@@ -1,4 +1,4 @@
-package com.lhiot.fruitdoctor;
+package com.lhiot.healthygood;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -8,8 +8,8 @@ import org.springframework.cloud.openfeign.EnableFeignClients;
 @SpringBootApplication
 @EnableDiscoveryClient
 @EnableFeignClients
-public class FruitDoctorServiceApplication {
+public class HealthyGoodServiceApplication {
     public static void main(String[] args) {
-        SpringApplication.run(FruitDoctorServiceApplication.class, args);
+        SpringApplication.run(HealthyGoodServiceApplication.class, args);
     }
 }
