@@ -16,7 +16,7 @@
     <description>LH-IOT Fruit Doctor</description>
 
     <properties>
-        <start-clasee>com.lhiot.fruitdoctor.FruitDoctorServiceApplication</start-clasee>
+        <start-clasee>com.lhiot.healthygood.HealthyGoodServiceApplication</start-clasee>
     </properties>
 
     <dependencies>
