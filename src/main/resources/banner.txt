@@ -7,5 +7,5 @@ ${AnsiColor.BRIGHT_GREEN}
  #+#        #+#    #+#           #+#          #+#    #+#      #+#
 ########## ###    ###       ###########       ########       ###
 ${AnsiColor.BRIGHT_RED}
-Application Name: fruit-doctor-service
+Application Name: healthy-good-service
 Spring Boot Version: 1.0
