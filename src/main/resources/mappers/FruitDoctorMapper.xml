@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
-<mapper namespace="com.lhiot.fruitdoctor.user.mapper.FruitDoctorMapper">
+<mapper namespace="com.lhiot.healthygood.mapper.user.FruitDoctorMapper">
 
     <!-- 数据库字段对象关系映射 -->
     <resultMap id="BaseResultMap"
-        type="com.lhiot.fruitdoctor.user.domain.FruitDoctor" >
+        type="com.lhiot.healthygood.domain.user.FruitDoctor" >
         <id column="id" property="id"/>
         <result column="real_name" property="realName" />
         <result column="photo" property="photo" />
@@ -39,7 +39,7 @@
             doctor_level,
             doctor_status,
             job_title,
-            create_time,
+            create_at,
             referee_id,
             profile,
             card_no,
@@ -55,7 +55,7 @@
     </sql>
 
     <!--新增鲜果师成员-->
-    <insert id="create" parameterType="com.lhiot.fruitdoctor.user.domain.FruitDoctor" useGeneratedKeys="true" keyProperty="id">
+    <insert id="create" parameterType="com.lhiot.healthygood.domain.user.FruitDoctor" useGeneratedKeys="true" keyProperty="id">
         insert into fruit_doctor
         <trim prefix="(" suffix=")" suffixOverrides="," >
             <if test="id != null ">
@@ -82,8 +82,8 @@
             <if test="jobTitle != null ">
                 job_title,
             </if>
-            <if test="createTime != null ">
-                create_time,
+            <if test="createAt != null ">
+                create_at,
             </if>
             <if test="refereeId != null ">
                 referee_id,
@@ -144,8 +144,8 @@
             <if test="jobTitle != null ">
                 #{jobTitle},
             </if>
-            <if test="createTime != null ">
-                #{createTime},
+            <if test="createAt != null ">
+                #{createAt},
             </if>
             <if test="refereeId != null ">
                 #{refereeId},
@@ -184,7 +184,7 @@
     </insert>
 
     <!--根据id修改鲜果师成员-->
-    <update id="updateById" parameterType="com.lhiot.fruitdoctor.user.domain.FruitDoctor">
+    <update id="updateById" parameterType="com.lhiot.healthygood.domain.user.FruitDoctor">
         update fruit_doctor
         <set>
             <if test="id != null ">
@@ -212,7 +212,7 @@
                 job_title = #{jobTitle},
             </if>
             <if test="createTime != null ">
-                create_time = #{createTime},
+                create_at = #{createAt},
             </if>
             <if test="refereeId != null ">
                 referee_id = #{refereeId},
@@ -349,7 +349,7 @@
 
     <!--查询鲜果师成员列表-->
      <select id="pageFruitDoctors" resultMap="BaseResultMap"
-        parameterType="com.lhiot.fruitdoctor.user.domain.FruitDoctor">
+        parameterType="com.lhiot.healthygood.domain.user.FruitDoctor">
 	        select <include refid="Base_Column_List" />
 	        from fruit_doctor
 	        <include refid="Base_Where_Condition" />
@@ -358,7 +358,7 @@
 
     <!--查询鲜果师成员总记录-->
     <select id="pageFruitDoctorCounts" resultType="long"
-        parameterType="com.lhiot.fruitdoctor.user.domain.FruitDoctor">
+        parameterType="com.lhiot.healthygood.domain.user.FruitDoctor">
             select count(1)
             from fruit_doctor
             <include refid="Base_Where_Condition" />
@@ -366,7 +366,7 @@
 
     <!--查询鲜果师团队列表-->
     <select id="team" resultMap="BaseResultMap"
-            parameterType="com.lhiot.fruitdoctor.user.domain.FruitDoctor">
+            parameterType="com.lhiot.healthygood.domain.user.FruitDoctor">
         select <include refid="Base_Column_List" />,(select sum(amount/commission) from doctor_bonus_log where doctor_id=f.id
           and source_type in('ORDER','REFUND')
           and create_time between CONCAT(date_add(curdate(),interval -day(curdate())+1 day),' 00:00:00')

@@ -1,9 +1,7 @@
 package com.lhiot.healthygood.api.user;
 
 import com.leon.microx.util.Maps;
-import com.leon.microx.util.SnowflakeId;
 import com.leon.microx.util.StringUtils;
-import com.leon.microx.util.auditing.Random;
 import com.leon.microx.web.result.Tips;
 import com.leon.microx.web.session.Sessions;
 import com.lhiot.healthygood.domain.template.CaptchaTemplate;
@@ -18,7 +16,6 @@ import com.lhiot.healthygood.service.user.FruitDoctorUserService;
 import com.lhiot.healthygood.wechat.*;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
-import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 import org.redisson.api.RMapCache;
@@ -51,27 +48,24 @@ import java.util.concurrent.TimeUnit;
 @RequestMapping("/users")
 public class UserApi {
     private final static String PREFIX_REDIS = "fruit_doctor_";//
-    private final SnowflakeId snowflakeId;
     private final WeChatUtil weChatUtil;
-    private final RedissonClient redissonClient;
     private final FruitDoctorUserService fruitDoctorUserService;
     private final FruitDoctorService fruitDoctorService;
     private final DoctorUserService doctorUserService;
     private final BaseUserServerFeign baseUserServerFeign;
     private final ThirdpartyServerFeign thirdpartyServerFeign;
     private Sessions session;
-
+    private RedissonClient redissonClient;
     @Autowired
-    public UserApi(SnowflakeId snowflakeId, WeChatUtil weChatUtil, RedissonClient redissonClient, FruitDoctorUserService fruitDoctorUserService, FruitDoctorService fruitDoctorService, DoctorUserService doctorUserService, BaseUserServerFeign baseUserServerFeign, ThirdpartyServerFeign thirdpartyServerFeign, Sessions session) {
-        this.snowflakeId = snowflakeId;
+    public UserApi(WeChatUtil weChatUtil, FruitDoctorUserService fruitDoctorUserService, FruitDoctorService fruitDoctorService, DoctorUserService doctorUserService, BaseUserServerFeign baseUserServerFeign, ThirdpartyServerFeign thirdpartyServerFeign, Sessions session, RedissonClient redissonClient) {
         this.weChatUtil = weChatUtil;
-        this.redissonClient = redissonClient;
         this.fruitDoctorUserService = fruitDoctorUserService;
         this.fruitDoctorService = fruitDoctorService;
         this.doctorUserService = doctorUserService;
         this.baseUserServerFeign = baseUserServerFeign;
         this.thirdpartyServerFeign = thirdpartyServerFeign;
         this.session = session;
+        this.redissonClient = redissonClient;
     }
 
     /*****************************************微信授权登陆*****************************************************/

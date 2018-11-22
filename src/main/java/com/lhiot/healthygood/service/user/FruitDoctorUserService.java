@@ -13,7 +13,6 @@ import com.lhiot.healthygood.feign.user.BaseUserServerFeign;
 import com.lhiot.healthygood.feign.user.ThirdpartyServerFeign;
 import com.lhiot.healthygood.mapper.user.DoctorUserMapper;
 import com.lhiot.healthygood.mapper.user.FruitDoctorMapper;
-import com.lhiot.healthygood.mapper.user.FruitDoctorUserMapper;
 import com.lhiot.healthygood.util.StringReplaceUtil;
 import org.springframework.amqp.AmqpException;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
@@ -36,7 +35,6 @@ import java.util.*;
 @Transactional
 public class FruitDoctorUserService {
 
-    private final FruitDoctorUserMapper fruitDoctorUserMapper;
     private final FruitDoctorMapper fruitDoctorMapper;
     private final DoctorUserMapper doctorUserMapper;
     private DictionaryClient dictionaryClient;
@@ -46,10 +44,9 @@ public class FruitDoctorUserService {
     private final RabbitTemplate rabbit;
 
     @Autowired
-    public FruitDoctorUserService(FruitDoctorUserMapper fruitDoctorUserMapper, FruitDoctorMapper fruitDoctorMapper,
+    public FruitDoctorUserService(FruitDoctorMapper fruitDoctorMapper,
                                   DictionaryClient dictionaryClient, BaseUserServerFeign baseUserServerFeign, ThirdpartyServerFeign thirdpartyServerFeign,
                                   DoctorUserMapper doctorUserMapper, RabbitTemplate rabbit) {
-        this.fruitDoctorUserMapper = fruitDoctorUserMapper;
         this.fruitDoctorMapper = fruitDoctorMapper;
         this.dictionaryClient = dictionaryClient;
         this.baseUserServerFeign = baseUserServerFeign;
