@@ -1,0 +1,296 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.lhiot.fruitdoctor.user.mapper.FruitDoctorUserMapper">
+
+    <!-- 数据库字段对象关系映射 -->
+    <resultMap id="BaseResultMap"
+        type="com.lhiot.fruitdoctor.user.domain.FruitDoctorUser" >
+        <id column="id" property="id"/>
+        <result column="open_id" property="openId" />
+        <result column="gender" property="gender" />
+        <result column="phone" property="phone" />
+        <result column="nickname" property="nickname" />
+        <result column="city" property="city" />
+        <result column="country" property="country" />
+        <result column="language" property="language" />
+        <result column="registration_time" property="registrationTime" />
+        <result column="baseuser_id" property="baseuserId" />
+        <result column="avatar" property="avatar" />
+        <result column="union_id" property="unionId" />
+        <result column="create_time" property="createTime" />
+    </resultMap>
+
+    <!-- base查询字段  -->
+    <sql id="Base_Column_List" >
+        <trim suffixOverrides="," >
+            id,
+            open_id,
+            gender,
+            phone,
+            nickname,
+            city,
+            country,
+            language,
+            registration_time,
+            baseuser_id,
+            avatar,
+            union_id,
+            create_time,
+        </trim>
+    </sql>
+
+    <!--新增鲜果师微信用户-->
+    <insert id="create" parameterType="com.lhiot.fruitdoctor.user.domain.FruitDoctorUser" useGeneratedKeys="true" keyProperty="id">
+        insert into fruit_doctor_user
+        <trim prefix="(" suffix=")" suffixOverrides="," >
+            <if test="id != null ">
+                id,
+            </if>
+            <if test="openId != null ">
+                open_id,
+            </if>
+            <if test="gender != null ">
+                gender,
+            </if>
+            <if test="phone != null ">
+                phone,
+            </if>
+            <if test="nickname != null ">
+                nickname,
+            </if>
+            <if test="city != null ">
+                city,
+            </if>
+            <if test="country != null ">
+                country,
+            </if>
+            <if test="language != null ">
+                language,
+            </if>
+            <if test="registrationTime != null ">
+                registration_time,
+            </if>
+            <if test="baseuserId != null ">
+                baseuser_id,
+            </if>
+            <if test="avatar != null ">
+                avatar,
+            </if>
+            <if test="unionId != null ">
+                union_id,
+            </if>
+            <if test="createTime != null ">
+                create_time,
+            </if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides="," >
+            <if test="id != null ">
+                #{id},
+            </if>
+            <if test="openId != null ">
+                #{openId},
+            </if>
+            <if test="gender != null ">
+                #{gender},
+            </if>
+            <if test="phone != null ">
+                #{phone},
+            </if>
+            <if test="nickname != null ">
+                #{nickname},
+            </if>
+            <if test="city != null ">
+                #{city},
+            </if>
+            <if test="country != null ">
+                #{country},
+            </if>
+            <if test="language != null ">
+                #{language},
+            </if>
+            <if test="registrationTime != null ">
+                #{registrationTime},
+            </if>
+            <if test="baseuserId != null ">
+                #{baseuserId},
+            </if>
+            <if test="avatar != null ">
+                #{avatar},
+            </if>
+            <if test="unionId != null ">
+                #{unionId},
+            </if>
+            <if test="createTime != null ">
+                #{createTime},
+            </if>
+        </trim>
+    </insert>
+
+    <!--根据id修改鲜果师微信用户-->
+    <update id="updateById" parameterType="com.lhiot.fruitdoctor.user.domain.FruitDoctorUser">
+        update fruit_doctor_user
+        <trim prefix="set" suffixOverrides=",">
+            <if test="id != null ">
+                id = #{id},
+            </if>
+            <if test="openId != null ">
+                open_id = #{openId},
+            </if>
+            <if test="gender != null ">
+                gender = #{gender},
+            </if>
+            <if test="phone != null ">
+                phone = #{phone},
+            </if>
+            <if test="nickname != null ">
+                nickname = #{nickname},
+            </if>
+            <if test="city != null ">
+                city = #{city},
+            </if>
+            <if test="country != null ">
+                country = #{country},
+            </if>
+            <if test="language != null ">
+                language = #{language},
+            </if>
+            <if test="registrationTime != null ">
+                registration_time = #{registrationTime},
+            </if>
+            <if test="baseuserId != null ">
+                baseuser_id = #{baseuserId},
+            </if>
+            <if test="avatar != null ">
+                avatar = #{avatar},
+            </if>
+            <if test="unionId != null ">
+                union_id = #{unionId},
+            </if>
+            <if test="createTimeBegin != null || createTimeEnd !=null">
+                create_time BETWEEN #{createTimeBegin} and #{createTimeEnd},
+            </if>
+        </trim>
+        where id=#{id}
+    </update>
+
+    <!--根据ids删除鲜果师微信用户-->
+    <delete id="deleteByIds" parameterType="java.util.List">
+        delete from fruit_doctor_user where id in
+        <foreach collection="list" item="item" open="("
+            separator="," close=")">
+            #{item}
+        </foreach>
+    </delete>
+
+
+    <!-- 根据id查找鲜果师微信用户 -->
+	<select id="selectById" resultMap="BaseResultMap"
+		parameterType="long"> select <include refid="Base_Column_List" />
+		from fruit_doctor_user where id = #{id}
+	</select>
+
+    <!-- 根据id查找鲜果师微信用户 -->
+    <select id="selectByOpenId" resultMap="BaseResultMap"
+            parameterType="String"> select <include refid="Base_Column_List" />
+        from fruit_doctor_user where open_id = #{0}
+    </select>
+
+
+    <!-- base where条件  -->
+    <sql id="Base_Where_Condition" >
+        <where>
+            <if test="id != null ">
+                and id = #{id}
+            </if>
+            <if test="openId != null ">
+                and open_id = #{openId}
+            </if>
+            <if test="gender != null ">
+                and gender = #{gender}
+            </if>
+            <if test="phone != null ">
+                and phone = #{phone}
+            </if>
+            <if test="nickname != null ">
+                and nickname like concat('%',#{nickname},'%')
+            </if>
+            <if test="city != null ">
+                and city = #{city}
+            </if>
+            <if test="country != null ">
+                and country = #{country}
+            </if>
+            <if test="language != null ">
+                and language = #{language}
+            </if>
+            <if test="registrationTime != null ">
+                and registration_time = #{registrationTime}
+            </if>
+            <if test="baseuserId != null ">
+                and baseuser_id = #{baseuserId}
+            </if>
+            <if test="avatar != null ">
+                and avatar = #{avatar}
+            </if>
+            <if test="unionId != null ">
+                and union_id = #{unionId}
+            </if>
+            <if test="createTime != null ">
+                and create_time = #{createTime}
+            </if>
+            <!-- 根据ids查询 add Limiaojun by 20180811-->
+            <if test="ids != null ">
+                and id in
+                <foreach collection="ids" item="item" open="("
+                         separator="," close=")">
+                    #{item}
+                </foreach>
+            </if>
+        </where>
+    </sql>
+
+
+    <!--查询鲜果师微信用户列表-->
+     <select id="pageFruitDoctorUsers" resultMap="BaseResultMap"
+        parameterType="com.lhiot.fruitdoctor.user.domain.FruitDoctorUser">
+	        select <include refid="Base_Column_List" />
+	        from fruit_doctor_user
+	        <include refid="Base_Where_Condition" />
+	        <include refid="common.pager" />
+    </select>
+
+    <!--查询鲜果师微信用户总记录-->
+    <select id="pageFruitDoctorUserCounts" resultType="Integer"
+        parameterType="com.lhiot.fruitdoctor.user.domain.FruitDoctorUser">
+            select count(1)
+            from fruit_doctor_user
+            <include refid="Base_Where_Condition" />
+    </select>
+	
+	<!--lynn 根据鲜果师id查询用户 -->
+	<select id="findUserByDoctorId" parameterType="Long" resultType="com.lhiot.fruitdoctor.user.domain.FruitDoctorUser">
+        SELECT t2.* FROM doctor_user t1
+		LEFT JOIN fruit_doctor_user t2 ON t1.user_id = t2.id
+		WHERE t1.doctor_id = #{0}
+    </select>
+
+	<!-- lynn 根据鲜果师id和用户id链表查询用户信息 -->
+	<select id="findByDoctorIdAndUserId" parameterType="map" 
+		resultType="com.lhiot.fruitdoctor.user.domain.FruitDoctorUser">
+		SELECT t1.remark,t2.* FROM doctor_user t1
+		LEFT JOIN fruit_doctor_user t2 ON t1.user_id = t2.id
+		WHERE t1.doctor_id = #{doctorId} and t1.user_id = #{userId}
+	</select>
+	
+ 	<select id="findByPhone" parameterType="String" resultMap="BaseResultMap">
+		select <include refid="Base_Column_List"/> from fruit_doctor_user where phone = #{0}
+	</select>
+	
+	<!-- lynn根据会员id查询鲜果师的会员信息 -->
+	<select id="findFruitDoctorUser" parameterType="Long" resultMap="BaseResultMap">
+		SELECT t1.* FROM fruit_doctor_user t1
+		LEFT JOIN fruit_doctor t2 ON t1.id = t2.user_id
+		LEFT JOIN doctor_user t3 ON t2.id = t3.doctor_id
+		WHERE t3.user_id = #{0}
+	</select>
+</mapper>

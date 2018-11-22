@@ -1,0 +1,163 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.lhiot.fruitdoctor.user.mapper.DoctorUserMapper">
+
+    <!-- 数据库字段对象关系映射 -->
+    <resultMap id="BaseResultMap"
+        type="com.lhiot.fruitdoctor.user.domain.DoctorUser" >
+        <id column="id" property="id"/>
+        <result column="remark" property="remark" />
+        <result column="doctor_id" property="doctorId" />
+        <result column="user_id" property="userId" />
+    </resultMap>
+
+    <!-- base查询字段  -->
+    <sql id="Base_Column_List" >
+        <trim suffixOverrides="," >
+            id,
+            remark,
+            doctor_id,
+            user_id,
+        </trim>
+    </sql>
+
+    <!--新增鲜果师客户-->
+    <insert id="create" parameterType="com.lhiot.fruitdoctor.user.domain.DoctorUser" useGeneratedKeys="true" keyProperty="id">
+        insert into doctor_user
+        <trim prefix="(" suffix=")" suffixOverrides="," >
+            <if test="id != null ">
+                id,
+            </if>
+            <if test="remark != null ">
+                remark,
+            </if>
+            <if test="doctorId != null ">
+                doctor_id,
+            </if>
+            <if test="userId != null ">
+                user_id,
+            </if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides="," >
+            <if test="id != null ">
+                #{id},
+            </if>
+            <if test="remark != null ">
+                #{remark},
+            </if>
+            <if test="doctorId != null ">
+                #{doctorId},
+            </if>
+            <if test="userId != null ">
+                #{userId},
+            </if>
+        </trim>
+    </insert>
+
+    <!--根据id修改鲜果师客户-->
+    <update id="updateById" parameterType="com.lhiot.fruitdoctor.user.domain.DoctorUser">
+        update doctor_user
+        <trim prefix="set" prefixOverrides="and">
+            <if test="id != null ">
+                id = #{id},
+            </if>
+            <if test="remark != null ">
+                remark = #{remark},
+            </if>
+            <if test="doctorId != null ">
+                doctor_id = #{doctorId},
+            </if>
+            <if test="userId != null ">
+                user_id = #{userId},
+            </if>
+        </trim>
+        where id=#{id}
+    </update>
+
+
+    <!--鲜果师修改用户备注-->
+    <update id="updateRemarkName" parameterType="com.lhiot.fruitdoctor.user.domain.DoctorUser">
+        update doctor_user
+        <set>
+            <if test="remark != null ">
+                remark = #{remark},
+            </if>
+        </set>
+        where doctor_id = #{doctorId} and user_id = #{userId}
+    </update>
+
+    <!--根据ids删除鲜果师客户-->
+    <delete id="deleteByIds" parameterType="java.util.List">
+        delete from doctor_user where id in
+        <foreach collection="list" item="item" open="("
+            separator="," close=")">
+            #{item}
+        </foreach>
+    </delete>
+
+
+    <!-- 根据id查找鲜果师客户 -->
+	<select id="selectById" resultMap="BaseResultMap"
+		parameterType="long"> select <include refid="Base_Column_List" />
+		from doctor_user where id = #{id}
+	</select>
+
+    <!-- 根据用户编号查找鲜果师客户 -->
+    <select id="selectByUserId" resultMap="BaseResultMap"
+            parameterType="long"> select <include refid="Base_Column_List" />
+        from doctor_user where user_id = #{userId}
+    </select>
+
+
+    <!-- base where条件  -->
+    <sql id="Base_Where_Condition" >
+        <where>
+            <if test="id != null ">
+                and id = #{id}
+            </if>
+            <if test="remark != null ">
+                and remark = #{remark}
+            </if>
+            <if test="doctorId != null ">
+                and doctor_id = #{doctorId}
+            </if>
+            <if test="userId != null ">
+                and user_id = #{userId}
+            </if>
+        </where>
+    </sql>
+
+
+    <!--查询鲜果师客户列表-->
+     <select id="pageDoctorUsers" resultMap="BaseResultMap"
+        parameterType="com.lhiot.fruitdoctor.user.domain.DoctorUser">
+	        select <include refid="Base_Column_List" />
+	        from doctor_user
+	        <include refid="Base_Where_Condition" />
+	        <include refid="common.pager" />
+    </select>
+
+    <!--查询鲜果师客户总记录-->
+    <select id="pageDoctorUserCounts" resultType="long"
+        parameterType="com.lhiot.fruitdoctor.user.domain.DoctorUser">
+            select count(1)
+            from doctor_user
+            <include refid="Base_Where_Condition" />
+    </select>
+
+    <!--查询鲜果师客户列表-->
+    <select id="doctorCustomers" resultMap="BaseResultMap"
+            parameterType="long">
+        select d.id,
+            d.remark,
+            d.doctor_id,
+            d.user_id,
+            f.nickname,
+            f.avatar,
+            f.phone
+        from doctor_user d left join fruit_doctor_user f on d.user_id=f.id
+        where doctor_id=#{0} order by remark asc
+    </select>
+
+
+</mapper>
