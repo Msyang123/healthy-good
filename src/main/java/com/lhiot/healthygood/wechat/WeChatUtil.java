@@ -7,9 +7,11 @@
 package com.lhiot.healthygood.wechat;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.Data;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.ibatis.parsing.XPathParser;
+import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
 import javax.net.ssl.*;
@@ -33,6 +35,8 @@ import java.util.Map.Entry;
  * @version 1.0 2016年11月18日下午3:31:26
  */
 @Slf4j
+@Service
+@Data
 public class WeChatUtil {
 	public final  String encoding = "UTF-8";
 
