@@ -4,12 +4,16 @@ import com.leon.microx.util.Maps;
 import com.leon.microx.util.StringUtils;
 import com.leon.microx.web.result.Tips;
 import com.leon.microx.web.session.Sessions;
+import com.lhiot.healthygood.domain.doctor.Achievement;
 import com.lhiot.healthygood.domain.template.CaptchaTemplate;
 import com.lhiot.healthygood.domain.template.FreeSignName;
 import com.lhiot.healthygood.domain.user.*;
 import com.lhiot.healthygood.entity.ApplicationType;
+import com.lhiot.healthygood.entity.DateTypeEnum;
+import com.lhiot.healthygood.entity.PeriodType;
 import com.lhiot.healthygood.feign.user.BaseUserServerFeign;
 import com.lhiot.healthygood.feign.user.ThirdpartyServerFeign;
+import com.lhiot.healthygood.service.doctor.DoctorAchievementLogService;
 import com.lhiot.healthygood.service.user.DoctorUserService;
 import com.lhiot.healthygood.service.user.FruitDoctorService;
 import com.lhiot.healthygood.service.user.FruitDoctorUserService;
@@ -47,23 +51,25 @@ import java.util.concurrent.TimeUnit;
 @RestController
 @RequestMapping("/users")
 public class UserApi {
-    private final static String PREFIX_REDIS = "fruit_doctor_";//
+    private final static String PREFIX_REDIS = "lhiot:healthy_good:user_";//
     private final WeChatUtil weChatUtil;
     private final FruitDoctorUserService fruitDoctorUserService;
     private final FruitDoctorService fruitDoctorService;
     private final DoctorUserService doctorUserService;
     private final BaseUserServerFeign baseUserServerFeign;
     private final ThirdpartyServerFeign thirdpartyServerFeign;
+    private final DoctorAchievementLogService doctorAchievementLogService;
     private Sessions session;
     private RedissonClient redissonClient;
     @Autowired
-    public UserApi(WeChatUtil weChatUtil, FruitDoctorUserService fruitDoctorUserService, FruitDoctorService fruitDoctorService, DoctorUserService doctorUserService, BaseUserServerFeign baseUserServerFeign, ThirdpartyServerFeign thirdpartyServerFeign, Sessions session, RedissonClient redissonClient) {
+    public UserApi(WeChatUtil weChatUtil, FruitDoctorUserService fruitDoctorUserService, FruitDoctorService fruitDoctorService, DoctorUserService doctorUserService, BaseUserServerFeign baseUserServerFeign, ThirdpartyServerFeign thirdpartyServerFeign, Sessions session, RedissonClient redissonClient, DoctorAchievementLogService doctorAchievementLogService) {
         this.weChatUtil = weChatUtil;
         this.fruitDoctorUserService = fruitDoctorUserService;
         this.fruitDoctorService = fruitDoctorService;
         this.doctorUserService = doctorUserService;
         this.baseUserServerFeign = baseUserServerFeign;
         this.thirdpartyServerFeign = thirdpartyServerFeign;
+        this.doctorAchievementLogService = doctorAchievementLogService;
         this.session = session;
         this.redissonClient = redissonClient;
     }
@@ -149,7 +155,7 @@ public class UserApi {
         session.cache(sessionUser);
         return ResponseEntity.ok(sessionUser);
     }
-
+    @Sessions.Uncheck
     @GetMapping("/wechat/token")
     @ApiOperation(value = "微信oauth Token 全局缓存的", response = Token.class)
     public ResponseEntity<Token> token() throws IOException {
@@ -255,5 +261,31 @@ public class UserApi {
             return ResponseEntity.badRequest().body(userInfo.getBody());
         }
         return ResponseEntity.ok(userInfo.getBody());
+    }
+
+    @ApiOperation("统计用户总计消费数及本月消费数")
+    @ApiImplicitParam(paramType = "path", name = "id", dataType = "String", required = true, value = "用户id")
+    @GetMapping("/users/{userId}/consumption")
+    public ResponseEntity<?> findUserAchievement(@PathVariable Long id){
+        //统计本月订单数和消费额
+        Achievement thisMonth =
+                doctorAchievementLogService.achievement(DateTypeEnum.MONTH, PeriodType.current, null, true, false,id);
+        //统计总订单数和消费额
+        Achievement total =
+                doctorAchievementLogService.achievement(DateTypeEnum.MONTH, PeriodType.current, null, true, true,id);
+        //构建返回值
+        total.setSalesAmountOfThisMonth(thisMonth.getSalesAmount());
+        total.setOrderCountOfThisMonth(thisMonth.getOrderCount());
+
+        //获取用户信息
+        /*FruitDoctorUser user = fruitDoctorUserMapper.findByDoctorIdAndUserId(map);
+        total.setUser(user);*/
+        ResponseEntity<UserDetailResult> userInfo = baseUserServerFeign.findById(id);
+        if (userInfo.getStatusCode().isError()){
+            return ResponseEntity.badRequest().body(userInfo.getBody());
+        }
+        total.setAvatar(userInfo.getBody().getAvatar());
+        total.setDescription(userInfo.getBody().getDescription());
+        return ResponseEntity.ok(total);
     }
 }

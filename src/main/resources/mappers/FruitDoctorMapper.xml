@@ -13,7 +13,7 @@
         <result column="doctor_level" property="doctorLevel" />
         <result column="doctor_status" property="doctorStatus" />
         <result column="job_title" property="jobTitle" />
-        <result column="create_time" property="createTime" />
+        <result column="create_at" property="createAt" />
         <result column="referee_id" property="refereeId" />
         <result column="profile" property="profile" />
         <result column="card_no" property="cardNo" />
@@ -211,7 +211,7 @@
             <if test="jobTitle != null ">
                 job_title = #{jobTitle},
             </if>
-            <if test="createTime != null ">
+            <if test="createAt != null ">
                 create_at = #{createAt},
             </if>
             <if test="refereeId != null ">
@@ -307,8 +307,8 @@
             <if test="jobTitle != null ">
                 and job_title = #{jobTitle}
             </if>
-            <if test="createTime != null ">
-                and create_time = #{createTime}
+            <if test="createAt != null ">
+                and create_at = #{createAt}
             </if>
             <if test="refereeId != null ">
                 and referee_id = #{refereeId}
@@ -365,11 +365,11 @@
     </select>
 
     <!--查询鲜果师团队列表-->
-    <select id="team" resultMap="BaseResultMap"
+    <select id="subordinate" resultMap="BaseResultMap"
             parameterType="com.lhiot.healthygood.domain.user.FruitDoctor">
         select <include refid="Base_Column_List" />,(select sum(amount/commission) from doctor_bonus_log where doctor_id=f.id
           and source_type in('ORDER','REFUND')
-          and create_time between CONCAT(date_add(curdate(),interval -day(curdate())+1 day),' 00:00:00')
+          and create_at between CONCAT(date_add(curdate(),interval -day(curdate())+1 day),' 00:00:00')
           and  CONCAT(date_add(curdate()-day(curdate())+1,interval 1 month),' 00:00:00')
           ) as amount_of_month
         from fruit_doctor f

@@ -94,7 +94,7 @@ public interface FruitDoctorMapper {
      * @author yijun
      * @date 2018/07/26 12:08:13
      */
-    List<FruitDoctor> team(FruitDoctor fruitDoctor);
+    List<FruitDoctor> subordinate(FruitDoctor fruitDoctor);
 
     FruitDoctor selectByInviteCode(String inviteCode);
 

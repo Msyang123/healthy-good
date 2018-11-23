@@ -15,7 +15,7 @@
         <result column="audit_status" property="auditStatus" />
         <result column="create_at" property="createAt" />
         <result column="real_name" property="realName" />
-        <result column="audit_time" property="auditTime" />
+        <result column="audit_at" property="auditAt" />
         <result column="user_id" property="userId" />
     </resultMap>
 
@@ -32,7 +32,7 @@
             audit_status,
             create_at,
             real_name,
-            audit_time,
+            audit_at,
             user_id,
         </trim>
     </sql>
@@ -134,8 +134,8 @@
             <if test="realName != null ">
                 real_name = #{realName},
             </if>
-            <if test="auditTime != null ">
-                audit_time = #{auditTime},
+            <if test="auditAt != null ">
+                audit_at = #{auditAt},
             </if>
             <if test="userId != null ">
                 user_id = #{userId},
@@ -201,8 +201,8 @@
             <if test="realName != null ">
                 and real_name like concat('%',#{realName},'%')
             </if>
-            <if test="auditTime != null ">
-                and audit_time = #{auditTime}
+            <if test="auditAt != null ">
+                and audit_at = #{auditAt}
             </if>
             <if test="userId != null ">
                 and user_id = #{userId}

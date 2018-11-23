@@ -1,0 +1,247 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.lhiot.healthygood.mapper.doctor.DoctorAchievementLogMapper">
+
+    <!-- 数据库字段对象关系映射 -->
+    <resultMap id="BaseResultMap"
+        type="com.lhiot.healthygood.domain.doctor.DoctorAchievementLog" >
+        <id column="id" property="id"/>
+        <result column="doctor_id" property="doctorId" />
+        <result column="user_id" property="userId" />
+        <result column="order_id" property="orderId" />
+        <result column="amount" property="amount" />
+        <result column="source_type" property="sourceType" />
+        <result column="create_at" property="createAt" />
+    </resultMap>
+
+    <!-- base查询字段  -->
+    <sql id="Base_Column_List" >
+        <trim suffixOverrides="," >
+            id,
+            doctor_id,
+            user_id,
+            order_id,
+            amount,
+            source_type,
+            create_at,
+        </trim>
+    </sql>
+
+    <!--新增鲜果师业绩记录-->
+    <insert id="create" parameterType="com.lhiot.healthygood.domain.doctor.DoctorAchievementLog" useGeneratedKeys="true" keyProperty="id">
+        insert into doctor_bonus_log
+        <trim prefix="(" suffix=")" suffixOverrides="," >
+            <if test="id != null ">
+                id,
+            </if>
+            <if test="doctorId != null ">
+                doctor_id,
+            </if>
+            <if test="userId != null ">
+                user_id,
+            </if>
+            <if test="orderId != null ">
+                order_id,
+            </if>
+            <if test="amount != null ">
+                amount,
+            </if>
+            <if test="sourceType != null ">
+                source_type,
+            </if>
+            <if test="createAt != null ">
+                create_at,
+            </if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides="," >
+            <if test="id != null ">
+                #{id},
+            </if>
+            <if test="doctorId != null ">
+                #{doctorId},
+            </if>
+            <if test="userId != null ">
+                #{userId},
+            </if>
+            <if test="orderId != null ">
+                #{orderId},
+            </if>
+            <if test="amount != null ">
+                #{amount},
+            </if>
+            <if test="sourceType != null ">
+                #{sourceType},
+            </if>
+            <if test="createAt != null ">
+                #{createAt},
+            </if>
+        </trim>
+    </insert>
+
+    <!--根据id修改鲜果师业绩记录-->
+    <update id="updateById" parameterType="com.lhiot.healthygood.domain.doctor.DoctorAchievementLog">
+        update doctor_bonus_log
+        <set>
+            <if test="id != null ">
+                id = #{id},
+            </if>
+            <if test="doctorId != null ">
+                doctor_id = #{doctorId},
+            </if>
+            <if test="userId != null ">
+                user_id = #{userId},
+            </if>
+            <if test="orderId != null ">
+                order_id = #{orderId},
+            </if>
+            <if test="amount != null ">
+                amount = #{amount},
+            </if>
+            <if test="sourceType != null ">
+                source_type = #{sourceType},
+            </if>
+            <if test="createAt != null ">
+                create_at = #{createAt},
+            </if>
+        </set>
+        where id=#{id}
+    </update>
+
+    <!--根据ids删除鲜果师业绩记录-->
+    <delete id="deleteByIds" parameterType="java.util.List">
+        delete from doctor_bonus_log where id in
+        <foreach collection="list" item="item" open="("
+            separator="," close=")">
+            #{item}
+        </foreach>
+    </delete>
+
+
+    <!-- 根据id查找鲜果师业绩记录 -->
+	<select id="selectById" resultMap="BaseResultMap"
+		parameterType="long"> select <include refid="Base_Column_List" />
+		from doctor_bonus_log where id = #{id}
+	</select>
+
+
+    <!-- base where条件  -->
+    <sql id="Base_Where_Condition" >
+        <where>
+            <if test="id != null ">
+                and id = #{id}
+            </if>
+            <if test="doctorId != null ">
+                and doctor_id = #{doctorId}
+            </if>
+            <if test="userId != null ">
+                and user_id = #{userId}
+            </if>
+            <if test="orderId != null ">
+                and order_id = #{orderId}
+            </if>
+            <if test="amount != null ">
+                and amount = #{amount}
+            </if>
+            <if test="sourceType != null ">
+                and source_type = #{sourceType}
+            </if>
+            <if test="createAt != null ">
+                and create_at = #{createAt}
+            </if>
+            <if test="incomeType != null and incomeType.name=='INCOME'">
+                and source_type in('ORDER','SUB_DISTRIBUTOR')
+            </if>
+            <if test="incomeType != null and incomeType.name=='EXPENDITURE'">
+                and source_type in('SETTLEMENT','REFUND')
+            </if>
+        </where>
+    </sql>
+
+
+    <!--查询鲜果师业绩记录列表-->
+     <select id="pageDoctorBonusLogs" resultMap="BaseResultMap"
+        parameterType="com.lhiot.healthygood.domain.doctor.DoctorAchievementLog">
+	        select <include refid="Base_Column_List" />
+	        from doctor_bonus_log
+	        <include refid="Base_Where_Condition" />
+	        <include refid="common.pager" />
+    </select>
+
+    <!--查询鲜果师业绩记录总记录-->
+    <select id="pageDoctorBonusLogCounts" resultType="long"
+        parameterType="com.lhiot.healthygood.domain.doctor.DoctorAchievementLog">
+            select count(1)
+            from doctor_bonus_log
+            <include refid="Base_Where_Condition" />
+    </select>
+
+
+
+    <!--查询我的收入-->
+    <select id="myIncome" resultType="com.lhiot.fruitdoctor.user.domain.IncomeStat"
+            parameterType="long">
+        select sum(amount) as bonus,
+        (select sum(amount)
+        from doctor_bonus_log where doctor_id=#{0}
+        and create_at &lt; DATE_ADD(curdate(),interval -day(curdate())+1 day)) as bonusCanBeSettled,
+        (select sum(amount)
+        from doctor_bonus_log where doctor_id=#{0}
+        and source_type in('ORDER','SUB_DISTRIBUTOR','REFUND')) as bonusOfHistory,
+        (select -sum(amount)
+        from doctor_bonus_log where doctor_id=#{0}
+        and source_type in('SETTLEMENT')) as bonusSettled,
+        (select sum(amount) from settlement_application
+        where create_at between CONCAT(date_add(curdate(),interval -day(curdate())+1 day),' 00:00:00')
+        and  CONCAT(date_add(curdate()-day(curdate())+1,interval 1 month),' 00:00:00')
+        and settlement_status='UNSETTLED' and doctor_id=#{0}) as bonusSettling
+        from doctor_bonus_log where doctor_id=#{0}
+    </select>
+
+
+    <!--查询我的团队销售业绩-->
+    <select id="teamAchievement" parameterType="long" resultType="com.lhiot.fruitdoctor.user.domain.TeamAchievement">
+      select real_name,f.phone,f.avatar,f.create_at,
+        (select sum(amount/commission)
+        from doctor_bonus_log where doctor_id=#{0}
+        and source_type in('ORDER','REFUND')
+				)as salesAmount,
+        (select sum(amount/commission)
+        from doctor_bonus_log where doctor_id=#{0}
+        and source_type in('ORDER','REFUND')
+        and create_at between CONCAT(date_add(curdate(),interval -day(curdate())+1 day),' 00:00:00')
+        and  CONCAT(date_add(curdate()-day(curdate())+1,interval 1 month),' 00:00:00')
+				)as amountOfMonth,
+        (select sum(amount)
+        from doctor_bonus_log where doctor_id=#{0}
+        and source_type in('ORDER','SUB_DISTRIBUTOR','REFUND')
+        and create_at between CONCAT(date_add(curdate(),interval -day(curdate())+1 day),' 00:00:00')
+        and  CONCAT(date_add(curdate()-day(curdate())+1,interval 1 month),' 00:00:00')
+				)as incomeAmountOfMonth
+         from fruit_doctor f where id=#{0}
+    </select>
+
+	<!-- lynn 统计业绩 -->
+	<select id="achievement" parameterType="map" 
+		resultType="com.lhiot.fruitdoctor.user.domain.Achievement">
+		SELECT IFNULL(SUM(amount/commission),0) as salesAmount ,IFNULL(SUM(amount),0) AS incomeAmount,COUNT(DISTINCT order_id) AS orderCount
+		FROM doctor_bonus_log 
+		<trim prefix="where" prefixOverrides="and">
+				source_type IN ('ORDER','REFUND')
+			<if test=" beginTime!=null and endTime != null">
+				AND (DATE_FORMAT(create_at,'%Y-%m-%d') &gt;= #{beginTime} AND DATE_FORMAT(create_at,'%Y-%m-%d') &lt;= #{endTime})
+			</if>
+			<if test="doctorId != null">
+				AND doctor_id = #{doctorId}
+			</if>
+			<if test="userId != null">
+				AND user_id = #{userId}
+			</if>
+		</trim>
+	</select>
+	
+	<!-- lynn 根据订单id查询记录 -->
+	<select id="selectByOrderId" parameterType="Long" resultMap="BaseResultMap">
+		select <include refid="Base_Column_List" />
+		from doctor_bonus_log where id = #{0} and source_type = 'ORDER'
+	</select>
+</mapper>

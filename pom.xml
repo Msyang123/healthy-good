@@ -100,6 +100,12 @@
             <artifactId>dictionary-client</artifactId>
             <version>1.0-SNAPSHOT</version>
         </dependency>
+        <!-- utils -->
+        <dependency>
+            <groupId>com.leon.microx.util</groupId>
+            <artifactId>microx-utils</artifactId>
+            <version>20180725</version>
+        </dependency>
     </dependencies>
 
     <build>
