@@ -1,17 +1,21 @@
 package com.lhiot.healthygood.api.user;
 
 import com.leon.microx.web.result.Tips;
+import com.leon.microx.web.session.Sessions;
 import com.lhiot.healthygood.common.PagerResultObject;
-import com.lhiot.healthygood.domain.doctor.RegisterApplication;
-import com.lhiot.healthygood.domain.doctor.SettlementApplication;
+import com.lhiot.healthygood.domain.doctor.*;
 import com.lhiot.healthygood.domain.template.CaptchaTemplate;
 import com.lhiot.healthygood.domain.template.FreeSignName;
 import com.lhiot.healthygood.domain.user.CaptchaParam;
 import com.lhiot.healthygood.domain.user.DoctorUser;
 import com.lhiot.healthygood.domain.user.FruitDoctor;
 import com.lhiot.healthygood.domain.user.ValidateParam;
+import com.lhiot.healthygood.entity.DateTypeEnum;
+import com.lhiot.healthygood.entity.PeriodType;
 import com.lhiot.healthygood.entity.SettlementStatus;
 import com.lhiot.healthygood.feign.user.ThirdpartyServerFeign;
+import com.lhiot.healthygood.service.doctor.CardUpdateLogService;
+import com.lhiot.healthygood.service.doctor.DoctorAchievementLogService;
 import com.lhiot.healthygood.service.doctor.RegisterApplicationService;
 import com.lhiot.healthygood.service.doctor.SettlementApplicationService;
 import com.lhiot.healthygood.service.user.DoctorUserService;
@@ -25,7 +29,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import javax.servlet.http.HttpServletRequest;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Objects;
 
 @Api(description = "鲜果师申请记录接口")
@@ -38,13 +45,19 @@ public class FruitDoctorApi {
     private final SettlementApplicationService settlementApplicationService;
     private final DoctorUserService doctorUserService;
     private final FruitDoctorService fruitDoctorService;
+    private final DoctorAchievementLogService doctorAchievementLogService;
+    private final CardUpdateLogService cardUpdateLogService;
+    private Sessions session;
     @Autowired
-    public FruitDoctorApi(ThirdpartyServerFeign thirdpartyServerFeign, RegisterApplicationService registerApplicationService, SettlementApplicationService settlementApplicationService, DoctorUserService doctorUserService, FruitDoctorService fruitDoctorService) {
+    public FruitDoctorApi(ThirdpartyServerFeign thirdpartyServerFeign, RegisterApplicationService registerApplicationService, SettlementApplicationService settlementApplicationService, DoctorUserService doctorUserService, FruitDoctorService fruitDoctorService, DoctorAchievementLogService doctorAchievementLogService, CardUpdateLogService cardUpdateLogService, Sessions session) {
         this.thirdpartyServerFeign = thirdpartyServerFeign;
         this.registerApplicationService = registerApplicationService;
         this.settlementApplicationService = settlementApplicationService;
         this.doctorUserService = doctorUserService;
         this.fruitDoctorService = fruitDoctorService;
+        this.doctorAchievementLogService = doctorAchievementLogService;
+        this.cardUpdateLogService = cardUpdateLogService;
+        this.session = session;
     }
 
     @GetMapping("/sms/captcha")
@@ -134,7 +147,7 @@ public class FruitDoctorApi {
     @ApiOperation(value = "团队列表")
     public ResponseEntity<PagerResultObject<FruitDoctor>> team(FruitDoctor fruitDoctor){
         log.debug("查询鲜果师成员分页列表\t param:{}",fruitDoctor);
-        return ResponseEntity.ok(fruitDoctorService.team(fruitDoctor));
+        return ResponseEntity.ok(fruitDoctorService.subordinate(fruitDoctor));
     }
 
     @GetMapping("/page")
@@ -143,4 +156,86 @@ public class FruitDoctorApi {
         log.debug("查询鲜果师成员分页列表\t param:{}",fruitDoctor);
         return ResponseEntity.ok(fruitDoctorService.pageList(fruitDoctor));
     }
+
+    @GetMapping("/incomes/detail")
+    @ApiOperation(value = "收支明细")
+    public ResponseEntity<PagerResultObject<DoctorAchievementLog>> pageQuery(DoctorAchievementLog doctorAchievementLog){
+        log.debug("收支明细\t param:{}", doctorAchievementLog);
+
+        return ResponseEntity.ok(doctorAchievementLogService.pageList(doctorAchievementLog));
+    }
+
+    @GetMapping("/incomes")
+    @ApiImplicitParam(paramType = "path", name = "id", value = "鲜果师id", required = true, dataType = "Long")
+    @ApiOperation(value = "我的收入")
+    public ResponseEntity<IncomeStat> myIncome(HttpServletRequest request){
+        String sessionId = session.id(request);
+        Long doctorId = (Long) session.user(sessionId).getUser().get("doctorId");
+        return ResponseEntity.ok(doctorAchievementLogService.myIncome(doctorId));
+    }
+
+    @GetMapping("/member-achievements/{doctorId}")
+    @ApiImplicitParam(paramType = "path", name = "doctorId", value = "下级鲜果师id", required = true, dataType = "Long")
+    @ApiOperation(value = "我的团队的个人业绩")
+    public ResponseEntity<TeamAchievement> teamAchievement(@PathVariable("id") Long id){
+        log.debug("我的团队的个人业绩\t param:{}",id);
+
+        return ResponseEntity.ok(doctorAchievementLogService.teamAchievement(id));
+    }
+
+    @ApiOperation("统计本期和上期的日周月季度的业绩")
+    @ApiImplicitParam(paramType = "query", name = "dateType", dataType = "DateTypeEnum", required = true, value = "统计的类型")
+    @GetMapping("/achievement/period")
+    public ResponseEntity<?> findAchievement(HttpServletRequest request,@RequestParam DateTypeEnum dateType){
+        String sessionId = session.id(request);
+        Long doctorId = (Long) session.user(sessionId).getUser().get("doctorId");
+        //统计本期
+        Achievement current =
+                doctorAchievementLogService.achievement(dateType, PeriodType.current, doctorId, true, false,null);
+        //统计上期
+        Achievement last =
+                doctorAchievementLogService.achievement(dateType, PeriodType.last, doctorId, true, false,null);
+        //构建返回值
+        Map<String,Object> achievementMap = new HashMap<>();
+        achievementMap.put("current", current);
+        achievementMap.put("last", last);
+        return ResponseEntity.ok(achievementMap);
+    }
+
+    @ApiOperation("统计今日业绩订单数及总的业绩")
+    @GetMapping("/achievement")
+    public ResponseEntity<?> findTodayAchievement(HttpServletRequest request){
+        String sessionId = session.id(request);
+        Long doctorId = (Long) session.user(sessionId).getUser().get("doctorId");
+        //统计今天订单数和业绩
+        Achievement current =
+                doctorAchievementLogService.achievement(DateTypeEnum.DAY, PeriodType.current, doctorId, true, false,null);
+        //统计总的订单数
+        Achievement total =
+                doctorAchievementLogService.achievement(DateTypeEnum.DAY, PeriodType.current, doctorId, true, true,null);
+        //构建返回值
+        current.setSummaryAmount(total.getSalesAmount());
+        return ResponseEntity.ok(current);
+    }
+
+    @PostMapping("/bank-card")
+    @ApiOperation(value = "银行卡添加")
+    @ApiImplicitParam(paramType = "body", name = "cardUpdateLog", value = "要添加的", required = true, dataType = "CardUpdateLog")
+    public ResponseEntity<Integer> create(@RequestBody CardUpdateLog cardUpdateLog) {
+        log.debug("添加\t param:{}",cardUpdateLog);
+
+        return ResponseEntity.ok(cardUpdateLogService.create(cardUpdateLog));
+    }
+
+    @ApiOperation(value = "查询鲜果师银行卡信息", notes = "根据session里的doctorId查询")
+    @GetMapping("/bank-card")
+    public ResponseEntity<CardUpdateLog> findCardUpdateLog(HttpServletRequest request) {
+        String sessionId = session.id(request);
+        Long doctorId = (Long) session.user(sessionId).getUser().get("doctorId");
+        CardUpdateLog cardUpdateLog = new CardUpdateLog();
+        cardUpdateLog.setDoctorId(doctorId);
+        return ResponseEntity.ok(cardUpdateLogService.selectByCard(cardUpdateLog));
+    }
+
+
 }

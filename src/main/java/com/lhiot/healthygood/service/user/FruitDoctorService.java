@@ -135,13 +135,13 @@ public class FruitDoctorService {
      * @author yijun
      * @date 2018/07/26 12:08:13
      */
-    public PagerResultObject<FruitDoctor> team(FruitDoctor fruitDoctor){
+    public PagerResultObject<FruitDoctor> subordinate(FruitDoctor fruitDoctor){
         long total = 0;
         if (fruitDoctor.getRows() != null && fruitDoctor.getRows() > 0) {
             total = this.count(fruitDoctor);
         }
         return PagerResultObject.of(fruitDoctor, total,
-                this.fruitDoctorMapper.team(fruitDoctor));
+                this.fruitDoctorMapper.subordinate(fruitDoctor));
     }
     
     /**
