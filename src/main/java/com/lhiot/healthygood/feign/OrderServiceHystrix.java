@@ -1,7 +1,7 @@
 package com.lhiot.healthygood.feign;
 
-import com.lhiot.healthygood.model.order.CreateOrderParam;
-import com.lhiot.healthygood.model.order.OrderDetailResult;
+import com.lhiot.healthygood.domain.order.CreateOrderParam;
+import com.lhiot.healthygood.domain.order.OrderDetailResult;
 import org.springframework.http.ResponseEntity;
 
 public class OrderServiceHystrix implements OrderServiceFeign{

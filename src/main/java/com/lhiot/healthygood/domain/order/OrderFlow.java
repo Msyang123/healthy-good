@@ -1,6 +1,6 @@
-package com.lhiot.healthygood.model.order;
+package com.lhiot.healthygood.domain.order;
 
-import com.lhiot.healthygood.model.common.PagerRequestObject;
+import com.lhiot.healthygood.common.PagerRequestObject;
 import io.swagger.annotations.ApiModel;
 import lombok.Data;
 import lombok.EqualsAndHashCode;

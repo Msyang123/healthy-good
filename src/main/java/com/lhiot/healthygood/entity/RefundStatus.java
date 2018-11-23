@@ -1,4 +1,4 @@
-package com.lhiot.healthygood.model.type;
+package com.lhiot.healthygood.entity;
 
 /**
  * @author zhangfeng created in 2018/9/19 10:55
