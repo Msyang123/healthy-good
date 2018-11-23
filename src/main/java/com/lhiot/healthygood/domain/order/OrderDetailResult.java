@@ -1,7 +1,7 @@
-package com.lhiot.healthygood.model.order;
+package com.lhiot.healthygood.domain.order;
 
-import com.lhiot.healthygood.model.type.ApplicationType;
-import com.lhiot.healthygood.model.type.ReceivingWay;
+import com.lhiot.healthygood.entity.ApplicationType;
+import com.lhiot.healthygood.entity.ReceivingWay;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;

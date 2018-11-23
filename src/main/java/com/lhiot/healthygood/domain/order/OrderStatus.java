@@ -1,4 +1,4 @@
-package com.lhiot.healthygood.model.order;
+package com.lhiot.healthygood.domain.order;
 
 import lombok.Getter;
 

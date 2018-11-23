@@ -1,4 +1,4 @@
-package com.lhiot.healthygood.model.type;
+package com.lhiot.healthygood.entity;
 
 import lombok.Getter;
 
