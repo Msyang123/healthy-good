@@ -1,4 +1,4 @@
-package com.lhiot.healthygood.domain.customplan;
+package com.lhiot.healthygood.domain.customplan.model;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -48,7 +48,7 @@ public class CustomPlanSectionResult {
     @ApiModelProperty(value = "", dataType = "Date")
     private java.util.Date createAt;
 
-    @JsonProperty("sectionCode")
+    @JsonProperty("customPlanList")
     @ApiModelProperty(value = "", dataType = "List")
     private List<CustomPlanSimpleResult> customPlanList;
 }

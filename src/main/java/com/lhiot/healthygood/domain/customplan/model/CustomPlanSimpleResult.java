@@ -1,10 +1,10 @@
-package com.lhiot.healthygood.domain.customplan;
+package com.lhiot.healthygood.domain.customplan.model;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.annotations.ApiModelProperty;
 
-public class CustomPlanDetailResult {
+public class CustomPlanSimpleResult {
     /**
      *
      */
@@ -40,4 +40,12 @@ public class CustomPlanDetailResult {
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss",timezone = "GMT+8")
     @ApiModelProperty(value = "创建时间", dataType = "Date")
     private java.util.Date createAt;
+
+    /**
+     *价格
+     */
+    @JsonProperty("price")
+    @ApiModelProperty(value = "价格", dataType = "String")
+    private Long price;
+
 }
