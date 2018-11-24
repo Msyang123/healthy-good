@@ -1,8 +1,8 @@
 package com.lhiot.healthygood.api.customplan;
 
 import com.leon.microx.web.session.Sessions;
-import com.lhiot.healthygood.domain.customplan.CustomPlanDetailResult;
-import com.lhiot.healthygood.domain.customplan.CustomPlanSectionResult;
+import com.lhiot.healthygood.domain.customplan.model.CustomPlanDetailResult;
+import com.lhiot.healthygood.domain.customplan.model.CustomPlanSectionResult;
 import com.lhiot.healthygood.service.customplan.CustomPlanService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
