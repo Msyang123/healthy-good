@@ -178,7 +178,7 @@
 
 
     <!--查询我的收入-->
-    <select id="myIncome" resultType="com.lhiot.fruitdoctor.user.domain.IncomeStat"
+    <select id="myIncome" resultType="com.lhiot.healthygood.domain.doctor.IncomeStat"
             parameterType="long">
         select sum(amount) as bonus,
         (select sum(amount)
@@ -199,7 +199,7 @@
 
 
     <!--查询我的团队销售业绩-->
-    <select id="teamAchievement" parameterType="long" resultType="com.lhiot.fruitdoctor.user.domain.TeamAchievement">
+    <select id="teamAchievement" parameterType="long" resultType="com.lhiot.healthygood.domain.doctor.TeamAchievement">
       select real_name,f.phone,f.avatar,f.create_at,
         (select sum(amount/commission)
         from doctor_bonus_log where doctor_id=#{0}
@@ -222,7 +222,7 @@
 
 	<!-- lynn 统计业绩 -->
 	<select id="achievement" parameterType="map" 
-		resultType="com.lhiot.fruitdoctor.user.domain.Achievement">
+		resultType="com.lhiot.healthygood.domain.doctor.Achievement">
 		SELECT IFNULL(SUM(amount/commission),0) as salesAmount ,IFNULL(SUM(amount),0) AS incomeAmount,COUNT(DISTINCT order_id) AS orderCount
 		FROM doctor_bonus_log 
 		<trim prefix="where" prefixOverrides="and">

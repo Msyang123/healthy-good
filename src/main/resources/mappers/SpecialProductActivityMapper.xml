@@ -1,0 +1,172 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.lhiot.healthygood.mapper..SpecialProductActivityMapper">
+
+    <!-- 数据库字段对象关系映射 -->
+    <resultMap id="BaseResultMap"
+        type="com.lhiot.healthygood.domain.SpecialProductActivity" >
+        <id column="id" property="id"/>
+        <result column="activity_name" property="activityName" />
+        <result column="description" property="description" />
+        <result column="limit_count" property="limitCount" />
+        <result column="application_type" property="applicationType" />
+        <result column="create_at" property="createAt" />
+        <result column="status" property="status" />
+    </resultMap>
+
+    <!-- base查询字段  -->
+    <sql id="Base_Column_List" >
+        <trim suffixOverrides="," >
+            id,
+            activity_name,
+            description,
+            limit_count,
+            application_type,
+            create_at,
+            status,
+        </trim>
+    </sql>
+
+    <!--新增新品尝鲜活动-->
+    <insert id="create" parameterType="com.lhiot.healthygood.domain.SpecialProductActivity" useGeneratedKeys="true" keyProperty="id">
+        insert into special_product_activity
+        <trim prefix="(" suffix=")" suffixOverrides="," >
+            <if test="id != null ">
+                id,
+            </if>
+            <if test="activityName != null ">
+                activity_name,
+            </if>
+            <if test="description != null ">
+                description,
+            </if>
+            <if test="limitCount != null ">
+                limit_count,
+            </if>
+            <if test="applicationType != null ">
+                application_type,
+            </if>
+            <if test="createAt != null ">
+                create_at,
+            </if>
+            <if test="status != null ">
+                status,
+            </if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides="," >
+            <if test="id != null ">
+                #{id},
+            </if>
+            <if test="activityName != null ">
+                #{activityName},
+            </if>
+            <if test="description != null ">
+                #{description},
+            </if>
+            <if test="limitCount != null ">
+                #{limitCount},
+            </if>
+            <if test="applicationType != null ">
+                #{applicationType},
+            </if>
+            <if test="createAt != null ">
+                #{createAt},
+            </if>
+            <if test="status != null ">
+                #{status},
+            </if>
+        </trim>
+    </insert>
+
+    <!--根据id修改新品尝鲜活动-->
+    <update id="updateById" parameterType="com.lhiot.healthygood.domain.SpecialProductActivity">
+        update special_product_activity
+        <set>
+            <if test="id != null ">
+                id = #{id},
+            </if>
+            <if test="activityName != null ">
+                activity_name = #{activityName},
+            </if>
+            <if test="description != null ">
+                description = #{description},
+            </if>
+            <if test="limitCount != null ">
+                limit_count = #{limitCount},
+            </if>
+            <if test="applicationType != null ">
+                application_type = #{applicationType},
+            </if>
+            <if test="createAt != null ">
+                create_at = #{createAt},
+            </if>
+            <if test="status != null ">
+                status = #{status},
+            </if>
+        </set>
+        where id=#{id}
+    </update>
+
+    <!--根据ids删除新品尝鲜活动-->
+    <delete id="deleteByIds" parameterType="java.util.List">
+        delete from special_product_activity where id in
+        <foreach collection="list" item="item" open="("
+            separator="," close=")">
+            #{item}
+        </foreach>
+    </delete>
+
+
+    <!-- 根据id查找新品尝鲜活动 -->
+	<select id="selectById" resultMap="BaseResultMap"
+		parameterType="long"> select <include refid="Base_Column_List" />
+		from special_product_activity where id = #{id}
+	</select>
+
+
+    <!-- base where条件  -->
+    <sql id="Base_Where_Condition" >
+        <where>
+            <if test="id != null ">
+                and id = #{id}
+            </if>
+            <if test="activityName != null ">
+                and activity_name = #{activityName}
+            </if>
+            <if test="description != null ">
+                and description = #{description}
+            </if>
+            <if test="limitCount != null ">
+                and limit_count = #{limitCount}
+            </if>
+            <if test="applicationType != null ">
+                and application_type = #{applicationType}
+            </if>
+            <if test="createAt != null ">
+                and create_at = #{createAt}
+            </if>
+            <if test="status != null ">
+                and status = #{status}
+            </if>
+        </where>
+    </sql>
+
+
+    <!--查询新品尝鲜活动列表-->
+     <select id="pageSpecialProductActivitys" resultMap="BaseResultMap"
+        parameterType="com.lhiot.healthygood.domain.SpecialProductActivity">
+	        select <include refid="Base_Column_List" />
+	        from special_product_activity
+	        <include refid="Base_Where_Condition" />
+	        <include refid="common.pager" />
+    </select>
+
+    <!--查询新品尝鲜活动总记录-->
+    <select id="pageSpecialProductActivityCounts" resultType="long"
+        parameterType="com.lhiot.healthygood.domain.SpecialProductActivity">
+            select count(1)
+            from special_product_activity
+            <include refid="Base_Where_Condition" />
+    </select>
+
+</mapper>
