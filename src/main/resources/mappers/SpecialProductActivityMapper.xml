@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
-<mapper namespace="com.lhiot.healthygood.mapper..SpecialProductActivityMapper">
+<mapper namespace="com.lhiot.healthygood.mapper.activity.SpecialProductActivityMapper">
 
     <!-- 数据库字段对象关系映射 -->
     <resultMap id="BaseResultMap"
-        type="com.lhiot.healthygood.domain.SpecialProductActivity" >
+        type="com.lhiot.healthygood.domain.activity.SpecialProductActivity" >
         <id column="id" property="id"/>
         <result column="activity_name" property="activityName" />
         <result column="description" property="description" />
@@ -28,7 +28,7 @@
     </sql>
 
     <!--新增新品尝鲜活动-->
-    <insert id="create" parameterType="com.lhiot.healthygood.domain.SpecialProductActivity" useGeneratedKeys="true" keyProperty="id">
+    <insert id="create" parameterType="com.lhiot.healthygood.domain.activity.SpecialProductActivity" useGeneratedKeys="true" keyProperty="id">
         insert into special_product_activity
         <trim prefix="(" suffix=")" suffixOverrides="," >
             <if test="id != null ">
@@ -79,7 +79,7 @@
     </insert>
 
     <!--根据id修改新品尝鲜活动-->
-    <update id="updateById" parameterType="com.lhiot.healthygood.domain.SpecialProductActivity">
+    <update id="updateById" parameterType="com.lhiot.healthygood.domain.activity.SpecialProductActivity">
         update special_product_activity
         <set>
             <if test="id != null ">
@@ -154,7 +154,7 @@
 
     <!--查询新品尝鲜活动列表-->
      <select id="pageSpecialProductActivitys" resultMap="BaseResultMap"
-        parameterType="com.lhiot.healthygood.domain.SpecialProductActivity">
+        parameterType="com.lhiot.healthygood.domain.activity.SpecialProductActivity">
 	        select <include refid="Base_Column_List" />
 	        from special_product_activity
 	        <include refid="Base_Where_Condition" />
@@ -163,7 +163,7 @@
 
     <!--查询新品尝鲜活动总记录-->
     <select id="pageSpecialProductActivityCounts" resultType="long"
-        parameterType="com.lhiot.healthygood.domain.SpecialProductActivity">
+        parameterType="com.lhiot.healthygood.domain.activity.SpecialProductActivity">
             select count(1)
             from special_product_activity
             <include refid="Base_Where_Condition" />
