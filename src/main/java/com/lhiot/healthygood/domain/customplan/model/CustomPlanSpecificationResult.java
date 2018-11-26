@@ -1,8 +1,7 @@
-package com.lhiot.healthygood.domain.customplan;
+package com.lhiot.healthygood.domain.customplan.model;
 
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonFormat;
 import com.lhiot.healthygood.common.PagerRequestObject;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
@@ -11,17 +10,7 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
 
-/**
-* Description:定制计划规格实体类
-* @author zhangs
-* @date 2018/11/22
-*/
-@Data
-@ToString(callSuper = true)
-@ApiModel
-@NoArgsConstructor
-@EqualsAndHashCode(callSuper = true)
-public class CustomPlanSpecification extends PagerRequestObject {
+public class CustomPlanSpecificationResult {
 
     /**
     *
