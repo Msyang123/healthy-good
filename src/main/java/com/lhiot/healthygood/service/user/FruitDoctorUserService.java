@@ -92,7 +92,8 @@ public class FruitDoctorUserService {
         String nickname= StringReplaceUtil.replaceByte4(StringReplaceUtil.replaceEmoji(wxUserMap.get("nickname").toString()));
         weChatRegisterParam.setNickname(nickname);
         String wxSex=String.valueOf(wxUserMap.get("sex"));
-        Dictionary sex = dictionaryClient.dictionary("sex");
+        Dictionary sex = dictionaryClient.dictionary("sex").get();
+
         if (Objects.nonNull(sex)){
             Dictionary.Entry man = sex.getEntries().stream().filter(entry -> matches(wxSex, entry)).findFirst().orElse(null);
             if (Objects.nonNull(man)){
@@ -105,7 +106,7 @@ public class FruitDoctorUserService {
         }else {
             weChatRegisterParam.setSex("unknown");
         }
-        Dictionary.Entry entry = dictionaryClient.dictionary("sex").entry("sex");//性别
+        Dictionary entry = dictionaryClient.dictionary("sex").get();//性别
         if (Objects.isNull(entry)){
             weChatRegisterParam.setSex(entry.getName());
         }
