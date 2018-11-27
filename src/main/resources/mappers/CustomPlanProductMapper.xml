@@ -1,0 +1,166 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.lhiot.healthygood.domain.customplan.CustomPlanProductMapper">
+
+    <!-- 数据库字段对象关系映射 -->
+    <resultMap id="BaseResultMap"
+        type="com.lhiot.healthygood.domain.customplan.CustomPlanProduct" >
+        <id column="id" property="id"/>
+        <result column="plan_id" property="planId" />
+        <result column="product_shelf_id" property="productShelfId" />
+        <result column="day_n" property="dayN" />
+        <result column="plan_period" property="planPeriod" />
+        <result column="sort" property="sort" />
+    </resultMap>
+
+    <!-- base查询字段  -->
+    <sql id="Base_Column_List" >
+        <trim suffixOverrides="," >
+            id,
+            plan_id,
+            product_shelf_id,
+            day_n,
+            plan_period,
+            sort,
+        </trim>
+    </sql>
+
+    <!--新增定制计划关联商品-->
+    <insert id="create" parameterType="com.lhiot.healthygood.domain.customplan.CustomPlanProduct" useGeneratedKeys="true" keyProperty="id">
+        insert into custom_plan_product
+        <trim prefix="(" suffix=")" suffixOverrides="," >
+            <if test="id != null ">
+                id,
+            </if>
+            <if test="planId != null ">
+                plan_id,
+            </if>
+            <if test="productShelfId != null ">
+                product_shelf_id,
+            </if>
+            <if test="dayN != null ">
+                day_n,
+            </if>
+            <if test="planPeriod != null ">
+                plan_period,
+            </if>
+            <if test="sort != null ">
+                sort,
+            </if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides="," >
+            <if test="id != null ">
+                #{id},
+            </if>
+            <if test="planId != null ">
+                #{planId},
+            </if>
+            <if test="productShelfId != null ">
+                #{productShelfId},
+            </if>
+            <if test="dayN != null ">
+                #{dayN},
+            </if>
+            <if test="planPeriod != null ">
+                #{planPeriod},
+            </if>
+            <if test="sort != null ">
+                #{sort},
+            </if>
+        </trim>
+    </insert>
+
+    <!--根据id修改定制计划关联商品-->
+    <update id="updateById" parameterType="com.lhiot.healthygood.domain.customplan.CustomPlanProduct">
+        update custom_plan_product
+        <set>
+            <if test="id != null ">
+                id = #{id},
+            </if>
+            <if test="planId != null ">
+                plan_id = #{planId},
+            </if>
+            <if test="productShelfId != null ">
+                product_shelf_id = #{productShelfId},
+            </if>
+            <if test="dayN != null ">
+                day_n = #{dayN},
+            </if>
+            <if test="planPeriod != null ">
+                plan_period = #{planPeriod},
+            </if>
+            <if test="sort != null ">
+                sort = #{sort},
+            </if>
+        </set>
+        where id=#{id}
+    </update>
+
+    <!--根据ids删除定制计划关联商品-->
+    <delete id="deleteByIds" parameterType="java.util.List">
+        delete from custom_plan_product where id in
+        <foreach collection="list" item="item" open="("
+            separator="," close=")">
+            #{item}
+        </foreach>
+    </delete>
+
+
+    <!-- 根据id查找定制计划关联商品 -->
+	<select id="selectById" resultMap="BaseResultMap"
+		parameterType="long"> select <include refid="Base_Column_List" />
+		from custom_plan_product where id = #{id}
+	</select>
+
+
+    <!-- base where条件  -->
+    <sql id="Base_Where_Condition" >
+        <where>
+            <if test="id != null ">
+                and id = #{id}
+            </if>
+            <if test="planId != null ">
+                and plan_id = #{planId}
+            </if>
+            <if test="productShelfId != null ">
+                and product_shelf_id = #{productShelfId}
+            </if>
+            <if test="dayN != null ">
+                and day_n = #{dayN}
+            </if>
+            <if test="planPeriod != null ">
+                and plan_period = #{planPeriod}
+            </if>
+            <if test="sort != null ">
+                and sort = #{sort}
+            </if>
+        </where>
+    </sql>
+
+
+    <!--查询定制计划关联商品列表-->
+     <select id="pageCustomPlanProducts" resultMap="BaseResultMap"
+        parameterType="com.lhiot.healthygood.domain.customplan.CustomPlanProduct">
+	        select <include refid="Base_Column_List" />
+	        from custom_plan_product
+	        <include refid="Base_Where_Condition" />
+	        <include refid="common.pager" />
+    </select>
+
+    <!--查询定制计划关联商品总记录-->
+    <select id="pageCustomPlanProductCounts" resultType="long"
+        parameterType="com.lhiot.healthygood.domain.customplan.CustomPlanProduct">
+            select count(1)
+            from custom_plan_product
+            <include refid="Base_Where_Condition" />
+    </select>
+
+    <!--查询定制计划关联商品列表-->
+    <select id="findByPlanId" resultMap="BaseResultMap"
+            parameterType="Long">
+        select <include refid="Base_Column_List" />
+        from custom_plan_product
+        where plan_id = #{0}
+    </select>
+
+</mapper>

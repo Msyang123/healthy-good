@@ -3,30 +3,38 @@ package com.lhiot.healthygood.service.customplan;
 import com.leon.microx.util.BeanUtils;
 import com.lhiot.healthygood.domain.customplan.CustomPlan;
 import com.lhiot.healthygood.domain.customplan.CustomPlanSection;
+import com.lhiot.healthygood.domain.customplan.CustomPlanSectionRelation;
+import com.lhiot.healthygood.domain.customplan.CustomPlanSpecification;
+import com.lhiot.healthygood.domain.customplan.model.*;
 import com.lhiot.healthygood.mapper.customplan.CustomPlanMapper;
 import com.lhiot.healthygood.mapper.customplan.CustomPlanSectionMapper;
-import com.lhiot.healthygood.domain.customplan.model.CustomPlanDetailResult;
-import com.lhiot.healthygood.domain.customplan.model.CustomPlanSectionResult;
-import com.lhiot.healthygood.domain.customplan.model.CustomPlanSimpleResult;
+import com.lhiot.healthygood.mapper.customplan.CustomPlanSectionRelationMapper;
+import com.lhiot.healthygood.mapper.customplan.CustomPlanSpecificationMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Service
 @Transactional
 public class CustomPlanService {
     private final CustomPlanSectionMapper customPlanSectionMapper;
     private final CustomPlanMapper customPlanMapper;
-
+    private final CustomPlanSpecificationMapper customPlanSpecificationMapper;
+    private final CustomPlanSectionRelationMapper customPlanSectionRelationMapper;
 
     @Autowired
-    public CustomPlanService(CustomPlanSectionMapper customPlanSectionMapper,CustomPlanMapper customPlanMapper ) {
+    public CustomPlanService(CustomPlanSectionMapper customPlanSectionMapper,CustomPlanMapper customPlanMapper,
+                             CustomPlanSpecificationMapper customPlanSpecificationMapper,CustomPlanSectionRelationMapper customPlanSectionRelationMapper) {
         this.customPlanSectionMapper = customPlanSectionMapper;
         this.customPlanMapper = customPlanMapper;
+        this.customPlanSpecificationMapper = customPlanSpecificationMapper;
+        this.customPlanSectionRelationMapper =customPlanSectionRelationMapper;
     }
     public List<CustomPlanSectionResult> findComPlanSectionByCode(String code) {
         List<CustomPlanSectionResult> result = new ArrayList<>();
@@ -65,7 +73,39 @@ public class CustomPlanService {
         CustomPlanDetailResult result = new CustomPlanDetailResult();
         CustomPlan customPlan = customPlanMapper.selectById(id);
         BeanUtils.of(result).populate(customPlan);
+        //
+        List<CustomPlanDatailStandardResult> customPlanDatailStandardResult = getCustomPlanDetailStandardResultList(customPlan);
+        //result.setStandardList();
+        return null;
+    }
 
+    private List<CustomPlanDatailStandardResult> getCustomPlanDetailStandardResultList(CustomPlan customPlan) {
+        //获取定制计划周期 - 周
+        List<CustomPlanDatailStandardResult> results =  new ArrayList<>();
+        CustomPlanDatailStandardResult customPlanDatailStandardResult = getCustomPlanDetailStandardResult(customPlan,"7");
+        return null;
+    }
+
+    private CustomPlanDatailStandardResult getCustomPlanDetailStandardResult(CustomPlan customPlan, String type) {
+        CustomPlanDatailStandardResult customPlanDatailStandardResult = new CustomPlanDatailStandardResult();
+        customPlanDatailStandardResult.setPlanPeriod(type);
+        //获取套餐列表
+        Map<String,Object> param = new HashMap<String,Object>();
+        param.put("planId",customPlan.getId());
+        param.put("planPeriod",type);
+        List<CustomPlanSpecification> customPlanSpecifications = customPlanSpecificationMapper.findByPlanIdAndPerid(param);
+        List<CustomPlanSpecificationResult> customPlanSpecificationResults = new ArrayList<>();
+        for(CustomPlanSpecification customPlanSpecification:customPlanSpecifications){
+            CustomPlanSpecificationResult customPlanSpecificationResult = new CustomPlanSpecificationResult();
+            BeanUtils.of(customPlanSpecificationResult).populate(customPlanSpecification);
+            customPlanSpecificationResults.add(customPlanSpecificationResult);
+        }
+        customPlanDatailStandardResult.setSpecificationList(customPlanSpecificationResults);
+        //获取定制产品信息
+        List<CustomPlanSectionRelation> customPlanSectionRelations = customPlanSectionRelationMapper.findByPlanId(customPlan.getId());
+        for(CustomPlanSectionRelation customPlanSectionRelation:customPlanSectionRelations){
+           // customPlanSectionRelation.
+        }
         return null;
     }
 }
