@@ -24,4 +24,9 @@ public class BaseDataServiceHystrix implements BaseDataServiceFeign{
     public ResponseEntity search(ProductSpecificationParam param) {
         return null;
     }
+
+    @Override
+    public ResponseEntity singleShelf(Long shelfId) {
+        return null;
+    }
 }

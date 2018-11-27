@@ -1,5 +1,6 @@
 package com.lhiot.healthygood.domain.activity;
 
+import com.lhiot.healthygood.common.PagerRequestObject;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
@@ -8,7 +9,7 @@ import lombok.NoArgsConstructor;
 @Data
 @ApiModel("新品尝鲜活动")
 @NoArgsConstructor
-public class ActivityProductRecord {
+public class ActivityProductRecord extends PagerRequestObject {
     @ApiModelProperty(notes="ID",dataType="Long")
     private Long id;
 

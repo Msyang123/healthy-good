@@ -50,7 +50,7 @@ public class DoctorUser extends PagerRequestObject {
     @JsonProperty("userId")
     @JsonSerialize(using = ToStringSerializer.class)
     @ApiModelProperty(value = "用户编号", dataType = "Long")
-    private Long userId;
+    private String userId;
 
     /**
      *微信昵称

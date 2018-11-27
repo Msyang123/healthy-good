@@ -1,6 +1,7 @@
 package com.lhiot.healthygood.feign.good;
 
 import com.lhiot.healthygood.domain.good.ProductParam;
+import com.lhiot.healthygood.domain.good.ProductShelf;
 import com.lhiot.healthygood.domain.good.ProductSpecificationParam;
 import com.lhiot.healthygood.feign.user.BaseUserServerHystrix;
 import org.springframework.cloud.openfeign.FeignClient;
@@ -13,7 +14,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 /**
  * 基础数据服务
  */
-@FeignClient(value = "base-data-service-v1-0", fallback = BaseUserServerHystrix.class)
+@FeignClient(value = "BASIC-DATA-SERVICE-V1-0-HUFAN", fallback = BaseUserServerHystrix.class)
 public interface BaseDataServiceFeign {
     /**
      * 根据id查询商品
@@ -44,6 +45,12 @@ public interface BaseDataServiceFeign {
     @RequestMapping(value="/product-specifications/pages",method = RequestMethod.POST)
     ResponseEntity search(@RequestBody ProductSpecificationParam param);
 
-
+    /**
+     * 根据Id查找商品上架
+     * @param shelfId
+     * @return
+     */
+    @RequestMapping(value="/product-shelves/{id}",method = RequestMethod.GET)
+    ResponseEntity<ProductShelf> singleShelf(@PathVariable("id") Long shelfId);
 
 }
