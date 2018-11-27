@@ -1,15 +1,15 @@
 package com.lhiot.healthygood.feign.good;
 
+import com.lhiot.healthygood.domain.common.LocationParam;
 import com.lhiot.healthygood.domain.good.ProductParam;
 import com.lhiot.healthygood.domain.good.ProductShelf;
 import com.lhiot.healthygood.domain.good.ProductSpecificationParam;
+import com.lhiot.healthygood.domain.store.Store;
+import com.lhiot.healthygood.entity.ApplicationType;
 import com.lhiot.healthygood.feign.user.BaseUserServerHystrix;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.*;
 
 /**
  * 基础数据服务
@@ -52,5 +52,9 @@ public interface BaseDataServiceFeign {
      */
     @RequestMapping(value="/product-shelves/{id}",method = RequestMethod.GET)
     ResponseEntity<ProductShelf> singleShelf(@PathVariable("id") Long shelfId);
+
+    @RequestMapping(value="/position/lately",method = RequestMethod.GET)
+    ResponseEntity<Store> findPositionLately(@RequestParam("param") LocationParam param,@RequestParam("applicationType") ApplicationType applicationType);
+
 
 }

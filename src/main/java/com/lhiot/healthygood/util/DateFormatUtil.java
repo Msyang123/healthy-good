@@ -8,8 +8,13 @@ package com.lhiot.healthygood.util;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.TimeZone;
 
 /**
  * @author User 
@@ -23,7 +28,19 @@ public class DateFormatUtil
     private static final String format4 = "yyyy/MM/dd HH:mm:ss";
     private static final String format5 = "yyyy-MM-dd";
     private static final String format6 = "yyyyMMdd";
-    
+
+    /**
+     * 东八区（GMT +8:00）
+     */
+    public static final ZoneOffset CN_ZONE_OFFSET = ZoneOffset.of("+08:00");
+    /**
+     * 上海时区
+     */
+    public static final TimeZone CN_TIME_ZONE = TimeZone.getTimeZone("Asia/Shanghai");
+    /**
+     * 上海时区ID
+     */
+    public static final ZoneId CN_ZONE_ID = CN_TIME_ZONE.toZoneId();
     /**
      * 将时间格式转化为字符串，yyyy-MM-dd HH:mm:ss。
      * */
@@ -82,4 +99,12 @@ public class DateFormatUtil
         }
         return null;
     }
+    public static String dateToString(Date dateTime, String pattern) {
+        return DateTimeFormatter.ofPattern(pattern).format(dateTime.toInstant().atZone(CN_ZONE_ID));
+    }
+
+    public static Date stringToDate(String dateTime, String pattern) {
+        return Date.from(LocalDateTime.parse(dateTime, DateTimeFormatter.ofPattern(pattern)).toInstant(CN_ZONE_OFFSET));
+    }
+
 }
