@@ -6,6 +6,8 @@ import com.lhiot.healthygood.domain.customplan.CustomPlanSection;
 import com.lhiot.healthygood.domain.customplan.CustomPlanSectionRelation;
 import com.lhiot.healthygood.domain.customplan.CustomPlanSpecification;
 import com.lhiot.healthygood.domain.customplan.model.*;
+import com.lhiot.healthygood.domain.good.ProductShelf;
+import com.lhiot.healthygood.feign.good.BaseDataServiceFeign;
 import com.lhiot.healthygood.mapper.customplan.CustomPlanMapper;
 import com.lhiot.healthygood.mapper.customplan.CustomPlanSectionMapper;
 import com.lhiot.healthygood.mapper.customplan.CustomPlanSectionRelationMapper;
@@ -27,14 +29,17 @@ public class CustomPlanService {
     private final CustomPlanMapper customPlanMapper;
     private final CustomPlanSpecificationMapper customPlanSpecificationMapper;
     private final CustomPlanSectionRelationMapper customPlanSectionRelationMapper;
+    private final BaseDataServiceFeign baseDataServiceFeign;
 
     @Autowired
     public CustomPlanService(CustomPlanSectionMapper customPlanSectionMapper,CustomPlanMapper customPlanMapper,
-                             CustomPlanSpecificationMapper customPlanSpecificationMapper,CustomPlanSectionRelationMapper customPlanSectionRelationMapper) {
+                             CustomPlanSpecificationMapper customPlanSpecificationMapper,CustomPlanSectionRelationMapper customPlanSectionRelationMapper,
+                             BaseDataServiceFeign baseDataServiceFeign) {
         this.customPlanSectionMapper = customPlanSectionMapper;
         this.customPlanMapper = customPlanMapper;
         this.customPlanSpecificationMapper = customPlanSpecificationMapper;
         this.customPlanSectionRelationMapper =customPlanSectionRelationMapper;
+        this.baseDataServiceFeign = baseDataServiceFeign;
     }
     public List<CustomPlanSectionResult> findComPlanSectionByCode(String code) {
         List<CustomPlanSectionResult> result = new ArrayList<>();
@@ -103,9 +108,25 @@ public class CustomPlanService {
         customPlanDatailStandardResult.setSpecificationList(customPlanSpecificationResults);
         //获取定制产品信息
         List<CustomPlanSectionRelation> customPlanSectionRelations = customPlanSectionRelationMapper.findByPlanId(customPlan.getId());
+        List<CustomPlanProductResult> customPlanProductResults = new ArrayList<>();
         for(CustomPlanSectionRelation customPlanSectionRelation:customPlanSectionRelations){
+            CustomPlanProductResult customPlanProductResult = new CustomPlanProductResult();
+            BeanUtils.of(customPlanProductResult).populate(customPlanSectionRelation);
+            //查询上架规格信息
+            Long productShelfId = customPlanProductResult.getProductShelfId();
+            ProductShelf productShelf = baseDataServiceFeign.singleShelf(productShelfId).getBody();
+            BeanUtils.of(productShelf).populate(customPlanSectionRelation);
+            customPlanProductResults.add(customPlanProductResult);
            // customPlanSectionRelation.
         }
-        return null;
+        customPlanDatailStandardResult.setProducts(customPlanProductResults);
+        return customPlanDatailStandardResult;
+    }
+
+    public CustomPlanSpecificationDetailResult findCustomPlanSpecificationDetail(Long id) {
+        CustomPlanSpecificationDetailResult customPlanSpecificationDetailResult = new CustomPlanSpecificationDetailResult();
+        CustomPlanSpecification customPlanSpecification = customPlanSpecificationMapper.selectById(id);
+        BeanUtils.of(customPlanSpecification).populate(customPlanSpecificationDetailResult);
+        return customPlanSpecificationDetailResult;
     }
 }

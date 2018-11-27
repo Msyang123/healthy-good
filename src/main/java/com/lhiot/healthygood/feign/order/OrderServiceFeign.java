@@ -1,4 +1,4 @@
-package com.lhiot.healthygood.feign;
+package com.lhiot.healthygood.feign.order;
 
 import com.lhiot.healthygood.domain.order.CreateOrderParam;
 import com.lhiot.healthygood.domain.order.OrderDetailResult;
