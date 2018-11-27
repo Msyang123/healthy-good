@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.*;
  * 用户中心基础服务
  * Created by yj
  */
-@FeignClient(value = "base-user-service-v1-0", fallback = BaseUserServerHystrix.class)
+@FeignClient(value = "BASIC-USER-SERVICE-V1-0", fallback = BaseUserServerHystrix.class)
 public interface BaseUserServerFeign {
 
 

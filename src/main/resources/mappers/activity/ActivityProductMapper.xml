@@ -131,7 +131,7 @@
 	        from activity_product
 	        <include refid="Base_Where_Condition" />
 	        <include refid="common.pager" />
-    </select>
+     </select>
 
     <!--查询活动商品总记录-->
     <select id="pageActivityProductCounts" resultType="long"

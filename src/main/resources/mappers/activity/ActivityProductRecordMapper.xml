@@ -123,11 +123,10 @@
 		from activity_product_record where id = #{id}
 	</select>
 
-    <select id="selectRecordCount" resultMap="Integer" parameterType="long">
+    <select id="selectRecordCount" resultType="Integer" parameterType="long">
         select count(*)
-        from activity_product_record where userId = #{id}
+        from activity_product_record where user_id = #{id}
     </select>
-
 
     <!-- base where条件  -->
     <sql id="Base_Where_Condition" >

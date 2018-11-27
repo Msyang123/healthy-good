@@ -21,7 +21,7 @@ public interface SpecialProductActivityMapper {
     * @author yangjiawen
     * @date 2018/11/24 16:09:12
     */
-    int create(SpecialProductActivity specialProductActivity);
+    Integer create(SpecialProductActivity specialProductActivity);
 
     /**
     * Description:根据id修改新品尝鲜活动
@@ -31,7 +31,7 @@ public interface SpecialProductActivityMapper {
     * @author yangjiawen
     * @date 2018/11/24 16:09:12
     */
-    int updateById(SpecialProductActivity specialProductActivity);
+    Integer updateById(SpecialProductActivity specialProductActivity);
 
     /**
     * Description:根据ids删除新品尝鲜活动
@@ -41,7 +41,9 @@ public interface SpecialProductActivityMapper {
     * @author yangjiawen
     * @date 2018/11/24 16:09:12
     */
-    int deleteByIds(List<String> ids);
+    Integer deleteByIds(List<String> ids);
+
+    SpecialProductActivity selectActivity();
 
     /**
     * Description:根据id查找新品尝鲜活动
@@ -72,5 +74,5 @@ public interface SpecialProductActivityMapper {
     * @author yangjiawen
     * @date 2018/11/24 16:09:12
     */
-    long pageSpecialProductActivityCounts(SpecialProductActivity specialProductActivity);
+    Long pageSpecialProductActivityCounts(SpecialProductActivity specialProductActivity);
 }

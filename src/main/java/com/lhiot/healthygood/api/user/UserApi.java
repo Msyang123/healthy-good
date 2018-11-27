@@ -3,6 +3,7 @@ package com.lhiot.healthygood.api.user;
 import com.leon.microx.util.Maps;
 import com.leon.microx.util.StringUtils;
 import com.leon.microx.web.result.Tips;
+import com.leon.microx.web.session.Authority;
 import com.leon.microx.web.session.Sessions;
 import com.lhiot.healthygood.domain.doctor.Achievement;
 import com.lhiot.healthygood.domain.template.CaptchaTemplate;
@@ -27,11 +28,13 @@ import org.redisson.api.RedissonClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import springfox.documentation.annotations.ApiIgnore;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.net.URI;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.text.MessageFormat;
@@ -151,9 +154,11 @@ public class UserApi {
     @ApiOperation(value = "根据openId重新获取session", response = String.class)
     public ResponseEntity session(HttpServletRequest request,@PathVariable("openId") String openId) {
         UserDetailResult searchUser= baseUserServerFeign.findByOpenId(openId).getBody();
-        Sessions.User sessionUser = session.create(request).user(Maps.of("userId",searchUser.getId())).timeToLive(30, TimeUnit.MINUTES);// TODO 还没有加权限
-        session.cache(sessionUser);
-        return ResponseEntity.ok(sessionUser);
+        Sessions.User sessionUser = session.create(request).user(Maps.of("userId",searchUser.getId())).timeToLive(30, TimeUnit.MINUTES)
+                .authorities(Authority.of("/**", RequestMethod.values()));// TODO 还没有加权限
+        String sessionId = session.cache(sessionUser);
+        return ResponseEntity.ok()
+                .header(Sessions.HTTP_HEADER_NAME, sessionId).body(sessionUser);
     }
     @Sessions.Uncheck
     @GetMapping("/wechat/token")
@@ -249,8 +254,8 @@ public class UserApi {
 
     @PutMapping("/binding")
     @ApiOperation(value = "用户绑定手机号")
-    @ApiImplicitParam(paramType = "body", name = "fruitDoctorUser", value = "要用户注册", required = true, dataType = "FruitDoctorUser")
-    public ResponseEntity bandPhone(HttpServletRequest request, @RequestBody ValidateParam validateParam) {
+    @ApiImplicitParam(paramType = "body", name = "validateParam", value = "要用户注册", required = true, dataType = "ValidateParam")
+    public ResponseEntity bandPhone(@ApiIgnore HttpServletRequest request, @RequestBody ValidateParam validateParam) {
         String sessionId = session.id(request);
         Long userId = (Long) session.user(sessionId).getUser().get("userId");
         UserBindingPhoneParam userBindingPhoneParam = new UserBindingPhoneParam();

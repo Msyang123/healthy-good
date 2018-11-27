@@ -1,5 +1,6 @@
 package com.lhiot.healthygood.domain.activity;
 
+import com.lhiot.healthygood.entity.ShelfType;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
@@ -24,9 +25,6 @@ public class ActivityProducts {
     @ApiModelProperty(notes="已购买数量",dataType="Integer")
     private Integer alreadyBuyCount;
 
-    @ApiModelProperty(notes="商品编码",dataType="String")
-    private String productCode;
-
     @ApiModelProperty(notes="商品名称",dataType="String")
     private String productName;
 
@@ -46,7 +44,7 @@ public class ActivityProducts {
     private BigDecimal shelfQty;
 
     @ApiModelProperty(notes="NORMAL-普通商品,GIFT-赠品",dataType="String")
-    private String shelfType;
+    private ShelfType shelfType;
 
     @ApiModelProperty(notes="商品主图",dataType="String")
     private String productImage;
