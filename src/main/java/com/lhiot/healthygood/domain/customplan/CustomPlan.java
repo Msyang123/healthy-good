@@ -26,7 +26,7 @@ public class CustomPlan extends PagerRequestObject {
     *
     */
     @JsonProperty("id")
-    @ApiModelProperty(value = "", dataType = "Long")
+    @ApiModelProperty(value = "主键Id", dataType = "Long")
     private Long id;
 
     /**
@@ -55,7 +55,7 @@ public class CustomPlan extends PagerRequestObject {
     */
     @JsonProperty("createAt")
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss",timezone = "GMT+8")
-    @ApiModelProperty(value = "创建时间", dataType = "Date")
+    @ApiModelProperty(value = "创建时间", dataType = "Date", readOnly = true)
     private java.util.Date createAt;
     
 
@@ -72,5 +72,9 @@ public class CustomPlan extends PagerRequestObject {
     @JsonProperty("status")
     @ApiModelProperty(value = "VALID INVALID", dataType = "String")
     private String status;
+
+
+    @ApiModelProperty(value = "定制板块关联定制计划排序", dataType = "Integer")
+    private Integer sort;
 
 }

@@ -123,7 +123,7 @@
 		from activity_product_record where id = #{id}
 	</select>
 
-    <select id="selectRecordCount" resultMap="Integer" parameterType="long">
+    <select id="selectRecordCount" resultType="Integer" parameterType="long">
         select count(*)
         from activity_product_record where userId = #{id}
     </select>

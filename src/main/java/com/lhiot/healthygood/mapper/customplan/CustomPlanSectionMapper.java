@@ -1,6 +1,7 @@
 package com.lhiot.healthygood.mapper.customplan;
 
 import com.lhiot.healthygood.domain.customplan.CustomPlanSection;
+import com.lhiot.healthygood.domain.customplan.CustomPlanSectionParam;
 import org.apache.ibatis.annotations.Mapper;
 
 import java.util.List;
@@ -57,21 +58,21 @@ public interface CustomPlanSectionMapper {
     /**
     * Description:查询定制计划板块列表
     *
-    * @param customPlanSection
+    * @param customPlanSectionParam
     * @return
     * @author zhangs
     * @date 2018/11/22 12:09:27
     */
-     List<CustomPlanSection> pageCustomPlanSections(CustomPlanSection customPlanSection);
+     List<CustomPlanSection> pageCustomPlanSections(CustomPlanSectionParam customPlanSectionParam);
 
 
     /**
     * Description: 查询定制计划板块总记录数
     *
-    * @param customPlanSection
+    * @param customPlanSectionParam
     * @return
     * @author zhangs
     * @date 2018/11/22 12:09:27
     */
-    long pageCustomPlanSectionCounts(CustomPlanSection customPlanSection);
+    int pageCustomPlanSectionCounts(CustomPlanSectionParam customPlanSectionParam);
 }

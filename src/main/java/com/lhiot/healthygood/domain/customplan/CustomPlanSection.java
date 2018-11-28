@@ -10,6 +10,8 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
 
+import java.util.List;
+
 /**
 * Description:定制计划板块实体类
 * @author zhangs
@@ -26,7 +28,7 @@ public class CustomPlanSection extends PagerRequestObject {
     *
     */
     @JsonProperty("id")
-    @ApiModelProperty(value = "", dataType = "Long")
+    @ApiModelProperty(value = "主键id", dataType = "Long", readOnly = true)
     private Long id;
 
     /**
@@ -69,8 +71,11 @@ public class CustomPlanSection extends PagerRequestObject {
     */
     @JsonProperty("createAt")
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss",timezone = "GMT+8")
-    @ApiModelProperty(value = "", dataType = "Date")
+    @ApiModelProperty(value = "", dataType = "Date", readOnly = true)
     private java.util.Date createAt;
-    
+
+
+    @ApiModelProperty(value = "定制计划列表", dataType = "CustomPlan")
+    private List<CustomPlan> customPlanList;
 
 }

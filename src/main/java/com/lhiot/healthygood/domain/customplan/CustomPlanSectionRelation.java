@@ -11,6 +11,8 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
 
+import java.util.List;
+
 /**
 * Description:定制计划板块关联定制计划实体类
 * @author zhangs
@@ -27,7 +29,7 @@ public class CustomPlanSectionRelation extends PagerRequestObject {
     *id
     */
     @JsonProperty("id")
-    @ApiModelProperty(value = "id", dataType = "Long")
+    @ApiModelProperty(value = "id", dataType = "Long", readOnly = true)
     private Long id;
 
     /**
@@ -45,10 +47,12 @@ public class CustomPlanSectionRelation extends PagerRequestObject {
     private Long planId;
 
     /**
-    *是否推荐计划
+    *定制计划排序
     */
     @JsonProperty("sort")
-    @ApiModelProperty(value = "是否推荐计划", dataType = "Long")
+    @ApiModelProperty(value = "定制计划排序", dataType = "Long")
     private Long sort;
 
+    @ApiModelProperty(value = "定制计划列表", dataType = "CustomPlan")
+    private CustomPlan customPlan;
 }

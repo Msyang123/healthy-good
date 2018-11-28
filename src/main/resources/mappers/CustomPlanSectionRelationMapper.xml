@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.lhiot.healthygood.mapper.customplan.CustomPlanSectionRelationMapper">
+    <!-- 数据库字段对象关系映射 -->
+    <resultMap id="baseResultMap" type="com.lhiot.healthygood.domain.customplan.CustomPlanSectionRelation">
+        <id column="id" property="id"/>
+        <result column="plan_id" property="planId"/>
+        <result column="section_id" property="sectionId"/>
+        <association property="customPlan" javaType="com.lhiot.healthygood.domain.customplan.CustomPlan">
+            <id column="plan_id" property="id"/>
+            <result column="name" property="name" />
+            <result column="description" property="description" />
+            <result column="image" property="image" />
+            <result column="create_at" property="createAt" />
+            <result column="over_rule" property="overRule" />
+            <result column="status" property="status" />
+            <result column="sort" property="sort"/>
+        </association>
+    </resultMap>
+
+
+    <!-- base查询字段  -->
+    <sql id="columns">
+        <trim suffixOverrides=",">
+            relation.id,
+            relation.plan_id,
+            relation.section_id,
+            relation.sort sort,
+
+            plan.id,
+            plan.name,
+            plan.description,
+            plan.image,
+            plan.create_at,
+            plan.over_rule,
+            plan.status,
+        </trim>
+    </sql>
+
+    <!--新增关系-->
+    <insert id="insert" parameterType="com.lhiot.healthygood.domain.customplan.CustomPlanSectionRelation" useGeneratedKeys="true"
+            keyColumn="id"
+            keyProperty="id">
+        insert into custom_plan_section_relation
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="planId != null ">
+                plan_id,
+            </if>
+            <if test="sectionId != null ">
+                section_id,
+            </if>
+            <if test="sort != null ">
+                sort,
+            </if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="planId != null ">
+                #{planId},
+            </if>
+            <if test="sectionId != null ">
+                #{sectionId},
+            </if>
+            <if test="sort != null ">
+                #{sort},
+            </if>
+        </trim>
+    </insert>
+
+    <!--批量新增关系-->
+    <insert id="insertList" parameterType="java.util.List">
+        insert into custom_plan_section_relation (plan_id,section_id,sort)
+        values
+        <foreach collection="list" item="item" index="index" separator=",">
+            (
+            #{item.planId},
+            #{item.sectionId},
+            #{item.sort}
+            )
+        </foreach>
+    </insert>
+
+
+    <!-- 删除单个关系 -->
+    <delete id="deleteById" parameterType="Long">
+        delete from custom_plan_section_relation where id = #{0}
+    </delete>
+
+
+    <!-- 根据定制计划ID集合删除相关关系 -->
+    <delete id="deleteRelationByShelfIds" parameterType="String">
+        delete from custom_plan_section_relation where plan_id in
+        <foreach item="item" index="index" collection="planIds.split(',')" open="(" separator="," close=")">
+            ${item}
+        </foreach>
+    </delete>
+
+
+    <!-- 根据定制版块ID集合删除相关关系 -->
+    <delete id="deleteRelationBySectionIds" parameterType="String">
+        delete from custom_plan_section_relation where section_id in
+        <foreach item="item" index="index" collection="sectionIds.split(',')" open="(" separator="," close=")">
+            ${item}
+        </foreach>
+    </delete>
+
+
+    <!-- 根据定制计划ID集合删除相关关系 -->
+    <delete id="deleteRelationList">
+        delete from custom_plan_section_relation where section_id = #{sectionId}
+        <if test="planIds != null and planIds != ''">
+            and plan_id in
+            <foreach item="item" index="index" collection="planIds.split(',')" open="(" separator="," close=")">
+                ${item}
+            </foreach>
+        </if>
+    </delete>
+
+
+    <!-- 查找单个商品上架 -->
+    <select id="findBySectionId" parameterType="Long" resultMap="baseResultMap">
+        select
+        <include refid="columns"/>
+        from custom_plan_section_relation relation
+        left join custom_plan plan on relation.plan_id = plan.id
+        where relation.section_id = #{sectionId}
+    </select>
+
+    <!--根据定制板块Id集合 查找出有定制计划的定制板块id-->
+    <select id="findBySectionIds" parameterType="String" resultType="map">
+        select id,section_id sectionId,plan_id planId
+        from custom_plan_section_relation
+        where section_id in
+        <foreach item="item" index="index" collection="sectionIds.split(',')" open="(" separator="," close=")">
+           ${item}
+        </foreach>
+    </select>
+
+</mapper>

@@ -27,6 +27,7 @@ import org.redisson.api.RedissonClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import springfox.documentation.annotations.ApiIgnore;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -249,8 +250,8 @@ public class UserApi {
 
     @PutMapping("/binding")
     @ApiOperation(value = "用户绑定手机号")
-    @ApiImplicitParam(paramType = "body", name = "fruitDoctorUser", value = "要用户注册", required = true, dataType = "FruitDoctorUser")
-    public ResponseEntity bandPhone(HttpServletRequest request, @RequestBody ValidateParam validateParam) {
+    @ApiImplicitParam(paramType = "body", name = "validateParam", value = "要用户注册", required = true, dataType = "ValidateParam")
+    public ResponseEntity bandPhone(@ApiIgnore HttpServletRequest request, @RequestBody ValidateParam validateParam) {
         String sessionId = session.id(request);
         Long userId = (Long) session.user(sessionId).getUser().get("userId");
         UserBindingPhoneParam userBindingPhoneParam = new UserBindingPhoneParam();
