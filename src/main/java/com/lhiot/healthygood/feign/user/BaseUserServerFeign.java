@@ -26,7 +26,7 @@ public interface BaseUserServerFeign {
 	/**
 	 * 微信注册
 	 */
-	@RequestMapping(value="/users/we-chat/users",method = RequestMethod.POST)
+	@RequestMapping(value="/we-chat/users",method = RequestMethod.POST)
 	ResponseEntity registerByWeChat(@RequestBody WeChatRegisterParam baseUser);
 
 	/**

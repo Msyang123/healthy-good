@@ -19,12 +19,14 @@ import com.lhiot.healthygood.service.user.DoctorUserService;
 import com.lhiot.healthygood.service.user.FruitDoctorService;
 import com.lhiot.healthygood.service.user.FruitDoctorUserService;
 import com.lhiot.healthygood.wechat.*;
+import com.netflix.ribbon.proxy.annotation.Http;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 import org.redisson.api.RMapCache;
 import org.redisson.api.RedissonClient;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -65,7 +67,14 @@ public class UserApi {
     private Sessions session;
     private RedissonClient redissonClient;
     @Autowired
-    public UserApi(WeChatUtil weChatUtil, FruitDoctorUserService fruitDoctorUserService, FruitDoctorService fruitDoctorService, DoctorUserService doctorUserService, BaseUserServerFeign baseUserServerFeign, ThirdpartyServerFeign thirdpartyServerFeign, Sessions session, RedissonClient redissonClient, DoctorAchievementLogService doctorAchievementLogService) {
+    public UserApi(WeChatUtil weChatUtil, FruitDoctorUserService fruitDoctorUserService,
+                   FruitDoctorService fruitDoctorService,
+                   DoctorUserService doctorUserService,
+                   BaseUserServerFeign baseUserServerFeign,
+                   ThirdpartyServerFeign thirdpartyServerFeign,
+                   ObjectProvider<Sessions> sessionsObjectProvider,
+                   RedissonClient redissonClient,
+                   DoctorAchievementLogService doctorAchievementLogService) {
         this.weChatUtil = weChatUtil;
         this.fruitDoctorUserService = fruitDoctorUserService;
         this.fruitDoctorService = fruitDoctorService;
@@ -73,8 +82,8 @@ public class UserApi {
         this.baseUserServerFeign = baseUserServerFeign;
         this.thirdpartyServerFeign = thirdpartyServerFeign;
         this.doctorAchievementLogService = doctorAchievementLogService;
-        this.session = session;
         this.redissonClient = redissonClient;
+        this.session = sessionsObjectProvider.getIfAvailable();
     }
 
     /*****************************************微信授权登陆*****************************************************/
@@ -90,7 +99,7 @@ public class UserApi {
 
     //通过code换取网页授权access_token
     @Sessions.Uncheck
-    @PostMapping ("/wechat/authorize")
+    @GetMapping ("/wechat/authorize")
     @ApiOperation(value = "微信oauth鉴权登录 authorize back之后处理业务", response = String.class)
     public void wechatAuthorize(HttpServletRequest request, HttpServletResponse response) throws IOException {
         Map<String,String> resultMap= paramsToMap(request);
@@ -117,48 +126,73 @@ public class UserApi {
             fruitDoctor = fruitDoctorService.findDoctorByInviteCode(inviteCode);
         }
         //如果用户不存在且邀请码有效则创建用户并绑定鲜果师，否则不做操作或者绑定鲜果师
-        UserDetailResult searchUser= baseUserServerFeign.findByOpenId(accessToken.getOpenId()).getBody();
+        ResponseEntity searchUserEntity= baseUserServerFeign.findByOpenId(accessToken.getOpenId());
         //注册
-        if(Objects.isNull(searchUser)){
+        if(searchUserEntity.getStatusCode().isError()){
             //写入数据库中
             String weixinUserInfo=weChatUtil.getOauth2UserInfo(accessToken.getOpenId(),accessToken.getAccessToken());
             WeChatRegisterParam weChatRegisterParam = fruitDoctorUserService.convert(weixinUserInfo);//传给基础服务的用户数据
-            //新增用户
-            Tips tips =fruitDoctorUserService.create(weChatRegisterParam ,fruitDoctor.getId());
-            UserDetailResult userDetailResult = (UserDetailResult) tips.getData();
-            Sessions.User sessionUser = session.create(request).user(Maps.of("userId",userDetailResult.getId())).timeToLive(30, TimeUnit.MINUTES);// TODO 还没有加权限
-            String sessionId = session.cache(sessionUser);
-            clientUri=accessToken.getOpenId()+"?X-SessionId="+sessionId+"&clientUri="+clientUri;
-        }else{
-            //判断用户是否绑定鲜果师，没有绑定则绑定,并且鲜果师不是自己
-            if((Objects.isNull(fruitDoctor.getId()) || Objects.equals(0L, fruitDoctor.getId())) && Objects.nonNull(fruitDoctor) &&
-                    !Objects.equals(fruitDoctor.getUserId(), searchUser.getId())){
-                DoctorUser doctorUser = new DoctorUser();
-                doctorUser.setDoctorId(fruitDoctor.getId());
-                doctorUser.setUserId(searchUser.getId());
-                doctorUser.setRemark(searchUser.getNickname());
-                doctorUserService.create(doctorUser);
+            if(Objects.nonNull(fruitDoctor)){
+                weChatRegisterParam.setDoctorId(fruitDoctor.getId());
             }
-            Sessions.User sessionUser = session.create(request).user(Maps.of("userId",searchUser.getId())).timeToLive(30, TimeUnit.MINUTES);// TODO 还没有加权限
+            //新增用户
+            Tips tips =fruitDoctorUserService.create(weChatRegisterParam);
+            UserDetailResult userDetailResult = (UserDetailResult) tips.getData();
+            Sessions.User sessionUser = session.create(request).user(Maps.of("userId",userDetailResult.getId(),"openId",userDetailResult.getOpenId())).timeToLive(30, TimeUnit.MINUTES);// TODO 还没有加权限
             String sessionId = session.cache(sessionUser);
-            clientUri=accessToken.getOpenId()+"?X-SessionId="+sessionId+"&clientUri="+clientUri;
+            clientUri=accessToken.getOpenId()+"?sessionId="+sessionId+"&clientUri="+clientUri;
+        }else{
+            UserDetailResult searchUser = (UserDetailResult) searchUserEntity.getBody();
+            //判断用户是否绑定鲜果师，没有绑定则绑定,并且鲜果师不是自己
+            if((Objects.isNull(searchUser.getDoctorId()) || Objects.equals(0L, searchUser.getId())) && Objects.nonNull(fruitDoctor)){
+                if (!Objects.equals(fruitDoctor.getUserId(), searchUser.getId())){
+                    DoctorUser doctorUser = new DoctorUser();
+                    doctorUser.setDoctorId(fruitDoctor.getId());
+                    doctorUser.setUserId(searchUser.getId());
+                    doctorUser.setRemark(searchUser.getNickname());
+                    doctorUserService.create(doctorUser);
+                }
+            }
+            Sessions.User sessionUser = session.create(request).user(Maps.of("userId",searchUser.getId(),"openId",searchUser.getOpenId())).timeToLive(30, TimeUnit.MINUTES);// TODO 还没有加权限
+            String sessionId = session.cache(sessionUser);
+            clientUri=accessToken.getOpenId()+"?sessionId="+sessionId+"&clientUri="+clientUri;
         }
         log.info("用户sendRedirect:"+weChatUtil.getProperties().getWeChatOauth().getAppFrontUri()+clientUri);
         response.sendRedirect(weChatUtil.getProperties().getWeChatOauth().getAppFrontUri()+clientUri);
         return;
     }
 
+    @GetMapping ("/session")
+    @ApiOperation(value = "根据sessionId重新获取session", response = String.class)
+    public ResponseEntity userInfo(HttpServletRequest request){
+        String sessionId = session.id(request);
+        String openId = session.user(sessionId).getUser().get("openId").toString();
+        ResponseEntity searchUserEntity= baseUserServerFeign.findByOpenId(openId);
+        if (searchUserEntity.getStatusCode().isError()){
+            return ResponseEntity.badRequest().body(searchUserEntity.getBody());
+        }
+        UserDetailResult searchUser = (UserDetailResult) searchUserEntity.getBody();
+        if (Objects.isNull(searchUser)){
+            return ResponseEntity.badRequest().body("用户不存在！");
+        }
+        return ResponseEntity.ok(searchUser);
+    }
+
     @Sessions.Uncheck
     @PostMapping ("/wechat/{openId}/session")
-    @ApiImplicitParam(paramType = "path", name = "openId", value = "openId", required = true, dataType = "Long")
+    @ApiImplicitParam(paramType = "path", name = "openId", value = "openId", required = true, dataType = "String")
     @ApiOperation(value = "根据openId重新获取session", response = String.class)
     public ResponseEntity session(HttpServletRequest request,@PathVariable("openId") String openId) {
-        UserDetailResult searchUser= baseUserServerFeign.findByOpenId(openId).getBody();
-        Sessions.User sessionUser = session.create(request).user(Maps.of("userId",searchUser.getId())).timeToLive(30, TimeUnit.MINUTES)
+        ResponseEntity searchUserEntity= baseUserServerFeign.findByOpenId(openId);
+        if (searchUserEntity.getStatusCode().isError()){
+            return ResponseEntity.badRequest().body(searchUserEntity.getBody());
+        }
+        UserDetailResult searchUser = (UserDetailResult) searchUserEntity.getBody();
+        Sessions.User sessionUser = session.create(request).user(Maps.of("userId",searchUser.getId(),"openId",searchUser.getOpenId())).timeToLive(30, TimeUnit.MINUTES)
                 .authorities(Authority.of("/**", RequestMethod.values()));// TODO 还没有加权限
         String sessionId = session.cache(sessionUser);
         return ResponseEntity.ok()
-                .header(Sessions.HTTP_HEADER_NAME, sessionId).body(sessionUser);
+                .header(Sessions.HTTP_HEADER_NAME, sessionId).body(sessionId);
     }
     @Sessions.Uncheck
     @GetMapping("/wechat/token")
