@@ -35,9 +35,11 @@ public class CreateOrderParam {
     @ApiModelProperty(notes = "配送时间 json格式如 {\"display\":\"立即配送\",\"startTime\":\"2018-08-15 11:30:00\",\"endTime\":\"2018-08-15 12:30:00\"}", dataType = "String")
     private String deliveryTime;
     @ApiModelProperty(notes = "商品列表", dataType = "OrderProduct")
-    private List<OrderProduct> orderProducts;
+    private List<OrderProductParam> orderProducts;
     @ApiModelProperty(notes = "门店信息", dataType = "OrderStoreParam")
     private OrderStore orderStore;
+    @ApiModelProperty(notes = "门店id", dataType = "Long")
+    private Long storeId;
 //
 //    /**
 //     * 对象属性复制

@@ -1,8 +1,16 @@
 package com.lhiot.healthygood.domain.customplan.model;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.ToString;
 
+@Data
+@ToString(callSuper = true)
+@ApiModel
+@NoArgsConstructor
 public class CustomPlanProductResult {
     /**
      *
@@ -17,6 +25,13 @@ public class CustomPlanProductResult {
     @JsonProperty("productName")
     @ApiModelProperty(value = "状态", dataType = "String")
     private String productName;
+
+    /**
+     *上架Id
+     */
+    @JsonProperty("productShelfId")
+    @ApiModelProperty(value = "上架Id", dataType = "Long")
+    private Long productShelfId;
 
     /**
      *名称

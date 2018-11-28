@@ -3,6 +3,7 @@ package com.lhiot.healthygood.api.customplan;
 import com.leon.microx.web.session.Sessions;
 import com.lhiot.healthygood.domain.customplan.model.CustomPlanDetailResult;
 import com.lhiot.healthygood.domain.customplan.model.CustomPlanSectionResult;
+import com.lhiot.healthygood.domain.customplan.model.CustomPlanSpecificationDetailResult;
 import com.lhiot.healthygood.service.customplan.CustomPlanService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -63,4 +64,14 @@ public class CustomPlanApi {
         return ResponseEntity.ok(customPlanDetailResult);
     }
 
+    /**
+     * 定制计划详细信息
+     */
+    @Sessions.Uncheck
+    @GetMapping("/custom-plans-specification/{specificationId}")
+    @ApiOperation(value = "定制计划详细信息（定制计划详细信息页面）")
+    public ResponseEntity<CustomPlanSpecificationDetailResult> specificationDetail(@PathVariable Long specificationId){
+        CustomPlanSpecificationDetailResult customPlanSpecificationDetailResult = customPlanService.findCustomPlanSpecificationDetail(specificationId);
+        return ResponseEntity.ok(customPlanSpecificationDetailResult);
+    }
 }
