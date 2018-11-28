@@ -116,8 +116,8 @@
     </delete>
 
 
-    <!-- 查找单个商品上架 -->
-    <select id="findBySectionId" parameterType="Long" resultMap="baseResultMap">
+    <!-- 根据定制板块id查找关联的定制计划 -->
+    <select id="findPlanBySectionId" parameterType="Long" resultMap="baseResultMap">
         select
         <include refid="columns"/>
         from custom_plan_section_relation relation
@@ -133,6 +133,20 @@
         <foreach item="item" index="index" collection="sectionIds.split(',')" open="(" separator="," close=")">
            ${item}
         </foreach>
+    </select>
+
+    <!--根据商品版块ID查询商品上架与版块关系记录-->
+    <select id="selectRelationList" resultMap="baseResultMap">
+        select
+        <include refid="columns"/>
+        from custom_plan_section_relation
+        where section_id = #{sectionId}
+        <if test="planIds != null and planIds != ''">
+            and plan_id in
+            <foreach item="item" index="index" collection="planIds.split(',')" open="(" separator="," close=")">
+                ${item}
+            </foreach>
+        </if>
     </select>
 
 </mapper>

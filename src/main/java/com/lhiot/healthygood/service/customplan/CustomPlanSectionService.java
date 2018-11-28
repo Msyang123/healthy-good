@@ -40,12 +40,12 @@ public class CustomPlanSectionService {
      */
     public Tips addCustomPlanSection(CustomPlanSection customPlanSection) {
         if (Objects.isNull(customPlanSection.getSectionCode())) {
-            Tips.warn("定制板块编码不能为空，添加失败！");
+            return Tips.warn("定制板块编码不能为空，添加失败！");
         }
         // 幂等添加
         List<CustomPlanSection> customPlanSection1 = customPlanSectionMapper.selectBySectionCode(customPlanSection.getSectionCode());
-        if (Objects.nonNull(customPlanSection1)) {
-            Tips.warn("定制板块编码重复，添加失败");
+        if (customPlanSection1.isEmpty()) {
+            return Tips.warn("定制板块编码重复，添加失败");
         }
         customPlanSection.setCreateAt(Date.from(Instant.now()));
         customPlanSectionMapper.create(customPlanSection);
@@ -81,9 +81,11 @@ public class CustomPlanSectionService {
     public CustomPlanSection findById(Long id, boolean flag) {
         CustomPlanSection customPlanSection = customPlanSectionMapper.selectById(id);
         if (flag && Objects.nonNull(customPlanSection)) {
-            List<CustomPlanSectionRelation> customPlanSectionRelation = customPlanSectionRelationMapper.findBySectionId(id);
-            List<CustomPlan> customPlans = customPlanSectionRelation.stream().map(CustomPlanSectionRelation::getCustomPlan).collect(Collectors.toList());
-            customPlanSection.setCustomPlanList(customPlans);
+            List<CustomPlanSectionRelation> customPlanSectionRelation = customPlanSectionRelationMapper.findPlanBySectionId(id);
+            if (customPlanSectionRelation.isEmpty()) {
+                List<CustomPlan> customPlans = customPlanSectionRelation.stream().map(CustomPlanSectionRelation::getCustomPlan).collect(Collectors.toList());
+                customPlanSection.setCustomPlanList(customPlans);
+            }
         }
         return customPlanSection;
     }

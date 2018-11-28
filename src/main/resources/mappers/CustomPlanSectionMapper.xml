@@ -126,7 +126,7 @@
     <!-- 根据id查找定制计划板块 -->
     <select id="selectBySectionCode" resultMap="BaseResultMap"
             parameterType="string"> select <include refid="Base_Column_List" />
-        from custom_plan_section where section_code = #{0}
+        from custom_plan_section where section_code = #{sectionCode}
     </select>
 
 

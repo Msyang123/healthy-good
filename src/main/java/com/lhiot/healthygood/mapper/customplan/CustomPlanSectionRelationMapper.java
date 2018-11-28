@@ -66,24 +66,33 @@ public interface CustomPlanSectionRelationMapper {
      * 批量删除定制计划与版块关系记录
      *
      * @param sectionId 定制版块ID
-     * @param shelfIds  定制计划ID集合
+     * @param planIds  定制计划ID集合
      * @return 执行结果
      */
-    int deleteRelationList(@Param("sectionId") Long sectionId, @Param("shelfIds") String shelfIds);
+    int deleteRelationList(@Param("sectionId") Long sectionId, @Param("planIds") String planIds);
 
     /**
-     * 根据定制板块id查询关联的定制计划信息
+     * 根据定制板块id 查询关联的定制计划信息
      * @param sectionId
      * @return
      */
-    List<CustomPlanSectionRelation> findBySectionId(@Param("sectionId") Long sectionId);
+    List<CustomPlanSectionRelation> findPlanBySectionId(@Param("sectionId") Long sectionId);
 
     /**
-     * 根据定制板块Id集合 查找出有定制计划
+     * 根据定制板块Ids 查询哪些关联了定制计划
      *
      * @param sectionIds 定制板块id集合
-     * @return 定制板块名称集合
+     * @return 关联信息集合
      */
     List<Map<String, Object>> findBySectionIds(@Param("sectionIds") String sectionIds);
+
+    /**
+     * 查询定制计划与版块关系记录
+     *
+     * @param sectionId 定制版块ID
+     * @param planIds 定制计划ID集合
+     * @return 关系集合
+     */
+    List<CustomPlanSectionRelation> selectRelationList(@Param("sectionId") Long sectionId, @Param("planIds") String planIds);
 
 }

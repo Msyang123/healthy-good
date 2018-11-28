@@ -28,7 +28,7 @@ import java.util.stream.Collectors;
 /**
  * @author hufan created in 2018/11/27 10:42
  **/
-@Api(description = "定制板块接口")
+@Api("定制板块接口")
 @Slf4j
 @RestController
 public class CustomPlanSectionApi {
@@ -48,20 +48,24 @@ public class CustomPlanSectionApi {
     public ResponseEntity create(@RequestBody CustomPlanSection customPlanSection) {
         log.debug("添加定制板块\t param:{}", customPlanSection);
 
+        // 添加定制板块
         Tips tips = customPlanSectionService.addCustomPlanSection(customPlanSection);
         if (tips.err()) {
             return ResponseEntity.badRequest().body(tips.getMessage());
         }
         Long customPlanSectionId = Long.valueOf(tips.getMessage());
-        List<Long> planIdList = customPlanSection.getCustomPlanList().stream().map(CustomPlan::getId).collect(Collectors.toList());
-        String planIds = Joiner.on(",").join(planIdList);
-        List<Integer> sortList = customPlanSection.getCustomPlanList().stream().map(CustomPlan::getSort).collect(Collectors.toList());
-        String sorts = Joiner.on(",").join(sortList);
-        // 添加定制板块和定制计划的关联   FIXME 添加到ims中操作
-        if (Objects.nonNull(customPlanSectionId) && Objects.nonNull(planIds) && Objects.nonNull(sorts)) {
-            return customPlanSectionRelationService.addRelationList(customPlanSectionId, planIds, sorts) ?
-                    ResponseEntity.created(URI.create("/custom-plan-sections/" + customPlanSectionId)).body(Maps.of("id", customPlanSectionId)) :
-                    ResponseEntity.badRequest().body("批量添加定制版块与定制计划关系失败！");
+        // 添加定制板块和定制计划的关联
+        if (!customPlanSection.getCustomPlanList().isEmpty()){
+            List<Long> planIdList = customPlanSection.getCustomPlanList().stream().map(CustomPlan::getId).collect(Collectors.toList());
+            String planIds = Joiner.on(",").join(planIdList);
+            List<Integer> sortList = customPlanSection.getCustomPlanList().stream().map(CustomPlan::getSort).collect(Collectors.toList());
+            String sorts = Joiner.on(",").join(sortList);
+            if (Objects.nonNull(customPlanSectionId) && Objects.nonNull(planIds) && Objects.nonNull(sorts)) {
+                Tips relationTips = customPlanSectionRelationService.addRelationList(customPlanSectionId, planIds, sorts);
+                return relationTips.err() ?
+                        ResponseEntity.badRequest().body("批量添加定制版块与定制计划关系失败！") :
+                        ResponseEntity.created(URI.create("/custom-plan-sections/" + customPlanSectionId)).body(Maps.of("id", customPlanSectionId));
+            }
         }
         return customPlanSectionId > 0 ?
                 ResponseEntity.created(URI.create("/custom-plan-sections/" + customPlanSectionId)).body(Maps.of("id", customPlanSectionId)) :
@@ -105,7 +109,6 @@ public class CustomPlanSectionApi {
 
         List<String> sectionIds = customPlanSectionRelationService.findBySectionIds(ids);
         if (Objects.nonNull(sectionIds)) {
-            // FIXME 显示多个id
             return ResponseEntity.badRequest().body("以下定制板块id不可删除：" +  sectionIds.toString());
         }
         return customPlanSectionService.batchDeleteByIds(ids) ? ResponseEntity.noContent().build() : ResponseEntity.badRequest().body("删除信息失败!");
@@ -118,7 +121,6 @@ public class CustomPlanSectionApi {
     public ResponseEntity search(@RequestBody CustomPlanSectionParam param) {
         log.debug("根据条件分页查询定制板块信息列表\t param:{}", param);
 
-        // TODO 包括定制计划详情
         Pages<CustomPlanSection> pages = customPlanSectionService.findList(param);
         return ResponseEntity.ok(pages);
     }
