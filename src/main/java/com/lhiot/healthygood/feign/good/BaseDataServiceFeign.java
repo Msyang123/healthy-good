@@ -53,8 +53,9 @@ public interface BaseDataServiceFeign {
     @RequestMapping(value="/product-shelves/{id}",method = RequestMethod.GET)
     ResponseEntity<ProductShelf> singleShelf(@PathVariable("id") Long shelfId);
 
-    @RequestMapping(value="/position/lately",method = RequestMethod.GET)
+    @RequestMapping(value="/stores/position/lately",method = RequestMethod.GET)
     ResponseEntity<Store> findPositionLately(@RequestParam("param") LocationParam param,@RequestParam("applicationType") ApplicationType applicationType);
 
-
+    @RequestMapping(value="/stores/{id}",method = RequestMethod.GET)
+    ResponseEntity<Store> findStoreById(@PathVariable("id") Long shelfId);
 }

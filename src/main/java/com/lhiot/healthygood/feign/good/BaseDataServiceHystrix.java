@@ -37,4 +37,9 @@ public class BaseDataServiceHystrix implements BaseDataServiceFeign{
     public ResponseEntity<Store> findPositionLately(LocationParam param, ApplicationType applicationType) {
         return null;
     }
+
+    @Override
+    public ResponseEntity<Store> findStoreById(Long shelfId) {
+        return null;
+    }
 }
