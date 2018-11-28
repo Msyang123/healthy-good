@@ -17,6 +17,7 @@ import com.lhiot.healthygood.util.MapUtil;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -32,6 +33,7 @@ import java.util.*;
 @RestController
 public class CommonsApi {
     private final CommonService commonService;
+    @Autowired
     public CommonsApi(CommonService commonService){
         this.commonService = commonService;
     }
