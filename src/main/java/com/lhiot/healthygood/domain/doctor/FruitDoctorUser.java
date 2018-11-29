@@ -3,7 +3,6 @@ package com.lhiot.healthygood.domain.doctor;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.lhiot.healthygood.common.PagerRequestObject;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
@@ -22,8 +21,7 @@ import java.util.List;
 @ToString(callSuper = true)
 @ApiModel
 @NoArgsConstructor
-@EqualsAndHashCode(callSuper = true)
-public class FruitDoctorUser extends PagerRequestObject {
+public class FruitDoctorUser{
 
     /**
     *

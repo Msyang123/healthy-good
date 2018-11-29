@@ -3,12 +3,10 @@ package com.lhiot.healthygood.domain.doctor;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.leon.microx.util.BeanUtils;
-import com.lhiot.healthygood.common.PagerRequestObject;
-import com.lhiot.healthygood.entity.IncomeType;
+import com.lhiot.healthygood.type.IncomeType;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
 
@@ -23,8 +21,7 @@ import java.util.Map;
 @ToString(callSuper = true)
 @ApiModel
 @NoArgsConstructor
-@EqualsAndHashCode(callSuper = true)
-public class DoctorAchievementLog extends PagerRequestObject {
+public class DoctorAchievementLog{
 
     /**
     *

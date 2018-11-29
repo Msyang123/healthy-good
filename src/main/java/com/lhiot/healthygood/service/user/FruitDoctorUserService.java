@@ -7,13 +7,13 @@ import com.leon.microx.util.StringUtils;
 import com.leon.microx.web.result.Tips;
 import com.lhiot.dc.dictionary.DictionaryClient;
 import com.lhiot.dc.dictionary.module.Dictionary;
-import com.lhiot.healthygood.domain.doctor.FruitDoctorUser;
 import com.lhiot.healthygood.domain.template.TemplateMessageEnum;
 import com.lhiot.healthygood.domain.user.*;
-import com.lhiot.healthygood.feign.user.BaseUserServerFeign;
-import com.lhiot.healthygood.feign.user.ThirdpartyServerFeign;
+import com.lhiot.healthygood.feign.BaseUserServerFeign;
+import com.lhiot.healthygood.feign.ThirdpartyServerFeign;
 import com.lhiot.healthygood.mapper.user.DoctorUserMapper;
 import com.lhiot.healthygood.mapper.user.FruitDoctorMapper;
+import com.lhiot.healthygood.type.FruitDoctorOrderExchange;
 import com.lhiot.healthygood.util.StringReplaceUtil;
 import org.springframework.amqp.AmqpException;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
@@ -126,7 +126,7 @@ public class FruitDoctorUserService {
         ObjectMapper om = new ObjectMapper();
         Map<String,Object> wxUserMap=om.readValue(userStr, Map.class);
         WeChatRegisterParam weChatRegisterParam=new WeChatRegisterParam();
-        String nickname= StringReplaceUtil.replaceByte4(StringReplaceUtil.replaceEmoji(wxUserMap.get("nickname").toString()));
+        String nickname= StringUtils.replaceEmoji(wxUserMap.get("nickname").toString(),"");
         weChatRegisterParam.setNickname(nickname);
         String wxSex=String.valueOf(wxUserMap.get("sex"));
        List list = dictionaryClient.dictionary("sex").get().getEntries();
@@ -190,7 +190,7 @@ public class FruitDoctorUserService {
     	keywordValue.setUserId(userId);
     	
     	//发送模板消息
-        rabbit.convertAndSend(FruitDoctorOrderExchange.FRUIT_TEMPLATE_MESSAGE.getExchangeName(), 
+        rabbit.convertAndSend(FruitDoctorOrderExchange.FRUIT_TEMPLATE_MESSAGE.getExchangeName(),
         		FruitDoctorOrderExchange.FRUIT_TEMPLATE_MESSAGE.getQueueName(), Jackson.json(keywordValue));
     }
 }

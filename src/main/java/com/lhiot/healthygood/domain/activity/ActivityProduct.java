@@ -1,7 +1,6 @@
 package com.lhiot.healthygood.domain.activity;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.lhiot.healthygood.common.PagerRequestObject;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
@@ -18,8 +17,7 @@ import lombok.ToString;
 @ToString(callSuper = true)
 @ApiModel
 @NoArgsConstructor
-@EqualsAndHashCode(callSuper = true)
-public class ActivityProduct extends PagerRequestObject {
+public class ActivityProduct{
 
     /**
     *

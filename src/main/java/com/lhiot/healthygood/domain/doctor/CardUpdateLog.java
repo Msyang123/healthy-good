@@ -2,11 +2,9 @@ package com.lhiot.healthygood.domain.doctor;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.lhiot.healthygood.common.PagerRequestObject;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
 
@@ -19,8 +17,7 @@ import lombok.ToString;
 @ToString(callSuper = true)
 @ApiModel
 @NoArgsConstructor
-@EqualsAndHashCode(callSuper = true)
-public class CardUpdateLog extends PagerRequestObject {
+public class CardUpdateLog {
 
     /**
     *id

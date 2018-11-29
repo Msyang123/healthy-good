@@ -1,6 +1,6 @@
 package com.lhiot.healthygood.domain.activity;
 
-import com.lhiot.healthygood.entity.ShelfType;
+import com.lhiot.healthygood.type.ShelfType;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;

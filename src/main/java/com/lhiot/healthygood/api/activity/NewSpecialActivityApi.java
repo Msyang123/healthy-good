@@ -6,7 +6,7 @@ import com.lhiot.healthygood.domain.activity.ActivityProducts;
 import com.lhiot.healthygood.domain.activity.NewSpecialResult;
 import com.lhiot.healthygood.domain.activity.SpecialProductActivity;
 import com.lhiot.healthygood.domain.good.ProductShelf;
-import com.lhiot.healthygood.feign.good.BaseDataServiceFeign;
+import com.lhiot.healthygood.feign.BaseDataServiceFeign;
 import com.lhiot.healthygood.service.activity.ActivityProductRecordService;
 import com.lhiot.healthygood.service.activity.ActivityProductService;
 import com.lhiot.healthygood.service.activity.SpecialProductActivityService;
