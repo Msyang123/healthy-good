@@ -1,11 +1,11 @@
 package com.lhiot.healthygood.feign;
 
-import com.lhiot.healthygood.domain.common.LocationParam;
+import com.leon.microx.web.result.Pages;
 import com.lhiot.healthygood.domain.good.ProductParam;
 import com.lhiot.healthygood.domain.good.ProductShelf;
 import com.lhiot.healthygood.domain.good.ProductSpecificationParam;
-import com.lhiot.healthygood.domain.store.Store;
-import com.lhiot.healthygood.type.ApplicationType;
+import com.lhiot.healthygood.feign.model.Store;
+import com.lhiot.healthygood.feign.model.StoreSearchParam;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.*;
  * 基础数据服务
  */
 @Component
-@FeignClient(value = "BASIC-DATA-SERVICE-V1-0-HUFAN")
+@FeignClient(value = "BASIC-DATA-SERVICE-V1-0")
 public interface BaseDataServiceFeign {
     /**
      * 根据id查询商品
@@ -27,7 +27,7 @@ public interface BaseDataServiceFeign {
      * 根据条件分页查询商品信息列表
      */
     @RequestMapping(value="/products/pages",method = RequestMethod.POST)
-    ResponseEntity search(@RequestBody ProductParam param);
+    ResponseEntity searchProducts(@RequestBody ProductParam param);
 
     /**
      * 根据Id查找商品规格
@@ -44,7 +44,7 @@ public interface BaseDataServiceFeign {
      * @return
      */
     @RequestMapping(value="/product-specifications/pages",method = RequestMethod.POST)
-    ResponseEntity search(@RequestBody ProductSpecificationParam param);
+    ResponseEntity searchSpecifications(@RequestBody ProductSpecificationParam param);
 
     /**
      * 根据Id查找商品上架
@@ -54,8 +54,11 @@ public interface BaseDataServiceFeign {
     @RequestMapping(value="/product-shelves/{id}",method = RequestMethod.GET)
     ResponseEntity<ProductShelf> singleShelf(@PathVariable("id") Long shelfId);
 
-    @RequestMapping(value="/stores/position/lately",method = RequestMethod.GET)
-    ResponseEntity<Store> findPositionLately(@RequestParam("param") LocationParam param,@RequestParam("applicationType") ApplicationType applicationType);
+    /**
+     * 根据位置查询门店所有列表根据距离排序
+     */
+    @RequestMapping(value = "/stores/search",method = RequestMethod.POST)
+    ResponseEntity<Pages<Store>> searchStores(@RequestBody StoreSearchParam param);
 
     @RequestMapping(value="/stores/{id}",method = RequestMethod.GET)
     ResponseEntity<Store> findStoreById(@PathVariable("id") Long shelfId);
