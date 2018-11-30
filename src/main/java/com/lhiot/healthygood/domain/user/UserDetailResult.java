@@ -76,4 +76,7 @@ public class UserDetailResult {
     @ApiModelProperty(value = "鲜果师id", dataType = "Long")
     private Long doctorId;
 
+
+    private FruitDoctor fruitDoctorInfo;
+
 }

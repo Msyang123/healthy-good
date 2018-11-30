@@ -16,9 +16,9 @@ import javax.validation.constraints.NotBlank;
 public class ValidateParam {
     @NotBlank(message = "手机号不能为空")
     @ApiModelProperty(notes = "接收短信的手机号", required = true, dataType = "String")
-    private String phone;
+    private String phoneNumber;
 
     @NotBlank(message = "验证码不能为空")
     @ApiModelProperty(notes = "要校验的验证码", required = true, dataType = "String")
-    private String verificationCode;
+    private String code;
 }

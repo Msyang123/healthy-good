@@ -43,9 +43,21 @@ public class RegisterApplicationService {
     */  
     public RegisterApplication create(RegisterApplication registerApplication){
         registerApplication.setAuditStatus(AuditStatus.UNAUDITED.toString());
-        registerApplication.setCreateTime(new Date());
+        registerApplication.setCreateAt(new Date());
         this.registerApplicationMapper.create(registerApplication);
         return registerApplication;
+    }
+
+    /**
+     * Description:根据用户id查找鲜果师最新申请记录
+     *
+     * @param id
+     * @return
+     * @author yijun
+     * @date 2018/07/26 12:08:13
+     */
+    public RegisterApplication findLastApplicationById(Long id){
+        return this.registerApplicationMapper.findLastApplicationById(id);
     }
 
 }

@@ -27,7 +27,7 @@
 
     <!--新增结算申请-->
     <insert id="create" parameterType="com.lhiot.healthygood.domain.doctor.SettlementApplication" useGeneratedKeys="true" keyProperty="id">
-        insert into settlement_application
+        insert into fruit_doctor_settlement
         <trim prefix="(" suffix=")" suffixOverrides="," >
             <if test="id != null ">
                 id,
@@ -72,7 +72,7 @@
 
     <!--根据id修改结算申请-->
     <update id="updateById" parameterType="com.lhiot.healthygood.domain.doctor.SettlementApplication">
-        update settlement_application
+        update fruit_doctor_settlement
         <set>
             <if test="id != null ">
                 id = #{id},
@@ -98,7 +98,7 @@
 
     <!--根据ids删除结算申请-->
     <delete id="deleteByIds" parameterType="java.util.List">
-        delete from settlement_application where id in
+        delete from fruit_doctor_settlement where id in
         <foreach collection="list" item="item" open="("
             separator="," close=")">
             #{item}
@@ -109,7 +109,7 @@
     <!-- 根据id查找结算申请 -->
 	<select id="selectById" resultMap="BaseResultMap"
 		parameterType="long"> select <include refid="Base_Column_List" />
-		from settlement_application where id = #{id}
+		from fruit_doctor_settlement where id = #{id}
 	</select>
 
 
@@ -152,7 +152,7 @@
                  b.real_name as realName,
                  a.*
                  FROM
-                 settlement_application a
+                 fruit_doctor_settlement a
                  LEFT JOIN fruit_doctor b ON a.doctor_id = b.id
              ) res
             <include refid="Base_Where_Condition" />
@@ -168,7 +168,7 @@
                 b.real_name as realName,
                 a.*
                 FROM
-                settlement_application a
+                fruit_doctor_settlement a
                 LEFT JOIN fruit_doctor b ON a.doctor_id = b.id
             ) res
             <include refid="Base_Where_Condition" />

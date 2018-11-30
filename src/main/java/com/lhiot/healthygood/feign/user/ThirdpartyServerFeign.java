@@ -31,5 +31,5 @@ public interface ThirdpartyServerFeign {
 	 * @return
 	 */
 	@RequestMapping(value = "/sms-captcha/{template}/validate", method = RequestMethod.POST)
-    ResponseEntity<String> validate(@PathVariable("template") CaptchaTemplate template, @RequestBody ValidateParam parameters);
+    ResponseEntity validate(@PathVariable("template") CaptchaTemplate template, @RequestBody ValidateParam parameters);
 }

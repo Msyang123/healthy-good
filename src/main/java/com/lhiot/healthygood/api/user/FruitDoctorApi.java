@@ -11,6 +11,7 @@ import com.lhiot.healthygood.domain.user.DoctorUser;
 import com.lhiot.healthygood.domain.user.FruitDoctor;
 import com.lhiot.healthygood.domain.user.ValidateParam;
 import com.lhiot.healthygood.entity.DateTypeEnum;
+import com.lhiot.healthygood.entity.IncomeType;
 import com.lhiot.healthygood.entity.PeriodType;
 import com.lhiot.healthygood.entity.SettlementStatus;
 import com.lhiot.healthygood.feign.user.ThirdpartyServerFeign;
@@ -25,20 +26,22 @@ import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
+import java.time.Instant;
+import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @Api(description = "鲜果师申请记录接口")
 @Slf4j
 @RestController
-@RequestMapping("/fruit-doctor")
+@RequestMapping("/fruit-doctors")
 public class FruitDoctorApi {
     private final ThirdpartyServerFeign thirdpartyServerFeign;
     private final RegisterApplicationService registerApplicationService;
@@ -60,13 +63,14 @@ public class FruitDoctorApi {
         this.session = session;
     }
 
+    @Sessions.Uncheck
     @GetMapping("/sms/captcha")
     @ApiOperation(value = "发送鲜果师申请验证码")
     @ApiImplicitParam(paramType = "query", name = "phone", value = "发送鲜果师申请验证码对应手机号", required = true, dataType = "String")
     public ResponseEntity captcha(@RequestParam String phone) {
         //TODO 需要申请发送短信模板
         CaptchaParam captchaParam=new CaptchaParam();
-        captchaParam.setFreeSignName(FreeSignName.FRUIT_DOCTOR);
+        captchaParam.setFreeSignName(FreeSignName.SGSL);
         captchaParam.setPhoneNumber(phone);
         captchaParam.setApplicationName("和色果膳");
         return thirdpartyServerFeign.captcha(CaptchaTemplate.REGISTER,captchaParam);
@@ -75,17 +79,19 @@ public class FruitDoctorApi {
     @PostMapping("/qualifications")
     @ApiOperation(value = "添加鲜果师申请记录")
     @ApiImplicitParam(paramType = "body", name = "registerApplication", value = "要添加的鲜果师申请记录", required = true, dataType = "RegisterApplication")
-    public ResponseEntity<Object> qualifications(@RequestBody RegisterApplication registerApplication){
+    public ResponseEntity qualifications(HttpServletRequest request,@RequestBody RegisterApplication registerApplication){
         log.debug("添加鲜果师申请记录\t param:{}",registerApplication);
-        //到远端验证手机验证码是否正确
+        String sessionId = session.id(request);
+        String userId = session.user(sessionId).getUser().get("userId").toString();
+        registerApplication.setUserId(Long.valueOf(userId));
         //TODO 需要申请发送短信模板
         ValidateParam smsValidateParam=new ValidateParam();
-        smsValidateParam.setVerificationCode(registerApplication.getVerificationCode());
-        smsValidateParam.setPhone(registerApplication.getPhone());
-        ResponseEntity<String> responseEntity=thirdpartyServerFeign.validate(CaptchaTemplate.REGISTER,smsValidateParam);
+        smsValidateParam.setCode(registerApplication.getVerificationCode());
+        smsValidateParam.setPhoneNumber(registerApplication.getPhone());
+        ResponseEntity responseEntity=thirdpartyServerFeign.validate(CaptchaTemplate.REGISTER,smsValidateParam);
 
-        if (responseEntity.getStatusCodeValue() >= 400|| Objects.equals(responseEntity.getBody(),"false")){
-            return ResponseEntity.badRequest().body("验证短信失败");
+        if (responseEntity.getStatusCode().isError()){
+            return ResponseEntity.badRequest().body(responseEntity.getBody());
         }
         return ResponseEntity.ok(registerApplicationService.create(registerApplication));
     }
@@ -94,18 +100,21 @@ public class FruitDoctorApi {
     @PostMapping("/settlement")
     @ApiOperation(value = "申请提现红利")
     @ApiImplicitParams({
-            @ApiImplicitParam(paramType = "path", name = "id", value = "鲜果师id", required = true, dataType = "Long"),
             @ApiImplicitParam(paramType = "query", name = "amount", value = "申请提现红利", required = true, dataType = "int")
     })
-    public ResponseEntity<Tips> create(
-            @PathVariable("id") Long id,
+    public ResponseEntity create(HttpServletRequest request,
             @RequestParam int amount) {
         log.debug("申请提现红利\t param:{}",amount);
-
+        String sessionId = session.id(request);
+        String userId =  session.user(sessionId).getUser().get("userId").toString();
+        FruitDoctor fruitDoctor = fruitDoctorService.selectByUserId(Long.valueOf(userId));
+        if (Objects.isNull(fruitDoctor)){
+            return ResponseEntity.badRequest().body("鲜果师不存在");
+        }
         SettlementApplication settlementApplication=new SettlementApplication();
 
         settlementApplication.setAmount(amount);
-        settlementApplication.setDoctorId(id);
+        settlementApplication.setDoctorId(fruitDoctor.getId());
         settlementApplication.setCreateTime(new Date());
         settlementApplication.setSettlementStatus(SettlementStatus.UNSETTLED.toString());
         int result=settlementApplicationService.create(settlementApplication);
@@ -118,13 +127,15 @@ public class FruitDoctorApi {
 
     @PostMapping("/relation")
     @ApiOperation(value = "添加鲜果师客户 关注鲜果师(绑定)")
-    @ApiImplicitParams({
-            @ApiImplicitParam(paramType = "path", name = "doctorId", value = "鲜果师id", required = true, dataType = "Long"),
-            @ApiImplicitParam(paramType = "body", name = "doctorUser", value = "要添加的鲜果师客户", required = true, dataType = "DoctorUser")
-    })
-    public ResponseEntity<Tips> bindingDoctor(@PathVariable Long doctorId, @RequestBody DoctorUser doctorUser) {
-        log.debug("添加鲜果师客户\t param:{}-{}",doctorId,doctorUser);
-        doctorUser.setDoctorId(doctorId);
+    @ApiImplicitParam(paramType = "body", name = "doctorUser", value = "要添加的鲜果师客户", required = true, dataType = "DoctorUser")
+    public ResponseEntity bindingDoctor(HttpServletRequest request,@RequestBody DoctorUser doctorUser) {
+        String sessionId = session.id(request);
+        String userId =  session.user(sessionId).getUser().get("userId").toString();
+        FruitDoctor fruitDoctor = fruitDoctorService.selectByUserId(Long.valueOf(userId));
+        if (Objects.isNull(fruitDoctor)){
+            return ResponseEntity.badRequest().body("鲜果师不存在");
+        }
+        doctorUser.setDoctorId(fruitDoctor.getId());
         doctorUserService.create(doctorUser);
         return ResponseEntity.ok(Tips.info("绑定成功！"));
     }
@@ -132,8 +143,15 @@ public class FruitDoctorApi {
     @PutMapping("/remark")
     @ApiOperation(value = "鲜果师修改用户备注")
     @ApiImplicitParam(paramType = "body", name = "doctorUser", value = "鲜果师修改用户备注实体信息", required = true, dataType = "DoctorUser")
-    public ResponseEntity<Tips> updateRemarkName(@RequestBody DoctorUser doctorUser) {
+    public ResponseEntity updateRemarkName(HttpServletRequest request,@RequestBody DoctorUser doctorUser) {
+        String sessionId = session.id(request);
+        String userId =  session.user(sessionId).getUser().get("userId").toString();
+        FruitDoctor fruitDoctor = fruitDoctorService.selectByUserId(Long.valueOf(userId));
+        if (Objects.isNull(fruitDoctor)){
+            return ResponseEntity.badRequest().body("鲜果师不存在");
+        }
         log.debug("鲜果师修改用户备注\t param:{}",doctorUser);
+        doctorUser.setDoctorId(fruitDoctor.getId());
         int result=doctorUserService.updateRemarkName(doctorUser);
         if(result>0) {
             return ResponseEntity.ok(Tips.info("更新成功"));
@@ -144,57 +162,92 @@ public class FruitDoctorApi {
 
 
     @GetMapping("/subordinate")
-    @ApiOperation(value = "团队列表")
-    public ResponseEntity<PagerResultObject<FruitDoctor>> team(FruitDoctor fruitDoctor){
-        log.debug("查询鲜果师成员分页列表\t param:{}",fruitDoctor);
+    @ApiOperation(value = "团队列表",response = FruitDoctor.class, responseContainer = "Set")
+    public ResponseEntity team(HttpServletRequest request){
+        String sessionId = session.id(request);
+        String userId =  session.user(sessionId).getUser().get("userId").toString();
+        FruitDoctor fruitDoctor = fruitDoctorService.selectByUserId(Long.valueOf(userId));
+        if (Objects.isNull(fruitDoctor)){
+            return ResponseEntity.badRequest().body("鲜果师不存在");
+        }
+        FruitDoctor fruitDoctor1 = new FruitDoctor();
+        fruitDoctor1.setId(fruitDoctor.getId());
         return ResponseEntity.ok(fruitDoctorService.subordinate(fruitDoctor));
     }
 
     @GetMapping("/page")
-    @ApiOperation(value = "查询鲜果师成员分页列表")
-    public ResponseEntity<PagerResultObject<FruitDoctor>> pageQuery(FruitDoctor fruitDoctor){
+    @ApiOperation(value = "查询鲜果师成员分页列表",response = FruitDoctor.class, responseContainer = "Set")
+    public ResponseEntity pageQuery(HttpServletRequest request,FruitDoctor fruitDoctor1){
+        String sessionId = session.id(request);
+        String userId =  session.user(sessionId).getUser().get("userId").toString();
+        FruitDoctor fruitDoctor = fruitDoctorService.selectByUserId(Long.valueOf(userId));
+        if (Objects.isNull(fruitDoctor)){
+            return ResponseEntity.badRequest().body("鲜果师不存在");
+        }
         log.debug("查询鲜果师成员分页列表\t param:{}",fruitDoctor);
-        return ResponseEntity.ok(fruitDoctorService.pageList(fruitDoctor));
+        fruitDoctor1.setId(fruitDoctor.getId());
+        return ResponseEntity.ok(fruitDoctorService.pageList(fruitDoctor1));
     }
 
     @GetMapping("/incomes/detail")
-    @ApiOperation(value = "收支明细")
-    public ResponseEntity<PagerResultObject<DoctorAchievementLog>> pageQuery(DoctorAchievementLog doctorAchievementLog){
-        log.debug("收支明细\t param:{}", doctorAchievementLog);
-
+    @ApiImplicitParams({
+            @ApiImplicitParam(paramType = "query", name = "page", dataType = "Long", required = true, value = "多少页"),
+            @ApiImplicitParam(paramType = "query", name = "rows", dataType = "Long", required = true, value = "数据多少条"),
+            @ApiImplicitParam(paramType = "query", name = "incomeType", dataTypeClass = IncomeType.class, required = true, value = "收入支出类型")
+    })
+    @ApiOperation(value = "收支明细",response = DoctorAchievementLog.class, responseContainer = "Set")
+    public ResponseEntity pageQuery(HttpServletRequest request,@RequestParam IncomeType incomeType, @RequestParam Long page, @RequestParam Long rows){
+        String sessionId = session.id(request);
+        String userId =  session.user(sessionId).getUser().get("userId").toString();
+        FruitDoctor fruitDoctor = fruitDoctorService.selectByUserId(Long.valueOf(userId));
+        if (Objects.isNull(fruitDoctor)){
+            return ResponseEntity.badRequest().body("鲜果师不存在");
+        }
+        DoctorAchievementLog doctorAchievementLog = new DoctorAchievementLog();
+        doctorAchievementLog.setIncomeType(incomeType);
+        doctorAchievementLog.setDoctorId(fruitDoctor.getId());
+        doctorAchievementLog.setRows(rows); //TODO page and rows 需要修改
+        doctorAchievementLog.setPage(page);
         return ResponseEntity.ok(doctorAchievementLogService.pageList(doctorAchievementLog));
     }
 
     @GetMapping("/incomes")
-    @ApiImplicitParam(paramType = "path", name = "id", value = "鲜果师id", required = true, dataType = "Long")
-    @ApiOperation(value = "我的收入")
-    public ResponseEntity<IncomeStat> myIncome(HttpServletRequest request){
+    @ApiOperation(value = "我的收入",response = IncomeStat.class, responseContainer = "Set")
+    public ResponseEntity myIncome(HttpServletRequest request){
         String sessionId = session.id(request);
-        Long doctorId = (Long) session.user(sessionId).getUser().get("doctorId");
-        return ResponseEntity.ok(doctorAchievementLogService.myIncome(doctorId));
+        String userId =  session.user(sessionId).getUser().get("userId").toString();
+        FruitDoctor fruitDoctor = fruitDoctorService.selectByUserId(Long.valueOf(userId));
+        if (Objects.isNull(fruitDoctor)){
+            return ResponseEntity.badRequest().body("鲜果师不存在");
+        }
+        return ResponseEntity.ok(doctorAchievementLogService.myIncome(fruitDoctor.getId()));
     }
 
+    @Sessions.Uncheck
     @GetMapping("/member-achievements/{doctorId}")
-    @ApiImplicitParam(paramType = "path", name = "doctorId", value = "下级鲜果师id", required = true, dataType = "Long")
-    @ApiOperation(value = "我的团队的个人业绩")
-    public ResponseEntity<TeamAchievement> teamAchievement(@PathVariable("id") Long id){
-        log.debug("我的团队的个人业绩\t param:{}",id);
+    @ApiOperation(value = "我的团队的个人业绩",response = TeamAchievement.class, responseContainer = "Set")
+    @ApiImplicitParam(paramType = "path", name = "doctorId", value = "鲜果师id", required = true, dataType = "Long")
+    public ResponseEntity teamAchievement(@PathVariable Long doctorId){
 
-        return ResponseEntity.ok(doctorAchievementLogService.teamAchievement(id));
+        return ResponseEntity.ok(doctorAchievementLogService.teamAchievement(doctorId));
     }
 
-    @ApiOperation("统计本期和上期的日周月季度的业绩")
-    @ApiImplicitParam(paramType = "query", name = "dateType", dataType = "DateTypeEnum", required = true, value = "统计的类型")
+    @ApiOperation(value = "统计本期和上期的日周月季度的业绩",response = Achievement.class, responseContainer = "Set")
+    @ApiImplicitParam(paramType = "query", name = "dateType", dataTypeClass = DateTypeEnum.class, required = true, value = "统计的类型")
     @GetMapping("/achievement/period")
-    public ResponseEntity<?> findAchievement(HttpServletRequest request,@RequestParam DateTypeEnum dateType){
+    public ResponseEntity findAchievement(HttpServletRequest request,@RequestParam DateTypeEnum dateType){
         String sessionId = session.id(request);
-        Long doctorId = (Long) session.user(sessionId).getUser().get("doctorId");
+        String userId =  session.user(sessionId).getUser().get("userId").toString();
+        FruitDoctor fruitDoctor = fruitDoctorService.selectByUserId(Long.valueOf(userId));
+        if (Objects.isNull(fruitDoctor)){
+            return ResponseEntity.badRequest().body("鲜果师不存在");
+        }
         //统计本期
         Achievement current =
-                doctorAchievementLogService.achievement(dateType, PeriodType.current, doctorId, true, false,null);
+                doctorAchievementLogService.achievement(dateType, PeriodType.current, fruitDoctor.getId(), true, false,null);
         //统计上期
         Achievement last =
-                doctorAchievementLogService.achievement(dateType, PeriodType.last, doctorId, true, false,null);
+                doctorAchievementLogService.achievement(dateType, PeriodType.last, fruitDoctor.getId(), true, false,null);
         //构建返回值
         Map<String,Object> achievementMap = new HashMap<>();
         achievementMap.put("current", current);
@@ -202,40 +255,123 @@ public class FruitDoctorApi {
         return ResponseEntity.ok(achievementMap);
     }
 
-    @ApiOperation("统计今日业绩订单数及总的业绩")
+    @ApiOperation(value = "统计今日业绩订单数及总的业绩",response = Achievement.class, responseContainer = "Set")
     @GetMapping("/achievement")
-    public ResponseEntity<?> findTodayAchievement(HttpServletRequest request){
+    public ResponseEntity findTodayAchievement(HttpServletRequest request){
         String sessionId = session.id(request);
-        Long doctorId = (Long) session.user(sessionId).getUser().get("doctorId");
+        String userId =  session.user(sessionId).getUser().get("userId").toString();
+        FruitDoctor fruitDoctor = fruitDoctorService.selectByUserId(Long.valueOf(userId));
+        if (Objects.isNull(fruitDoctor)){
+            return ResponseEntity.badRequest().body("鲜果师不存在");
+        }
         //统计今天订单数和业绩
         Achievement current =
-                doctorAchievementLogService.achievement(DateTypeEnum.DAY, PeriodType.current, doctorId, true, false,null);
+                doctorAchievementLogService.achievement(DateTypeEnum.DAY, PeriodType.current, fruitDoctor.getId(), true, false,null);
         //统计总的订单数
         Achievement total =
-                doctorAchievementLogService.achievement(DateTypeEnum.DAY, PeriodType.current, doctorId, true, true,null);
+                doctorAchievementLogService.achievement(DateTypeEnum.DAY, PeriodType.current, fruitDoctor.getId(), true, true,null);
         //构建返回值
         current.setSummaryAmount(total.getSalesAmount());
+        current.setAvatar(fruitDoctor.getAvatar());
+        current.setDescription(fruitDoctor.getProfile());
         return ResponseEntity.ok(current);
     }
 
     @PostMapping("/bank-card")
     @ApiOperation(value = "银行卡添加")
     @ApiImplicitParam(paramType = "body", name = "cardUpdateLog", value = "要添加的", required = true, dataType = "CardUpdateLog")
-    public ResponseEntity<Integer> create(@RequestBody CardUpdateLog cardUpdateLog) {
+    public ResponseEntity create(HttpServletRequest request,@RequestBody CardUpdateLog cardUpdateLog) {
         log.debug("添加\t param:{}",cardUpdateLog);
-
+        String sessionId = session.id(request);
+        String userId =  session.user(sessionId).getUser().get("userId").toString();
+        FruitDoctor fruitDoctor = fruitDoctorService.selectByUserId(Long.valueOf(userId));
+        if (Objects.isNull(fruitDoctor)){
+            return ResponseEntity.badRequest().body("鲜果师不存在");
+        }
+        CardUpdateLog cardParam = new CardUpdateLog();
+        cardParam.setDoctorId(fruitDoctor.getId());
+        CardUpdateLog card = cardUpdateLogService.selectByCard(cardParam);
+        if (Objects.nonNull(card)){
+            return ResponseEntity.badRequest().body("只能添加一张卡");
+        }
+        cardUpdateLog.setDoctorId(fruitDoctor.getId());
+        cardUpdateLog.setUpdateAt(Date.from(Instant.now()));
         return ResponseEntity.ok(cardUpdateLogService.create(cardUpdateLog));
     }
 
-    @ApiOperation(value = "查询鲜果师银行卡信息", notes = "根据session里的doctorId查询")
+    @ApiOperation(value = "查询鲜果师银行卡信息",notes = "根据session里的doctorId查询",response = CardUpdateLog.class, responseContainer = "Set")
     @GetMapping("/bank-card")
-    public ResponseEntity<CardUpdateLog> findCardUpdateLog(HttpServletRequest request) {
+    public ResponseEntity findCardUpdateLog(HttpServletRequest request) {
         String sessionId = session.id(request);
-        Long doctorId = (Long) session.user(sessionId).getUser().get("doctorId");
+        String userId =  session.user(sessionId).getUser().get("userId").toString();
+        FruitDoctor fruitDoctor = fruitDoctorService.selectByUserId(Long.valueOf(userId));
+        if (Objects.isNull(fruitDoctor)){
+            return ResponseEntity.badRequest().body("鲜果师不存在");
+        }
         CardUpdateLog cardUpdateLog = new CardUpdateLog();
-        cardUpdateLog.setDoctorId(doctorId);
+        cardUpdateLog.setDoctorId(fruitDoctor.getId());
         return ResponseEntity.ok(cardUpdateLogService.selectByCard(cardUpdateLog));
     }
 
+    @ApiOperation(value = "查询鲜果师最新申请记录", notes = "查询鲜果师最新申请记录")
+    @GetMapping("/new-application")
+    public ResponseEntity<RegisterApplication> findLastApplicationById(HttpServletRequest request) {
+        String sessionId = session.id(request);
+        Long userId = Long.valueOf(session.user(sessionId).getUser().get("userId").toString()) ;
+        return ResponseEntity.ok(registerApplicationService.findLastApplicationById(userId));
+    }
+
+    /*@GetMapping("/{id}/customers")
+    @ApiImplicitParam(paramType = "path", name = "id", value = "鲜果师id", required = true, dataType = "Long")
+    @ApiOperation(value = "查询鲜果师客户列表")
+    public ResponseEntity<JSONArray> doctorCustomers(@PathVariable("id") Long id) throws BadHanyuPinyinOutputFormatCombination {
+        log.debug("查询鲜果师客户列表\t param:{}",id);
+        List<DoctorUser> doctorUserList=doctorUserService.doctorCustomers(id);
+        PinyinTool tool = new PinyinTool();// TODO 可能会优化
+        Pattern pattern = Pattern.compile("^[a-zA-Z]");
+
+        JSONArray customers=new JSONArray();
+        for(DoctorUser item:doctorUserList){
+            String pinyin=tool.toPinYin(item.getNickname());
+            Matcher matcher = pattern.matcher(pinyin);
+            if(matcher.find()){
+                item.setNicknameFristChar((""+pinyin.charAt(0)).toUpperCase());
+            }else{
+                item.setNicknameFristChar("#");
+            }
+            boolean exist=false;
+            for(int i=0;i<customers.size();i++){
+                JSONObject jsonObject=(JSONObject)customers.get(i);
+                if(Objects.equals(item.getNicknameFristChar(),jsonObject.get("index"))){
+                    JSONArray array=(JSONArray)jsonObject.get("array");
+                    array.add(item);
+                    exist=true;
+                    break;
+                }
+            }
+            if(!exist){
+                JSONObject customerGroup=new JSONObject();
+                customerGroup.put("index",item.getNicknameFristChar());
+                JSONArray array=new JSONArray();
+                array.add(item);
+                customerGroup.put("array",array);
+                customers.add(customerGroup);
+            }
+        }
+        customers.sort(new Comparator<JSONObject>() {
+            @Override
+            public int compare(JSONObject o1, JSONObject o2) {
+                String o1Val=o1.get("index").toString();
+                String o2Val=o2.get("index").toString();
+                return o1Val.compareTo(o2Val);
+            }
+
+            @Override
+            public boolean equals(Object obj) {
+                return super.equals(obj);
+            }
+        });
+        return ResponseEntity.ok(customers);
+    }*/
 
 }

@@ -56,7 +56,7 @@ public class CardUpdateLog extends PagerRequestObject {
     @JsonProperty("updateTime")
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss",timezone = "GMT+8")
     @ApiModelProperty(value = "修改时间", dataType = "Date")
-    private java.util.Date updateTime;
+    private java.util.Date updateAt;
     
 
     /**

@@ -80,12 +80,12 @@ public class DoctorAchievementLogService {
     	DoctorAchievementLog sc = doctorAchievementLog.toDoctorBonusLog();
     	sc.setDoctorId(doctorId);
     	sc.setAmount(saleCommission);
-    	sc.setCreateTime(currentyTime);
+    	sc.setCreateAt(currentyTime);
     	//分销提成日记参数
     	DoctorAchievementLog fc = doctorAchievementLog.toDoctorBonusLog();
     	fc.setDoctorId(superiorDoctorId);
     	fc.setAmount(fruitCommission);
-    	fc.setCreateTime(currentyTime);
+    	fc.setCreateAt(currentyTime);
     	//设置红利收支类型
     	if(!"REFUND".equals(sourceType)){
     		sc.setSourceType("ORDER");
