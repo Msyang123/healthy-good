@@ -1,7 +1,7 @@
 package com.lhiot.healthygood.mapper.customplan;
 
 import com.lhiot.healthygood.domain.customplan.CustomPlanSection;
-import com.lhiot.healthygood.domain.customplan.CustomPlanSectionParam;
+import com.lhiot.healthygood.domain.customplan.model.CustomPlanSectionParam;
 import org.apache.ibatis.annotations.Mapper;
 import org.springframework.stereotype.Repository;
 

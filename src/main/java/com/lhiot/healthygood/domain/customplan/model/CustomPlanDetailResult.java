@@ -2,10 +2,17 @@ package com.lhiot.healthygood.domain.customplan.model;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.ToString;
 
 import java.util.List;
-
+@Data
+@ToString(callSuper = true)
+@ApiModel
+@NoArgsConstructor
 public class CustomPlanDetailResult {
     /**
      *

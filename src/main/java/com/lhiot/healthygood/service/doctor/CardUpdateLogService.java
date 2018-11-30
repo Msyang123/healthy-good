@@ -1,6 +1,6 @@
 package com.lhiot.healthygood.service.doctor;
 
-import com.lhiot.healthygood.common.PagerResultObject;
+import com.leon.microx.web.result.Pages;
 import com.lhiot.healthygood.domain.doctor.CardUpdateLog;
 import com.lhiot.healthygood.mapper.doctor.CardUpdateLogMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,7 +11,7 @@ import java.util.Arrays;
 
 /**
 * Description:服务类
-* @author yijun
+* @author yangjiawen
 * @date 2018/07/26
 */
 @Service
@@ -85,7 +85,7 @@ public class CardUpdateLogService {
     * @author yijun
     * @date 2018/07/26 12:08:13
     */  
-    public long count(CardUpdateLog cardUpdateLog){
+    public int count(CardUpdateLog cardUpdateLog){
         return this.cardUpdateLogMapper.pageCardUpdateLogCounts(cardUpdateLog);
     }
     
@@ -97,12 +97,12 @@ public class CardUpdateLogService {
     * @author yijun
     * @date 2018/07/26 12:08:13
     */  
-    public PagerResultObject<CardUpdateLog> pageList(CardUpdateLog cardUpdateLog) {
-       long total = 0;
+    public Pages<CardUpdateLog> pageList(CardUpdateLog cardUpdateLog) {
+       int total = 0;
        if (cardUpdateLog.getRows() != null && cardUpdateLog.getRows() > 0) {
            total = this.count(cardUpdateLog);
        }
-       return PagerResultObject.of(cardUpdateLog, total,
+       return Pages.of(total,
               this.cardUpdateLogMapper.pageCardUpdateLogs(cardUpdateLog));
     }
 }

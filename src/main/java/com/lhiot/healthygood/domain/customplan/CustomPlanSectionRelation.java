@@ -2,12 +2,9 @@ package com.lhiot.healthygood.domain.customplan;
 
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-
-import com.lhiot.healthygood.common.PagerRequestObject;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
 
@@ -22,8 +19,7 @@ import java.util.List;
 @ToString(callSuper = true)
 @ApiModel
 @NoArgsConstructor
-@EqualsAndHashCode(callSuper = true)
-public class CustomPlanSectionRelation extends PagerRequestObject {
+public class CustomPlanSectionRelation{
 
     /**
     *id
@@ -53,6 +49,4 @@ public class CustomPlanSectionRelation extends PagerRequestObject {
     @ApiModelProperty(value = "定制计划排序", dataType = "Long")
     private Long sort;
 
-    @ApiModelProperty(value = "定制计划列表", dataType = "CustomPlan")
-    private CustomPlan customPlan;
 }

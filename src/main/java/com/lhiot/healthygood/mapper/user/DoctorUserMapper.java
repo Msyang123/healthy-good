@@ -92,7 +92,7 @@ public interface DoctorUserMapper {
     * @author yijun
     * @date 2018/07/26 12:08:13
     */
-    long pageDoctorUserCounts(DoctorUser doctorUser);
+    int pageDoctorUserCounts(DoctorUser doctorUser);
 
 
 

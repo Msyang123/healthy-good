@@ -4,6 +4,7 @@ import com.google.common.base.Joiner;
 import com.leon.microx.util.StringUtils;
 import com.leon.microx.web.result.Tips;
 import com.lhiot.healthygood.domain.customplan.CustomPlanSectionRelation;
+import com.lhiot.healthygood.domain.customplan.model.CustomPlanSectionRelationResult;
 import com.lhiot.healthygood.mapper.customplan.CustomPlanSectionRelationMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -42,7 +43,7 @@ public class CustomPlanSectionRelationService {
         if (!customPlanSectionRelations.isEmpty()) {
             return Tips.warn("定制计划与版块关联重复，添加失败");
         }
-        customPlanSectionRelationMapper.insert(customPlanSectionRelation);
+        customPlanSectionRelationMapper.create(customPlanSectionRelation);
         return Tips.info(customPlanSectionRelation.getId() + "");
     }
 
@@ -137,8 +138,8 @@ public class CustomPlanSectionRelationService {
      * @param relationId 关系ID
      * @return 执行结果 true 或者 false
      */
-    public boolean deleteRelation(Long relationId) {
-        return customPlanSectionRelationMapper.deleteById(relationId) > 0;
+    public boolean deleteRelation(String relationId) {
+        return customPlanSectionRelationMapper.deleteByIds(Arrays.asList(relationId.split(","))) > 0;
     }
 
 
@@ -159,7 +160,7 @@ public class CustomPlanSectionRelationService {
      * @param sectionId
      * @return
      */
-    public List<CustomPlanSectionRelation> findPlanBySectionId(Long sectionId) {
+    public List<CustomPlanSectionRelationResult> findPlanBySectionId(Long sectionId) {
         return Optional.of(customPlanSectionRelationMapper.findPlanBySectionId(sectionId)).orElse(Collections.emptyList());
     }
 
@@ -172,6 +173,7 @@ public class CustomPlanSectionRelationService {
     public List<String> findBySectionIds(String sectionIds) {
         List<String> resultList = new ArrayList<>();
         List<Map<String, Object>> relationList = customPlanSectionRelationMapper.findBySectionIds(sectionIds);
+        // 定制板块ids去重
         relationList.forEach(section -> resultList.add(section.get("sectionId").toString()));
         return resultList.stream().distinct().collect(Collectors.toList());
     }

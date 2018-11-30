@@ -5,11 +5,12 @@ import org.apache.ibatis.annotations.Mapper;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Map;
 
 /**
 * Description:定制计划规格Mapper类
-* @author hufan
-* @date 2018/11/26
+* @author zhangs
+* @date 2018/11/22
 */
 @Mapper
 @Repository
@@ -20,8 +21,8 @@ public interface CustomPlanSpecificationMapper {
     *
     * @param customPlanSpecification
     * @return
-    * @author hufan
-    * @date 2018/11/26 18:56:50
+    * @author zhangs
+    * @date 2018/11/22 12:09:27
     */
     int create(CustomPlanSpecification customPlanSpecification);
 
@@ -30,8 +31,8 @@ public interface CustomPlanSpecificationMapper {
     *
     * @param customPlanSpecification
     * @return
-    * @author hufan
-    * @date 2018/11/26 18:56:50
+    * @author zhangs
+    * @date 2018/11/22 12:09:27
     */
     int updateById(CustomPlanSpecification customPlanSpecification);
 
@@ -40,8 +41,8 @@ public interface CustomPlanSpecificationMapper {
     *
     * @param ids
     * @return
-    * @author hufan
-    * @date 2018/11/26 18:56:50
+    * @author zhangs
+    * @date 2018/11/22 12:09:27
     */
     int deleteByIds(List<String> ids);
 
@@ -50,8 +51,8 @@ public interface CustomPlanSpecificationMapper {
     *
     * @param id
     * @return
-    * @author hufan
-    * @date 2018/11/26 18:56:50
+    * @author zhangs
+    * @date 2018/11/22 12:09:27
     */
     CustomPlanSpecification selectById(Long id);
 
@@ -60,8 +61,8 @@ public interface CustomPlanSpecificationMapper {
     *
     * @param customPlanSpecification
     * @return
-    * @author hufan
-    * @date 2018/11/26 18:56:50
+    * @author zhangs
+    * @date 2018/11/22 12:09:27
     */
      List<CustomPlanSpecification> pageCustomPlanSpecifications(CustomPlanSpecification customPlanSpecification);
 
@@ -71,10 +72,12 @@ public interface CustomPlanSpecificationMapper {
     *
     * @param customPlanSpecification
     * @return
-    * @author hufan
-    * @date 2018/11/26 18:56:50
+    * @author zhangs
+    * @date 2018/11/22 12:09:27
     */
     long pageCustomPlanSpecificationCounts(CustomPlanSpecification customPlanSpecification);
+
+    List<CustomPlanSpecification> findByPlanIdAndPerid(Map<String,Object> param);
 
     /**
      * 新增定制规格集合

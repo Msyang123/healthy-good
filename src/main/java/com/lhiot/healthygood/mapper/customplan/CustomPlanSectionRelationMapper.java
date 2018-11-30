@@ -1,6 +1,7 @@
 package com.lhiot.healthygood.mapper.customplan;
 
 import com.lhiot.healthygood.domain.customplan.CustomPlanSectionRelation;
+import com.lhiot.healthygood.domain.customplan.model.CustomPlanSectionRelationResult;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.springframework.stereotype.Repository;
@@ -10,21 +11,22 @@ import java.util.Map;
 
 /**
 * Description:定制计划板块关联定制计划Mapper类
-* @author hufan
-* @date 2018/11/26
+* @author zhangs
+* @date 2018/11/22
 */
 @Mapper
 @Repository
 public interface CustomPlanSectionRelationMapper {
 
     /**
-     * 新增定制计划与版块关系记录
-     *
-     * @param customPlanSectionRelation 定制计划与版块关系对象
-     * @return 执行结果
-     */
-    int insert(CustomPlanSectionRelation customPlanSectionRelation);
-
+    * Description:新增定制计划板块关联定制计划
+    *
+    * @param customPlanSectionRelation
+    * @return
+    * @author zhangs
+    * @date 2018/11/22 12:09:27
+    */
+    int create(CustomPlanSectionRelation customPlanSectionRelation);
 
     /**
      * 新增批量定制计划与版块关系
@@ -34,15 +36,58 @@ public interface CustomPlanSectionRelationMapper {
      */
     int insertList(List<CustomPlanSectionRelation> list);
 
+    /**
+    * Description:根据id修改定制计划板块关联定制计划
+    *
+    * @param customPlanSectionRelation
+    * @return
+    * @author zhangs
+    * @date 2018/11/22 12:09:27
+    */
+    int updateById(CustomPlanSectionRelation customPlanSectionRelation);
 
     /**
-     * 删除定制计划与版块关系记录
-     *
-     * @param relationId 关系ID
-     * @return 执行结果
-     */
-    int deleteById(Long relationId);
+    * Description:根据ids删除定制计划板块关联定制计划
+    *
+    * @param ids
+    * @return
+    * @author zhangs
+    * @date 2018/11/22 12:09:27
+    */
+    int deleteByIds(List<String> ids);
 
+    /**
+    * Description:根据id查找定制计划板块关联定制计划
+    *
+    * @param id
+    * @return
+    * @author zhangs
+    * @date 2018/11/22 12:09:27
+    */
+    CustomPlanSectionRelation selectById(Long id);
+
+    /**
+    * Description:查询定制计划板块关联定制计划列表
+    *
+    * @param customPlanSectionRelation
+    * @return
+    * @author zhangs
+    * @date 2018/11/22 12:09:27
+    */
+     List<CustomPlanSectionRelation> pageCustomPlanSectionRelations(CustomPlanSectionRelation customPlanSectionRelation);
+
+
+    /**
+    * Description: 查询定制计划板块关联定制计划总记录数
+    *
+    * @param customPlanSectionRelation
+    * @return
+    * @author zhangs
+    * @date 2018/11/22 12:09:27
+    */
+    long pageCustomPlanSectionRelationCounts(CustomPlanSectionRelation customPlanSectionRelation);
+
+    List<CustomPlanSectionRelation> findByPlanId(Long planId);
 
     /**
      * 根据定制计划ID集合 删除定制计划与版块关系记录
@@ -76,7 +121,7 @@ public interface CustomPlanSectionRelationMapper {
      * @param sectionId
      * @return
      */
-    List<CustomPlanSectionRelation> findPlanBySectionId(@Param("sectionId") Long sectionId);
+    List<CustomPlanSectionRelationResult> findPlanBySectionId(@Param("sectionId") Long sectionId);
 
     /**
      * 根据定制板块Ids 查询哪些关联了定制计划

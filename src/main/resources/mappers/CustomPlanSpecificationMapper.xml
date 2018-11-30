@@ -117,22 +117,22 @@
     <sql id="Base_Where_Condition" >
         <where>
             <if test="id != null ">
-                    and id = #{id}
+                and id = #{id}
             </if>
             <if test="planId != null ">
-                    and plan_id = #{planId}
+                and plan_id = #{planId}
             </if>
-            <if test="price != null and price != '' ">
-                    and price like concat('%',#{price}, '%')
+            <if test="price != null ">
+                and price = #{price}
             </if>
-            <if test="quantity != null and quantity != '' ">
-                    and quantity like concat('%',#{quantity}, '%')
+            <if test="quantity != null ">
+                and quantity = #{quantity}
             </if>
-            <if test="description != null and description != '' ">
-                    and description like concat('%',#{description}, '%')
+            <if test="description != null ">
+                and description = #{description}
             </if>
-            <if test="planPeriod != null and planPeriod != '' ">
-                    and plan_period like concat('%',#{planPeriod}, '%')
+            <if test="planPeriod != null ">
+                and plan_period = #{planPeriod}
             </if>
         </where>
     </sql>
@@ -144,6 +144,7 @@
 	        select <include refid="Base_Column_List" />
 	        from custom_plan_specification
 	        <include refid="Base_Where_Condition" />
+	        <include refid="common.pager" />
     </select>
 
     <!--查询定制计划规格总记录-->
@@ -154,8 +155,13 @@
             <include refid="Base_Where_Condition" />
     </select>
 
+    <!-- 根据板块id查询定制计划 -->
+    <select id="findByPlanIdAndPerid" resultMap="BaseResultMap"
+            parameterType="map"> select <include refid="Base_Column_List" /> from
+        custom_plan_specification where plan_id = #{planId} and plan_period = #{planPeriod}
+    </select>
 
-    <!-- 新增商品附件集合 -->
+    <!-- 批量新增定制计划集合 -->
     <insert id="insertList" parameterType="java.util.List">
         insert into custom_plan_specification (plan_id,price,quantity,description, plan_period)
         values

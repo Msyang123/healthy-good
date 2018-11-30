@@ -2,11 +2,9 @@ package com.lhiot.healthygood.domain.customplan;
 
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.lhiot.healthygood.common.PagerRequestObject;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
 
@@ -22,8 +20,7 @@ import java.util.List;
 @ToString(callSuper = true)
 @ApiModel
 @NoArgsConstructor
-@EqualsAndHashCode(callSuper = true)
-public class CustomPlanSpecification extends PagerRequestObject {
+public class CustomPlanSpecification{
 
     /**
     *
@@ -66,13 +63,5 @@ public class CustomPlanSpecification extends PagerRequestObject {
     @JsonProperty("planPeriod")
     @ApiModelProperty(value = "定制计划周期", dataType = "String")
     private String planPeriod;
-
-
-    /**
-     * 定制商品
-     */
-    @ApiModelProperty(value = "定制商品", dataType = "List")
-    @NotNull
-    private List<CustomPlanProduct> customPlanProducts;
 
 }

@@ -1,12 +1,10 @@
 package com.lhiot.healthygood.domain.customplan;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonFormat;
-import com.lhiot.healthygood.common.PagerRequestObject;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
 
@@ -21,8 +19,7 @@ import java.util.List;
 @ToString(callSuper = true)
 @ApiModel
 @NoArgsConstructor
-@EqualsAndHashCode(callSuper = true)
-public class CustomPlanSection extends PagerRequestObject {
+public class CustomPlanSection{
 
     /**
     *
@@ -34,7 +31,7 @@ public class CustomPlanSection extends PagerRequestObject {
     /**
     *
     */
-    @JsonProperty("sectionImage")
+    @JsonProperty("image")
     @ApiModelProperty(value = "", dataType = "String")
     private String sectionImage;
 
@@ -73,9 +70,5 @@ public class CustomPlanSection extends PagerRequestObject {
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss",timezone = "GMT+8")
     @ApiModelProperty(value = "", dataType = "Date", readOnly = true)
     private java.util.Date createAt;
-
-
-    @ApiModelProperty(value = "定制计划列表", dataType = "CustomPlan")
-    private List<CustomPlan> customPlanList;
 
 }

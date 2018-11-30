@@ -8,7 +8,7 @@ import java.util.List;
 
 /**
 * Description:定制计划关联商品Mapper类
-* @author hufan
+* @author zhangs
 * @date 2018/11/26
 */
 @Mapper
@@ -16,13 +16,14 @@ import java.util.List;
 public interface CustomPlanProductMapper {
 
     /**
-    * Description:新增定制计划关联商品
-    *
-    * @param customPlanProduct
-    * @return
-    * @author hufan
-    * @date 2018/11/26 18:56:50
-    */
+     * Description:新增定制计划关联商品
+     *
+     * @param customPlanProduct
+     * @return
+    * @author zhangs
+    * @date 2018/11/26 15:53:47
+     * @date 2018/11/26 15:53:47
+     */
     int create(CustomPlanProduct customPlanProduct);
 
     /**
@@ -30,8 +31,8 @@ public interface CustomPlanProductMapper {
     *
     * @param customPlanProduct
     * @return
-    * @author hufan
-    * @date 2018/11/26 18:56:50
+    * @author zhangs
+    * @date 2018/11/26 15:53:47
     */
     int updateById(CustomPlanProduct customPlanProduct);
 
@@ -40,8 +41,8 @@ public interface CustomPlanProductMapper {
     *
     * @param ids
     * @return
-    * @author hufan
-    * @date 2018/11/26 18:56:50
+    * @author zhangs
+    * @date 2018/11/26 15:53:47
     */
     int deleteByIds(List<String> ids);
 
@@ -50,8 +51,8 @@ public interface CustomPlanProductMapper {
     *
     * @param id
     * @return
-    * @author hufan
-    * @date 2018/11/26 18:56:50
+    * @author zhangs
+    * @date 2018/11/26 15:53:47
     */
     CustomPlanProduct selectById(Long id);
 
@@ -60,8 +61,8 @@ public interface CustomPlanProductMapper {
     *
     * @param customPlanProduct
     * @return
-    * @author hufan
-    * @date 2018/11/26 18:56:50
+    * @author zhangs
+    * @date 2018/11/26 15:53:47
     */
      List<CustomPlanProduct> pageCustomPlanProducts(CustomPlanProduct customPlanProduct);
 
@@ -71,8 +72,8 @@ public interface CustomPlanProductMapper {
     *
     * @param customPlanProduct
     * @return
-    * @author hufan
-    * @date 2018/11/26 18:56:50
+    * @author zhangs
+    * @date 2018/11/26 15:53:47
     */
     long pageCustomPlanProductCounts(CustomPlanProduct customPlanProduct);
 

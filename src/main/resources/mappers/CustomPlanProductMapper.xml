@@ -117,22 +117,22 @@
     <sql id="Base_Where_Condition" >
         <where>
             <if test="id != null ">
-                    and id = #{id}
+                and id = #{id}
             </if>
             <if test="planId != null ">
-                    and plan_id = #{planId}
+                and plan_id = #{planId}
             </if>
             <if test="productShelfId != null ">
-                    and product_shelf_id = #{productShelfId}
+                and product_shelf_id = #{productShelfId}
             </if>
             <if test="dayN != null ">
-                    and day_n = #{dayN}
+                and day_n = #{dayN}
             </if>
-            <if test="planPeriod != null and planPeriod != '' ">
-                    and plan_period like concat('%',#{planPeriod}, '%')
+            <if test="planPeriod != null ">
+                and plan_period = #{planPeriod}
             </if>
             <if test="sort != null ">
-                    and sort = #{sort}
+                and sort = #{sort}
             </if>
         </where>
     </sql>
@@ -144,6 +144,7 @@
 	        select <include refid="Base_Column_List" />
 	        from custom_plan_product
 	        <include refid="Base_Where_Condition" />
+	        <include refid="common.pager" />
     </select>
 
     <!--查询定制计划关联商品总记录-->
@@ -154,8 +155,19 @@
             <include refid="Base_Where_Condition" />
     </select>
 
+    <!--查询定制计划关联商品列表-->
+    <select id="findByPlanId" resultMap="BaseResultMap"
+            parameterType="Long">
+        select <include refid="Base_Column_List" />
+        from custom_plan_product
+        where plan_id = #{0}
+    </select>
+
     <!--批量新增关系-->
     <insert id="insertList" parameterType="java.util.List">
+        <selectKey resultType ="java.lang.Integer" keyProperty= "id" order= "AFTER">
+            SELECT LAST_INSERT_ID()
+        </selectKey >
         insert into custom_plan_product (plan_id,product_shelf_id,day_n,plan_period,sort)
         values
         <foreach collection="list" item="item" index="index" separator=",">

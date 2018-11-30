@@ -1,6 +1,6 @@
 package com.lhiot.healthygood.domain.user;
 
-import com.lhiot.healthygood.entity.ApplicationType;
+import com.lhiot.healthygood.type.ApplicationType;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
@@ -26,6 +26,8 @@ public class WeChatRegisterParam {
     private String avatar;
     @ApiModelProperty(notes = "应用类型", dataType = "Apply")
     private ApplicationType applicationType;
+    @ApiModelProperty(notes = "鲜果师", dataType = "Long")
+    private Long doctorId;
 
 
 }

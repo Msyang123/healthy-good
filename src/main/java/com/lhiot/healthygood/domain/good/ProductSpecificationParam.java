@@ -2,7 +2,7 @@ package com.lhiot.healthygood.domain.good;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.leon.microx.predefine.Use;
-import com.lhiot.healthygood.entity.InventorySpecification;
+import com.lhiot.healthygood.type.InventorySpecification;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;

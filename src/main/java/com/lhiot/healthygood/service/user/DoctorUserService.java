@@ -1,6 +1,6 @@
 package com.lhiot.healthygood.service.user;
 
-import com.lhiot.healthygood.common.PagerResultObject;
+import com.leon.microx.web.result.Pages;
 import com.lhiot.healthygood.domain.user.DoctorUser;
 import com.lhiot.healthygood.mapper.user.DoctorUserMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -107,7 +107,7 @@ public class DoctorUserService {
     * @author yijun
     * @date 2018/07/26 12:08:13
     */  
-    public long count(DoctorUser doctorUser){
+    public int count(DoctorUser doctorUser){
         return this.doctorUserMapper.pageDoctorUserCounts(doctorUser);
     }
     
@@ -119,12 +119,12 @@ public class DoctorUserService {
     * @author yijun
     * @date 2018/07/26 12:08:13
     */  
-    public PagerResultObject<DoctorUser> pageList(DoctorUser doctorUser) {
-       long total = 0;
+    public Pages<DoctorUser> pageList(DoctorUser doctorUser) {
+       int total = 0;
        if (doctorUser.getRows() != null && doctorUser.getRows() > 0) {
            total = this.count(doctorUser);
        }
-       return PagerResultObject.of(doctorUser, total,
+       return Pages.of(total,
               this.doctorUserMapper.pageDoctorUsers(doctorUser));
     }
 

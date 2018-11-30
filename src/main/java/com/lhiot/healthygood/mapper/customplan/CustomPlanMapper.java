@@ -1,7 +1,8 @@
 package com.lhiot.healthygood.mapper.customplan;
 
 import com.lhiot.healthygood.domain.customplan.CustomPlan;
-import com.lhiot.healthygood.domain.customplan.CustomPlanParam;
+import com.lhiot.healthygood.domain.customplan.model.PlanSectionsParam;
+import com.lhiot.healthygood.domain.customplan.model.CustomPlanParam;
 import org.apache.ibatis.annotations.Mapper;
 import org.springframework.stereotype.Repository;
 
@@ -87,5 +88,5 @@ public interface CustomPlanMapper {
     */
     int pageCustomPlanCounts(CustomPlanParam customPlanParam);
 
-    List<CustomPlan> findByCustomPlanSectionId(Long id);
+    List<CustomPlan> findByCustomPlanSectionId(PlanSectionsParam planSectionsParam);
 }

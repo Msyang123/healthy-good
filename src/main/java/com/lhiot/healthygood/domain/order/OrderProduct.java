@@ -1,6 +1,6 @@
 package com.lhiot.healthygood.domain.order;
 
-import com.lhiot.healthygood.entity.RefundStatus;
+import com.lhiot.healthygood.type.RefundStatus;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;

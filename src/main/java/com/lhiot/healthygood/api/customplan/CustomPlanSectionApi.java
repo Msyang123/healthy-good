@@ -1,14 +1,13 @@
 package com.lhiot.healthygood.api.customplan;
 
-import com.google.common.base.Joiner;
 import com.leon.microx.util.Maps;
 import com.leon.microx.web.result.Pages;
 import com.leon.microx.web.result.Tips;
 import com.leon.microx.web.session.Sessions;
 import com.leon.microx.web.swagger.ApiParamType;
-import com.lhiot.healthygood.domain.customplan.CustomPlan;
 import com.lhiot.healthygood.domain.customplan.CustomPlanSection;
-import com.lhiot.healthygood.domain.customplan.CustomPlanSectionParam;
+import com.lhiot.healthygood.domain.customplan.model.CustomPlanSectionParam;
+import com.lhiot.healthygood.domain.customplan.model.CustomPlanSectionResultAdmin;
 import com.lhiot.healthygood.service.customplan.CustomPlanSectionRelationService;
 import com.lhiot.healthygood.service.customplan.CustomPlanSectionService;
 import io.swagger.annotations.Api;
@@ -23,12 +22,11 @@ import org.springframework.web.bind.annotation.*;
 import java.net.URI;
 import java.util.List;
 import java.util.Objects;
-import java.util.stream.Collectors;
 
 /**
  * @author hufan created in 2018/11/27 10:42
  **/
-@Api("定制板块接口")
+@Api(description = "定制板块接口")
 @Slf4j
 @RestController
 public class CustomPlanSectionApi {
@@ -43,31 +41,17 @@ public class CustomPlanSectionApi {
 
     @Sessions.Uncheck
     @ApiOperation("添加定制板块(后台)")
-    @ApiImplicitParam(paramType = ApiParamType.BODY, name = "customPlanSection", value = "定制计划板块", dataType = "CustomPlanSection", required = true)
+    @ApiImplicitParam(paramType = ApiParamType.BODY, name = "customPlanSectionResultAdmin", value = "定制计划板块", dataType = "CustomPlanSectionResultAdmin", required = true)
     @PostMapping("/custom-plan-sections")
-    // FIXME 代码重构
-    public ResponseEntity create(@RequestBody CustomPlanSection customPlanSection) {
-        log.debug("添加定制板块\t param:{}", customPlanSection);
+    public ResponseEntity create(@RequestBody CustomPlanSectionResultAdmin customPlanSectionResultAdmin) {
+        log.debug("添加定制板块\t param:{}", customPlanSectionResultAdmin);
 
         // 添加定制板块
-        Tips tips = customPlanSectionService.addCustomPlanSection(customPlanSection);
+        Tips tips = customPlanSectionService.addCustomPlanSection(customPlanSectionResultAdmin);
         if (tips.err()) {
             return ResponseEntity.badRequest().body(tips.getMessage());
         }
         Long customPlanSectionId = Long.valueOf(tips.getMessage());
-        // 添加定制板块和定制计划的关联
-        if (!customPlanSection.getCustomPlanList().isEmpty()){
-            List<Long> planIdList = customPlanSection.getCustomPlanList().stream().map(CustomPlan::getId).collect(Collectors.toList());
-            String planIds = Joiner.on(",").join(planIdList);
-            List<Integer> sortList = customPlanSection.getCustomPlanList().stream().map(CustomPlan::getSort).collect(Collectors.toList());
-            String sorts = Joiner.on(",").join(sortList);
-            if (Objects.nonNull(customPlanSectionId) && Objects.nonNull(planIds) && Objects.nonNull(sorts)) {
-                Tips relationTips = customPlanSectionRelationService.addRelationList(customPlanSectionId, planIds, sorts);
-                return relationTips.err() ?
-                        ResponseEntity.badRequest().body("批量添加定制版块与定制计划关系失败！") :
-                        ResponseEntity.created(URI.create("/custom-plan-sections/" + customPlanSectionId)).body(Maps.of("id", customPlanSectionId));
-            }
-        }
         return customPlanSectionId > 0 ?
                 ResponseEntity.created(URI.create("/custom-plan-sections/" + customPlanSectionId)).body(Maps.of("id", customPlanSectionId)) :
                 ResponseEntity.badRequest().body("添加定制板块失败!");
@@ -77,18 +61,18 @@ public class CustomPlanSectionApi {
     @ApiOperation("修改定制板块(后台)")
     @ApiImplicitParams({
             @ApiImplicitParam(paramType = ApiParamType.PATH, name = "id", value = "定制板块id", dataType = "Long", required = true),
-            @ApiImplicitParam(paramType = ApiParamType.BODY, name = "customPlanSection", value = "定制板块", dataType = "CustomPlanSection", required = true)
+            @ApiImplicitParam(paramType = ApiParamType.BODY, name = "customPlanSectionResultAdmin", value = "定制板块", dataType = "CustomPlanSectionResultAdmin", required = true)
     })
     @PutMapping("/custom-plan-sections/{id}")
-    public ResponseEntity update(@PathVariable("id") Long id, @RequestBody CustomPlanSection customPlanSection) {
-        log.debug("修改定制板块\t param:{}", customPlanSection);
+    public ResponseEntity update(@PathVariable("id") Long id, @RequestBody CustomPlanSectionResultAdmin customPlanSectionResultAdmin) {
+        log.debug("修改定制板块\t param:{}", customPlanSectionResultAdmin);
 
-        customPlanSection.setId(id);
-        return customPlanSectionService.update(customPlanSection) ? ResponseEntity.ok().build() : ResponseEntity.badRequest().body("修改信息失败!");
+        customPlanSectionResultAdmin.setId(id);
+        return customPlanSectionService.update(customPlanSectionResultAdmin) ? ResponseEntity.ok().build() : ResponseEntity.badRequest().body("修改信息失败!");
     }
 
     @Sessions.Uncheck
-    @ApiOperation("根据id查找单个定制板块")
+    @ApiOperation(value = "根据id查找单个定制板块(后台)", response = CustomPlanSectionResultAdmin.class)
     @ApiImplicitParams({
             @ApiImplicitParam(paramType = ApiParamType.PATH, name = "id", value = "定制板块id", dataType = "Long", required = true),
             @ApiImplicitParam(paramType = ApiParamType.QUERY, name = "flag", value = "是否查询关联定制计划信息", dataType = "Boolean")
@@ -97,8 +81,8 @@ public class CustomPlanSectionApi {
     public ResponseEntity findById(@PathVariable("id") Long id, @RequestParam(value = "flag", required = false)  boolean flag) {
         log.debug("根据id查找单个定制板块\t param:{}", id, flag);
 
-        CustomPlanSection customPlanSection = customPlanSectionService.findById(id, flag);
-        return ResponseEntity.ok().body(customPlanSection);
+        CustomPlanSectionResultAdmin customPlanSectionResult = customPlanSectionService.findById(id, flag);
+        return ResponseEntity.ok().body(customPlanSectionResult);
     }
 
     @Sessions.Uncheck

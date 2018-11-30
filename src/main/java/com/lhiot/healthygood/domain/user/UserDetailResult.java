@@ -1,5 +1,7 @@
 package com.lhiot.healthygood.domain.user;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import io.swagger.annotations.ApiModel;
@@ -13,7 +15,7 @@ import java.util.Date;
 public class UserDetailResult {
 
     @JsonSerialize(using = ToStringSerializer.class)
-    private Long id;
+    private String id;
 
     @ApiModelProperty(notes = "生日", dataType = "String")
     private String birthday;
@@ -62,5 +64,16 @@ public class UserDetailResult {
 
     @ApiModelProperty(notes = "t_base_user的id", dataType = "Long")
     private Long baseUserId;
+
+    /**
+     *是否为鲜果师(是-true，否-false)
+     */
+    @JsonProperty("fruitDoctor")
+    @ApiModelProperty(value = "fruitDoctor", dataType = "boolean")
+    private boolean fruitDoctor;
+
+    @JsonIgnore
+    @ApiModelProperty(value = "鲜果师id", dataType = "Long")
+    private Long doctorId;
 
 }

@@ -11,6 +11,7 @@ import lombok.Data;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.ibatis.parsing.XPathParser;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
@@ -72,7 +73,7 @@ public class WeChatUtil {
 	public final String CREATE_WEIXIN_MENU="https://api.weixin.qq.com/cgi-bin/menu/create?access_token={0}";
 	
 	/************微信认证登录与支付配置*******************************************/
-	@Getter
+	@Autowired
 	private WeChatProperties properties;
 
 	private ObjectMapper om = new ObjectMapper();

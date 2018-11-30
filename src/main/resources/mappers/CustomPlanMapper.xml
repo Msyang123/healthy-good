@@ -160,7 +160,7 @@
 
     <!--查询定制计划列表-->
      <select id="pageCustomPlans" resultMap="BaseResultMap"
-        parameterType="com.lhiot.healthygood.domain.customplan.CustomPlanParam">
+        parameterType="com.lhiot.healthygood.domain.customplan.model.CustomPlanParam">
 	        select <include refid="Base_Column_List" />
 	        from custom_plan
 	        <include refid="Base_Where_Condition" />
@@ -172,7 +172,7 @@
 
     <!--查询定制计划总记录-->
     <select id="pageCustomPlanCounts" resultType="int"
-        parameterType="com.lhiot.healthygood.domain.customplan.CustomPlanParam">
+        parameterType="com.lhiot.healthygood.domain.customplan.model.CustomPlanParam">
             select count(1)
             from custom_plan
             <include refid="Base_Where_Condition" />
@@ -180,9 +180,16 @@
 
     <!-- 根据板块id查询定制计划 -->
     <select id="findByCustomPlanSectionId" resultMap="BaseResultMap"
-            parameterType="long"> select <include refid="Base_Column_List" /> from ()
-        select t1.*
-        from custom_plan t1 left join custom_plan_section_relation t2 on t1.id = t2.plan_id where t2.section_id = #{0} )t2
+            parameterType="map">
+        select <include refid="Base_Column_List" />
+        from custom_plan t1
+        left join custom_plan_section_relation t2
+        on t1.id = t2.plan_id
+        where t2.section_id = #{id}
+        <if test="rows != null and rows > 0 ">
+            order by t2.sort asc
+            limit #{startRow} , #{rows}
+        </if>
     </select>
 
 

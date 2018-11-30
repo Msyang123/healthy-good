@@ -1,0 +1,395 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.lhiot.healthygood.mapper.user.FruitDoctorMapper">
+
+    <!-- 数据库字段对象关系映射 -->
+    <resultMap id="BaseResultMap"
+        type="com.lhiot.healthygood.domain.user.FruitDoctor" >
+        <id column="id" property="id"/>
+        <result column="real_name" property="realName" />
+        <result column="photo" property="photo" />
+        <result column="invite_code" property="inviteCode" />
+        <result column="user_id" property="userId" />
+        <result column="doctor_level" property="doctorLevel" />
+        <result column="doctor_status" property="doctorStatus" />
+        <result column="job_title" property="jobTitle" />
+        <result column="create_at" property="createAt" />
+        <result column="referee_id" property="refereeId" />
+        <result column="profile" property="profile" />
+        <result column="card_no" property="cardNo" />
+        <result column="bank_deposit" property="bankDeposit" />
+        <result column="card_username" property="cardUsername" />
+        <result column="hot" property="hot" />
+        <result column="balance" property="balance" />
+        <result column="avatar" property="avatar" />
+        <result column="upperbody_photo" property="upperbodyPhoto" />
+        <result column="phone" property="phone" />
+        <result column="application_id" property="applicationId" />
+        <result column="amount_of_month" property="amountOfMonth" />
+    </resultMap>
+
+    <!-- base查询字段  -->
+    <sql id="Base_Column_List" >
+        <trim suffixOverrides="," >
+            id,
+            real_name,
+            photo,
+            invite_code,
+            user_id,
+            doctor_level,
+            doctor_status,
+            job_title,
+            create_at,
+            referee_id,
+            profile,
+            card_no,
+            bank_deposit,
+            card_username,
+            hot,
+            balance,
+            avatar,
+            upperbody_photo,
+            phone,
+            application_id,
+        </trim>
+    </sql>
+
+    <!--新增鲜果师成员-->
+    <insert id="create" parameterType="com.lhiot.healthygood.domain.user.FruitDoctor" useGeneratedKeys="true" keyProperty="id">
+        insert into fruit_doctor
+        <trim prefix="(" suffix=")" suffixOverrides="," >
+            <if test="id != null ">
+                id,
+            </if>
+            <if test="realName != null ">
+                real_name,
+            </if>
+            <if test="photo != null ">
+                photo,
+            </if>
+            <if test="inviteCode != null ">
+                invite_code,
+            </if>
+            <if test="userId != null ">
+                user_id,
+            </if>
+            <if test="doctorLevel != null ">
+                doctor_level,
+            </if>
+            <if test="doctorStatus != null ">
+                doctor_status,
+            </if>
+            <if test="jobTitle != null ">
+                job_title,
+            </if>
+            <if test="createAt != null ">
+                create_at,
+            </if>
+            <if test="refereeId != null ">
+                referee_id,
+            </if>
+            <if test="profile != null ">
+                profile,
+            </if>
+            <if test="cardNo != null ">
+                card_no,
+            </if>
+            <if test="bankDeposit != null ">
+                bank_deposit,
+            </if>
+            <if test="cardUsername != null ">
+                card_username,
+            </if>
+            <if test="hot != null ">
+                hot,
+            </if>
+            <if test="balance != null ">
+                balance,
+            </if>
+            <if test="avatar != null ">
+                avatar,
+            </if>
+            <if test="upperbodyPhoto != null ">
+                upperbody_photo,
+            </if>
+            <if test="phone != null ">
+                phone,
+            </if>
+            <if test="applicationId != null ">
+                application_id,
+            </if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides="," >
+            <if test="id != null ">
+                #{id},
+            </if>
+            <if test="realName != null ">
+                #{realName},
+            </if>
+            <if test="photo != null ">
+                #{photo},
+            </if>
+            <if test="inviteCode != null ">
+                #{inviteCode},
+            </if>
+            <if test="userId != null ">
+                #{userId},
+            </if>
+            <if test="doctorLevel != null ">
+                #{doctorLevel},
+            </if>
+            <if test="doctorStatus != null ">
+                #{doctorStatus},
+            </if>
+            <if test="jobTitle != null ">
+                #{jobTitle},
+            </if>
+            <if test="createAt != null ">
+                #{createAt},
+            </if>
+            <if test="refereeId != null ">
+                #{refereeId},
+            </if>
+            <if test="profile != null ">
+                #{profile},
+            </if>
+            <if test="cardNo != null ">
+                #{cardNo},
+            </if>
+            <if test="bankDeposit != null ">
+                #{bankDeposit},
+            </if>
+            <if test="cardUsername != null ">
+                #{cardUsername},
+            </if>
+            <if test="hot != null ">
+                #{hot},
+            </if>
+            <if test="balance != null ">
+                #{balance},
+            </if>
+            <if test="avatar != null ">
+                #{avatar},
+            </if>
+            <if test="upperbodyPhoto != null ">
+                #{upperbodyPhoto},
+            </if>
+            <if test="phone != null ">
+                #{phone},
+            </if>
+            <if test="applicationId != null ">
+                #{applicationId},
+            </if>
+        </trim>
+    </insert>
+
+    <!--根据id修改鲜果师成员-->
+    <update id="updateById" parameterType="com.lhiot.healthygood.domain.user.FruitDoctor">
+        update fruit_doctor
+        <set>
+            <if test="id != null ">
+                id = #{id},
+            </if>
+            <if test="realName != null ">
+                real_name = #{realName},
+            </if>
+            <if test="photo != null ">
+                photo = #{photo},
+            </if>
+            <if test="inviteCode != null ">
+                invite_code = #{inviteCode},
+            </if>
+            <if test="userId != null ">
+                user_id = #{userId},
+            </if>
+            <if test="doctorLevel != null ">
+                doctor_level = #{doctorLevel},
+            </if>
+            <if test="doctorStatus != null ">
+                doctor_status = #{doctorStatus},
+            </if>
+            <if test="jobTitle != null ">
+                job_title = #{jobTitle},
+            </if>
+            <if test="createAt != null ">
+                create_at = #{createAt},
+            </if>
+            <if test="refereeId != null ">
+                referee_id = #{refereeId},
+            </if>
+            <if test="profile != null ">
+                profile = #{profile},
+            </if>
+            <if test="cardNo != null ">
+                card_no = #{cardNo},
+            </if>
+            <if test="bankDeposit != null ">
+                bank_deposit = #{bankDeposit},
+            </if>
+            <if test="cardUsername != null ">
+                card_username = #{cardUsername},
+            </if>
+            <if test="hot != null ">
+                hot = #{hot},
+            </if>
+            <if test="balance != null ">
+                balance = #{balance},
+            </if>
+            <if test="avatar != null ">
+                avatar = #{avatar},
+            </if>
+            <if test="upperbodyPhoto != null ">
+                upperbody_photo = #{upperbodyPhoto},
+            </if>
+            <if test="phone != null ">
+                phone = #{phone},
+            </if>
+            <if test="applicationId != null ">
+                application_id = #{applicationId},
+            </if>
+        </set>
+        where id=#{id}
+    </update>
+
+    <!--根据ids删除鲜果师成员-->
+    <delete id="deleteByIds" parameterType="java.util.List">
+        delete from fruit_doctor where id in
+        <foreach collection="list" item="item" open="("
+            separator="," close=")">
+            #{item}
+        </foreach>
+    </delete>
+
+
+    <!-- 根据id查找鲜果师成员 -->
+	<select id="selectById" resultMap="BaseResultMap"
+		parameterType="long"> select <include refid="Base_Column_List" />
+		from fruit_doctor where id = #{id}
+	</select>
+
+    <!-- 根据用户编号查找鲜果师成员 -->
+    <select id="selectByUserId" resultMap="BaseResultMap"
+            parameterType="long"> select <include refid="Base_Column_List" />
+        from fruit_doctor where user_id = #{userId}
+    </select>
+
+    <!-- base where条件  -->
+    <sql id="Base_Where_Condition" >
+        <where>
+            <if test="id != null ">
+                and id = #{id}
+            </if>
+            <if test="realName != null ">
+                and real_name like concat('%',#{realName},'%')
+            </if>
+            <if test="photo != null ">
+                and photo = #{photo}
+            </if>
+            <if test="inviteCode != null ">
+                and invite_code = #{inviteCode}
+            </if>
+            <if test="userId != null ">
+                and user_id = #{userId}
+            </if>
+            <if test="doctorLevel != null ">
+                and doctor_level = #{doctorLevel}
+            </if>
+            <if test=" doctorLevels!= null ">
+                and doctor_level in
+                <foreach collection="doctorLevels" item="item" open="("
+                         separator="," close=")">
+                    #{item}
+                </foreach>
+            </if>
+            <if test="doctorStatus != null ">
+                and doctor_status = #{doctorStatus}
+            </if>
+            <if test="jobTitle != null ">
+                and job_title = #{jobTitle}
+            </if>
+            <if test="createAt != null ">
+                and create_at = #{createAt}
+            </if>
+            <if test="refereeId != null ">
+                and referee_id = #{refereeId}
+            </if>
+            <if test="profile != null ">
+                and profile = #{profile}
+            </if>
+            <if test="cardNo != null ">
+                and card_no = #{cardNo}
+            </if>
+            <if test="bankDeposit != null ">
+                and bank_deposit = #{bankDeposit}
+            </if>
+            <if test="cardUsername != null ">
+                and card_username = #{cardUsername}
+            </if>
+            <if test="hot != null ">
+                and hot = #{hot}
+            </if>
+            <if test="balance != null ">
+                and balance = #{balance}
+            </if>
+            <if test="avatar != null ">
+                and avatar = #{avatar}
+            </if>
+            <if test="upperbodyPhoto != null ">
+                and upperbody_photo = #{upperbodyPhoto}
+            </if>
+            <if test="phone != null ">
+                and phone = #{phone}
+            </if>
+            <if test="applicationId != null ">
+                and application_id = #{applicationId}
+            </if>
+        </where>
+    </sql>
+
+
+    <!--查询鲜果师成员列表-->
+     <select id="pageFruitDoctors" resultMap="BaseResultMap"
+        parameterType="com.lhiot.healthygood.domain.user.FruitDoctor">
+	        select <include refid="Base_Column_List" />
+	        from fruit_doctor
+	        <include refid="Base_Where_Condition" />
+	        <include refid="common.pager" />
+    </select>
+
+    <!--查询鲜果师成员总记录-->
+    <select id="pageFruitDoctorCounts" resultType="int"
+        parameterType="com.lhiot.healthygood.domain.user.FruitDoctor">
+            select count(1)
+            from fruit_doctor
+            <include refid="Base_Where_Condition" />
+    </select>
+
+    <!--查询鲜果师团队列表-->
+    <select id="subordinate" resultMap="BaseResultMap"
+            parameterType="com.lhiot.healthygood.domain.user.FruitDoctor">
+        select <include refid="Base_Column_List" />,(select sum(amount/commission) from doctor_bonus_log where doctor_id=f.id
+          and source_type in('ORDER','REFUND')
+          and create_at between CONCAT(date_add(curdate(),interval -day(curdate())+1 day),' 00:00:00')
+          and  CONCAT(date_add(curdate()-day(curdate())+1,interval 1 month),' 00:00:00')
+          ) as amount_of_month
+        from fruit_doctor f
+        <include refid="Base_Where_Condition" />
+        <include refid="common.pager" />
+    </select>
+
+	<!-- 根据邀请码 -->
+	<select id="selectByInviteCode" parameterType="String" resultMap="BaseResultMap">
+		select <include refid="Base_Column_List"/> 
+		from fruit_doctor 
+		where invite_code = #{0} and doctor_status = 'VALID' and doctor_level != 'TRAINING'
+	</select>
+
+    <!--根据用户id查询上级鲜果师信息-->
+    <select id="findSuperiorFruitDoctorByUserId" resultMap="BaseResultMap"
+            parameterType="Long">
+        select *
+        from doctor_user t1
+        LEFT JOIN fruit_doctor t2 on t1.doctor_id = t2.id
+        where t1.user_id = #{id}
+    </select>
+</mapper>
