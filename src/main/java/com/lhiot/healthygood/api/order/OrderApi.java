@@ -70,7 +70,7 @@ public class OrderApi {
         }
         //判断门店是否存在
         ResponseEntity<Store> storeResponseEntity = baseDataServiceFeign.findStoreById(orderParam.getStoreId());
-        Tips<Store> storeTips=FeginResponseTools.convertFailureResponse(storeResponseEntity);
+        Tips<Store> storeTips=FeginResponseTools.convertResponse(storeResponseEntity);
         if (storeTips.err()) {
             return ResponseEntity.badRequest().body(storeTips);
         }
