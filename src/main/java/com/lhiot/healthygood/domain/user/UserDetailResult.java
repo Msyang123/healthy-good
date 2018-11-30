@@ -15,7 +15,7 @@ import java.util.Date;
 public class UserDetailResult {
 
     @JsonSerialize(using = ToStringSerializer.class)
-    private String id;
+    private Long id;
 
     @ApiModelProperty(notes = "生日", dataType = "String")
     private String birthday;

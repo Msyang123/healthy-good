@@ -11,7 +11,7 @@ import java.util.List;
 * @date 2018/07/26
 */
 @Mapper
-public interface DoctorCustomerMapper {
+public interface DoctorUserMapper {
 
     /**
     * Description:新增鲜果师客户

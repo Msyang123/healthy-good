@@ -164,7 +164,10 @@
 	        select <include refid="Base_Column_List" />
 	        from doctor_achievement_log
 	        <include refid="Base_Where_Condition" />
-	        <include refid="common.pager" />
+             <if test="rows != null and rows > 0 ">
+                 order by rank asc , id desc
+                 limit #{startRow} , #{rows}
+             </if>
     </select>
 
     <!--查询鲜果师业绩记录总记录-->

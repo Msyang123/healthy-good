@@ -218,7 +218,10 @@
 	        select <include refid="Base_Column_List" />
 	        from register_application
 	        <include refid="Base_Where_Condition" />
-	        <include refid="common.pager" />
+             <if test="rows != null and rows > 0 ">
+                 order by rank asc , id desc
+                 limit #{startRow} , #{rows}
+             </if>
     </select>
 
     <!--查询鲜果师申请记录总记录-->

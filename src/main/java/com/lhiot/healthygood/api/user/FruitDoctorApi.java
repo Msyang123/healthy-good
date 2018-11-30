@@ -1,15 +1,12 @@
 package com.lhiot.healthygood.api.user;
 
-import com.leon.microx.web.result.Pages;
 import com.leon.microx.web.result.Tips;
 import com.leon.microx.web.session.Sessions;
 import com.lhiot.healthygood.domain.doctor.*;
 import com.lhiot.healthygood.domain.template.CaptchaTemplate;
 import com.lhiot.healthygood.domain.template.FreeSignName;
-import com.lhiot.healthygood.domain.user.CaptchaParam;
-import com.lhiot.healthygood.domain.user.DoctorUser;
-import com.lhiot.healthygood.domain.user.FruitDoctor;
-import com.lhiot.healthygood.domain.user.ValidateParam;
+import com.lhiot.healthygood.domain.user.*;
+import com.lhiot.healthygood.feign.BaseUserServerFeign;
 import com.lhiot.healthygood.feign.ThirdpartyServerFeign;
 import com.lhiot.healthygood.service.doctor.CardUpdateLogService;
 import com.lhiot.healthygood.service.doctor.DoctorAchievementLogService;
@@ -18,13 +15,16 @@ import com.lhiot.healthygood.service.doctor.SettlementApplicationService;
 import com.lhiot.healthygood.service.user.DoctorUserService;
 import com.lhiot.healthygood.service.user.FruitDoctorService;
 import com.lhiot.healthygood.type.DateTypeEnum;
+import com.lhiot.healthygood.type.IncomeType;
 import com.lhiot.healthygood.type.PeriodType;
 import com.lhiot.healthygood.type.SettlementStatus;
+import com.lhiot.healthygood.util.PinyinTool;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
+import net.sourceforge.pinyin4j.format.exception.BadHanyuPinyinOutputFormatCombination;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -49,9 +49,10 @@ public class FruitDoctorApi {
     private final FruitDoctorService fruitDoctorService;
     private final DoctorAchievementLogService doctorAchievementLogService;
     private final CardUpdateLogService cardUpdateLogService;
+    private final BaseUserServerFeign baseUserServerFeign;
     private Sessions session;
     @Autowired
-    public FruitDoctorApi(ThirdpartyServerFeign thirdpartyServerFeign, RegisterApplicationService registerApplicationService, SettlementApplicationService settlementApplicationService, DoctorUserService doctorUserService, FruitDoctorService fruitDoctorService, DoctorAchievementLogService doctorAchievementLogService, CardUpdateLogService cardUpdateLogService, Sessions session) {
+    public FruitDoctorApi(ThirdpartyServerFeign thirdpartyServerFeign, RegisterApplicationService registerApplicationService, SettlementApplicationService settlementApplicationService, DoctorUserService doctorUserService, FruitDoctorService fruitDoctorService, DoctorAchievementLogService doctorAchievementLogService, CardUpdateLogService cardUpdateLogService, BaseUserServerFeign baseUserServerFeign, Sessions session) {
         this.thirdpartyServerFeign = thirdpartyServerFeign;
         this.registerApplicationService = registerApplicationService;
         this.settlementApplicationService = settlementApplicationService;
@@ -59,6 +60,7 @@ public class FruitDoctorApi {
         this.fruitDoctorService = fruitDoctorService;
         this.doctorAchievementLogService = doctorAchievementLogService;
         this.cardUpdateLogService = cardUpdateLogService;
+        this.baseUserServerFeign = baseUserServerFeign;
         this.session = session;
     }
 
@@ -189,12 +191,12 @@ public class FruitDoctorApi {
 
     @GetMapping("/incomes/detail")
     @ApiImplicitParams({
-            @ApiImplicitParam(paramType = "query", name = "page", dataType = "Long", required = true, value = "多少页"),
-            @ApiImplicitParam(paramType = "query", name = "rows", dataType = "Long", required = true, value = "数据多少条"),
+            @ApiImplicitParam(paramType = "query", name = "page", dataType = "Integer", required = true, value = "多少页"),
+            @ApiImplicitParam(paramType = "query", name = "rows", dataType = "Integer", required = true, value = "数据多少条"),
             @ApiImplicitParam(paramType = "query", name = "incomeType", dataTypeClass = IncomeType.class, required = true, value = "收入支出类型")
     })
     @ApiOperation(value = "收支明细",response = DoctorAchievementLog.class, responseContainer = "Set")
-    public ResponseEntity pageQuery(HttpServletRequest request,@RequestParam IncomeType incomeType, @RequestParam Long page, @RequestParam Long rows){
+    public ResponseEntity pageQuery(HttpServletRequest request,@RequestParam IncomeType incomeType, @RequestParam Integer page, @RequestParam Integer rows){
         String sessionId = session.id(request);
         String userId =  session.user(sessionId).getUser().get("userId").toString();
         FruitDoctor fruitDoctor = fruitDoctorService.selectByUserId(Long.valueOf(userId));
@@ -204,7 +206,7 @@ public class FruitDoctorApi {
         DoctorAchievementLog doctorAchievementLog = new DoctorAchievementLog();
         doctorAchievementLog.setIncomeType(incomeType);
         doctorAchievementLog.setDoctorId(fruitDoctor.getId());
-        doctorAchievementLog.setRows(rows); //TODO page and rows 需要修改
+        doctorAchievementLog.setRows(rows);
         doctorAchievementLog.setPage(page);
         return ResponseEntity.ok(doctorAchievementLogService.pageList(doctorAchievementLog));
     }
@@ -319,13 +321,27 @@ public class FruitDoctorApi {
         return ResponseEntity.ok(registerApplicationService.findLastApplicationById(userId));
     }
 
-    /*@GetMapping("/{id}/customers")
-    @ApiImplicitParam(paramType = "path", name = "id", value = "鲜果师id", required = true, dataType = "Long")
+    @GetMapping("/customers")
     @ApiOperation(value = "查询鲜果师客户列表")
-    public ResponseEntity<JSONArray> doctorCustomers(@PathVariable("id") Long id) throws BadHanyuPinyinOutputFormatCombination {
-        log.debug("查询鲜果师客户列表\t param:{}",id);
-        List<DoctorUser> doctorUserList=doctorUserService.doctorCustomers(id);
-        PinyinTool tool = new PinyinTool();// TODO 可能会优化
+    public ResponseEntity doctorCustomers(HttpServletRequest request) throws BadHanyuPinyinOutputFormatCombination {
+        String sessionId = session.id(request);
+        String userId =  session.user(sessionId).getUser().get("userId").toString();
+        FruitDoctor fruitDoctor = fruitDoctorService.selectByUserId(Long.valueOf(userId));
+        if (Objects.isNull(fruitDoctor)){
+            return ResponseEntity.badRequest().body("鲜果师不存在");
+        }
+        List<DoctorUser> doctorUserList=doctorUserService.doctorCustomers(fruitDoctor.getId());
+        doctorUserList.stream().forEach(doctorUser ->{
+            ResponseEntity userInfoEntity = baseUserServerFeign.findById(Long.valueOf(doctorUser.getUserId()));
+            if (userInfoEntity.getStatusCode().isError()){
+                return;
+            }
+            UserDetailResult userDetailResult = (UserDetailResult) userInfoEntity.getBody();
+            doctorUser.setNickname(userDetailResult.getNickname());
+            doctorUser.setAvatar(userDetailResult.getAvatar());
+            doctorUser.setPhone(userDetailResult.getPhone());
+        });
+        PinyinTool tool = new PinyinTool();
         Pattern pattern = Pattern.compile("^[a-zA-Z]");
 
         JSONArray customers=new JSONArray();
@@ -370,6 +386,6 @@ public class FruitDoctorApi {
             }
         });
         return ResponseEntity.ok(customers);
-    }*/
+    }
 
 }

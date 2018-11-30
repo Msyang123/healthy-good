@@ -196,7 +196,7 @@ public class UserApi {
         }
         UserDetailResult searchUser = (UserDetailResult) searchUserEntity.getBody();
         Sessions.User sessionUser = session.create(request).user(Maps.of("userId",searchUser.getId(),"openId",searchUser.getOpenId())).timeToLive(30, TimeUnit.MINUTES)
-                .authorities(Authority.of("/**", RequestMethod.values()));// TODO 还没有加权限
+                .authorities(Authority.of("/**", RequestMethod.values()));
         String sessionId = session.cache(sessionUser);
         return ResponseEntity.ok()
                 .header(Sessions.HTTP_HEADER_NAME, sessionId).body(sessionId);
@@ -309,16 +309,17 @@ public class UserApi {
         return ResponseEntity.ok(userInfo.getBody());
     }
 
+    @Sessions.Uncheck
     @ApiOperation("统计用户总计消费数及本月消费数")
-    @ApiImplicitParam(paramType = "path", name = "id", dataType = "String", required = true, value = "用户id")
+    @ApiImplicitParam(paramType = "path", name = "userId", dataType = "Long", required = true, value = "用户id")
     @GetMapping("/{userId}/consumption")
-    public ResponseEntity<?> findUserAchievement(@PathVariable Long id){
+    public ResponseEntity<?> findUserAchievement(@PathVariable Long userId){
         //统计本月订单数和消费额
         Achievement thisMonth =
-                doctorAchievementLogService.achievement(DateTypeEnum.MONTH, PeriodType.current, null, true, false,id);
+                doctorAchievementLogService.achievement(DateTypeEnum.MONTH, PeriodType.current, null, true, false,userId);
         //统计总订单数和消费额
         Achievement total =
-                doctorAchievementLogService.achievement(DateTypeEnum.MONTH, PeriodType.current, null, true, true,id);
+                doctorAchievementLogService.achievement(DateTypeEnum.MONTH, PeriodType.current, null, true, true,userId);
         //构建返回值
         total.setSalesAmountOfThisMonth(thisMonth.getSalesAmount());
         total.setOrderCountOfThisMonth(thisMonth.getOrderCount());
@@ -326,7 +327,7 @@ public class UserApi {
         //获取用户信息
         /*FruitDoctorUser user = fruitDoctorUserMapper.findByDoctorIdAndUserId(map);
         total.setUser(user);*/
-        ResponseEntity<UserDetailResult> userInfo = baseUserServerFeign.findById(id);
+        ResponseEntity<UserDetailResult> userInfo = baseUserServerFeign.findById(userId);
         if (userInfo.getStatusCode().isError()){
             return ResponseEntity.badRequest().body(userInfo.getBody());
         }
