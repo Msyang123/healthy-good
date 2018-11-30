@@ -3,6 +3,7 @@ package com.lhiot.healthygood.mapper.customplan;
 import com.lhiot.healthygood.domain.customplan.CustomPlanSection;
 import com.lhiot.healthygood.domain.customplan.CustomPlanSectionParam;
 import org.apache.ibatis.annotations.Mapper;
+import org.springframework.stereotype.Repository;
 
 import java.util.List;
 
@@ -12,6 +13,7 @@ import java.util.List;
 * @date 2018/11/22
 */
 @Mapper
+@Repository
 public interface CustomPlanSectionMapper {
 
     /**

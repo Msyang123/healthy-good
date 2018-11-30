@@ -135,8 +135,8 @@
         </foreach>
     </select>
 
-    <!--根据商品版块ID查询商品上架与版块关系记录-->
-    <select id="selectRelationList" resultMap="baseResultMap">
+    <!--根据定制版块id和定制计划ids查询商品上架与版块关系记录-->
+    <select id="selectRelationListBySectionId" resultMap="baseResultMap">
         select
         <include refid="columns"/>
         from custom_plan_section_relation
@@ -144,6 +144,19 @@
         <if test="planIds != null and planIds != ''">
             and plan_id in
             <foreach item="item" index="index" collection="planIds.split(',')" open="(" separator="," close=")">
+                ${item}
+            </foreach>
+        </if>
+    </select>
+
+    <!--根据定制计划id和定制板块ids查询商品上架与版块关系记录-->
+    <select id="selectRelationListByPlanId" resultMap="baseResultMap">
+        select *
+        from custom_plan_section_relation relation
+        where plan_id = #{planId}
+        <if test="sectionIds != null and sectionIds != ''">
+            and section_id in
+            <foreach item="item" index="index" collection="sectionIds.split(',')" open="(" separator="," close=")">
                 ${item}
             </foreach>
         </if>

@@ -1,10 +1,9 @@
 package com.lhiot.healthygood.mapper.customplan;
 
-import com.lhiot.healthygood.domain.customplan.CustomPlan;
-import com.lhiot.healthygood.domain.customplan.CustomPlanSection;
 import com.lhiot.healthygood.domain.customplan.CustomPlanSectionRelation;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
+import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.Map;
@@ -15,6 +14,7 @@ import java.util.Map;
 * @date 2018/11/26
 */
 @Mapper
+@Repository
 public interface CustomPlanSectionRelationMapper {
 
     /**
@@ -93,6 +93,15 @@ public interface CustomPlanSectionRelationMapper {
      * @param planIds 定制计划ID集合
      * @return 关系集合
      */
-    List<CustomPlanSectionRelation> selectRelationList(@Param("sectionId") Long sectionId, @Param("planIds") String planIds);
+    List<CustomPlanSectionRelation> selectRelationListBySectionId(@Param("sectionId") Long sectionId, @Param("planIds") String planIds);
+
+    /**
+     * 查询定制计划与版块关系记录
+     *
+     * @param planId 定制计划ID
+     * @param sectionIds 定制版块ID集合
+     * @return 关系集合
+     */
+    List<CustomPlanSectionRelation> selectRelationListByPlanId(@Param("planId") Long planId, @Param("sectionIds") String sectionIds);
 
 }

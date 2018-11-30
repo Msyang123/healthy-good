@@ -38,7 +38,7 @@ public class CustomPlanSectionRelationService {
      */
     public Tips addRelation(CustomPlanSectionRelation customPlanSectionRelation) {
         // 幂等添加
-        List<CustomPlanSectionRelation> customPlanSectionRelations = customPlanSectionRelationMapper.selectRelationList(customPlanSectionRelation.getSectionId(), customPlanSectionRelation.getPlanId() + "");
+        List<CustomPlanSectionRelation> customPlanSectionRelations = customPlanSectionRelationMapper.selectRelationListBySectionId(customPlanSectionRelation.getSectionId(), customPlanSectionRelation.getPlanId() + "");
         if (!customPlanSectionRelations.isEmpty()) {
             return Tips.warn("定制计划与版块关联重复，添加失败");
         }
@@ -55,7 +55,7 @@ public class CustomPlanSectionRelationService {
      */
     public Tips addRelationList(Long sectionId, String planIds, String sorts) {
         //先做幂等验证
-        List<CustomPlanSectionRelation> relationList = customPlanSectionRelationMapper.selectRelationList(sectionId, planIds);
+        List<CustomPlanSectionRelation> relationList = customPlanSectionRelationMapper.selectRelationListBySectionId(sectionId, planIds);
         if (!relationList.isEmpty()) {
             Tips.warn("定制计划与版块关联重复，添加失败");
         }

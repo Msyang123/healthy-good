@@ -1,16 +1,14 @@
 package com.lhiot.healthygood.service.customplan;
 
 import com.leon.microx.util.BeanUtils;
+import com.leon.microx.util.StringUtils;
 import com.leon.microx.web.result.Pages;
 import com.leon.microx.web.result.Tips;
-import com.lhiot.healthygood.domain.customplan.CustomPlan;
-import com.lhiot.healthygood.domain.customplan.CustomPlanParam;
-import com.lhiot.healthygood.domain.customplan.CustomPlanSection;
-import com.lhiot.healthygood.mapper.customplan.CustomPlanMapper;
-import com.lhiot.healthygood.mapper.customplan.CustomPlanSectionMapper;
+import com.lhiot.healthygood.domain.customplan.*;
 import com.lhiot.healthygood.domain.customplan.model.CustomPlanDetailResult;
 import com.lhiot.healthygood.domain.customplan.model.CustomPlanSectionResult;
 import com.lhiot.healthygood.domain.customplan.model.CustomPlanSimpleResult;
+import com.lhiot.healthygood.mapper.customplan.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,36 +16,46 @@ import org.springframework.util.CollectionUtils;
 
 import java.time.Instant;
 import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Service
 @Transactional
 public class CustomPlanService {
     private final CustomPlanSectionMapper customPlanSectionMapper;
     private final CustomPlanMapper customPlanMapper;
+    private final CustomPlanSectionRelationMapper customPlanSectionRelationMapper;
+    private final CustomPlanSpecificationMapper customPlanSpecificationMapper;
+    private final CustomPlanProductMapper customPlanProductMapper;
 
 
     @Autowired
-    public CustomPlanService(CustomPlanSectionMapper customPlanSectionMapper,CustomPlanMapper customPlanMapper ) {
+    public CustomPlanService(CustomPlanSectionMapper customPlanSectionMapper, CustomPlanMapper customPlanMapper, CustomPlanSectionRelationMapper customPlanSectionRelationMapper, CustomPlanSpecificationMapper customPlanSpecificationMapper, CustomPlanProductMapper customPlanProductMapper) {
         this.customPlanSectionMapper = customPlanSectionMapper;
         this.customPlanMapper = customPlanMapper;
+        this.customPlanSectionRelationMapper = customPlanSectionRelationMapper;
+        this.customPlanSpecificationMapper = customPlanSpecificationMapper;
+        this.customPlanProductMapper = customPlanProductMapper;
     }
+
     public List<CustomPlanSectionResult> findComPlanSectionByCode(String code) {
         List<CustomPlanSectionResult> result = new ArrayList<>();
         List<CustomPlanSection> customPlanSections = customPlanSectionMapper.selectBySectionCode(code);
-        for(CustomPlanSection customPlanSection:customPlanSections){
+        for (CustomPlanSection customPlanSection : customPlanSections) {
             result.add(getCustomPlanSecionResult(customPlanSection));
         }
         return result;
     }
-    CustomPlanSectionResult getCustomPlanSecionResult(CustomPlanSection customPlanSection){
+
+    CustomPlanSectionResult getCustomPlanSecionResult(CustomPlanSection customPlanSection) {
         CustomPlanSectionResult customPlanSectionResult = new CustomPlanSectionResult();
-        if(null != customPlanSection ){
+        if (null != customPlanSection) {
             BeanUtils.of(customPlanSectionResult).populate(customPlanSection);
             customPlanSectionResult.setImage(customPlanSection.getSectionImage());
             List<CustomPlanSimpleResult> customPlanSimpleResults = new ArrayList<>();
             List<CustomPlan> customPlanList = customPlanMapper.findByCustomPlanSectionId(customPlanSection.getId());
-            if(CollectionUtils.isEmpty(customPlanList)){
-                for(CustomPlan customPlan:customPlanList){
+            if (CollectionUtils.isEmpty(customPlanList)) {
+                for (CustomPlan customPlan : customPlanList) {
                     CustomPlanSimpleResult customPlanSimpleResult = new CustomPlanSimpleResult();
                     BeanUtils.of(customPlanSimpleResult).populate(customPlan);
                     customPlanSimpleResults.add(customPlanSimpleResult);
@@ -69,7 +77,7 @@ public class CustomPlanService {
         CustomPlan customPlan = customPlanMapper.selectById(id);
         BeanUtils.of(result).populate(customPlan);
 
-        return null;
+        return result;
     }
 
 
@@ -89,21 +97,75 @@ public class CustomPlanService {
     /**
      * 新增定制计划
      *
-     * @param customPlan
+     * @param customPlanResult
      * @return Tips信息  成功在message中返回Id
      */
-    public Tips addCustomPlan(CustomPlan customPlan){
-        if (Objects.isNull(customPlan.getName())) {
-            return Tips.warn("定制计划名称为空，添加失败.");
-        }
-        // 幂等添加
-        CustomPlan customPlan1 = customPlanMapper.selectByName(customPlan.getName());
+    // FIXME   TCC操作
+    public Tips addCustomPlan(CustomPlanResult customPlanResult) {
+        // 幂等添加 定制计划
+        CustomPlan customPlan1 = customPlanMapper.selectByName(customPlanResult.getName());
         if (Objects.nonNull(customPlan1)) {
             return Tips.warn("定制计划名称重复，添加失败");
         }
-        customPlan.setCreateAt(Date.from(Instant.now()));
-        customPlanMapper.create(customPlan);
-        return Tips.info(customPlan.getId() + "");
+        customPlanResult.setCreateAt(Date.from(Instant.now()));
+        CustomPlan customPlan = new CustomPlan();
+        BeanUtils.copyProperties(customPlanResult, customPlan);
+        boolean addCustomPlan = customPlanMapper.create(customPlan) > 0;
+
+        if (!addCustomPlan) {
+            return Tips.warn("添加定制计划失败");
+        }
+        // 新增的定制计划id
+        Long customPlanId = customPlan.getId();
+
+        // 幂等添加 定制板块和定制计划的关联
+        List<CustomPlanSectionRelation> customPlanSectionRelations = customPlanSectionRelationMapper.selectRelationListByPlanId(customPlanId, customPlanResult.getCustomPlanSectionIds());
+        if (!customPlanSectionRelations.isEmpty()) {
+            return Tips.warn("定制计划与版块关联重复，添加失败");
+        }
+        List<CustomPlanSectionRelation> customPlanSectionRelation = new ArrayList<>();
+        String[] sectionIds = StringUtils.tokenizeToStringArray(customPlanResult.getCustomPlanSectionIds(), ",");
+        List<String> sectionIdList = Stream.of(sectionIds).collect(Collectors.toList());
+        String[] sortIds = StringUtils.tokenizeToStringArray(customPlanResult.getSorts(), ",");
+        List<String> sortIdList = Stream.of(sortIds).collect(Collectors.toList());
+        if (sectionIdList.isEmpty() || sortIdList.isEmpty() || sectionIdList.size() != sortIdList.size()) {
+            return Tips.warn("关联板块ids和排序ids长度不一致");
+        }
+        sectionIdList.stream().forEach(s -> {
+            CustomPlanSectionRelation customPlanSectionRelation1 = new CustomPlanSectionRelation();
+            customPlanSectionRelation1.setPlanId(customPlanId);
+            customPlanSectionRelation1.setSectionId(Long.valueOf(s));
+            customPlanSectionRelation1.setSort(Long.valueOf(sortIdList.get(sectionIdList.indexOf(s))));
+            customPlanSectionRelation.add(customPlanSectionRelation1);
+        });
+        boolean addRelation = customPlanSectionRelationMapper.insertList(customPlanSectionRelation) > 0;
+
+        if (!addRelation) {
+            return Tips.warn("定制计划和定制板块关联失败");
+        }
+        // 添加定制计划规格  FIXME (定制规格和定制商品需要幂等添加？)
+        List<CustomPlanSpecification> customPlanSpecifications = customPlanResult.getCustomPlanSpecifications();
+        if (addCustomPlan && customPlanSpecifications != null && !customPlanSpecifications.isEmpty()) {
+            customPlanSpecifications = customPlanSpecifications.stream()
+                    .peek(specification -> specification.setPlanId(customPlanId))
+                    .collect(Collectors.toList());
+            boolean addCustomPlanSpecification = customPlanSpecificationMapper.insertList(customPlanSpecifications) > 0;
+            if (!addCustomPlanSpecification) {
+                return Tips.warn("定制计划规格添加失败");
+            }
+            // 添加定制计划商品 TODO 新增定制周期和定制序号
+            customPlanSpecifications.stream()
+                    .forEach(customPlanSpecification -> {
+                        List<CustomPlanProduct> customPlanProducts = customPlanSpecification.getCustomPlanProducts().stream()
+                                .peek(customPlanProduct -> customPlanProduct.setPlanId(customPlanId)).collect(Collectors.toList());
+                        boolean addCustomPlanProduct = customPlanProductMapper.insertList(customPlanProducts) > 0;
+                        if (!addCustomPlanProduct) {
+                            Tips.warn("定制计划商品添加失败");
+                        }
+                        // FIXME ruturn Tips.warn("定制计划商品添加失败");
+                    });
+        }
+        return Tips.info(customPlanId + "");
     }
 
     /**
@@ -115,6 +177,25 @@ public class CustomPlanService {
     public boolean update(CustomPlan customPlan) {
         return customPlanMapper.updateById(customPlan) > 0;
     }
+
+
+    /**
+     * 修改定制计划商品
+     *
+     * @param customPlanProducts
+     * @return
+     */
+    public Tips updateProduct(List<CustomPlanProduct> customPlanProducts) {
+        // 循环批量更新上架商品id
+        customPlanProducts.stream().forEach(customPlanProduct -> {
+            boolean addProduct = customPlanProductMapper.updateById(customPlanProduct) > 0;
+            if (!addProduct){
+                Tips.warn("修改失败");
+            }
+        });
+        return Tips.info("修改成功");
+    }
+
 
     /**
      * 根据id查找单个定制计划
@@ -129,6 +210,7 @@ public class CustomPlanService {
 
     /**
      * 根据id批量删除
+     *
      * @param ids
      * @return
      */

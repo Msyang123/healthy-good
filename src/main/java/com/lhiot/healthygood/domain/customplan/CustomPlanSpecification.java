@@ -2,7 +2,6 @@ package com.lhiot.healthygood.domain.customplan;
 
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonFormat;
 import com.lhiot.healthygood.common.PagerRequestObject;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
@@ -10,6 +9,9 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
+
+import javax.validation.constraints.NotNull;
+import java.util.List;
 
 /**
 * Description:定制计划规格实体类
@@ -65,5 +67,12 @@ public class CustomPlanSpecification extends PagerRequestObject {
     @ApiModelProperty(value = "定制计划周期", dataType = "String")
     private String planPeriod;
 
+
+    /**
+     * 定制商品
+     */
+    @ApiModelProperty(value = "定制商品", dataType = "List")
+    @NotNull
+    private List<CustomPlanProduct> customPlanProducts;
 
 }

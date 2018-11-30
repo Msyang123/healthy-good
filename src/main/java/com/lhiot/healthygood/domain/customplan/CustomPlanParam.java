@@ -30,6 +30,10 @@ public class CustomPlanParam {
     @ApiModelProperty(value = "定制计划状态", dataType = "String")
     private String status;
 
+    // TODO 定制商品
+
+    // TODO 定制规格
+
     @ApiModelProperty(notes = "每页查询条数(为空或0不分页查所有)", dataType = "Integer")
     private Integer rows;
     @ApiModelProperty(notes = "当前页", dataType = "Integer")

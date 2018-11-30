@@ -74,6 +74,7 @@ public class CustomPlan extends PagerRequestObject {
     private String status;
 
 
+    // FIXME 不一定需要
     @ApiModelProperty(value = "定制板块关联定制计划排序", dataType = "Integer")
     private Integer sort;
 
