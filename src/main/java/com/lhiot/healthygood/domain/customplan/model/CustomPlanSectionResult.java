@@ -10,6 +10,8 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
 
+import javax.validation.constraints.NotNull;
+import java.util.Date;
 import java.util.List;
 
 @Data
@@ -41,16 +43,19 @@ public class CustomPlanSectionResult {
      */
     @JsonProperty("sectionCode")
     @ApiModelProperty(value = "", dataType = "String")
+    @NotNull
     private String sectionCode;
     /**
      *
      */
     @JsonProperty("createAt")
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss",timezone = "GMT+8")
-    @ApiModelProperty(value = "", dataType = "Date")
-    private java.util.Date createAt;
+    @ApiModelProperty(value = "", dataType = "Date", readOnly = true)
+    private Date createAt;
 
     @JsonProperty("customPlanList")
     @ApiModelProperty(value = "", dataType = "Pages")
+    @NotNull
     private Pages<CustomPlan> customPlanList;
+
 }

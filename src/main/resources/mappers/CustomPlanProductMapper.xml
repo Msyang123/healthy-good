@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
-<mapper namespace="com.lhiot.healthygood.domain.customplan.CustomPlanProductMapper">
+<mapper namespace="com.lhiot.healthygood.mapper.customplan.CustomPlanProductMapper">
 
     <!-- 数据库字段对象关系映射 -->
     <resultMap id="BaseResultMap"
@@ -162,5 +162,23 @@
         from custom_plan_product
         where plan_id = #{0}
     </select>
+
+    <!--批量新增关系-->
+    <insert id="insertList" parameterType="java.util.List">
+        <selectKey resultType ="java.lang.Integer" keyProperty= "id" order= "AFTER">
+            SELECT LAST_INSERT_ID()
+        </selectKey >
+        insert into custom_plan_product (plan_id,product_shelf_id,day_n,plan_period,sort)
+        values
+        <foreach collection="list" item="item" index="index" separator=",">
+            (
+            #{item.planId},
+            #{item.productShelfId},
+            #{item.dayN},
+            #{item.planPeriod},
+            #{item.sort}
+            )
+        </foreach>
+    </insert>
 
 </mapper>

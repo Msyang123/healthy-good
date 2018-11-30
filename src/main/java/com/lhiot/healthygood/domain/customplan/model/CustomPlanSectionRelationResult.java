@@ -1,52 +1,50 @@
-package com.lhiot.healthygood.domain.customplan;
-
+package com.lhiot.healthygood.domain.customplan.model;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.lhiot.healthygood.domain.customplan.CustomPlan;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
 
-import java.util.List;
-
 /**
-* Description:定制计划板块关联定制计划实体类
-* @author zhangs
-* @date 2018/11/22
-*/
+ * @author hufan created in 2018/11/30 14:40
+ **/
 @Data
 @ToString(callSuper = true)
 @ApiModel
 @NoArgsConstructor
-public class CustomPlanSectionRelation{
+public class CustomPlanSectionRelationResult {
 
     /**
-    *id
-    */
+     * id
+     */
     @JsonProperty("id")
     @ApiModelProperty(value = "id", dataType = "Long", readOnly = true)
     private Long id;
 
     /**
-    *定制计划板块id
-    */
+     * 定制计划板块id
+     */
     @JsonProperty("sectionId")
     @ApiModelProperty(value = "定制计划板块id", dataType = "Long")
     private Long sectionId;
 
     /**
-    *定制计划id
-    */
+     * 定制计划id
+     */
     @JsonProperty("planId")
     @ApiModelProperty(value = "定制计划id", dataType = "Long")
     private Long planId;
 
     /**
-    *定制计划排序
-    */
+     * 定制计划排序
+     */
     @JsonProperty("sort")
     @ApiModelProperty(value = "定制计划排序", dataType = "Long")
     private Long sort;
 
+    @ApiModelProperty(value = "定制计划列表", dataType = "CustomPlan")
+    private CustomPlan customPlan;
 }

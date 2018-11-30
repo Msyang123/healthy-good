@@ -2,6 +2,7 @@ package com.lhiot.healthygood.mapper.customplan;
 
 import com.lhiot.healthygood.domain.customplan.CustomPlanProduct;
 import org.apache.ibatis.annotations.Mapper;
+import org.springframework.stereotype.Repository;
 
 import java.util.List;
 
@@ -11,16 +12,18 @@ import java.util.List;
 * @date 2018/11/26
 */
 @Mapper
+@Repository
 public interface CustomPlanProductMapper {
 
     /**
-    * Description:新增定制计划关联商品
-    *
-    * @param customPlanProduct
-    * @return
+     * Description:新增定制计划关联商品
+     *
+     * @param customPlanProduct
+     * @return
     * @author zhangs
     * @date 2018/11/26 15:53:47
-    */
+     * @date 2018/11/26 15:53:47
+     */
     int create(CustomPlanProduct customPlanProduct);
 
     /**
@@ -73,4 +76,12 @@ public interface CustomPlanProductMapper {
     * @date 2018/11/26 15:53:47
     */
     long pageCustomPlanProductCounts(CustomPlanProduct customPlanProduct);
+
+    /**
+     * 新增定制商品集合
+     *
+     * @param customPlanProducts 定制商品集合
+     * @return 定制商品id
+     */
+    int insertList(List<CustomPlanProduct> customPlanProducts);
 }

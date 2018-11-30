@@ -3,21 +3,55 @@
 <mapper namespace="com.lhiot.healthygood.mapper.customplan.CustomPlanSectionRelationMapper">
 
     <!-- 数据库字段对象关系映射 -->
-    <resultMap id="BaseResultMap"
-        type="com.lhiot.healthygood.domain.customplan.CustomPlanSectionRelation" >
+    <resultMap id="BaseResultMap" type="com.lhiot.healthygood.domain.customplan.CustomPlanSectionRelation">
         <id column="id" property="id"/>
-        <result column="section_id" property="sectionId" />
-        <result column="plan_id" property="planId" />
-        <result column="sort" property="sort" />
+        <result column="plan_id" property="planId"/>
+        <result column="section_id" property="sectionId"/>
+        <result column="sort" property="sort"/>
     </resultMap>
 
     <!-- base查询字段  -->
     <sql id="Base_Column_List" >
         <trim suffixOverrides="," >
             id,
-            section_id,
             plan_id,
+            section_id,
             sort,
+        </trim>
+    </sql>
+
+    <!-- 数据库字段对象关系映射 -->
+    <resultMap id="SectionAndPlan" type="com.lhiot.healthygood.domain.customplan.model.CustomPlanSectionRelationResult">
+        <id column="id" property="id"/>
+        <result column="plan_id" property="planId"/>
+        <result column="section_id" property="sectionId"/>
+        <result column="sort" property="sort"/>
+        <association property="customPlan" javaType="com.lhiot.healthygood.domain.customplan.CustomPlan">
+            <id column="plan_id" property="id"/>
+            <result column="name" property="name" />
+            <result column="description" property="description" />
+            <result column="image" property="image" />
+            <result column="create_at" property="createAt" />
+            <result column="over_rule" property="overRule" />
+            <result column="status" property="status" />
+        </association>
+    </resultMap>
+
+    <!-- base查询字段  -->
+    <sql id="columnsPlan">
+        <trim suffixOverrides=",">
+            relation.id,
+            relation.plan_id,
+            relation.section_id,
+            relation.sort sort,
+
+            plan.id,
+            plan.name,
+            plan.description,
+            plan.image,
+            plan.create_at,
+            plan.over_rule,
+            plan.status,
         </trim>
     </sql>
 
@@ -54,6 +88,19 @@
         </trim>
     </insert>
 
+    <!--批量新增关系-->
+    <insert id="insertList" parameterType="java.util.List">
+        insert into custom_plan_section_relation (plan_id,section_id,sort)
+        values
+        <foreach collection="list" item="item" index="index" separator=",">
+            (
+            #{item.planId},
+            #{item.sectionId},
+            #{item.sort}
+            )
+        </foreach>
+    </insert>
+
     <!--根据id修改定制计划板块关联定制计划-->
     <update id="updateById" parameterType="com.lhiot.healthygood.domain.customplan.CustomPlanSectionRelation">
         update custom_plan_section_relation
@@ -74,22 +121,26 @@
         where id=#{id}
     </update>
 
+
+    <!-- 删除单个关系 -->
+    <delete id="deleteById" parameterType="Long">
+        delete from custom_plan_section_relation where id = #{0}
+    </delete>
+
     <!--根据ids删除定制计划板块关联定制计划-->
     <delete id="deleteByIds" parameterType="java.util.List">
         delete from custom_plan_section_relation where id in
         <foreach collection="list" item="item" open="("
-            separator="," close=")">
+                 separator="," close=")">
             #{item}
         </foreach>
     </delete>
 
-
     <!-- 根据id查找定制计划板块关联定制计划 -->
-	<select id="selectById" resultMap="BaseResultMap"
-		parameterType="long"> select <include refid="Base_Column_List" />
-		from custom_plan_section_relation where id = #{id}
-	</select>
-
+    <select id="selectById" resultMap="BaseResultMap"
+            parameterType="long"> select <include refid="Base_Column_List" />
+        from custom_plan_section_relation where id = #{id}
+    </select>
 
     <!-- base where条件  -->
     <sql id="Base_Where_Condition" >
@@ -132,5 +183,81 @@
             parameterType="com.lhiot.healthygood.domain.customplan.CustomPlanSectionRelation">
         select <include refid="Base_Column_List" />
         from custom_plan_section_relation where plan_id = #{0}
+    </select>
+
+    <!-- 根据定制计划ID集合删除相关关系 -->
+    <delete id="deleteRelationByShelfIds" parameterType="String">
+        delete from custom_plan_section_relation where plan_id in
+        <foreach item="item" index="index" collection="planIds.split(',')" open="(" separator="," close=")">
+            ${item}
+        </foreach>
+    </delete>
+
+
+    <!-- 根据定制版块ID集合删除相关关系 -->
+    <delete id="deleteRelationBySectionIds" parameterType="String">
+        delete from custom_plan_section_relation where section_id in
+        <foreach item="item" index="index" collection="sectionIds.split(',')" open="(" separator="," close=")">
+            ${item}
+        </foreach>
+    </delete>
+
+
+    <!-- 根据定制计划ID集合删除相关关系 -->
+    <delete id="deleteRelationList">
+        delete from custom_plan_section_relation where section_id = #{sectionId}
+        <if test="planIds != null and planIds != ''">
+            and plan_id in
+            <foreach item="item" index="index" collection="planIds.split(',')" open="(" separator="," close=")">
+                ${item}
+            </foreach>
+        </if>
+    </delete>
+
+
+    <!-- 根据定制板块id查找关联的定制计划 -->
+    <select id="findPlanBySectionId" parameterType="Long" resultMap="SectionAndPlan">
+        select
+        <include refid="columnsPlan"/>
+        from custom_plan_section_relation relation
+        left join custom_plan plan on relation.plan_id = plan.id
+        where relation.section_id = #{sectionId}
+    </select>
+
+    <!--根据定制板块Id集合 查找出有定制计划的定制板块id-->
+    <select id="findBySectionIds" parameterType="String" resultType="map">
+        select id,section_id sectionId,plan_id planId
+        from custom_plan_section_relation
+        where section_id in
+        <foreach item="item" index="index" collection="sectionIds.split(',')" open="(" separator="," close=")">
+            ${item}
+        </foreach>
+    </select>
+
+    <!--根据定制版块id和定制计划ids查询商品上架与版块关系记录-->
+    <select id="selectRelationListBySectionId" resultMap="BaseResultMap">
+        select
+        <include refid="Base_Column_List"/>
+        from custom_plan_section_relation
+        where section_id = #{sectionId}
+        <if test="planIds != null and planIds != ''">
+            and plan_id in
+            <foreach item="item" index="index" collection="planIds.split(',')" open="(" separator="," close=")">
+                ${item}
+            </foreach>
+        </if>
+    </select>
+
+    <!--根据定制计划id和定制板块ids查询商品上架与版块关系记录-->
+    <select id="selectRelationListByPlanId" resultMap="BaseResultMap">
+        select *
+        from custom_plan_section_relation relation
+        where plan_id = #{planId}
+        <if test="sectionIds != null and sectionIds != ''">
+            and section_id in
+            <foreach item="item" index="index" collection="sectionIds.split(',')" open="(" separator="," close=")">
+                ${item}
+            </foreach>
+        </if>
     </select>
 </mapper>

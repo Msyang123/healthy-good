@@ -2,7 +2,9 @@ package com.lhiot.healthygood.mapper.customplan;
 
 import com.lhiot.healthygood.domain.customplan.CustomPlan;
 import com.lhiot.healthygood.domain.customplan.model.PlanSectionsParam;
+import com.lhiot.healthygood.domain.customplan.model.CustomPlanParam;
 import org.apache.ibatis.annotations.Mapper;
+import org.springframework.stereotype.Repository;
 
 import java.util.List;
 
@@ -12,6 +14,7 @@ import java.util.List;
 * @date 2018/11/22
 */
 @Mapper
+@Repository
 public interface CustomPlanMapper {
 
     /**
@@ -55,25 +58,35 @@ public interface CustomPlanMapper {
     CustomPlan selectById(Long id);
 
     /**
+     * Description:根据name查找定制计划
+     *
+     * @param name
+     * @return
+     * @author hufan
+     * @date 2018/11/26 20:08:07
+     */
+    CustomPlan selectByName(String name);
+
+    /**
     * Description:查询定制计划列表
     *
-    * @param customPlan
+    * @param customPlanParam
     * @return
     * @author zhangs
     * @date 2018/11/22 12:09:27
     */
-     List<CustomPlan> pageCustomPlans(CustomPlan customPlan);
+     List<CustomPlan> pageCustomPlans(CustomPlanParam customPlanParam);
 
 
     /**
     * Description: 查询定制计划总记录数
     *
-    * @param customPlan
+    * @param customPlanParam
     * @return
     * @author zhangs
     * @date 2018/11/22 12:09:27
     */
-    long pageCustomPlanCounts(CustomPlan customPlan);
+    int pageCustomPlanCounts(CustomPlanParam customPlanParam);
 
     List<CustomPlan> findByCustomPlanSectionId(PlanSectionsParam planSectionsParam);
 }
