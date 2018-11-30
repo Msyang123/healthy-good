@@ -4,11 +4,13 @@ import com.alibaba.fastjson.JSONException;
 import com.leon.microx.util.DateTime;
 import com.leon.microx.util.Jackson;
 import com.leon.microx.util.StringUtils;
+import com.leon.microx.web.result.Tips;
 import com.leon.microx.web.session.Sessions;
 import com.lhiot.healthygood.domain.common.DeliverTime;
 import com.lhiot.healthygood.domain.store.StoreResult;
 import com.lhiot.healthygood.feign.DeliverServiceFeign;
 import com.lhiot.healthygood.service.common.CommonService;
+import com.lhiot.healthygood.util.FeginResponseTools;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
@@ -70,13 +72,14 @@ public class CommonsApi {
     @Sessions.Uncheck
     @GetMapping("/delivery/times")
     @ApiOperation(value = "获取配送时间列表")
-    public ResponseEntity<String> getDeliverTime() {
+    public ResponseEntity<Tips> getDeliverTime() {
         //查询今天和明天的配送时间列表
         ResponseEntity<Map<String,Object>> deliverTimesEntity = deliverServiceFeign.deliverTimes(null);
-        if(Objects.isNull(deliverTimesEntity)||deliverTimesEntity.getStatusCode().isError()){
-            return ResponseEntity.badRequest().body("调用获取配送时间列表失败");
+        Tips<Map<String,Object>> tips = FeginResponseTools.convertResponse(deliverTimesEntity);
+        if(tips.err()){
+            return ResponseEntity.badRequest().body(tips);
         }
-        return ResponseEntity.ok(Jackson.json(deliverTimesEntity.getBody()));
+        return ResponseEntity.ok(tips);
     }
 
     @Sessions.Uncheck

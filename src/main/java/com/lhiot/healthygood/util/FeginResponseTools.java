@@ -9,7 +9,7 @@ import java.util.Objects;
 @Slf4j
 public class FeginResponseTools {
 
-    public static <T> Tips<T> convertFailureResponse(ResponseEntity<T> responseEntity){
+    public static <T> Tips<T> convertResponse(ResponseEntity<T> responseEntity){
 
         if(Objects.isNull(responseEntity)||responseEntity.getStatusCode().isError()){
             log.error("调用基础服务失败:{}",responseEntity);
