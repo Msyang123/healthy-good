@@ -74,5 +74,5 @@ public interface SpecialProductActivityMapper {
     * @author yangjiawen
     * @date 2018/11/24 16:09:12
     */
-    Long pageSpecialProductActivityCounts(SpecialProductActivity specialProductActivity);
+    int pageSpecialProductActivityCounts(SpecialProductActivity specialProductActivity);
 }

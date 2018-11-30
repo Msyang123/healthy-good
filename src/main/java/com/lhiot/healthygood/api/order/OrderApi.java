@@ -1,17 +1,12 @@
 package com.lhiot.healthygood.api.order;
 
-import com.google.common.collect.Lists;
-import com.leon.microx.util.Jackson;
 import com.leon.microx.web.session.Sessions;
 import com.lhiot.healthygood.domain.good.ProductShelf;
 import com.lhiot.healthygood.domain.order.CreateOrderParam;
 import com.lhiot.healthygood.domain.order.OrderProductParam;
 import com.lhiot.healthygood.domain.store.Store;
-import com.lhiot.healthygood.entity.ReceivingWay;
-import com.lhiot.healthygood.feign.good.BaseDataServiceFeign;
-import com.lhiot.healthygood.service.activity.ActivityProductRecordService;
-import com.lhiot.healthygood.service.activity.ActivityProductService;
-import com.lhiot.healthygood.service.activity.SpecialProductActivityService;
+import com.lhiot.healthygood.type.ReceivingWay;
+import com.lhiot.healthygood.feign.BaseDataServiceFeign;
 import com.lhiot.healthygood.service.order.OrderService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
@@ -20,13 +15,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.servlet.http.HttpServletRequest;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -48,7 +41,6 @@ public class OrderApi {
         this.baseDataServiceFeign = baseDataServiceFeign;
     }
 
-    //创建订单
     @PostMapping("/orders")
     @ApiOperation("和色果膳--创建订单")
     @ApiImplicitParam(paramType = "body", name = "orderParam", dataType = "CreateOrderParam", required = true, value = "创建订单传入参数")
@@ -117,5 +109,6 @@ public class OrderApi {
         return ResponseEntity.ok(null);
 
     }
+
 
 }

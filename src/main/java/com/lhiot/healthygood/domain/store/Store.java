@@ -1,12 +1,14 @@
 package com.lhiot.healthygood.domain.store;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.lhiot.healthygood.entity.StorePosition;
-import com.lhiot.healthygood.entity.StoreStatus;
-import com.lhiot.healthygood.entity.StoreType;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.lhiot.healthygood.type.ApplicationType;
+import com.lhiot.healthygood.type.StoreStatus;
+import com.lhiot.healthygood.type.StoreType;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
+
+import java.math.BigDecimal;
 
 /**
 * Description:门店实体类
@@ -101,20 +103,20 @@ public class Store {
     @ApiModelProperty(notes = "录播地址", dataType = "String")
     private String tapeUrl;
 
-    @ApiModelProperty(notes="门店位置信息",dataType="StorePosition")
-    private StorePosition storePosition;
+    @ApiModelProperty(notes = "纬度", dataType = "BigDecimal")
+    private BigDecimal latitude;
 
-    private String distance;
 
-    @JsonIgnore
-    @ApiModelProperty(value = "当前页,默认值1")
-    private Long page = 1L;
+    @ApiModelProperty(notes = "经度", dataType = "BigDecimal")
+    private BigDecimal longitude;
 
     /**
-     * 传入-1可不分页
+     *应用类型
      */
-    @JsonIgnore
-    @ApiModelProperty(value = "每页显示条数,默认值10")
-    private Long rows = 10L;
+    @JsonProperty("applicationType")
+    @ApiModelProperty(value = "应用类型", dataType = "ApplicationTypeEnum")
+    private ApplicationType applicationType;
+
+    private String distance;
 
 }

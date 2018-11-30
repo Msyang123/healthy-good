@@ -1,14 +1,13 @@
 package com.lhiot.healthygood.domain.doctor;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.leon.microx.util.BeanUtils;
-import com.lhiot.healthygood.common.PagerRequestObject;
-import com.lhiot.healthygood.entity.IncomeType;
+import com.lhiot.healthygood.type.IncomeType;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
 
@@ -23,8 +22,7 @@ import java.util.Map;
 @ToString(callSuper = true)
 @ApiModel
 @NoArgsConstructor
-@EqualsAndHashCode(callSuper = true)
-public class DoctorAchievementLog extends PagerRequestObject {
+public class DoctorAchievementLog{
 
     /**
     *
@@ -106,5 +104,22 @@ public class DoctorAchievementLog extends PagerRequestObject {
     	DoctorAchievementLog doctorAchievementLog = new DoctorAchievementLog();
         BeanUtils.of(doctorAchievementLog).populate(BeanUtils.of(this).toMap());
         return doctorAchievementLog;
+    }
+
+
+    @ApiModelProperty(notes = "每页查询条数(为空或0不分页查所有)", dataType = "Integer")
+    private Integer rows;
+    @ApiModelProperty(notes = "当前页", dataType = "Integer")
+    private Integer page;
+
+    @ApiModelProperty(hidden = true)
+    private Integer startRow;
+
+    @JsonIgnore
+    public Integer getStartRow() {
+        if (this.rows != null && this.rows > 0) {
+            return (this.page != null && this.page > 0 ? this.page - 1 : 0) * this.rows;
+        }
+        return null;
     }
 }

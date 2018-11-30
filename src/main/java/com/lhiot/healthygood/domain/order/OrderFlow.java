@@ -1,6 +1,6 @@
 package com.lhiot.healthygood.domain.order;
 
-import com.lhiot.healthygood.common.PagerRequestObject;
+import com.lhiot.healthygood.type.OrderStatus;
 import io.swagger.annotations.ApiModel;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -13,7 +13,7 @@ import java.util.Date;
 @EqualsAndHashCode(callSuper = false)
 @Data
 @ApiModel
-public class OrderFlow extends PagerRequestObject {
+public class OrderFlow {
     private Long id;
     private Long orderId;
     private OrderStatus status;

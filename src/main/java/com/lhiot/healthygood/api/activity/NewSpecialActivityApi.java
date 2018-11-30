@@ -6,7 +6,7 @@ import com.lhiot.healthygood.domain.activity.ActivityProducts;
 import com.lhiot.healthygood.domain.activity.NewSpecialResult;
 import com.lhiot.healthygood.domain.activity.SpecialProductActivity;
 import com.lhiot.healthygood.domain.good.ProductShelf;
-import com.lhiot.healthygood.feign.good.BaseDataServiceFeign;
+import com.lhiot.healthygood.feign.BaseDataServiceFeign;
 import com.lhiot.healthygood.service.activity.ActivityProductRecordService;
 import com.lhiot.healthygood.service.activity.ActivityProductService;
 import com.lhiot.healthygood.service.activity.SpecialProductActivityService;
@@ -54,11 +54,11 @@ public class NewSpecialActivityApi {
 
     @GetMapping("/activities/specials/products")
     @ApiImplicitParams({
-            @ApiImplicitParam(paramType = "query",name = "page",value = "多少页",dataType = "Long",required = true),
-            @ApiImplicitParam(paramType = "query", name = "startRow", value = "数据多少条", dataType = "Long",required = true)
+            @ApiImplicitParam(paramType = "query",name = "page",value = "多少页",dataType = "Integer",required = true),
+            @ApiImplicitParam(paramType = "query", name = "startRow", value = "数据多少条", dataType = "Integer",required = true)
     })
     @ApiOperation(value = "新品尝鲜活动商品列表")
-    public ResponseEntity specialActivity( HttpServletRequest request, @RequestParam Long page, @RequestParam Long startRow){
+    public ResponseEntity specialActivity( HttpServletRequest request, @RequestParam Integer page, @RequestParam Integer startRow){
         SpecialProductActivity specialProductActivity = specialProductActivityService.selectActivity();
         if (Objects.isNull(specialProductActivity)){
             return ResponseEntity.badRequest().body("没有开这个活动哦~");

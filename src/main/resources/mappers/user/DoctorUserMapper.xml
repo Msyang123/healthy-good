@@ -138,7 +138,7 @@
     </select>
 
     <!--查询鲜果师客户总记录-->
-    <select id="pageDoctorUserCounts" resultType="long"
+    <select id="pageDoctorUserCounts" resultType="int"
         parameterType="com.lhiot.healthygood.domain.user.DoctorUser">
             select count(1)
             from doctor_user

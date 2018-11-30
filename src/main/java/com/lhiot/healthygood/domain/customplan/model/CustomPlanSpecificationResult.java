@@ -2,11 +2,9 @@ package com.lhiot.healthygood.domain.customplan.model;
 
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.lhiot.healthygood.common.PagerRequestObject;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
 @Data
