@@ -28,9 +28,9 @@ import java.util.Map;
 import java.util.Objects;
 
 /**
- * 定制计划api /custom-plan-sections
+ * 公共接口api /custom-plan-sections
  */
-@Api(description = "定制计划接口")
+@Api(description = "公共接口")
 @Slf4j
 @RestController
 public class CommonsApi {
@@ -79,6 +79,7 @@ public class CommonsApi {
         return ResponseEntity.ok(Jackson.json(deliverTimesEntity.getBody()));
     }
 
+    @Sessions.Uncheck
     @ApiOperation(value = "计算配送距离（收获地址与智能选择最近的门店）")
     @GetMapping("/delivery/distance")
     public ResponseEntity testDeliveryNote(@RequestParam("address") String address) throws JSONException {
