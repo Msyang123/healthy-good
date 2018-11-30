@@ -1,12 +1,10 @@
 package com.lhiot.healthygood.domain.customplan;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonFormat;
-import com.lhiot.healthygood.common.PagerRequestObject;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
 
@@ -19,8 +17,7 @@ import lombok.ToString;
 @ToString(callSuper = true)
 @ApiModel
 @NoArgsConstructor
-@EqualsAndHashCode(callSuper = true)
-public class CustomPlan extends PagerRequestObject {
+public class CustomPlan{
 
     /**
     *
@@ -72,5 +69,8 @@ public class CustomPlan extends PagerRequestObject {
     @JsonProperty("status")
     @ApiModelProperty(value = "VALID INVALID", dataType = "String")
     private String status;
+
+
+
 
 }

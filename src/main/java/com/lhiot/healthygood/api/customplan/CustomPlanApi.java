@@ -4,16 +4,14 @@ import com.leon.microx.web.session.Sessions;
 import com.lhiot.healthygood.domain.customplan.model.CustomPlanDetailResult;
 import com.lhiot.healthygood.domain.customplan.model.CustomPlanSectionResult;
 import com.lhiot.healthygood.domain.customplan.model.CustomPlanSpecificationDetailResult;
+import com.lhiot.healthygood.domain.customplan.model.PlanSectionsParam;
 import com.lhiot.healthygood.service.customplan.CustomPlanService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -33,23 +31,25 @@ public class CustomPlanApi {
     }
 
     /**
-     * 定制计划信息
+     * 定制计划板块-定制首页
      */
     @Sessions.Uncheck
-    @GetMapping("/custom-plan-sections")
+    @PostMapping("/custom-plan-sections")
     @ApiOperation(value = "查询定制计划板块列表页（定制板块对应定制计划列表页）")
     public ResponseEntity<List<CustomPlanSectionResult>> findByPositionCode(@RequestParam String code){
         List<CustomPlanSectionResult> productSectionResult = customPlanService.findComPlanSectionByCode(code);
         return ResponseEntity.ok(productSectionResult);
     }
     /**
-     * 定制计划信息
+     * 定制计划信息-定制板块页
      */
     @Sessions.Uncheck
-    @GetMapping("/custom-plan-sections/{id}/custom-plans")
-    @ApiOperation(value = "查询定制计划板块列表页（定制板块对应定制计划列表页）")
-    public ResponseEntity<CustomPlanSectionResult> findByPositionCode(@PathVariable Long id){
-        CustomPlanSectionResult productSectionResult = customPlanService.findComPlanSectionId(id);
+    @PostMapping("/custom-plan-sections/{id}/custom-plans")
+    @ApiOperation(value = "查询定制计划板块列表页（定制计划板块和该板块对应的分页定制计划列表）")
+    public ResponseEntity<CustomPlanSectionResult> findById(@PathVariable Long id,@RequestBody PlanSectionsParam planSectionsParam){
+        planSectionsParam.setId(id);
+
+        CustomPlanSectionResult productSectionResult = customPlanService.findComPlanSectionId(planSectionsParam);
         return ResponseEntity.ok(productSectionResult);
     }
 

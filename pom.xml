@@ -10,7 +10,7 @@
         <version>1.0-RELEASE</version>
     </parent>
 
-    <artifactId>fruit-doctor</artifactId>
+    <artifactId>healthy-good</artifactId>
     <name>${project.artifactId}</name>
     <version>1.0-SNAPSHOT</version>
     <description>LH-IOT Fruit Doctor</description>

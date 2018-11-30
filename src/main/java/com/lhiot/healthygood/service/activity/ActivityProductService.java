@@ -1,6 +1,6 @@
 package com.lhiot.healthygood.service.activity;
 
-import com.lhiot.healthygood.common.PagerResultObject;
+import com.leon.microx.web.result.Pages;
 import com.lhiot.healthygood.domain.activity.ActivityProduct;
 import com.lhiot.healthygood.mapper.activity.ActivityProductMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -82,7 +82,7 @@ public class ActivityProductService {
     * @author yangjiawen
     * @date 2018/11/24 16:09:12
     */  
-    public Long count(ActivityProduct activityProduct){
+    public int count(ActivityProduct activityProduct){
         return this.activityProductMapper.pageActivityProductCounts(activityProduct);
     }
     
@@ -94,12 +94,12 @@ public class ActivityProductService {
     * @author yangjiawen
     * @date 2018/11/24 16:09:12
     */  
-    public PagerResultObject<ActivityProduct> pageList(ActivityProduct activityProduct) {
-       long total = 0;
+    public Pages<ActivityProduct> pageList(ActivityProduct activityProduct) {
+       int total = 0;
        if (activityProduct.getRows() != null && activityProduct.getRows() > 0) {
            total = this.count(activityProduct);
        }
-       return PagerResultObject.of(activityProduct, total,
+       return Pages.of(total,
               this.activityProductMapper.pageActivityProducts(activityProduct));
     }
 

@@ -84,7 +84,7 @@ public interface FruitDoctorMapper {
     * @author yijun
     * @date 2018/07/26 12:08:13
     */
-    long pageFruitDoctorCounts(FruitDoctor fruitDoctor);
+    int pageFruitDoctorCounts(FruitDoctor fruitDoctor);
 
     /**
      * Description:查询鲜果师团队列表

@@ -1,6 +1,6 @@
 package com.lhiot.healthygood.service.user;
 
-import com.lhiot.healthygood.common.PagerResultObject;
+import com.leon.microx.web.result.Pages;
 import com.lhiot.healthygood.domain.user.FruitDoctor;
 import com.lhiot.healthygood.mapper.user.FruitDoctorMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -94,7 +94,7 @@ public class FruitDoctorService {
     * @author yijun
     * @date 2018/07/26 12:08:13
     */  
-    public long count(FruitDoctor fruitDoctor){
+    public int count(FruitDoctor fruitDoctor){
         return this.fruitDoctorMapper.pageFruitDoctorCounts(fruitDoctor);
     }
     
@@ -106,12 +106,12 @@ public class FruitDoctorService {
     * @author yijun
     * @date 2018/07/26 12:08:13
     */  
-    public PagerResultObject<FruitDoctor> pageList(FruitDoctor fruitDoctor) {
-       long total = 0;
+    public Pages<FruitDoctor> pageList(FruitDoctor fruitDoctor) {
+       int total = 0;
        if (fruitDoctor.getRows() != null && fruitDoctor.getRows() > 0) {
            total = this.count(fruitDoctor);
        }
-       return PagerResultObject.of(fruitDoctor, total,
+       return Pages.of(total,
               this.fruitDoctorMapper.pageFruitDoctors(fruitDoctor));
     }
 
@@ -135,12 +135,12 @@ public class FruitDoctorService {
      * @author yijun
      * @date 2018/07/26 12:08:13
      */
-    public PagerResultObject<FruitDoctor> subordinate(FruitDoctor fruitDoctor){
-        long total = 0;
+    public Pages<FruitDoctor> subordinate(FruitDoctor fruitDoctor){
+        int total = 0;
         if (fruitDoctor.getRows() != null && fruitDoctor.getRows() > 0) {
             total = this.count(fruitDoctor);
         }
-        return PagerResultObject.of(fruitDoctor, total,
+        return Pages.of(total,
                 this.fruitDoctorMapper.subordinate(fruitDoctor));
     }
     

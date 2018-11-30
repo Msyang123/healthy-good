@@ -7,7 +7,7 @@ import com.lhiot.healthygood.domain.customplan.CustomPlanSectionRelation;
 import com.lhiot.healthygood.domain.customplan.CustomPlanSpecification;
 import com.lhiot.healthygood.domain.customplan.model.*;
 import com.lhiot.healthygood.domain.good.ProductShelf;
-import com.lhiot.healthygood.feign.good.BaseDataServiceFeign;
+import com.lhiot.healthygood.feign.BaseDataServiceFeign;
 import com.lhiot.healthygood.mapper.customplan.CustomPlanMapper;
 import com.lhiot.healthygood.mapper.customplan.CustomPlanSectionMapper;
 import com.lhiot.healthygood.mapper.customplan.CustomPlanSectionRelationMapper;
@@ -15,7 +15,6 @@ import com.lhiot.healthygood.mapper.customplan.CustomPlanSpecificationMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.CollectionUtils;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -32,46 +31,44 @@ public class CustomPlanService {
     private final BaseDataServiceFeign baseDataServiceFeign;
 
     @Autowired
-    public CustomPlanService(CustomPlanSectionMapper customPlanSectionMapper,CustomPlanMapper customPlanMapper,
-                             CustomPlanSpecificationMapper customPlanSpecificationMapper,CustomPlanSectionRelationMapper customPlanSectionRelationMapper,
+    public CustomPlanService(CustomPlanSectionMapper customPlanSectionMapper, CustomPlanMapper customPlanMapper,
+                             CustomPlanSpecificationMapper customPlanSpecificationMapper, CustomPlanSectionRelationMapper customPlanSectionRelationMapper,
                              BaseDataServiceFeign baseDataServiceFeign) {
         this.customPlanSectionMapper = customPlanSectionMapper;
         this.customPlanMapper = customPlanMapper;
         this.customPlanSpecificationMapper = customPlanSpecificationMapper;
-        this.customPlanSectionRelationMapper =customPlanSectionRelationMapper;
+        this.customPlanSectionRelationMapper = customPlanSectionRelationMapper;
         this.baseDataServiceFeign = baseDataServiceFeign;
     }
+
     public List<CustomPlanSectionResult> findComPlanSectionByCode(String code) {
         List<CustomPlanSectionResult> result = new ArrayList<>();
         List<CustomPlanSection> customPlanSections = customPlanSectionMapper.selectBySectionCode(code);
-        for(CustomPlanSection customPlanSection:customPlanSections){
-            result.add(getCustomPlanSecionResult(customPlanSection));
+        for (CustomPlanSection customPlanSection : customPlanSections) {
+            PlanSectionsParam planSectionsParam=new PlanSectionsParam();
+            planSectionsParam.setId(customPlanSection.getId());
+            planSectionsParam.setPage(1);
+            planSectionsParam.setRows(4);
+            result.add(getCustomPlanSecionResult(customPlanSection, planSectionsParam));//只查询最多4个推荐定制计划
         }
         return result;
     }
-    CustomPlanSectionResult getCustomPlanSecionResult(CustomPlanSection customPlanSection){
-        CustomPlanSectionResult customPlanSectionResult = new CustomPlanSectionResult();
-        if(null != customPlanSection ){
+
+    CustomPlanSectionResult getCustomPlanSecionResult(CustomPlanSection customPlanSection, PlanSectionsParam planSectionsParam) {
+/*        if (null != customPlanSection) {
             BeanUtils.of(customPlanSectionResult).populate(customPlanSection);
             customPlanSectionResult.setImage(customPlanSection.getSectionImage());
-            List<CustomPlanSimpleResult> customPlanSimpleResults = new ArrayList<>();
-            List<CustomPlan> customPlanList = customPlanMapper.findByCustomPlanSectionId(customPlanSection.getId());
-            if(CollectionUtils.isEmpty(customPlanList)){
-                for(CustomPlan customPlan:customPlanList){
-                    CustomPlanSimpleResult customPlanSimpleResult = new CustomPlanSimpleResult();
-                    BeanUtils.of(customPlanSimpleResult).populate(customPlan);
-                    customPlanSimpleResults.add(customPlanSimpleResult);
-                }
-            }
-            customPlanSectionResult.setCustomPlanList(customPlanSimpleResults);
-        }
+            List<CustomPlan> customPlanList = customPlanMapper.findByCustomPlanSectionId(planSectionsParam);
+            customPlanSectionResult.setCustomPlanList(Pages.of(Objects.isNull(customPlanList)?0:customPlanList.size(),customPlanList));
+        }*/
+//customPlanSectionResult
         //查询板块的定制计划
-        return customPlanSectionResult;
+        return null;
     }
 
-    public CustomPlanSectionResult findComPlanSectionId(Long id) {
-        CustomPlanSection customPlanSection = customPlanSectionMapper.selectById(id);
-        return getCustomPlanSecionResult(customPlanSection);
+    public CustomPlanSectionResult findComPlanSectionId(PlanSectionsParam planSectionsParam) {
+        CustomPlanSection customPlanSection = customPlanSectionMapper.selectById(planSectionsParam.getId());
+        return getCustomPlanSecionResult(customPlanSection, planSectionsParam);
     }
 
     public CustomPlanDetailResult findDetail(Long id) {
@@ -86,8 +83,8 @@ public class CustomPlanService {
 
     private List<CustomPlanDatailStandardResult> getCustomPlanDetailStandardResultList(CustomPlan customPlan) {
         //获取定制计划周期 - 周
-        List<CustomPlanDatailStandardResult> results =  new ArrayList<>();
-        CustomPlanDatailStandardResult customPlanDatailStandardResult = getCustomPlanDetailStandardResult(customPlan,"7");
+        List<CustomPlanDatailStandardResult> results = new ArrayList<>();
+        CustomPlanDatailStandardResult customPlanDatailStandardResult = getCustomPlanDetailStandardResult(customPlan, "7");
         return null;
     }
 
@@ -95,12 +92,12 @@ public class CustomPlanService {
         CustomPlanDatailStandardResult customPlanDatailStandardResult = new CustomPlanDatailStandardResult();
         customPlanDatailStandardResult.setPlanPeriod(type);
         //获取套餐列表
-        Map<String,Object> param = new HashMap<String,Object>();
-        param.put("planId",customPlan.getId());
-        param.put("planPeriod",type);
+        Map<String, Object> param = new HashMap<String, Object>();
+        param.put("planId", customPlan.getId());
+        param.put("planPeriod", type);
         List<CustomPlanSpecification> customPlanSpecifications = customPlanSpecificationMapper.findByPlanIdAndPerid(param);
         List<CustomPlanSpecificationResult> customPlanSpecificationResults = new ArrayList<>();
-        for(CustomPlanSpecification customPlanSpecification:customPlanSpecifications){
+        for (CustomPlanSpecification customPlanSpecification : customPlanSpecifications) {
             CustomPlanSpecificationResult customPlanSpecificationResult = new CustomPlanSpecificationResult();
             BeanUtils.of(customPlanSpecificationResult).populate(customPlanSpecification);
             customPlanSpecificationResults.add(customPlanSpecificationResult);
@@ -109,7 +106,7 @@ public class CustomPlanService {
         //获取定制产品信息
         List<CustomPlanSectionRelation> customPlanSectionRelations = customPlanSectionRelationMapper.findByPlanId(customPlan.getId());
         List<CustomPlanProductResult> customPlanProductResults = new ArrayList<>();
-        for(CustomPlanSectionRelation customPlanSectionRelation:customPlanSectionRelations){
+        for (CustomPlanSectionRelation customPlanSectionRelation : customPlanSectionRelations) {
             CustomPlanProductResult customPlanProductResult = new CustomPlanProductResult();
             BeanUtils.of(customPlanProductResult).populate(customPlanSectionRelation);
             //查询上架规格信息
@@ -117,7 +114,7 @@ public class CustomPlanService {
             ProductShelf productShelf = baseDataServiceFeign.singleShelf(productShelfId).getBody();
             BeanUtils.of(productShelf).populate(customPlanSectionRelation);
             customPlanProductResults.add(customPlanProductResult);
-           // customPlanSectionRelation.
+            // customPlanSectionRelation.
         }
         customPlanDatailStandardResult.setProducts(customPlanProductResults);
         return customPlanDatailStandardResult;

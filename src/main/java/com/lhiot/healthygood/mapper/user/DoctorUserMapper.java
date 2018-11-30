@@ -11,7 +11,7 @@ import java.util.List;
 * @date 2018/07/26
 */
 @Mapper
-public interface DoctorUserMapper {
+public interface DoctorCustomerMapper {
 
     /**
     * Description:新增鲜果师客户
@@ -92,7 +92,7 @@ public interface DoctorUserMapper {
     * @author yijun
     * @date 2018/07/26 12:08:13
     */
-    long pageDoctorUserCounts(DoctorUser doctorUser);
+    int pageDoctorUserCounts(DoctorUser doctorUser);
 
 
 

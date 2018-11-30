@@ -1,7 +1,7 @@
 package com.lhiot.healthygood.service.doctor;
 
 import com.lhiot.healthygood.domain.doctor.RegisterApplication;
-import com.lhiot.healthygood.entity.AuditStatus;
+import com.lhiot.healthygood.type.AuditStatus;
 import com.lhiot.healthygood.mapper.doctor.RegisterApplicationMapper;
 import com.lhiot.healthygood.mapper.user.DoctorUserMapper;
 import com.lhiot.healthygood.mapper.user.FruitDoctorMapper;

@@ -1,14 +1,13 @@
 package com.lhiot.healthygood.domain.user;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
-import com.lhiot.healthygood.common.PagerRequestObject;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
 
@@ -21,8 +20,7 @@ import lombok.ToString;
 @ToString(callSuper = true)
 @ApiModel
 @NoArgsConstructor
-@EqualsAndHashCode(callSuper = true)
-public class FruitDoctor extends PagerRequestObject {
+public class FruitDoctor{
 
     /**
     *id
@@ -182,5 +180,21 @@ public class FruitDoctor extends PagerRequestObject {
     @JsonProperty("applicationId")
     @ApiModelProperty(value = "审核通过记录id", dataType = "Long")
     private Long applicationId;
+
+    @ApiModelProperty(notes = "每页查询条数(为空或0不分页查所有)", dataType = "Integer")
+    private Integer rows;
+    @ApiModelProperty(notes = "当前页", dataType = "Integer")
+    private Integer page;
+
+    @ApiModelProperty(hidden = true)
+    private Integer startRow;
+
+    @JsonIgnore
+    public Integer getStartRow() {
+        if (this.rows != null && this.rows > 0) {
+            return (this.page != null && this.page > 0 ? this.page - 1 : 0) * this.rows;
+        }
+        return null;
+    }
 
 }

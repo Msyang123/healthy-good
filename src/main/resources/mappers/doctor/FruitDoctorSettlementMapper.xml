@@ -160,7 +160,7 @@
     </select>
 
     <!--查询结算申请总记录-->
-    <select id="pageSettlementApplicationCounts" resultType="long"
+    <select id="pageSettlementApplicationCounts" resultType="int"
         parameterType="com.lhiot.healthygood.domain.doctor.SettlementApplication">
             select count(1) from
             (

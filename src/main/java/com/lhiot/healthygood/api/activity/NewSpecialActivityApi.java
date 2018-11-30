@@ -6,7 +6,7 @@ import com.lhiot.healthygood.domain.activity.ActivityProducts;
 import com.lhiot.healthygood.domain.activity.NewSpecialResult;
 import com.lhiot.healthygood.domain.activity.SpecialProductActivity;
 import com.lhiot.healthygood.domain.good.ProductShelf;
-import com.lhiot.healthygood.feign.good.BaseDataServiceFeign;
+import com.lhiot.healthygood.feign.BaseDataServiceFeign;
 import com.lhiot.healthygood.service.activity.ActivityProductRecordService;
 import com.lhiot.healthygood.service.activity.ActivityProductService;
 import com.lhiot.healthygood.service.activity.SpecialProductActivityService;
@@ -66,7 +66,7 @@ public class NewSpecialActivityApi {
         ActivityProduct activityProduct = new ActivityProduct();
         activityProduct.setActivityId(specialProductActivity.getId());
         activityProduct.setPage(page);
-        activityProduct.setRows(rows);
+        activityProduct.setRows(startRow);
         List<ActivityProduct> activityProducts = activityProductService.activityProductList(activityProduct);
         if (Objects.isNull(activityProducts) || activityProducts.size() <= 0){
             return ResponseEntity.badRequest().body("活动商品是空的~");

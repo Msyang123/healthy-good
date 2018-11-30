@@ -1,8 +1,8 @@
 package com.lhiot.healthygood.api.user;
 
+import com.leon.microx.web.result.Pages;
 import com.leon.microx.web.result.Tips;
 import com.leon.microx.web.session.Sessions;
-import com.lhiot.healthygood.common.PagerResultObject;
 import com.lhiot.healthygood.domain.doctor.*;
 import com.lhiot.healthygood.domain.template.CaptchaTemplate;
 import com.lhiot.healthygood.domain.template.FreeSignName;
@@ -10,17 +10,16 @@ import com.lhiot.healthygood.domain.user.CaptchaParam;
 import com.lhiot.healthygood.domain.user.DoctorUser;
 import com.lhiot.healthygood.domain.user.FruitDoctor;
 import com.lhiot.healthygood.domain.user.ValidateParam;
-import com.lhiot.healthygood.entity.DateTypeEnum;
-import com.lhiot.healthygood.entity.IncomeType;
-import com.lhiot.healthygood.entity.PeriodType;
-import com.lhiot.healthygood.entity.SettlementStatus;
-import com.lhiot.healthygood.feign.user.ThirdpartyServerFeign;
+import com.lhiot.healthygood.feign.ThirdpartyServerFeign;
 import com.lhiot.healthygood.service.doctor.CardUpdateLogService;
 import com.lhiot.healthygood.service.doctor.DoctorAchievementLogService;
 import com.lhiot.healthygood.service.doctor.RegisterApplicationService;
 import com.lhiot.healthygood.service.doctor.SettlementApplicationService;
 import com.lhiot.healthygood.service.user.DoctorUserService;
 import com.lhiot.healthygood.service.user.FruitDoctorService;
+import com.lhiot.healthygood.type.DateTypeEnum;
+import com.lhiot.healthygood.type.PeriodType;
+import com.lhiot.healthygood.type.SettlementStatus;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
@@ -185,8 +184,7 @@ public class FruitDoctorApi {
             return ResponseEntity.badRequest().body("鲜果师不存在");
         }
         log.debug("查询鲜果师成员分页列表\t param:{}",fruitDoctor);
-        fruitDoctor1.setId(fruitDoctor.getId());
-        return ResponseEntity.ok(fruitDoctorService.pageList(fruitDoctor1));
+        return ResponseEntity.ok(fruitDoctorService.pageList(fruitDoctor));
     }
 
     @GetMapping("/incomes/detail")

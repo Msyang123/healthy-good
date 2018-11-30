@@ -2,6 +2,8 @@ package com.lhiot.healthygood.domain.customplan.model;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.leon.microx.web.result.Pages;
+import com.lhiot.healthygood.domain.customplan.CustomPlan;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
@@ -49,6 +51,6 @@ public class CustomPlanSectionResult {
     private java.util.Date createAt;
 
     @JsonProperty("customPlanList")
-    @ApiModelProperty(value = "", dataType = "List")
-    private List<CustomPlanSimpleResult> customPlanList;
+    @ApiModelProperty(value = "", dataType = "Pages")
+    private Pages<CustomPlan> customPlanList;
 }

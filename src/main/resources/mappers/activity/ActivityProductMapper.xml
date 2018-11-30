@@ -134,7 +134,7 @@
      </select>
 
     <!--查询活动商品总记录-->
-    <select id="pageActivityProductCounts" resultType="long"
+    <select id="pageActivityProductCounts" resultType="int"
         parameterType="com.lhiot.healthygood.domain.activity.ActivityProduct">
             select count(1)
             from activity_product

@@ -357,7 +357,7 @@
     </select>
 
     <!--查询鲜果师成员总记录-->
-    <select id="pageFruitDoctorCounts" resultType="long"
+    <select id="pageFruitDoctorCounts" resultType="int"
         parameterType="com.lhiot.healthygood.domain.user.FruitDoctor">
             select count(1)
             from fruit_doctor

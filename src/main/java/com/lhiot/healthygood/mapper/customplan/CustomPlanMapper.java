@@ -1,6 +1,7 @@
 package com.lhiot.healthygood.mapper.customplan;
 
 import com.lhiot.healthygood.domain.customplan.CustomPlan;
+import com.lhiot.healthygood.domain.customplan.model.PlanSectionsParam;
 import org.apache.ibatis.annotations.Mapper;
 
 import java.util.List;
@@ -74,5 +75,5 @@ public interface CustomPlanMapper {
     */
     long pageCustomPlanCounts(CustomPlan customPlan);
 
-    List<CustomPlan> findByCustomPlanSectionId(Long id);
+    List<CustomPlan> findByCustomPlanSectionId(PlanSectionsParam planSectionsParam);
 }
