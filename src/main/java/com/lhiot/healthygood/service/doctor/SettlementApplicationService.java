@@ -1,6 +1,6 @@
 package com.lhiot.healthygood.service.doctor;
 
-import com.lhiot.healthygood.common.PagerResultObject;
+import com.leon.microx.web.result.Pages;
 import com.lhiot.healthygood.domain.doctor.SettlementApplication;
 import com.lhiot.healthygood.mapper.doctor.SettlementApplicationMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -81,7 +81,7 @@ public class SettlementApplicationService {
     * @author yijun
     * @date 2018/07/26 12:08:13
     */  
-    public long count(SettlementApplication settlementApplication){
+    public int count(SettlementApplication settlementApplication){
         return this.settlementApplicationMapper.pageSettlementApplicationCounts(settlementApplication);
     }
     
@@ -93,13 +93,12 @@ public class SettlementApplicationService {
     * @author yijun
     * @date 2018/07/26 12:08:13
     */  
-    public PagerResultObject<SettlementApplication> pageList(SettlementApplication settlementApplication) {
-       long total = 0;
+    public Pages<SettlementApplication> pageList(SettlementApplication settlementApplication) {
+       int total = 0;
        if (settlementApplication.getRows() != null && settlementApplication.getRows() > 0) {
            total = this.count(settlementApplication);
        }
-       return PagerResultObject.of(settlementApplication, total,
-              this.settlementApplicationMapper.pageSettlementApplications(settlementApplication));
+       return Pages.of(total,this.settlementApplicationMapper.pageSettlementApplications(settlementApplication));
     }
 }
 

@@ -72,5 +72,5 @@ public interface SettlementApplicationMapper {
     * @author yijun
     * @date 2018/07/26 12:08:13
     */
-    long pageSettlementApplicationCounts(SettlementApplication settlementApplication);
+    int pageSettlementApplicationCounts(SettlementApplication settlementApplication);
 }

@@ -77,7 +77,7 @@ public interface DoctorAchievementLogMapper {
     * @author yijun
     * @date 2018/07/26 12:08:13
     */
-    long pageDoctorAchievementLogCounts(DoctorAchievementLog doctorAchievementLog);
+    int pageDoctorAchievementLogCounts(DoctorAchievementLog doctorAchievementLog);
 
 
     /**

@@ -54,11 +54,11 @@ public class NewSpecialActivityApi {
 
     @GetMapping("/activities/specials/products")
     @ApiImplicitParams({
-            @ApiImplicitParam(paramType = "query",name = "page",value = "多少页",dataType = "Long",required = true),
-            @ApiImplicitParam(paramType = "query", name = "startRow", value = "数据多少条", dataType = "Long",required = true)
+            @ApiImplicitParam(paramType = "query",name = "page",value = "多少页",dataType = "Integer",required = true),
+            @ApiImplicitParam(paramType = "query", name = "startRow", value = "数据多少条", dataType = "Integer",required = true)
     })
     @ApiOperation(value = "新品尝鲜活动商品列表")
-    public ResponseEntity specialActivity( HttpServletRequest request, @RequestParam Long page, @RequestParam Long startRow){
+    public ResponseEntity specialActivity( HttpServletRequest request, @RequestParam Integer page, @RequestParam Integer startRow){
         SpecialProductActivity specialProductActivity = specialProductActivityService.selectActivity();
         if (Objects.isNull(specialProductActivity)){
             return ResponseEntity.badRequest().body("没有开这个活动哦~");

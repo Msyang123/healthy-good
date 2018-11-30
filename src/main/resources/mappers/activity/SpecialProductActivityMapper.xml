@@ -167,7 +167,7 @@
     </select>
 
     <!--查询新品尝鲜活动总记录-->
-    <select id="pageSpecialProductActivityCounts" resultType="long"
+    <select id="pageSpecialProductActivityCounts" resultType="int"
         parameterType="com.lhiot.healthygood.domain.activity.SpecialProductActivity">
             select count(1)
             from special_product_activity

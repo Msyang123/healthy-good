@@ -14,7 +14,6 @@ import com.lhiot.healthygood.feign.ThirdpartyServerFeign;
 import com.lhiot.healthygood.mapper.user.DoctorUserMapper;
 import com.lhiot.healthygood.mapper.user.FruitDoctorMapper;
 import com.lhiot.healthygood.type.FruitDoctorOrderExchange;
-import com.lhiot.healthygood.util.StringReplaceUtil;
 import org.springframework.amqp.AmqpException;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;

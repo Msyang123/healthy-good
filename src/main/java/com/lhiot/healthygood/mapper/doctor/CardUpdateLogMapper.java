@@ -74,5 +74,5 @@ public interface CardUpdateLogMapper {
     * @author yijun
     * @date 2018/07/26 12:08:13
     */
-    long pageCardUpdateLogCounts(CardUpdateLog cardUpdateLog);
+    int pageCardUpdateLogCounts(CardUpdateLog cardUpdateLog);
 }

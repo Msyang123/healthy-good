@@ -1,18 +1,18 @@
 package com.lhiot.healthygood.service.doctor;
 
 import com.leon.microx.util.ImmutableMap;
-import com.lhiot.healthygood.common.PagerResultObject;
+import com.leon.microx.web.result.Pages;
 import com.lhiot.healthygood.domain.doctor.Achievement;
 import com.lhiot.healthygood.domain.doctor.DoctorAchievementLog;
 import com.lhiot.healthygood.domain.doctor.IncomeStat;
 import com.lhiot.healthygood.domain.doctor.TeamAchievement;
 import com.lhiot.healthygood.domain.user.DoctorUser;
 import com.lhiot.healthygood.domain.user.FruitDoctor;
-import com.lhiot.healthygood.type.DateTypeEnum;
-import com.lhiot.healthygood.type.PeriodType;
 import com.lhiot.healthygood.mapper.doctor.DoctorAchievementLogMapper;
 import com.lhiot.healthygood.mapper.user.DoctorUserMapper;
 import com.lhiot.healthygood.mapper.user.FruitDoctorMapper;
+import com.lhiot.healthygood.type.DateTypeEnum;
+import com.lhiot.healthygood.type.PeriodType;
 import com.lhiot.healthygood.util.DateCalculation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -140,7 +140,7 @@ public class DoctorAchievementLogService {
     * @author yijun
     * @date 2018/07/26 12:08:13
     */  
-    public long count(DoctorAchievementLog doctorBonusLog){
+    public int count(DoctorAchievementLog doctorBonusLog){
         return this.doctorAchievementLogMapper.pageDoctorAchievementLogCounts(doctorBonusLog);
     }
     
@@ -152,12 +152,12 @@ public class DoctorAchievementLogService {
     * @author yijun
     * @date 2018/07/26 12:08:13
     */  
-    public PagerResultObject<DoctorAchievementLog> pageList(DoctorAchievementLog doctorBonusLog) {
-       long total = 0;
+    public Pages<DoctorAchievementLog> pageList(DoctorAchievementLog doctorBonusLog) {
+       int total = 0;
        if (doctorBonusLog.getRows() != null && doctorBonusLog.getRows() > 0) {
            total = this.count(doctorBonusLog);
        }
-       return PagerResultObject.of(doctorBonusLog, total,
+       return Pages.of(total,
               this.doctorAchievementLogMapper.pageDoctorAchievementLogs(doctorBonusLog));
     }
 
