@@ -19,7 +19,7 @@ public class CustomPlanResult {
      */
     @ApiModelProperty(value = "主键Id", dataType = "Long", readOnly = true)
     private Long id;
-    @ApiModelProperty(value = "名称", dataType = "String")
+    @ApiModelProperty(value = "定制计划名称", dataType = "String")
     @NotNull
     private String name;
     @ApiModelProperty(value = "描述", dataType = "String")
@@ -30,8 +30,10 @@ public class CustomPlanResult {
     @ApiModelProperty(value = "创建时间", dataType = "Date", readOnly = true)
     private java.util.Date createAt;
     @ApiModelProperty(value = "到期规则", dataType = "String")
+    @NotNull
     private String overRule;
     @ApiModelProperty(value = "定制计划状态 有效-VALID 无效-INVALID", dataType = "String")
+    @NotNull
     private String status;
 
     /**

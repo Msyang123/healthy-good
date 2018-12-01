@@ -160,6 +160,24 @@
         </where>
     </sql>
 
+    <!-- base where条件  -->
+    <sql id="Where_Condition" >
+        <where>
+            <if test="sectionIds != null and sectionIds != ''">
+                and section_id in
+                <foreach item="item" index="index" collection="sectionIds.split(',')" open="(" separator="," close=")">
+                    ${item}
+                </foreach>
+            </if>
+            <if test="planIds != null and planIds != ''">
+                and plan_id in
+                <foreach item="item" index="index" collection="planIds.split(',')" open="(" separator="," close=")">
+                    ${item}
+                </foreach>
+            </if>
+        </where>
+    </sql>
+
 
     <!--查询定制计划板块关联定制计划列表-->
      <select id="pageCustomPlanSectionRelations" resultMap="BaseResultMap"
@@ -179,7 +197,7 @@
     </select>
 
     <!--查询定制计划板块关联定制计划总记录-->
-    <select id="findByPlanId" resultType="long"
+    <select id="findByPlanId" resultMap="BaseResultMap"
             parameterType="com.lhiot.healthygood.domain.customplan.CustomPlanSectionRelation">
         select <include refid="Base_Column_List" />
         from custom_plan_section_relation where plan_id = #{0}
@@ -225,13 +243,10 @@
     </select>
 
     <!--根据定制板块Id集合 查找出有定制计划的定制板块id-->
-    <select id="findBySectionIds" parameterType="String" resultType="map">
+    <select id="findBySectionIdsAndPlanIds" parameterType="String" resultType="map">
         select id,section_id sectionId,plan_id planId
         from custom_plan_section_relation
-        where section_id in
-        <foreach item="item" index="index" collection="sectionIds.split(',')" open="(" separator="," close=")">
-            ${item}
-        </foreach>
+        <include refid="Where_Condition" />
     </select>
 
     <!--根据定制版块id和定制计划ids查询商品上架与版块关系记录-->

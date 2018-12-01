@@ -8,7 +8,6 @@ import com.leon.microx.web.swagger.ApiParamType;
 import com.lhiot.healthygood.domain.customplan.CustomPlanSection;
 import com.lhiot.healthygood.domain.customplan.model.CustomPlanSectionParam;
 import com.lhiot.healthygood.domain.customplan.model.CustomPlanSectionResultAdmin;
-import com.lhiot.healthygood.service.customplan.CustomPlanSectionRelationService;
 import com.lhiot.healthygood.service.customplan.CustomPlanSectionService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
@@ -19,9 +18,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import javax.validation.Valid;
 import java.net.URI;
-import java.util.List;
-import java.util.Objects;
 
 /**
  * @author hufan created in 2018/11/27 10:42
@@ -31,19 +29,17 @@ import java.util.Objects;
 @RestController
 public class CustomPlanSectionApi {
     private final CustomPlanSectionService customPlanSectionService;
-    private final CustomPlanSectionRelationService customPlanSectionRelationService;
 
     @Autowired
-    public CustomPlanSectionApi(CustomPlanSectionService customPlanSectionService, CustomPlanSectionRelationService customPlanSectionRelationService) {
+    public CustomPlanSectionApi(CustomPlanSectionService customPlanSectionService) {
         this.customPlanSectionService = customPlanSectionService;
-        this.customPlanSectionRelationService = customPlanSectionRelationService;
     }
 
     @Sessions.Uncheck
     @ApiOperation("添加定制板块(后台)")
     @ApiImplicitParam(paramType = ApiParamType.BODY, name = "customPlanSectionResultAdmin", value = "定制计划板块", dataType = "CustomPlanSectionResultAdmin", required = true)
     @PostMapping("/custom-plan-sections")
-    public ResponseEntity create(@RequestBody CustomPlanSectionResultAdmin customPlanSectionResultAdmin) {
+    public ResponseEntity create(@Valid @RequestBody CustomPlanSectionResultAdmin customPlanSectionResultAdmin) {
         log.debug("添加定制板块\t param:{}", customPlanSectionResultAdmin);
 
         // 添加定制板块
@@ -54,7 +50,7 @@ public class CustomPlanSectionApi {
         Long customPlanSectionId = Long.valueOf(tips.getMessage());
         return customPlanSectionId > 0 ?
                 ResponseEntity.created(URI.create("/custom-plan-sections/" + customPlanSectionId)).body(Maps.of("id", customPlanSectionId)) :
-                ResponseEntity.badRequest().body("添加定制板块失败!");
+                ResponseEntity.badRequest().body(Tips.warn("添加定制板块失败!"));
     }
 
     @Sessions.Uncheck
@@ -64,11 +60,11 @@ public class CustomPlanSectionApi {
             @ApiImplicitParam(paramType = ApiParamType.BODY, name = "customPlanSectionResultAdmin", value = "定制板块", dataType = "CustomPlanSectionResultAdmin", required = true)
     })
     @PutMapping("/custom-plan-sections/{id}")
-    public ResponseEntity update(@PathVariable("id") Long id, @RequestBody CustomPlanSectionResultAdmin customPlanSectionResultAdmin) {
+    public ResponseEntity update(@PathVariable("id") Long id, @Valid @RequestBody CustomPlanSectionResultAdmin customPlanSectionResultAdmin) {
         log.debug("修改定制板块\t param:{}", customPlanSectionResultAdmin);
 
         customPlanSectionResultAdmin.setId(id);
-        return customPlanSectionService.update(customPlanSectionResultAdmin) ? ResponseEntity.ok().build() : ResponseEntity.badRequest().body("修改信息失败!");
+        return customPlanSectionService.update(customPlanSectionResultAdmin) ? ResponseEntity.ok().build() : ResponseEntity.badRequest().body(Tips.warn("修改信息失败!"));
     }
 
     @Sessions.Uncheck
@@ -92,11 +88,9 @@ public class CustomPlanSectionApi {
     public ResponseEntity batchDelete(@PathVariable("ids") String ids) {
         log.debug("批量删除定制板块\t param:{}", ids);
 
-        List<String> sectionIds = customPlanSectionRelationService.findBySectionIds(ids);
-        if (Objects.nonNull(sectionIds)) {
-            return ResponseEntity.badRequest().body("以下定制板块id不可删除：" +  sectionIds.toString());
-        }
-        return customPlanSectionService.batchDeleteByIds(ids) ? ResponseEntity.noContent().build() : ResponseEntity.badRequest().body("删除信息失败!");
+        customPlanSectionService.batchDeleteByIds(ids);
+        Tips tips = customPlanSectionService.batchDeleteByIds(ids);
+        return tips.err() ? ResponseEntity.badRequest().body(Tips.warn(tips.getMessage())) : ResponseEntity.noContent().build();
     }
 
     @Sessions.Uncheck
