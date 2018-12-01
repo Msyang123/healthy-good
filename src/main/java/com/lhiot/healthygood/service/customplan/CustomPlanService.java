@@ -7,7 +7,7 @@ import com.leon.microx.web.result.Pages;
 import com.leon.microx.web.result.Tips;
 import com.lhiot.healthygood.domain.customplan.*;
 import com.lhiot.healthygood.domain.customplan.model.*;
-import com.lhiot.healthygood.domain.good.ProductShelf;
+import com.lhiot.healthygood.feign.model.ProductShelf;
 import com.lhiot.healthygood.feign.BaseDataServiceFeign;
 import com.lhiot.healthygood.mapper.customplan.*;
 import org.springframework.beans.factory.annotation.Autowired;

@@ -1,4 +1,4 @@
-package com.lhiot.healthygood.domain.good;
+package com.lhiot.healthygood.feign.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.swagger.annotations.ApiModel;

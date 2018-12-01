@@ -149,7 +149,10 @@
 	        select <include refid="Base_Column_List" />
 	        from card_update_log
 	        <include refid="Base_Where_Condition" />
-	        <include refid="common.pager" />
+             <if test="rows != null and rows > 0 ">
+                 order by rank asc , id desc
+                 limit #{startRow} , #{rows}
+             </if>
     </select>
 
     <!--查询总记录-->

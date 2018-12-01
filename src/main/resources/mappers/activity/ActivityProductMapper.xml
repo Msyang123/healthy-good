@@ -130,7 +130,10 @@
 	        select <include refid="Base_Column_List" />
 	        from activity_product
 	        <include refid="Base_Where_Condition" />
-	        <include refid="common.pager" />
+             <if test="rows != null and rows > 0 ">
+                 order by rank asc , id desc
+                 limit #{startRow} , #{rows}
+             </if>
      </select>
 
     <!--查询活动商品总记录-->

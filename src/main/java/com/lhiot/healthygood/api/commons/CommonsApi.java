@@ -1,14 +1,15 @@
 package com.lhiot.healthygood.api.commons;
 
-import com.alibaba.fastjson.JSONException;
 import com.leon.microx.util.DateTime;
-import com.leon.microx.util.Jackson;
 import com.leon.microx.util.StringUtils;
+import com.leon.microx.web.result.Pages;
+import com.leon.microx.web.result.Tips;
 import com.leon.microx.web.session.Sessions;
 import com.lhiot.healthygood.domain.common.DeliverTime;
-import com.lhiot.healthygood.domain.store.StoreResult;
 import com.lhiot.healthygood.feign.DeliverServiceFeign;
+import com.lhiot.healthygood.feign.model.Store;
 import com.lhiot.healthygood.service.common.CommonService;
+import com.lhiot.healthygood.util.FeginResponseTools;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
@@ -28,9 +29,9 @@ import java.util.Map;
 import java.util.Objects;
 
 /**
- * 定制计划api /custom-plan-sections
+ * 公共接口api /custom-plan-sections
  */
-@Api(description = "定制计划接口")
+@Api(description = "公共接口")
 @Slf4j
 @RestController
 public class CommonsApi {
@@ -51,7 +52,7 @@ public class CommonsApi {
     @Sessions.Uncheck
     @GetMapping("/custom-plan-delivery/times")
     @ApiOperation(value = "获取订单配送时间 定制订单使用")
-    public ResponseEntity<String> times() {
+    public ResponseEntity<Tips> times() {
         List<DeliverTime> times = new ArrayList<>();
 
         LocalDateTime begin = LocalDate.now().atTime(BEGIN_DELIVER_OF_DAY);
@@ -64,25 +65,27 @@ public class CommonsApi {
             times.add(DeliverTime.of(display, DateTime.convert(current), DateTime.convert(next)));
             current = next;
         }
-        return ResponseEntity.ok(Jackson.json(times));
+        return ResponseEntity.ok(new Tips().data(times));
     }
 
     @Sessions.Uncheck
     @GetMapping("/delivery/times")
     @ApiOperation(value = "获取配送时间列表")
-    public ResponseEntity<String> getDeliverTime() {
+    public ResponseEntity<Tips> getDeliverTime() {
         //查询今天和明天的配送时间列表
         ResponseEntity<Map<String,Object>> deliverTimesEntity = deliverServiceFeign.deliverTimes(null);
-        if(Objects.isNull(deliverTimesEntity)||deliverTimesEntity.getStatusCode().isError()){
-            return ResponseEntity.badRequest().body("调用获取配送时间列表失败");
+        Tips<Map<String,Object>> tips = FeginResponseTools.convertResponse(deliverTimesEntity);
+        if(tips.err()){
+            return ResponseEntity.badRequest().body(tips);
         }
-        return ResponseEntity.ok(Jackson.json(deliverTimesEntity.getBody()));
+        return ResponseEntity.ok(tips);
     }
 
+    @Sessions.Uncheck
     @ApiOperation(value = "计算配送距离（收获地址与智能选择最近的门店）")
     @GetMapping("/delivery/distance")
-    public ResponseEntity testDeliveryNote(@RequestParam("address") String address) throws JSONException {
-        StoreResult storeResult = commonService.nearStore(address);
-        return ResponseEntity.ok(storeResult);
+    public ResponseEntity nearStore(@RequestParam("address") String address){
+        Pages<Store> storeResult = commonService.nearStore(address);
+        return Objects.isNull(storeResult)?ResponseEntity.badRequest().body("未找到门店"):ResponseEntity.ok(storeResult);
     }
 }

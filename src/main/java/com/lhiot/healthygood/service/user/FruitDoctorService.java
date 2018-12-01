@@ -2,8 +2,11 @@ package com.lhiot.healthygood.service.user;
 
 import com.leon.microx.web.result.Pages;
 import com.lhiot.healthygood.domain.user.FruitDoctor;
+import com.lhiot.healthygood.event.SendCaptchaSmsEvent;
 import com.lhiot.healthygood.mapper.user.FruitDoctorMapper;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -17,13 +20,17 @@ import java.util.List;
 */
 @Service
 @Transactional
+@Slf4j
 public class FruitDoctorService {
 
     private final FruitDoctorMapper fruitDoctorMapper;
 
+    private final ApplicationEventPublisher publisher;
+
     @Autowired
-    public FruitDoctorService(FruitDoctorMapper fruitDoctorMapper) {
+    public FruitDoctorService(FruitDoctorMapper fruitDoctorMapper, ApplicationEventPublisher publisher) {
         this.fruitDoctorMapper = fruitDoctorMapper;
+        this.publisher = publisher;
     }
 
     /** 
@@ -163,6 +170,19 @@ public class FruitDoctorService {
      */
     public FruitDoctor findSuperiorFruitDoctorByUserId(Long userId){
         return fruitDoctorMapper.findSuperiorFruitDoctorByUserId(userId);
+    }
+
+
+    /**
+     * 鲜果师注册时绑定手机号码，发送模板消息
+     * @param phone 待发送验证码手机号
+     */
+    public void bandPhoneSendTemplateMessage(String phone) {
+
+        //发送模板消息
+        publisher.publishEvent(new SendCaptchaSmsEvent(phone));
+
+        log.info("鲜果师注册时绑定手机号码，发送模板消息");
     }
 
 }

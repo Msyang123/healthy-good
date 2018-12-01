@@ -353,7 +353,10 @@
 	        select <include refid="Base_Column_List" />
 	        from fruit_doctor
 	        <include refid="Base_Where_Condition" />
-	        <include refid="common.pager" />
+             <if test="rows != null and rows > 0 ">
+                 order by rank asc , id desc
+                 limit #{startRow} , #{rows}
+             </if>
     </select>
 
     <!--查询鲜果师成员总记录-->
@@ -367,14 +370,17 @@
     <!--查询鲜果师团队列表-->
     <select id="subordinate" resultMap="BaseResultMap"
             parameterType="com.lhiot.healthygood.domain.user.FruitDoctor">
-        select <include refid="Base_Column_List" />,(select sum(amount/commission) from doctor_bonus_log where doctor_id=f.id
+        select <include refid="Base_Column_List" />,(select sum(amount/commission) from doctor_achievement_log where doctor_id=f.id
           and source_type in('ORDER','REFUND')
           and create_at between CONCAT(date_add(curdate(),interval -day(curdate())+1 day),' 00:00:00')
           and  CONCAT(date_add(curdate()-day(curdate())+1,interval 1 month),' 00:00:00')
           ) as amount_of_month
         from fruit_doctor f
         <include refid="Base_Where_Condition" />
-        <include refid="common.pager" />
+        <if test="rows != null and rows > 0 ">
+            order by rank asc , id desc
+            limit #{startRow} , #{rows}
+        </if>
     </select>
 
 	<!-- 根据邀请码 -->
