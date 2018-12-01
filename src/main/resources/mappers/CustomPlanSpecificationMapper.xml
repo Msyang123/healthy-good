@@ -4,18 +4,18 @@
 
     <!-- 数据库字段对象关系映射 -->
     <resultMap id="BaseResultMap"
-        type="com.lhiot.healthygood.domain.customplan.CustomPlanSpecification" >
+               type="com.lhiot.healthygood.domain.customplan.CustomPlanSpecification">
         <id column="id" property="id"/>
-        <result column="plan_id" property="planId" />
-        <result column="price" property="price" />
-        <result column="quantity" property="quantity" />
-        <result column="description" property="description" />
-        <result column="plan_period" property="planPeriod" />
+        <result column="plan_id" property="planId"/>
+        <result column="price" property="price"/>
+        <result column="quantity" property="quantity"/>
+        <result column="description" property="description"/>
+        <result column="plan_period" property="planPeriod"/>
     </resultMap>
 
     <!-- base查询字段  -->
-    <sql id="Base_Column_List" >
-        <trim suffixOverrides="," >
+    <sql id="Base_Column_List">
+        <trim suffixOverrides=",">
             id,
             plan_id,
             price,
@@ -26,9 +26,10 @@
     </sql>
 
     <!--新增定制计划规格-->
-    <insert id="create" parameterType="com.lhiot.healthygood.domain.customplan.CustomPlanSpecification" useGeneratedKeys="true" keyProperty="id">
+    <insert id="create" parameterType="com.lhiot.healthygood.domain.customplan.CustomPlanSpecification"
+            useGeneratedKeys="true" keyProperty="id">
         insert into custom_plan_specification
-        <trim prefix="(" suffix=")" suffixOverrides="," >
+        <trim prefix="(" suffix=")" suffixOverrides=",">
             <if test="id != null ">
                 id,
             </if>
@@ -48,7 +49,7 @@
                 plan_period,
             </if>
         </trim>
-        <trim prefix="values (" suffix=")" suffixOverrides="," >
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
             <if test="id != null ">
                 #{id},
             </if>
@@ -100,21 +101,22 @@
     <delete id="deleteByIds" parameterType="java.util.List">
         delete from custom_plan_specification where id in
         <foreach collection="list" item="item" open="("
-            separator="," close=")">
+                 separator="," close=")">
             #{item}
         </foreach>
     </delete>
 
 
     <!-- 根据id查找定制计划规格 -->
-	<select id="selectById" resultMap="BaseResultMap"
-		parameterType="long"> select <include refid="Base_Column_List" />
-		from custom_plan_specification where id = #{id}
-	</select>
+    <select id="selectById" resultMap="BaseResultMap"
+            parameterType="long">select
+        <include refid="Base_Column_List"/>
+        from custom_plan_specification where id = #{id}
+    </select>
 
 
     <!-- base where条件  -->
-    <sql id="Base_Where_Condition" >
+    <sql id="Base_Where_Condition">
         <where>
             <if test="id != null ">
                 and id = #{id}
@@ -139,26 +141,32 @@
 
 
     <!--查询定制计划规格列表-->
-     <select id="pageCustomPlanSpecifications" resultMap="BaseResultMap"
-        parameterType="com.lhiot.healthygood.domain.customplan.CustomPlanSpecification">
-	        select <include refid="Base_Column_List" />
-	        from custom_plan_specification
-	        <include refid="Base_Where_Condition" />
-	        <include refid="common.pager" />
+    <select id="pageCustomPlanSpecifications" resultMap="BaseResultMap"
+            parameterType="com.lhiot.healthygood.domain.customplan.CustomPlanSpecification">
+        select
+        <include refid="Base_Column_List"/>
+        from custom_plan_specification
+        <include refid="Base_Where_Condition"/>
+        <include refid="common.pager"/>
     </select>
 
     <!--查询定制计划规格总记录-->
     <select id="pageCustomPlanSpecificationCounts" resultType="long"
-        parameterType="com.lhiot.healthygood.domain.customplan.CustomPlanSpecification">
-            select count(1)
-            from custom_plan_specification
-            <include refid="Base_Where_Condition" />
+            parameterType="com.lhiot.healthygood.domain.customplan.CustomPlanSpecification">
+        select count(1)
+        from custom_plan_specification
+        <include refid="Base_Where_Condition"/>
     </select>
 
     <!-- 根据板块id查询定制计划 -->
     <select id="findByPlanIdAndPerid" resultMap="BaseResultMap"
-            parameterType="map"> select <include refid="Base_Column_List" /> from
-        custom_plan_specification where plan_id = #{planId} and plan_period = #{planPeriod}
+            parameterType="map">select
+        <include refid="Base_Column_List"/>
+        from
+        custom_plan_specification where plan_id = #{planId}
+        <if test="planPeriod != null ">
+            and plan_period = #{planPeriod}
+        </if>
     </select>
 
     <!-- 批量新增定制计划集合 -->

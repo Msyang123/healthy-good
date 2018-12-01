@@ -17,10 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.sql.Date;
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -111,8 +108,16 @@ public class CustomPlanSectionService {
      * @param ids
      * @return
      */
-    public boolean batchDeleteByIds(String ids) {
-        return customPlanSectionMapper.deleteByIds(Arrays.asList(ids.split(","))) > 0;
+    public Tips batchDeleteByIds(String ids) {
+        // 定制板块是否关联了定制计划
+        List<Map<String, Object>> relationList = customPlanSectionRelationMapper.findBySectionIdsAndPlanIds(ids, null);
+        if (!relationList.isEmpty()) {
+            List<String> resultList = new ArrayList<>();
+            relationList.forEach(section -> resultList.add(section.get("sectionId").toString()));
+            List<String> id = resultList.stream().distinct().collect(Collectors.toList());
+            return Tips.warn("以下定制板块id不可删除:" + id);
+        }
+        return customPlanSectionMapper.deleteByIds(Arrays.asList(ids.split(","))) > 0 ? Tips.info("删除成功") : Tips.warn("删除失败");
     }
 
     /**

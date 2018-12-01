@@ -41,6 +41,6 @@ public class CustomPlanSectionRelationApi {
         log.debug("批量修改定制版块与定制计划关系\t param:{}", sectionId, planIds, sorts);
 
         Tips tips = customPlanSectionRelationService.updateRelationList(sectionId, planIds, sorts);
-        return !tips.err() ? ResponseEntity.ok().build() : ResponseEntity.badRequest().body("批量修改定制版块与定制计划关系失败！");
+        return !tips.err() ? ResponseEntity.ok().build() : ResponseEntity.badRequest().body(Tips.warn("批量修改定制版块与定制计划关系失败！"));
     }
 }

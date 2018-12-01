@@ -1,8 +1,7 @@
 package com.lhiot.healthygood.service.customplan;
 
-import com.google.common.base.Converter;
-import com.google.common.collect.Lists;
 import com.leon.microx.util.BeanUtils;
+import com.leon.microx.util.Maps;
 import com.leon.microx.util.StringUtils;
 import com.leon.microx.web.result.Pages;
 import com.leon.microx.web.result.Tips;
@@ -14,17 +13,11 @@ import com.lhiot.healthygood.mapper.customplan.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import reactor.util.annotation.Nullable;
 
 import java.time.Instant;
 import java.util.*;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 @Service
 @Transactional
@@ -85,15 +78,17 @@ public class CustomPlanService {
         BeanUtils.of(result).populate(customPlan);
         //
         List<CustomPlanDatailStandardResult> customPlanDatailStandardResult = getCustomPlanDetailStandardResultList(customPlan);
-        //result.setStandardList();
-        return null;
+        result.setStandardList(customPlanDatailStandardResult);
+        return result;
+//        return null;
     }
 
     private List<CustomPlanDatailStandardResult> getCustomPlanDetailStandardResultList(CustomPlan customPlan) {
         //获取定制计划周期 - 周
         List<CustomPlanDatailStandardResult> results = new ArrayList<>();
         CustomPlanDatailStandardResult customPlanDatailStandardResult = getCustomPlanDetailStandardResult(customPlan, "7");
-        return null;
+        results.add(customPlanDatailStandardResult);
+        return results;
     }
 
     private CustomPlanDatailStandardResult getCustomPlanDetailStandardResult(CustomPlan customPlan, String type) {
@@ -112,15 +107,15 @@ public class CustomPlanService {
         }
         customPlanDatailStandardResult.setSpecificationList(customPlanSpecificationResults);
         //获取定制产品信息
-        List<CustomPlanSectionRelation> customPlanSectionRelations = customPlanSectionRelationMapper.findByPlanId(customPlan.getId());
+        List<CustomPlanProduct> customPlanProducts = customPlanProductMapper.findByPlanId(customPlan.getId());
         List<CustomPlanProductResult> customPlanProductResults = new ArrayList<>();
-        for (CustomPlanSectionRelation customPlanSectionRelation : customPlanSectionRelations) {
+        for (CustomPlanProduct customPlanProduct : customPlanProducts) {
             CustomPlanProductResult customPlanProductResult = new CustomPlanProductResult();
-            BeanUtils.of(customPlanProductResult).populate(customPlanSectionRelation);
+            BeanUtils.of(customPlanProducts).populate(customPlanProduct);
             //查询上架规格信息
-            Long productShelfId = customPlanProductResult.getProductShelfId();
+            Long productShelfId = customPlanProduct.getProductShelfId();
             ProductShelf productShelf = baseDataServiceFeign.singleShelf(productShelfId).getBody();
-            BeanUtils.of(productShelf).populate(customPlanSectionRelation);
+            BeanUtils.of(productShelf).populate(customPlanProducts);
             customPlanProductResults.add(customPlanProductResult);
             // customPlanSectionRelation.
         }
@@ -141,11 +136,29 @@ public class CustomPlanService {
      * @param param 参数
      * @return 定制计划信息列表
      */
-    public Pages<CustomPlan> findList(CustomPlanParam param) {
-        List<CustomPlan> list = customPlanMapper.pageCustomPlans(param);
+    public Pages<CustomPlanResult> findList(CustomPlanParam param) {
+        List<CustomPlanResult> customPlanResultList = new ArrayList<>();
+        // 查询定制计划信息
+        List<CustomPlan> customPlans = customPlanMapper.pageCustomPlans(param);
         boolean pageFlag = Objects.nonNull(param.getPage()) && Objects.nonNull(param.getRows()) && param.getPage() > 0 && param.getRows() > 0;
-        int total = pageFlag ? customPlanMapper.pageCustomPlanCounts(param) : list.size();
-        return Pages.of(total, list);
+        int total = pageFlag ? customPlanMapper.pageCustomPlanCounts(param) : customPlans.size();
+
+         customPlans.forEach(item -> {
+            CustomPlanResult customPlanResult = new CustomPlanResult();
+            BeanUtils.copyProperties(item, customPlanResult);
+             // 查询定制计划规格信息
+             List<CustomPlanSpecification> customPlanSpecification = customPlanSpecificationMapper.findByPlanIdAndPerid(Maps.of("planId",item.getId(),"planPeriod", null));
+             // List<CustomPlanSpecification> 转换为 List<CustomPlanSpecificationResult> 并添加到结果中
+             List<CustomPlanSpecificationResult> customPlanSpecificationResultList = new ArrayList<>();
+             customPlanSpecification.forEach(specification -> {
+                 CustomPlanSpecificationResult customPlanSpecificationResult = new CustomPlanSpecificationResult();
+                 BeanUtils.copyProperties(specification, customPlanSpecificationResult);
+                 customPlanSpecificationResultList.add(customPlanSpecificationResult);
+             });
+             customPlanResult.setCustomPlanSpecifications(customPlanSpecificationResultList);
+             customPlanResultList.add(customPlanResult);
+        });
+       return Pages.of(total, customPlanResultList);
     }
 
     /**
@@ -269,12 +282,20 @@ public class CustomPlanService {
 
 
     /**
-     * 根据id批量删除
+     * 根据定制计划id批量删除
      *
      * @param ids
      * @return
      */
-    public boolean batchDeleteByIds(String ids) {
-        return customPlanMapper.deleteByIds(Arrays.asList(ids.split(","))) > 0;
+    public Tips batchDeleteByIds(String ids) {
+        // 定制计划是否关联了定制板块
+        List<Map<String, Object>> relationList = customPlanSectionRelationMapper.findBySectionIdsAndPlanIds(null, ids);
+        if (!relationList.isEmpty()) {
+            List<String> resultList = new ArrayList<>();
+            relationList.forEach(section -> resultList.add(section.get("planId").toString()));
+            List<String> id = resultList.stream().distinct().collect(Collectors.toList());
+            return Tips.warn("以下定制计划id不可删除:" + id);
+        }
+        return customPlanMapper.deleteByIds(Arrays.asList(ids.split(","))) > 0 ? Tips.info("删除成功") : Tips.warn("删除失败");
     }
 }

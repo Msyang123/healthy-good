@@ -56,6 +56,8 @@ public interface CustomPlanProductMapper {
     */
     CustomPlanProduct selectById(Long id);
 
+    List<CustomPlanProduct> findByPlanId(Long planId);
+
     /**
     * Description:查询定制计划关联商品列表
     *

@@ -170,12 +170,13 @@ public class CustomPlanSectionRelationService {
      * @param sectionIds 板块ID集合
      * @return 存在定制计划的板块id集合
      */
-    public List<String> findBySectionIds(String sectionIds) {
+    public List<String> findBySectionIdsAndPlanIds(String sectionIds, String planIds) {
         List<String> resultList = new ArrayList<>();
-        List<Map<String, Object>> relationList = customPlanSectionRelationMapper.findBySectionIds(sectionIds);
-        // 定制板块ids去重
+        List<Map<String, Object>> relationList = customPlanSectionRelationMapper.findBySectionIdsAndPlanIds(sectionIds, planIds);
+        // 获取定制计划id和板块id
         relationList.forEach(section -> resultList.add(section.get("sectionId").toString()));
-        return resultList.stream().distinct().collect(Collectors.toList());
+        relationList.forEach(section -> resultList.add(section.get("planId").toString()));
+        return resultList;
     }
 
 }
