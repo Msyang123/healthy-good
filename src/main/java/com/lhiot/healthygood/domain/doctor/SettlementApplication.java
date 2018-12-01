@@ -38,10 +38,9 @@ public class SettlementApplication{
     /**
      *申请时间
      */
-    @JsonProperty("createTime")
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss",timezone = "GMT+8")
+    @JsonProperty("createAt")
     @ApiModelProperty(value = "申请时间", dataType = "Date")
-    private java.util.Date createTime;
+    private java.util.Date createAt;
 
     /**
     *申请提取金额
@@ -60,10 +59,9 @@ public class SettlementApplication{
     /**
     *处理时间
     */
-    @JsonProperty("dealTime")
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss",timezone = "GMT+8")
+    @JsonProperty("dealAt")
     @ApiModelProperty(value = "处理时间", dataType = "Date")
-    private java.util.Date dealTime;
+    private java.util.Date dealAt;
 
     //开始时间   用与搜索条件
     @JsonIgnore

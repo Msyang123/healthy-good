@@ -29,7 +29,7 @@
 
     <!--新增鲜果师业绩记录-->
     <insert id="create" parameterType="com.lhiot.healthygood.domain.doctor.DoctorAchievementLog" useGeneratedKeys="true" keyProperty="id">
-        insert into doctor_bonus_log
+        insert into doctor_achievement_log
         <trim prefix="(" suffix=")" suffixOverrides="," >
             <if test="id != null ">
                 id,
@@ -80,7 +80,7 @@
 
     <!--根据id修改鲜果师业绩记录-->
     <update id="updateById" parameterType="com.lhiot.healthygood.domain.doctor.DoctorAchievementLog">
-        update doctor_bonus_log
+        update doctor_achievement_log
         <set>
             <if test="id != null ">
                 id = #{id},
@@ -109,7 +109,7 @@
 
     <!--根据ids删除鲜果师业绩记录-->
     <delete id="deleteByIds" parameterType="java.util.List">
-        delete from doctor_bonus_log where id in
+        delete from doctor_achievement_log where id in
         <foreach collection="list" item="item" open="("
             separator="," close=")">
             #{item}
@@ -120,7 +120,7 @@
     <!-- 根据id查找鲜果师业绩记录 -->
 	<select id="selectById" resultMap="BaseResultMap"
 		parameterType="long"> select <include refid="Base_Column_List" />
-		from doctor_bonus_log where id = #{id}
+		from doctor_achievement_log where id = #{id}
 	</select>
 
 
@@ -159,19 +159,22 @@
 
 
     <!--查询鲜果师业绩记录列表-->
-     <select id="pageDoctorBonusLogs" resultMap="BaseResultMap"
+     <select id="pageDoctorAchievementLogs" resultMap="BaseResultMap"
         parameterType="com.lhiot.healthygood.domain.doctor.DoctorAchievementLog">
 	        select <include refid="Base_Column_List" />
-	        from doctor_bonus_log
+	        from doctor_achievement_log
 	        <include refid="Base_Where_Condition" />
-	        <include refid="common.pager" />
+             <if test="rows != null and rows > 0 ">
+                 order by rank asc , id desc
+                 limit #{startRow} , #{rows}
+             </if>
     </select>
 
     <!--查询鲜果师业绩记录总记录-->
-    <select id="pageDoctorBonusLogCounts" resultType="long"
+    <select id="pageDoctorAchievementLogCounts" resultType="long"
         parameterType="com.lhiot.healthygood.domain.doctor.DoctorAchievementLog">
             select count(1)
-            from doctor_bonus_log
+            from doctor_achievement_log
             <include refid="Base_Where_Condition" />
     </select>
 
@@ -180,39 +183,39 @@
     <!--查询我的收入-->
     <select id="myIncome" resultType="com.lhiot.healthygood.domain.doctor.IncomeStat"
             parameterType="long">
-        select sum(amount) as bonus,
-        (select sum(amount)
-        from doctor_bonus_log where doctor_id=#{0}
+        select IFNULL(sum(amount),0) as bonus,
+        (select IFNULL(sum(amount),0)
+        from doctor_achievement_log where doctor_id=#{0}
         and create_at &lt; DATE_ADD(curdate(),interval -day(curdate())+1 day)) as bonusCanBeSettled,
-        (select sum(amount)
-        from doctor_bonus_log where doctor_id=#{0}
+        (select IFNULL(sum(amount),0)
+        from doctor_achievement_log where doctor_id=#{0}
         and source_type in('ORDER','SUB_DISTRIBUTOR','REFUND')) as bonusOfHistory,
-        (select -sum(amount)
-        from doctor_bonus_log where doctor_id=#{0}
+        (select IFNULL(sum(amount),0)
+        from doctor_achievement_log where doctor_id=#{0}
         and source_type in('SETTLEMENT')) as bonusSettled,
-        (select sum(amount) from settlement_application
+        (select IFNULL(sum(amount),0) from fruit_doctor_settlement
         where create_at between CONCAT(date_add(curdate(),interval -day(curdate())+1 day),' 00:00:00')
         and  CONCAT(date_add(curdate()-day(curdate())+1,interval 1 month),' 00:00:00')
         and settlement_status='UNSETTLED' and doctor_id=#{0}) as bonusSettling
-        from doctor_bonus_log where doctor_id=#{0}
+        from doctor_achievement_log where doctor_id=#{0}
     </select>
 
 
     <!--查询我的团队销售业绩-->
     <select id="teamAchievement" parameterType="long" resultType="com.lhiot.healthygood.domain.doctor.TeamAchievement">
       select real_name,f.phone,f.avatar,f.create_at,
-        (select sum(amount/commission)
-        from doctor_bonus_log where doctor_id=#{0}
+        (select IFNULL(sum(amount/commission),0)
+        from doctor_achievement_log where doctor_id=#{0}
         and source_type in('ORDER','REFUND')
 				)as salesAmount,
-        (select sum(amount/commission)
-        from doctor_bonus_log where doctor_id=#{0}
+        (select IFNULL(sum(amount/commission),0)
+        from doctor_achievement_log where doctor_id=#{0}
         and source_type in('ORDER','REFUND')
         and create_at between CONCAT(date_add(curdate(),interval -day(curdate())+1 day),' 00:00:00')
         and  CONCAT(date_add(curdate()-day(curdate())+1,interval 1 month),' 00:00:00')
 				)as amountOfMonth,
-        (select sum(amount)
-        from doctor_bonus_log where doctor_id=#{0}
+        (select IFNULL(sum(amount),0)
+        from doctor_achievement_log where doctor_id=#{0}
         and source_type in('ORDER','SUB_DISTRIBUTOR','REFUND')
         and create_at between CONCAT(date_add(curdate(),interval -day(curdate())+1 day),' 00:00:00')
         and  CONCAT(date_add(curdate()-day(curdate())+1,interval 1 month),' 00:00:00')
@@ -224,7 +227,7 @@
 	<select id="achievement" parameterType="map" 
 		resultType="com.lhiot.healthygood.domain.doctor.Achievement">
 		SELECT IFNULL(SUM(amount/commission),0) as salesAmount ,IFNULL(SUM(amount),0) AS incomeAmount,COUNT(DISTINCT order_id) AS orderCount
-		FROM doctor_bonus_log 
+		FROM doctor_achievement_log 
 		<trim prefix="where" prefixOverrides="and">
 				source_type IN ('ORDER','REFUND')
 			<if test=" beginTime!=null and endTime != null">
@@ -242,6 +245,6 @@
 	<!-- lynn 根据订单id查询记录 -->
 	<select id="selectByOrderId" parameterType="Long" resultMap="BaseResultMap">
 		select <include refid="Base_Column_List" />
-		from doctor_bonus_log where id = #{0} and source_type = 'ORDER'
+		from doctor_achievement_log where id = #{0} and source_type = 'ORDER'
 	</select>
 </mapper>

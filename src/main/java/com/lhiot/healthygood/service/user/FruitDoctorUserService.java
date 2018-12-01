@@ -82,37 +82,6 @@ public class FruitDoctorUserService {
         return Tips.info("用户创建成功").data((UserDetailResult) baseUser.getBody());
     }
 
-   /* public FruitDoctorUser selectByOpenId(String openId){
-
-        UserDetailResult userDetailResult = baseUserServerFeign.findByOpenId(openId).getBody();
-        //查询是否为鲜果师成员
-        FruitDoctorUser fruitDoctorUser= new FruitDoctorUser();
-        fruitDoctorUser.setAvatar(userDetailResult.getAvatar());
-        fruitDoctorUser.setBaseuserId(userDetailResult.getBaseUserId());
-        fruitDoctorUser.setNickname(userDetailResult.getNickname());
-        fruitDoctorUser.setGender(userDetailResult.getSex());
-        fruitDoctorUser.setOpenId(userDetailResult.getOpenId());
-
-        if(Objects.nonNull(fruitDoctorUser)){
-            FruitDoctor fruitDoctor= fruitDoctorMapper.selectByUserId(fruitDoctorUser.getId());
-            //培训通过的鲜果师
-            if(Objects.nonNull(fruitDoctor)&&!Objects.equals(fruitDoctor.getDoctorLevel(), DoctorLevel.TRAINING.toString())){
-                fruitDoctorUser.setFruitDoctor(true);
-            }
-            //去基础用户中查询鲜果币信息
-            ResponseEntity<BaseUser> baseUserResponseEntity= baseUserServerFeign.findBaseUserById(fruitDoctorUser.getBaseuserId());
-            if (Objects.nonNull(baseUserResponseEntity)&&baseUserResponseEntity.getStatusCodeValue()<400){
-                fruitDoctorUser.setCurrency(baseUserResponseEntity.getBody().getCurrency());
-            }
-            //查询用户是否绑定了鲜果师
-            Long userId = fruitDoctorUser.getId();
-            DoctorUser doctorUser = doctorUserMapper.selectByUserId(userId);
-            if(Objects.nonNull(doctorUser)){
-                fruitDoctorUser.setDoctorId(doctorUser.getDoctorId());
-            }
-        }
-        return fruitDoctorUser;
-    }*/
 
     /**
      * 通过微信返回用户详细信息转换成系统用户

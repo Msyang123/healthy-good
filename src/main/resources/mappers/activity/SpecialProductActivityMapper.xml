@@ -163,7 +163,10 @@
 	        select <include refid="Base_Column_List" />
 	        from special_product_activity
 	        <include refid="Base_Where_Condition" />
-	        <include refid="common.pager" />
+             <if test="rows != null and rows > 0 ">
+                 order by rank asc , id desc
+                 limit #{startRow} , #{rows}
+             </if>
     </select>
 
     <!--查询新品尝鲜活动总记录-->

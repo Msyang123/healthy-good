@@ -139,7 +139,9 @@ public class UserApi {
             //新增用户
             Tips tips =fruitDoctorUserService.create(weChatRegisterParam);
             UserDetailResult userDetailResult = (UserDetailResult) tips.getData();
-            Sessions.User sessionUser = session.create(request).user(Maps.of("userId",userDetailResult.getId(),"openId",userDetailResult.getOpenId())).timeToLive(30, TimeUnit.MINUTES);// TODO 还没有加权限
+            Sessions.User sessionUser = session.create(request).user(Maps.of("userId",userDetailResult.getId(),"openId",userDetailResult.getOpenId()))
+                    .timeToLive(30, TimeUnit.MINUTES)
+                    .authorities(Authority.of("/**", RequestMethod.values()));// TODO 还没有加权限;
             String sessionId = session.cache(sessionUser);
             clientUri=accessToken.getOpenId()+"?sessionId="+sessionId+"&clientUri="+clientUri;
         }else{
@@ -154,7 +156,9 @@ public class UserApi {
                     doctorUserService.create(doctorUser);
                 }
             }
-            Sessions.User sessionUser = session.create(request).user(Maps.of("userId",searchUser.getId(),"openId",searchUser.getOpenId())).timeToLive(30, TimeUnit.MINUTES);// TODO 还没有加权限
+            Sessions.User sessionUser = session.create(request).user(Maps.of("userId",searchUser.getId(),"openId",searchUser.getOpenId()))
+                    .timeToLive(30, TimeUnit.MINUTES)
+                    .authorities(Authority.of("/**", RequestMethod.values()));// TODO 还没有加权限;
             String sessionId = session.cache(sessionUser);
             clientUri=accessToken.getOpenId()+"?sessionId="+sessionId+"&clientUri="+clientUri;
         }
@@ -176,6 +180,11 @@ public class UserApi {
         if (Objects.isNull(searchUser)){
             return ResponseEntity.badRequest().body("用户不存在！");
         }
+        FruitDoctor fruitDoctor = fruitDoctorService.selectByUserId(Long.valueOf(searchUser.getId()));
+        if (Objects.nonNull(fruitDoctor)){
+            searchUser.setFruitDoctor(true);
+            searchUser.setFruitDoctorInfo(fruitDoctor);
+        }
         return ResponseEntity.ok(searchUser);
     }
 
@@ -190,7 +199,7 @@ public class UserApi {
         }
         UserDetailResult searchUser = (UserDetailResult) searchUserEntity.getBody();
         Sessions.User sessionUser = session.create(request).user(Maps.of("userId",searchUser.getId(),"openId",searchUser.getOpenId())).timeToLive(30, TimeUnit.MINUTES)
-                .authorities(Authority.of("/**", RequestMethod.values()));// TODO 还没有加权限
+                .authorities(Authority.of("/**", RequestMethod.values()));
         String sessionId = session.cache(sessionUser);
         return ResponseEntity.ok()
                 .header(Sessions.HTTP_HEADER_NAME, sessionId).body(sessionId);
@@ -294,7 +303,7 @@ public class UserApi {
         String sessionId = session.id(request);
         Long userId = (Long) session.user(sessionId).getUser().get("userId");
         UserBindingPhoneParam userBindingPhoneParam = new UserBindingPhoneParam();
-        userBindingPhoneParam.setPhone(validateParam.getPhone());
+        userBindingPhoneParam.setPhone(validateParam.getPhoneNumber());
         userBindingPhoneParam.setApplicationType(ApplicationType.FRUIT_DOCTOR);
         ResponseEntity userInfo = baseUserServerFeign.userBindingPhone(userId,userBindingPhoneParam);
         if (userInfo.getStatusCode().isError()){
@@ -303,24 +312,23 @@ public class UserApi {
         return ResponseEntity.ok(userInfo.getBody());
     }
 
+    @Sessions.Uncheck
     @ApiOperation("统计用户总计消费数及本月消费数")
-    @ApiImplicitParam(paramType = "path", name = "id", dataType = "String", required = true, value = "用户id")
-    @GetMapping("/users/{userId}/consumption")
-    public ResponseEntity<?> findUserAchievement(@PathVariable Long id){
+    @ApiImplicitParam(paramType = "path", name = "userId", dataType = "Long", required = true, value = "用户id")
+    @GetMapping("/{userId}/consumption")
+    public ResponseEntity<?> findUserAchievement(@PathVariable Long userId){
         //统计本月订单数和消费额
         Achievement thisMonth =
-                doctorAchievementLogService.achievement(DateTypeEnum.MONTH, PeriodType.current, null, true, false,id);
+                doctorAchievementLogService.achievement(DateTypeEnum.MONTH, PeriodType.current, null, true, false,userId);
         //统计总订单数和消费额
         Achievement total =
-                doctorAchievementLogService.achievement(DateTypeEnum.MONTH, PeriodType.current, null, true, true,id);
+                doctorAchievementLogService.achievement(DateTypeEnum.MONTH, PeriodType.current, null, true, true,userId);
         //构建返回值
         total.setSalesAmountOfThisMonth(thisMonth.getSalesAmount());
         total.setOrderCountOfThisMonth(thisMonth.getOrderCount());
 
         //获取用户信息
-        /*FruitDoctorUser user = fruitDoctorUserMapper.findByDoctorIdAndUserId(map);
-        total.setUser(user);*/
-        ResponseEntity<UserDetailResult> userInfo = baseUserServerFeign.findById(id);
+        ResponseEntity<UserDetailResult> userInfo = baseUserServerFeign.findById(userId);
         if (userInfo.getStatusCode().isError()){
             return ResponseEntity.badRequest().body(userInfo.getBody());
         }
