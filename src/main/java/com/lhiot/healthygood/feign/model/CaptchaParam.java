@@ -1,6 +1,8 @@
-package com.lhiot.healthygood.domain.user;
+package com.lhiot.healthygood.feign.model;
 
-import com.lhiot.healthygood.domain.template.FreeSignName;
+import com.leon.microx.util.Maps;
+import com.leon.microx.util.auditing.Random;
+import com.lhiot.healthygood.type.FreeSignName;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
@@ -14,7 +16,7 @@ import javax.validation.constraints.NotBlank;
 @Data
 @ApiModel
 @ToString
-public class CaptchaParam {
+public class CaptchaParam implements PayloadConverter {
 
     @NotBlank(message = "手机号不能为空")
     @ApiModelProperty(notes = "接收短信的手机号", required = true, dataType = "String")
@@ -30,4 +32,10 @@ public class CaptchaParam {
     @ApiModelProperty(notes = "扩展参数（一般是JSON格式的字符串）", dataType = "String")
     private String extend;
 
+    @Override
+    public Payload toPayload() {
+        Payload payload = new Payload(phoneNumber, freeSignName, extend);
+        payload.withVars(() -> Maps.of("product", this.applicationName, "code", String.valueOf(Random.ofInt(6))));
+        return payload;
+    }
 }

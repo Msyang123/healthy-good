@@ -1,4 +1,4 @@
-package com.lhiot.healthygood.domain.user;
+package com.lhiot.healthygood.feign.model;
 
 import com.lhiot.healthygood.type.ApplicationType;
 import io.swagger.annotations.ApiModel;

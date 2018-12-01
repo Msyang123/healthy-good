@@ -1,6 +1,6 @@
 package com.lhiot.healthygood.domain.user;
 
-import com.lhiot.healthygood.domain.template.TemplateMessageEnum;
+import com.lhiot.healthygood.type.TemplateMessageEnum;
 import io.swagger.annotations.ApiModel;
 import lombok.Data;
 

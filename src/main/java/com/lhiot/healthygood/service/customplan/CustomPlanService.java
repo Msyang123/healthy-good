@@ -1,24 +1,20 @@
 package com.lhiot.healthygood.service.customplan;
 
-import com.google.common.base.Converter;
-import com.google.common.collect.Lists;
 import com.leon.microx.util.BeanUtils;
 import com.leon.microx.util.StringUtils;
 import com.leon.microx.web.result.Pages;
 import com.leon.microx.web.result.Tips;
 import com.lhiot.healthygood.domain.customplan.*;
 import com.lhiot.healthygood.domain.customplan.model.*;
-import com.lhiot.healthygood.domain.good.ProductShelf;
+import com.lhiot.healthygood.feign.model.ProductShelf;
 import com.lhiot.healthygood.feign.BaseDataServiceFeign;
 import com.lhiot.healthygood.mapper.customplan.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import reactor.util.annotation.Nullable;
 
 import java.time.Instant;
 import java.util.*;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.ArrayList;

@@ -2,13 +2,13 @@ package com.lhiot.healthygood.api.order;
 
 import com.leon.microx.web.result.Tips;
 import com.leon.microx.web.session.Sessions;
-import com.lhiot.healthygood.domain.good.ProductShelf;
-import com.lhiot.healthygood.domain.order.CreateOrderParam;
-import com.lhiot.healthygood.domain.order.OrderProductParam;
-import com.lhiot.healthygood.feign.model.Store;
-import com.lhiot.healthygood.type.ReceivingWay;
 import com.lhiot.healthygood.feign.BaseDataServiceFeign;
+import com.lhiot.healthygood.feign.model.CreateOrderParam;
+import com.lhiot.healthygood.feign.model.OrderProduct;
+import com.lhiot.healthygood.feign.model.ProductShelf;
+import com.lhiot.healthygood.feign.model.Store;
 import com.lhiot.healthygood.service.order.OrderService;
+import com.lhiot.healthygood.type.ReceivingWay;
 import com.lhiot.healthygood.util.FeginResponseTools;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
@@ -61,6 +61,9 @@ public class OrderApi {
                 return ResponseEntity.badRequest().body("送货上门，地址为空");
             }
         }
+
+
+
         //获取用户信息
         String sessionId = session.id(request);
 //        Long userId = Long.valueOf(session.user(sessionId).getUser().get("userId").toString());
@@ -69,7 +72,7 @@ public class OrderApi {
             return ResponseEntity.badRequest().body("用户不存在");
         }
         //判断门店是否存在
-        ResponseEntity<Store> storeResponseEntity = baseDataServiceFeign.findStoreById(orderParam.getStoreId());
+        ResponseEntity<Store> storeResponseEntity = baseDataServiceFeign.findStoreById(orderParam.getOrderStore().getStoreId());
         Tips<Store> storeTips=FeginResponseTools.convertResponse(storeResponseEntity);
         if (storeTips.err()) {
             return ResponseEntity.badRequest().body(storeTips);
@@ -77,7 +80,7 @@ public class OrderApi {
         String storeCode = storeTips.getData().getCode();
         //套餐id构建成以逗号分割的字符串
         List<String> standardIds = orderParam.getOrderProducts().parallelStream()
-                .map(OrderProductParam::getStandardId)
+                .map(OrderProduct::getId)
                 .map(String::valueOf).collect(Collectors.toList());
         for(String standardId:standardIds){
             ProductShelf productShelf = baseDataServiceFeign.singleShelf(Long.valueOf(standardId)).getBody();

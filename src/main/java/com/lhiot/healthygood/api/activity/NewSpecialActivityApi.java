@@ -1,11 +1,12 @@
 package com.lhiot.healthygood.api.activity;
 
+import com.leon.microx.util.BeanUtils;
 import com.leon.microx.web.session.Sessions;
 import com.lhiot.healthygood.domain.activity.ActivityProduct;
 import com.lhiot.healthygood.domain.activity.ActivityProducts;
 import com.lhiot.healthygood.domain.activity.NewSpecialResult;
 import com.lhiot.healthygood.domain.activity.SpecialProductActivity;
-import com.lhiot.healthygood.domain.good.ProductShelf;
+import com.lhiot.healthygood.feign.model.ProductShelf;
 import com.lhiot.healthygood.feign.BaseDataServiceFeign;
 import com.lhiot.healthygood.service.activity.ActivityProductRecordService;
 import com.lhiot.healthygood.service.activity.ActivityProductService;
@@ -72,36 +73,29 @@ public class NewSpecialActivityApi {
             return ResponseEntity.badRequest().body("活动商品是空的~");
         }
         List<ActivityProducts> activityProductsList = new ArrayList<ActivityProducts>();
-        activityProducts.stream().map(activityProduct1 -> {
+
+        activityProducts.stream().map(item -> {
             //从基础服务里查上架商品
-            ResponseEntity<ProductShelf> shelfProductResponse = baseDataServiceFeign.singleShelf(activityProduct1.getProductShelfId());
+            ResponseEntity<ProductShelf> shelfProductResponse = baseDataServiceFeign.singleShelf(item.getProductShelfId());
             if (shelfProductResponse.getStatusCode().isError()){
                 return ResponseEntity.badRequest().body(shelfProductResponse.getBody());
             }
             ProductShelf productShelf = shelfProductResponse.getBody();
             ActivityProducts product = new ActivityProducts();
-            product.setDescription(productShelf.getDescription());
-            product.setImage(productShelf.getImage());
-            product.setProductImage(productShelf.getProductImage());
+            BeanUtils.copyProperties(productShelf,product);
             product.setPrice(Objects.isNull(productShelf.getPrice()) ? productShelf.getOriginalPrice() : productShelf.getPrice());
             product.setProductName(productShelf.getName());
-            product.setShelfQty(productShelf.getShelfQty());
-            product.setShelfType(productShelf.getShelfType());
-            product.setActivityPrice(activityProduct1.getActivityPrice());
             String sessionId = session.id(request);
             Long userId = Long.valueOf(session.user(sessionId).getUser().get("userId").toString());
             Integer alreadyCount = activityProductRecordService.selectRecordCount(userId);
             product.setAlreadyBuyCount(alreadyCount);
-            product.setShelfId(activityProduct1.getProductShelfId());
+            product.setShelfId(item.getProductShelfId());
             activityProductsList.add(product);
             return product;
         }).collect(Collectors.toList());
         NewSpecialResult newSpecialResult = new NewSpecialResult();
-        newSpecialResult.setActivityName(specialProductActivity.getActivityName());
+        BeanUtils.copyProperties(specialProductActivity,newSpecialResult);
         newSpecialResult.setActivityProductsList(activityProductsList);
-        newSpecialResult.setDescription(specialProductActivity.getDescription());
-        newSpecialResult.setId(specialProductActivity.getId());
-        newSpecialResult.setLimitCount(specialProductActivity.getLimitCount());
 
         return ResponseEntity.ok(newSpecialResult);
     }
