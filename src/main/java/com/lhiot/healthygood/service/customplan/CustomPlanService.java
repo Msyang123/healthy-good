@@ -76,11 +76,9 @@ public class CustomPlanService {
         CustomPlanDetailResult result = new CustomPlanDetailResult();
         CustomPlan customPlan = customPlanMapper.selectById(id);
         BeanUtils.of(result).populate(customPlan);
-        //
         List<CustomPlanDatailStandardResult> customPlanDatailStandardResult = getCustomPlanDetailStandardResultList(customPlan);
         result.setStandardList(customPlanDatailStandardResult);
         return result;
-//        return null;
     }
 
     private List<CustomPlanDatailStandardResult> getCustomPlanDetailStandardResultList(CustomPlan customPlan) {
@@ -95,7 +93,7 @@ public class CustomPlanService {
         CustomPlanDatailStandardResult customPlanDatailStandardResult = new CustomPlanDatailStandardResult();
         customPlanDatailStandardResult.setPlanPeriod(type);
         //获取套餐列表
-        Map<String, Object> param = new HashMap<String, Object>();
+        Map<String, Object> param = new HashMap<>();
         param.put("planId", customPlan.getId());
         param.put("planPeriod", type);
         List<CustomPlanSpecification> customPlanSpecifications = customPlanSpecificationMapper.findByPlanIdAndPerid(param);
@@ -114,8 +112,8 @@ public class CustomPlanService {
             BeanUtils.of(customPlanProducts).populate(customPlanProduct);
             //查询上架规格信息
             Long productShelfId = customPlanProduct.getProductShelfId();
-            ProductShelf productShelf = baseDataServiceFeign.singleShelf(productShelfId).getBody();
-            BeanUtils.of(productShelf).populate(customPlanProducts);
+            ProductShelf  productShelf = baseDataServiceFeign.singleShelf(productShelfId).getBody();
+            BeanUtils.of(customPlanProductResult).populate(productShelf);
             customPlanProductResults.add(customPlanProductResult);
             // customPlanSectionRelation.
         }
@@ -143,22 +141,22 @@ public class CustomPlanService {
         boolean pageFlag = Objects.nonNull(param.getPage()) && Objects.nonNull(param.getRows()) && param.getPage() > 0 && param.getRows() > 0;
         int total = pageFlag ? customPlanMapper.pageCustomPlanCounts(param) : customPlans.size();
 
-         customPlans.forEach(item -> {
+        customPlans.forEach(item -> {
             CustomPlanResult customPlanResult = new CustomPlanResult();
             BeanUtils.copyProperties(item, customPlanResult);
-             // 查询定制计划规格信息
-             List<CustomPlanSpecification> customPlanSpecification = customPlanSpecificationMapper.findByPlanIdAndPerid(Maps.of("planId",item.getId(),"planPeriod", null));
-             // List<CustomPlanSpecification> 转换为 List<CustomPlanSpecificationResult> 并添加到结果中
-             List<CustomPlanSpecificationResult> customPlanSpecificationResultList = new ArrayList<>();
-             customPlanSpecification.forEach(specification -> {
-                 CustomPlanSpecificationResult customPlanSpecificationResult = new CustomPlanSpecificationResult();
-                 BeanUtils.copyProperties(specification, customPlanSpecificationResult);
-                 customPlanSpecificationResultList.add(customPlanSpecificationResult);
-             });
-             customPlanResult.setCustomPlanSpecifications(customPlanSpecificationResultList);
-             customPlanResultList.add(customPlanResult);
+            // 查询定制计划规格信息
+            List<CustomPlanSpecification> customPlanSpecification = customPlanSpecificationMapper.findByPlanIdAndPerid(Maps.of("planId", item.getId(), "planPeriod", null));
+            // List<CustomPlanSpecification> 转换为 List<CustomPlanSpecificationResult> 并添加到结果中
+            List<CustomPlanSpecificationResult> customPlanSpecificationResultList = new ArrayList<>();
+            customPlanSpecification.forEach(specification -> {
+                CustomPlanSpecificationResult customPlanSpecificationResult = new CustomPlanSpecificationResult();
+                BeanUtils.copyProperties(specification, customPlanSpecificationResult);
+                customPlanSpecificationResultList.add(customPlanSpecificationResult);
+            });
+            customPlanResult.setCustomPlanSpecifications(customPlanSpecificationResultList);
+            customPlanResultList.add(customPlanResult);
         });
-       return Pages.of(total, customPlanResultList);
+        return Pages.of(total, customPlanResultList);
     }
 
     /**
@@ -198,11 +196,11 @@ public class CustomPlanService {
         if (sectionIdList.isEmpty() || sortIdList.isEmpty() || sectionIdList.size() != sortIdList.size()) {
             return Tips.warn("关联板块ids和排序ids长度不一致");
         }
-        sectionIdList.stream().forEach(s -> {
+        sectionIdList.stream().forEach(sectionId -> {
             CustomPlanSectionRelation customPlanSectionRelation1 = new CustomPlanSectionRelation();
             customPlanSectionRelation1.setPlanId(customPlanId);
-            customPlanSectionRelation1.setSectionId(Long.valueOf(s));
-            customPlanSectionRelation1.setSort(Long.valueOf(sortIdList.get(sectionIdList.indexOf(s))));
+            customPlanSectionRelation1.setSectionId(Long.valueOf(sectionId));
+            customPlanSectionRelation1.setSort(Long.valueOf(sortIdList.get(sectionIdList.indexOf(sectionId))));
             customPlanSectionRelation.add(customPlanSectionRelation1);
         });
         boolean addRelation = customPlanSectionRelationMapper.insertList(customPlanSectionRelation) > 0;
@@ -258,6 +256,7 @@ public class CustomPlanService {
      * @param customPlanProducts
      * @return
      */
+    // FIXME 回滚操作
     public Tips updateProduct(List<CustomPlanProduct> customPlanProducts) {
         // 循环批量更新上架商品id
         customPlanProducts.stream().forEach(customPlanProduct -> {

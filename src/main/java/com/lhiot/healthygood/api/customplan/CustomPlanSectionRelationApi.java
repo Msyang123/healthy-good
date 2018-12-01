@@ -33,11 +33,11 @@ public class CustomPlanSectionRelationApi {
     @ApiOperation("批量修改定制版块与定制计划关系")
     @ApiImplicitParams({
             @ApiImplicitParam(paramType = ApiParamType.QUERY, name = "sectionId", value = "定制版块Id", dataType = "Long", required = true),
-            @ApiImplicitParam(paramType = ApiParamType.QUERY, name = "planIds", value = "多个定制计划Id以英文逗号分隔", dataType = "String", required = true),
-            @ApiImplicitParam(paramType = ApiParamType.QUERY, name = "sorts", value = "多个排序以英文逗号分隔", dataType = "String", required = true)
+            @ApiImplicitParam(paramType = ApiParamType.QUERY, name = "planIds", value = "多个定制计划Id以英文逗号分隔", dataType = "String"),
+            @ApiImplicitParam(paramType = ApiParamType.QUERY, name = "sorts", value = "多个排序以英文逗号分隔", dataType = "String")
     })
     @PutMapping("/custom-plan-section-relations/batches")
-    public ResponseEntity updateBatch(@RequestParam("sectionId") Long sectionId, @RequestParam("planIds") String planIds, @RequestParam("sorts") String sorts) {
+    public ResponseEntity updateBatch(@RequestParam("sectionId") Long sectionId, @RequestParam(value = "planIds", required = false) String planIds, @RequestParam(value = "sorts", required = false) String sorts) {
         log.debug("批量修改定制版块与定制计划关系\t param:{}", sectionId, planIds, sorts);
 
         Tips tips = customPlanSectionRelationService.updateRelationList(sectionId, planIds, sorts);

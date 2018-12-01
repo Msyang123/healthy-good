@@ -42,17 +42,17 @@ public class CustomPlanParam {
     /**
      * 定制计划和定制板块关联
      */
-    @ApiModelProperty(value = "定制板块关联定制计划排序", dataType = "String")
+    @ApiModelProperty(value = "定制板块关联定制计划排序，英文逗号分隔", dataType = "String")
     @NotNull
     private String sorts;
-    @ApiModelProperty(value = "定制板块ids", dataType = "String")
+    @ApiModelProperty(value = "定制板块ids，英文逗号分隔", dataType = "String")
     @NotNull
     private String customPlanSectionIds;
 
     /**
      * 定制规格
      */
-    @ApiModelProperty(value = "定制计划规格", dataType = "CustomPlanSpecification")
+    @ApiModelProperty(value = "定制计划规格集合", dataType = "CustomPlanSpecification")
     @NotNull
     private List<CustomPlanSpecificationResult> customPlanSpecifications;
 

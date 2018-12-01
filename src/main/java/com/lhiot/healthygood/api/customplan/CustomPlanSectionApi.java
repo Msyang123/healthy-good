@@ -18,6 +18,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import javax.validation.Valid;
 import java.net.URI;
 
 /**
@@ -38,7 +39,7 @@ public class CustomPlanSectionApi {
     @ApiOperation("添加定制板块(后台)")
     @ApiImplicitParam(paramType = ApiParamType.BODY, name = "customPlanSectionResultAdmin", value = "定制计划板块", dataType = "CustomPlanSectionResultAdmin", required = true)
     @PostMapping("/custom-plan-sections")
-    public ResponseEntity create(@RequestBody CustomPlanSectionResultAdmin customPlanSectionResultAdmin) {
+    public ResponseEntity create(@Valid @RequestBody CustomPlanSectionResultAdmin customPlanSectionResultAdmin) {
         log.debug("添加定制板块\t param:{}", customPlanSectionResultAdmin);
 
         // 添加定制板块
@@ -59,7 +60,7 @@ public class CustomPlanSectionApi {
             @ApiImplicitParam(paramType = ApiParamType.BODY, name = "customPlanSectionResultAdmin", value = "定制板块", dataType = "CustomPlanSectionResultAdmin", required = true)
     })
     @PutMapping("/custom-plan-sections/{id}")
-    public ResponseEntity update(@PathVariable("id") Long id, @RequestBody CustomPlanSectionResultAdmin customPlanSectionResultAdmin) {
+    public ResponseEntity update(@PathVariable("id") Long id, @Valid @RequestBody CustomPlanSectionResultAdmin customPlanSectionResultAdmin) {
         log.debug("修改定制板块\t param:{}", customPlanSectionResultAdmin);
 
         customPlanSectionResultAdmin.setId(id);

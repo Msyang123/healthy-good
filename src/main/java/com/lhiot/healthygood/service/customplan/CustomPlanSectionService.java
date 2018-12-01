@@ -59,9 +59,13 @@ public class CustomPlanSectionService {
         Long sectionId = customPlanSection.getId();
 
         // 添加定制板块和定制计划的关联
-        List<Long> planIds = customPlanSectionResultAdmin.getCustomPlanList().stream().map(CustomPlan::getId).collect(Collectors.toList());
+        List<CustomPlan> customPlanList = customPlanSectionResultAdmin.getCustomPlanList();
         List<Long> sorts = customPlanSectionResultAdmin.getRelationSorts();
-        if (Objects.nonNull(sectionId) && Objects.nonNull(planIds) && Objects.nonNull(sorts)) {
+        if (customPlanList.isEmpty() && sorts.isEmpty()){
+            return Tips.info(customPlanSection.getId() + "");
+        }
+        List<Long> planIds = customPlanSectionResultAdmin.getCustomPlanList().stream().map(CustomPlan::getId).collect(Collectors.toList());
+        if (Objects.nonNull(sectionId) && !planIds.isEmpty() && !sorts.isEmpty() ) {
             //先做幂等验证
             List<CustomPlanSectionRelation> relationList = customPlanSectionRelationMapper.selectRelationListBySectionId(sectionId, Joiner.on(",").join(planIds));
             if (!relationList.isEmpty()) {
