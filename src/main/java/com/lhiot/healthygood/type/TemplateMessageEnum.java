@@ -1,4 +1,4 @@
-package com.lhiot.healthygood.domain.template;
+package com.lhiot.healthygood.type;
 
 import lombok.Getter;
 

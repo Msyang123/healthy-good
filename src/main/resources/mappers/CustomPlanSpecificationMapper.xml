@@ -160,4 +160,20 @@
             parameterType="map"> select <include refid="Base_Column_List" /> from
         custom_plan_specification where plan_id = #{planId} and plan_period = #{planPeriod}
     </select>
+
+    <!-- 批量新增定制计划集合 -->
+    <insert id="insertList" parameterType="java.util.List">
+        insert into custom_plan_specification (plan_id,price,quantity,description, plan_period)
+        values
+        <foreach collection="list" item="item" index="index" separator=",">
+            (
+            #{item.planId},
+            #{item.price},
+            #{item.quantity},
+            #{item.description},
+            #{item.planPeriod}
+            )
+        </foreach>
+    </insert>
+
 </mapper>

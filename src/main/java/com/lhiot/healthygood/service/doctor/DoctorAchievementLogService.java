@@ -1,6 +1,6 @@
 package com.lhiot.healthygood.service.doctor;
 
-import com.leon.microx.util.ImmutableMap;
+import com.leon.microx.util.Maps;
 import com.leon.microx.web.result.Pages;
 import com.lhiot.healthygood.domain.doctor.Achievement;
 import com.lhiot.healthygood.domain.doctor.DoctorAchievementLog;
@@ -196,7 +196,7 @@ public class DoctorAchievementLogService {
 		if(Objects.isNull(time)){
 			return achievement;
 		}
-		Map<String,Object> param = ImmutableMap.of("doctorId",doctorId,
+		Map<String,Object> param = Maps.of("doctorId",doctorId,
 				"beginTime", null,"endTime", null,"userId",userId);
 		if(!isAll){
 			param.putAll(time);

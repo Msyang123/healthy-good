@@ -1,11 +1,7 @@
 package com.lhiot.healthygood.feign;
 
 import com.leon.microx.web.result.Pages;
-import com.lhiot.healthygood.domain.good.ProductParam;
-import com.lhiot.healthygood.domain.good.ProductShelf;
-import com.lhiot.healthygood.domain.good.ProductSpecificationParam;
-import com.lhiot.healthygood.feign.model.Store;
-import com.lhiot.healthygood.feign.model.StoreSearchParam;
+import com.lhiot.healthygood.feign.model.*;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;

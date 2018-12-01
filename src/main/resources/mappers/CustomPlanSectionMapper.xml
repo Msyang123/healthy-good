@@ -126,7 +126,7 @@
     <!-- 根据id查找定制计划板块 -->
     <select id="selectBySectionCode" resultMap="BaseResultMap"
             parameterType="string"> select <include refid="Base_Column_List" />
-        from custom_plan_section where section_code = #{0}
+        from custom_plan_section where section_code = #{sectionCode}
     </select>
 
 
@@ -164,11 +164,14 @@
 	        select <include refid="Base_Column_List" />
 	        from custom_plan_section
 	        <include refid="Base_Where_Condition" />
-	        <include refid="common.pager" />
+         <if test="rows != null and rows > 0 ">
+             order by create_at desc
+             limit #{startRow} , #{rows}
+         </if>
     </select>
 
     <!--查询定制计划板块总记录-->
-    <select id="pageCustomPlanSectionCounts" resultType="long"
+    <select id="pageCustomPlanSectionCounts" resultType="int"
         parameterType="com.lhiot.healthygood.domain.customplan.CustomPlanSection">
             select count(1)
             from custom_plan_section

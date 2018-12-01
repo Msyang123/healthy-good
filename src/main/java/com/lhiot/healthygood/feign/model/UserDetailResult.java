@@ -1,4 +1,4 @@
-package com.lhiot.healthygood.domain.user;
+package com.lhiot.healthygood.feign.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;

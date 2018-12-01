@@ -8,6 +8,9 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
 
+import javax.validation.constraints.NotNull;
+import java.util.List;
+
 /**
 * Description:定制计划规格实体类
 * @author zhangs
@@ -60,6 +63,5 @@ public class CustomPlanSpecification{
     @JsonProperty("planPeriod")
     @ApiModelProperty(value = "定制计划周期", dataType = "String")
     private String planPeriod;
-
 
 }

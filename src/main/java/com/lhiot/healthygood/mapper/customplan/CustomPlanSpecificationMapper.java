@@ -2,6 +2,7 @@ package com.lhiot.healthygood.mapper.customplan;
 
 import com.lhiot.healthygood.domain.customplan.CustomPlanSpecification;
 import org.apache.ibatis.annotations.Mapper;
+import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.Map;
@@ -12,6 +13,7 @@ import java.util.Map;
 * @date 2018/11/22
 */
 @Mapper
+@Repository
 public interface CustomPlanSpecificationMapper {
 
     /**
@@ -76,4 +78,13 @@ public interface CustomPlanSpecificationMapper {
     long pageCustomPlanSpecificationCounts(CustomPlanSpecification customPlanSpecification);
 
     List<CustomPlanSpecification> findByPlanIdAndPerid(Map<String,Object> param);
+
+    /**
+     * 新增定制规格集合
+     *
+     * @param customPlanSpecifications 定制规格集合
+     * @return 定制规格id
+     */
+    int insertList(List<CustomPlanSpecification> customPlanSpecifications);
+
 }

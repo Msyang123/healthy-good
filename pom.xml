@@ -13,7 +13,7 @@
     <artifactId>healthy-good</artifactId>
     <name>${project.artifactId}</name>
     <version>1.0-SNAPSHOT</version>
-    <description>LH-IOT Fruit Doctor</description>
+    <description>LH-IOT healthy-good</description>
 
     <properties>
         <start-clasee>com.lhiot.healthygood.HealthyGoodServiceApplication</start-clasee>
@@ -87,10 +87,6 @@
             <artifactId>spring-boot-devtools</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.springframework.cloud</groupId>
-            <artifactId>spring-cloud-starter-bus-amqp</artifactId>
-        </dependency>
-        <dependency>
             <groupId>com.lhiot.dc</groupId>
             <artifactId>dictionary-client</artifactId>
             <version>1.0</version>
@@ -101,16 +97,6 @@
             <version>2.0-20180620</version>
         </dependency>
         <!-- utils -->
-        <dependency>
-            <groupId>com.leon.microx.util</groupId>
-            <artifactId>microx-utils</artifactId>
-            <version>20180725</version>
-        </dependency>
-        <dependency>
-            <groupId>com.alibaba</groupId>
-            <artifactId>fastjson</artifactId>
-            <version>1.2.46</version>
-        </dependency>
         <dependency>
             <groupId>com.belerweb</groupId>
             <artifactId>pinyin4j</artifactId>
