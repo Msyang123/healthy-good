@@ -19,6 +19,10 @@ import com.lhiot.healthygood.service.user.DoctorUserService;
 import com.lhiot.healthygood.service.user.FruitDoctorService;
 import com.lhiot.healthygood.type.*;
 import com.lhiot.healthygood.util.PinyinTool;
+import com.lhiot.healthygood.type.CaptchaTemplate;
+import com.lhiot.healthygood.type.DateTypeEnum;
+import com.lhiot.healthygood.type.PeriodType;
+import com.lhiot.healthygood.type.SettlementStatus;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
@@ -71,11 +75,13 @@ public class FruitDoctorApi {
     @ApiImplicitParam(paramType = "query", name = "phone", value = "发送鲜果师申请验证码对应手机号", required = true, dataType = "String")
     public ResponseEntity captcha(@RequestParam String phone) {
         //TODO 需要申请发送短信模板
-        CaptchaParam captchaParam=new CaptchaParam();
+/*        CaptchaParam captchaParam=new CaptchaParam();
         captchaParam.setFreeSignName(FreeSignName.FRUIT_DOCTOR);
         captchaParam.setPhoneNumber(phone);
         captchaParam.setApplicationName("和色果膳");
-        return thirdpartyServerFeign.captcha(CaptchaTemplate.REGISTER,captchaParam);
+        thirdpartyServerFeign.captcha(CaptchaTemplate.REGISTER,captchaParam);*/
+        fruitDoctorService.bandPhoneSendTemplateMessage(phone);
+        return ResponseEntity.ok().build();
     }
 
     @PostMapping("/qualifications")

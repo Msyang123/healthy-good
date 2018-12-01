@@ -6,15 +6,13 @@ import com.leon.microx.web.result.Tips;
 import com.lhiot.dc.dictionary.DictionaryClient;
 import com.lhiot.dc.dictionary.module.Dictionary;
 import com.lhiot.healthygood.domain.user.DoctorUser;
-import com.lhiot.healthygood.event.SendCaptchaSmsEvent;
 import com.lhiot.healthygood.feign.BaseUserServerFeign;
-import com.lhiot.healthygood.feign.ThirdpartyServerFeign;
 import com.lhiot.healthygood.feign.model.UserDetailResult;
 import com.lhiot.healthygood.feign.model.WeChatRegisterParam;
 import com.lhiot.healthygood.mapper.user.DoctorUserMapper;
 import com.lhiot.healthygood.mapper.user.FruitDoctorMapper;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -34,29 +32,25 @@ import java.util.Optional;
  */
 @Service
 @Transactional
+@Slf4j
 public class FruitDoctorUserService {
 
     private final FruitDoctorMapper fruitDoctorMapper;
     private final DoctorUserMapper doctorUserMapper;
     private DictionaryClient dictionaryClient;
     private final BaseUserServerFeign baseUserServerFeign;
-    private final ThirdpartyServerFeign thirdpartyServerFeign;
 
-    private final ApplicationEventPublisher publisher;
+
 
     @Autowired
     public FruitDoctorUserService(FruitDoctorMapper fruitDoctorMapper,
                                   DictionaryClient dictionaryClient,
                                   BaseUserServerFeign baseUserServerFeign,
-                                  ThirdpartyServerFeign thirdpartyServerFeign,
-                                  DoctorUserMapper doctorUserMapper,
-                                  ApplicationEventPublisher publisher) {
+                                  DoctorUserMapper doctorUserMapper) {
         this.fruitDoctorMapper = fruitDoctorMapper;
         this.dictionaryClient = dictionaryClient;
         this.baseUserServerFeign = baseUserServerFeign;
-        this.thirdpartyServerFeign = thirdpartyServerFeign;
         this.doctorUserMapper = doctorUserMapper;
-        this.publisher = publisher;
     }
 
     /**
@@ -144,16 +138,6 @@ public class FruitDoctorUserService {
             return true;
         }
         return false;
-    }
-
-    /**
-     * 鲜果师注册时绑定手机号码，发送模板消息
-     * @param phone 待发送验证码手机号
-     */
-    public void bandPhoneSendTemplateMessage(String phone) {
-
-        //发送模板消息
-        publisher.publishEvent(new SendCaptchaSmsEvent(phone));
     }
 
 
