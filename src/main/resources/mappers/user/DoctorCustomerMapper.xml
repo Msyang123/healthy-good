@@ -108,6 +108,11 @@
         from doctor_customer where user_id = #{userId}
     </select>
 
+    <select id="selectByDoctorId" resultMap="BaseResultMap"
+            parameterType="long"> select <include refid="Base_Column_List" />
+        from doctor_customer where doctor_id = #{doctorId}
+    </select>
+
 
     <!-- base where条件  -->
     <sql id="Base_Where_Condition" >

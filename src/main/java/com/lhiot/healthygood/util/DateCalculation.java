@@ -3,10 +3,8 @@ package com.lhiot.healthygood.util;
 import com.leon.microx.util.DateTime;
 import com.lhiot.healthygood.type.PeriodType;
 
-import java.time.Instant;
-import java.time.LocalDate;
-import java.time.ZoneId;
-import java.time.ZonedDateTime;
+import java.time.*;
+import java.time.format.DateTimeFormatter;
 import java.time.temporal.TemporalAccessor;
 import java.time.temporal.TemporalAdjusters;
 import java.time.temporal.TemporalField;
@@ -23,6 +21,8 @@ import java.util.Map;
  */
 
 public class DateCalculation {
+
+    private static final String FOMART_1 = "yyyy-MM-dd";
 
     /**
      * 前几周的第一天,如本周
@@ -88,7 +88,7 @@ public class DateCalculation {
         LocalDate localDate = LocalDate.from(date);
         localDate = localDate.with(fieldISO, 7);
         Date d = Date.from(localDate.atStartOfDay(ZoneId.systemDefault()).plusDays(1L).minusNanos(1L).toInstant());
-        return DateTime.format(d, DateTime.DEFAULT_FORMATTER.toString());
+        return DateTime.format(d, FOMART_1);
     }
 
     //月的第一天
@@ -101,14 +101,19 @@ public class DateCalculation {
     public static String getEndDayOfMonth(LocalDate date) {
         LocalDate now = date.with(TemporalAdjusters.lastDayOfMonth());
         Date d = Date.from(now.atStartOfDay(ZoneId.systemDefault()).plusDays(1L).minusNanos(1L).toInstant());
-        return DateTime.format(d, DateTime.DEFAULT_FORMATTER.toString());
+        return DateTime.format(d, FOMART_1);
     }
 
     public static String localDate2Date(LocalDate localDate) {
         ZonedDateTime zonedDateTime = localDate.atStartOfDay(ZoneId.systemDefault());
         Instant instant1 = zonedDateTime.toInstant();
         Date from = Date.from(instant1);
-        return DateTime.format(from, DateTime.DEFAULT_FORMATTER.toString());
+        return DateTime.format(from,  FOMART_1);//DateTime.DEFAULT_FORMATTER.toString() TODO 需要研究一下
+    }
+
+    public static void main(String[] args) {
+        Date from = new Date();
+        System.out.println(DateTime.format(from,FOMART_1));
     }
 
     /**

@@ -325,8 +325,6 @@ public class UserApi {
         total.setOrderCountOfThisMonth(thisMonth.getOrderCount());
 
         //获取用户信息
-        /*FruitDoctorUser user = fruitDoctorUserMapper.findByDoctorIdAndUserId(map);
-        total.setUser(user);*/
         ResponseEntity<UserDetailResult> userInfo = baseUserServerFeign.findById(userId);
         if (userInfo.getStatusCode().isError()){
             return ResponseEntity.badRequest().body(userInfo.getBody());

@@ -1,10 +1,13 @@
 package com.lhiot.healthygood.api.user;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.leon.microx.util.Jackson;
 import com.leon.microx.web.result.Tips;
 import com.leon.microx.web.session.Sessions;
 import com.lhiot.healthygood.domain.doctor.*;
 import com.lhiot.healthygood.domain.template.CaptchaTemplate;
 import com.lhiot.healthygood.domain.template.FreeSignName;
+import com.lhiot.healthygood.domain.template.TemplateMessageEnum;
 import com.lhiot.healthygood.domain.user.*;
 import com.lhiot.healthygood.feign.BaseUserServerFeign;
 import com.lhiot.healthygood.feign.ThirdpartyServerFeign;
@@ -14,10 +17,7 @@ import com.lhiot.healthygood.service.doctor.RegisterApplicationService;
 import com.lhiot.healthygood.service.doctor.SettlementApplicationService;
 import com.lhiot.healthygood.service.user.DoctorUserService;
 import com.lhiot.healthygood.service.user.FruitDoctorService;
-import com.lhiot.healthygood.type.DateTypeEnum;
-import com.lhiot.healthygood.type.IncomeType;
-import com.lhiot.healthygood.type.PeriodType;
-import com.lhiot.healthygood.type.SettlementStatus;
+import com.lhiot.healthygood.type.*;
 import com.lhiot.healthygood.util.PinyinTool;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
@@ -27,11 +27,14 @@ import lombok.extern.slf4j.Slf4j;
 import net.sourceforge.pinyin4j.format.exception.BadHanyuPinyinOutputFormatCombination;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
+import org.springframework.amqp.AmqpException;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
+import java.text.SimpleDateFormat;
 import java.time.Instant;
 import java.util.*;
 import java.util.regex.Matcher;
@@ -50,9 +53,10 @@ public class FruitDoctorApi {
     private final DoctorAchievementLogService doctorAchievementLogService;
     private final CardUpdateLogService cardUpdateLogService;
     private final BaseUserServerFeign baseUserServerFeign;
+    private final RabbitTemplate rabbit;
     private Sessions session;
     @Autowired
-    public FruitDoctorApi(ThirdpartyServerFeign thirdpartyServerFeign, RegisterApplicationService registerApplicationService, SettlementApplicationService settlementApplicationService, DoctorUserService doctorUserService, FruitDoctorService fruitDoctorService, DoctorAchievementLogService doctorAchievementLogService, CardUpdateLogService cardUpdateLogService, BaseUserServerFeign baseUserServerFeign, Sessions session) {
+    public FruitDoctorApi(ThirdpartyServerFeign thirdpartyServerFeign, RegisterApplicationService registerApplicationService, SettlementApplicationService settlementApplicationService, DoctorUserService doctorUserService, FruitDoctorService fruitDoctorService, DoctorAchievementLogService doctorAchievementLogService, CardUpdateLogService cardUpdateLogService, BaseUserServerFeign baseUserServerFeign, RabbitTemplate rabbit, Sessions session) {
         this.thirdpartyServerFeign = thirdpartyServerFeign;
         this.registerApplicationService = registerApplicationService;
         this.settlementApplicationService = settlementApplicationService;
@@ -61,6 +65,7 @@ public class FruitDoctorApi {
         this.doctorAchievementLogService = doctorAchievementLogService;
         this.cardUpdateLogService = cardUpdateLogService;
         this.baseUserServerFeign = baseUserServerFeign;
+        this.rabbit = rabbit;
         this.session = session;
     }
 
@@ -110,13 +115,13 @@ public class FruitDoctorApi {
         String userId =  session.user(sessionId).getUser().get("userId").toString();
         FruitDoctor fruitDoctor = fruitDoctorService.selectByUserId(Long.valueOf(userId));
         if (Objects.isNull(fruitDoctor)){
-            return ResponseEntity.badRequest().body("鲜果师不存在");
+            return ResponseEntity.badRequest().body(Tips.warn("鲜果师不存在"));
         }
         SettlementApplication settlementApplication=new SettlementApplication();
 
         settlementApplication.setAmount(amount);
         settlementApplication.setDoctorId(fruitDoctor.getId());
-        settlementApplication.setCreateTime(new Date());
+        settlementApplication.setCreateAt(Date.from(Instant.now()));
         settlementApplication.setSettlementStatus(SettlementStatus.UNSETTLED.toString());
         int result=settlementApplicationService.create(settlementApplication);
         Tips tips = new Tips();
@@ -134,11 +139,15 @@ public class FruitDoctorApi {
         String userId =  session.user(sessionId).getUser().get("userId").toString();
         FruitDoctor fruitDoctor = fruitDoctorService.selectByUserId(Long.valueOf(userId));
         if (Objects.isNull(fruitDoctor)){
-            return ResponseEntity.badRequest().body("鲜果师不存在");
+            return ResponseEntity.badRequest().body(Tips.warn("鲜果师不存在"));
+        }
+        DoctorUser dUser = doctorUserService.selectByDoctorId(fruitDoctor.getId());
+        if (Objects.nonNull(dUser)){
+            return ResponseEntity.badRequest().body(Tips.warn("您已经绑定该鲜果师了"));
         }
         doctorUser.setDoctorId(fruitDoctor.getId());
         doctorUserService.create(doctorUser);
-        return ResponseEntity.ok(Tips.info("绑定成功！"));
+        return ResponseEntity.ok(Tips.of(1,"绑定成功！"));
     }
 
     @PutMapping("/remark")
@@ -149,7 +158,7 @@ public class FruitDoctorApi {
         String userId =  session.user(sessionId).getUser().get("userId").toString();
         FruitDoctor fruitDoctor = fruitDoctorService.selectByUserId(Long.valueOf(userId));
         if (Objects.isNull(fruitDoctor)){
-            return ResponseEntity.badRequest().body("鲜果师不存在");
+            return ResponseEntity.badRequest().body(Tips.warn("鲜果师不存在"));
         }
         log.debug("鲜果师修改用户备注\t param:{}",doctorUser);
         doctorUser.setDoctorId(fruitDoctor.getId());
@@ -169,7 +178,7 @@ public class FruitDoctorApi {
         String userId =  session.user(sessionId).getUser().get("userId").toString();
         FruitDoctor fruitDoctor = fruitDoctorService.selectByUserId(Long.valueOf(userId));
         if (Objects.isNull(fruitDoctor)){
-            return ResponseEntity.badRequest().body("鲜果师不存在");
+            return ResponseEntity.badRequest().body(Tips.warn("鲜果师不存在"));
         }
         FruitDoctor fruitDoctor1 = new FruitDoctor();
         fruitDoctor1.setId(fruitDoctor.getId());
@@ -183,7 +192,7 @@ public class FruitDoctorApi {
         String userId =  session.user(sessionId).getUser().get("userId").toString();
         FruitDoctor fruitDoctor = fruitDoctorService.selectByUserId(Long.valueOf(userId));
         if (Objects.isNull(fruitDoctor)){
-            return ResponseEntity.badRequest().body("鲜果师不存在");
+            return ResponseEntity.badRequest().body(Tips.warn("鲜果师不存在"));
         }
         log.debug("查询鲜果师成员分页列表\t param:{}",fruitDoctor);
         return ResponseEntity.ok(fruitDoctorService.pageList(fruitDoctor));
@@ -201,7 +210,7 @@ public class FruitDoctorApi {
         String userId =  session.user(sessionId).getUser().get("userId").toString();
         FruitDoctor fruitDoctor = fruitDoctorService.selectByUserId(Long.valueOf(userId));
         if (Objects.isNull(fruitDoctor)){
-            return ResponseEntity.badRequest().body("鲜果师不存在");
+            return ResponseEntity.badRequest().body(Tips.warn("鲜果师不存在"));
         }
         DoctorAchievementLog doctorAchievementLog = new DoctorAchievementLog();
         doctorAchievementLog.setIncomeType(incomeType);
@@ -218,7 +227,7 @@ public class FruitDoctorApi {
         String userId =  session.user(sessionId).getUser().get("userId").toString();
         FruitDoctor fruitDoctor = fruitDoctorService.selectByUserId(Long.valueOf(userId));
         if (Objects.isNull(fruitDoctor)){
-            return ResponseEntity.badRequest().body("鲜果师不存在");
+            return ResponseEntity.badRequest().body(Tips.warn("鲜果师不存在"));
         }
         return ResponseEntity.ok(doctorAchievementLogService.myIncome(fruitDoctor.getId()));
     }
@@ -240,7 +249,7 @@ public class FruitDoctorApi {
         String userId =  session.user(sessionId).getUser().get("userId").toString();
         FruitDoctor fruitDoctor = fruitDoctorService.selectByUserId(Long.valueOf(userId));
         if (Objects.isNull(fruitDoctor)){
-            return ResponseEntity.badRequest().body("鲜果师不存在");
+            return ResponseEntity.badRequest().body(Tips.warn("鲜果师不存在"));
         }
         //统计本期
         Achievement current =
@@ -262,7 +271,7 @@ public class FruitDoctorApi {
         String userId =  session.user(sessionId).getUser().get("userId").toString();
         FruitDoctor fruitDoctor = fruitDoctorService.selectByUserId(Long.valueOf(userId));
         if (Objects.isNull(fruitDoctor)){
-            return ResponseEntity.badRequest().body("鲜果师不存在");
+            return ResponseEntity.badRequest().body(Tips.warn("鲜果师不存在"));
         }
         //统计今天订单数和业绩
         Achievement current =
@@ -286,13 +295,13 @@ public class FruitDoctorApi {
         String userId =  session.user(sessionId).getUser().get("userId").toString();
         FruitDoctor fruitDoctor = fruitDoctorService.selectByUserId(Long.valueOf(userId));
         if (Objects.isNull(fruitDoctor)){
-            return ResponseEntity.badRequest().body("鲜果师不存在");
+            return ResponseEntity.badRequest().body(Tips.warn("鲜果师不存在"));
         }
         CardUpdateLog cardParam = new CardUpdateLog();
         cardParam.setDoctorId(fruitDoctor.getId());
         CardUpdateLog card = cardUpdateLogService.selectByCard(cardParam);
         if (Objects.nonNull(card)){
-            return ResponseEntity.badRequest().body("只能添加一张卡");
+            return ResponseEntity.badRequest().body(Tips.warn("只能添加一张卡"));
         }
         cardUpdateLog.setDoctorId(fruitDoctor.getId());
         cardUpdateLog.setUpdateAt(Date.from(Instant.now()));
@@ -306,7 +315,7 @@ public class FruitDoctorApi {
         String userId =  session.user(sessionId).getUser().get("userId").toString();
         FruitDoctor fruitDoctor = fruitDoctorService.selectByUserId(Long.valueOf(userId));
         if (Objects.isNull(fruitDoctor)){
-            return ResponseEntity.badRequest().body("鲜果师不存在");
+            return ResponseEntity.badRequest().body(Tips.warn("鲜果师不存在"));
         }
         CardUpdateLog cardUpdateLog = new CardUpdateLog();
         cardUpdateLog.setDoctorId(fruitDoctor.getId());
@@ -328,7 +337,7 @@ public class FruitDoctorApi {
         String userId =  session.user(sessionId).getUser().get("userId").toString();
         FruitDoctor fruitDoctor = fruitDoctorService.selectByUserId(Long.valueOf(userId));
         if (Objects.isNull(fruitDoctor)){
-            return ResponseEntity.badRequest().body("鲜果师不存在");
+            return ResponseEntity.badRequest().body(Tips.warn("鲜果师不存在"));
         }
         List<DoctorUser> doctorUserList=doctorUserService.doctorCustomers(fruitDoctor.getId());
         doctorUserList.stream().forEach(doctorUser ->{
@@ -387,5 +396,47 @@ public class FruitDoctorApi {
         });
         return ResponseEntity.ok(customers);
     }
+
+    @PutMapping("/info")
+    @ApiOperation(value = "修改鲜果师信息")
+    @ApiImplicitParam(paramType = "body", name = "fruitDoctor", value = "要更新的鲜果师成员", required = true, dataType = "FruitDoctor")
+    public ResponseEntity update(HttpServletRequest request,@RequestBody FruitDoctor fruitDoctor) throws AmqpException, JsonProcessingException {
+        String sessionId = session.id(request);
+        String userId =  session.user(sessionId).getUser().get("userId").toString();
+        FruitDoctor doctors = fruitDoctorService.selectByUserId(Long.valueOf(userId));
+        if (Objects.isNull(doctors)){
+            return ResponseEntity.badRequest().body(Tips.warn("鲜果师不存在"));
+        }
+        fruitDoctor.setId(doctors.getId());
+        Tips backMsg=new Tips();
+        if (fruitDoctorService.updateById(fruitDoctor)>=1){
+            backMsg.setCode("1");
+            backMsg.setMessage("更新成功");
+        }
+        //升级为明星鲜果师，发送模板消息
+        if("YES".equals(fruitDoctor.getHot())){
+            FruitDoctor fd = fruitDoctorService.selectById(doctors.getId());
+            if(Objects.nonNull(fd)){
+                //不是明星鲜果师的时候才发送模板消息
+                if(!"YES".equals(fd.getHot())){
+                    String currentTime = new SimpleDateFormat("yyyy-MM-dd").format(new Date());
+                    KeywordValue keywordValue = new KeywordValue();
+                    keywordValue.setTemplateType(TemplateMessageEnum.UPGRADE_FRUIT_DOCTOR);
+                    keywordValue.setKeyword1Value("明星鲜果师");
+                    keywordValue.setKeyword2Value("成功");
+                    keywordValue.setKeyword3Value(currentTime);
+                    keywordValue.setKeyword4Value("如有疑问请致电0731-85240088");
+                    keywordValue.setSendToDoctor(false);
+                    keywordValue.setUserId(fd.getUserId());
+
+                    rabbit.convertAndSend(FruitDoctorOrderExchange.FRUIT_TEMPLATE_MESSAGE.getExchangeName(),
+                            FruitDoctorOrderExchange.FRUIT_TEMPLATE_MESSAGE.getQueueName(), Jackson.json(keywordValue));
+                }
+            }
+        }
+        //如果是升级为明星鲜果师，则发送模板消息
+        return ResponseEntity.ok(backMsg);
+    }
+
 
 }
