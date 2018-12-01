@@ -50,12 +50,34 @@ public interface BaseDataServiceFeign {
     @RequestMapping(value="/product-shelves/{id}",method = RequestMethod.GET)
     ResponseEntity<ProductShelf> singleShelf(@PathVariable("id") Long shelfId);
 
+
+    /**
+     * 根据条件分页查询商品上架信息列表
+     * @param param
+     * @return
+     */
+    @RequestMapping(value="/product-shelves/pages",method = RequestMethod.POST)
+    ResponseEntity<Pages<ProductShelf>> searchProductShelves(@RequestBody ProductShelfParam param);
+
     /**
      * 根据位置查询门店所有列表根据距离排序
      */
     @RequestMapping(value = "/stores/search",method = RequestMethod.POST)
     ResponseEntity<Pages<Store>> searchStores(@RequestBody StoreSearchParam param);
 
+    /**
+     * 依据门店id查询门店信息
+     * @param id
+     * @return
+     */
     @RequestMapping(value="/stores/{id}",method = RequestMethod.GET)
-    ResponseEntity<Store> findStoreById(@PathVariable("id") Long shelfId);
+    ResponseEntity<Store> findStoreById(@PathVariable("id") Long id);
+    /**
+     * 依据门店编码查询门店信息
+     * @param code
+     * @return
+     */
+    @RequestMapping(value="/stores/code/{code}",method = RequestMethod.GET)
+    ResponseEntity<Store> findStoreByCode(@PathVariable("code") String code);
+
 }
