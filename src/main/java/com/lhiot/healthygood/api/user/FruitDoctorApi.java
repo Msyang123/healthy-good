@@ -1,17 +1,16 @@
 package com.lhiot.healthygood.api.user;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.leon.microx.util.Jackson;
 import com.leon.microx.web.result.Tips;
 import com.leon.microx.web.session.Sessions;
 import com.lhiot.healthygood.domain.doctor.*;
-import com.lhiot.healthygood.type.CaptchaTemplate;
-import com.lhiot.healthygood.type.FreeSignName;
-import com.lhiot.healthygood.feign.model.CaptchaParam;
 import com.lhiot.healthygood.domain.user.DoctorUser;
 import com.lhiot.healthygood.domain.user.FruitDoctor;
+import com.lhiot.healthygood.domain.user.KeywordValue;
 import com.lhiot.healthygood.domain.user.ValidateParam;
+import com.lhiot.healthygood.feign.BaseUserServerFeign;
 import com.lhiot.healthygood.feign.ThirdpartyServerFeign;
+import com.lhiot.healthygood.feign.model.CaptchaParam;
+import com.lhiot.healthygood.feign.model.UserDetailResult;
 import com.lhiot.healthygood.service.doctor.CardUpdateLogService;
 import com.lhiot.healthygood.service.doctor.DoctorAchievementLogService;
 import com.lhiot.healthygood.service.doctor.RegisterApplicationService;
@@ -28,8 +27,6 @@ import lombok.extern.slf4j.Slf4j;
 import net.sourceforge.pinyin4j.format.exception.BadHanyuPinyinOutputFormatCombination;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
-import org.springframework.amqp.AmqpException;
-import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -54,10 +51,9 @@ public class FruitDoctorApi {
     private final DoctorAchievementLogService doctorAchievementLogService;
     private final CardUpdateLogService cardUpdateLogService;
     private final BaseUserServerFeign baseUserServerFeign;
-    private final RabbitTemplate rabbit;
     private Sessions session;
     @Autowired
-    public FruitDoctorApi(ThirdpartyServerFeign thirdpartyServerFeign, RegisterApplicationService registerApplicationService, SettlementApplicationService settlementApplicationService, DoctorUserService doctorUserService, FruitDoctorService fruitDoctorService, DoctorAchievementLogService doctorAchievementLogService, CardUpdateLogService cardUpdateLogService, BaseUserServerFeign baseUserServerFeign, RabbitTemplate rabbit, Sessions session) {
+    public FruitDoctorApi(ThirdpartyServerFeign thirdpartyServerFeign, RegisterApplicationService registerApplicationService, SettlementApplicationService settlementApplicationService, DoctorUserService doctorUserService, FruitDoctorService fruitDoctorService, DoctorAchievementLogService doctorAchievementLogService, CardUpdateLogService cardUpdateLogService, BaseUserServerFeign baseUserServerFeign, Sessions session) {
         this.thirdpartyServerFeign = thirdpartyServerFeign;
         this.registerApplicationService = registerApplicationService;
         this.settlementApplicationService = settlementApplicationService;
@@ -66,7 +62,6 @@ public class FruitDoctorApi {
         this.doctorAchievementLogService = doctorAchievementLogService;
         this.cardUpdateLogService = cardUpdateLogService;
         this.baseUserServerFeign = baseUserServerFeign;
-        this.rabbit = rabbit;
         this.session = session;
     }
 
@@ -77,7 +72,7 @@ public class FruitDoctorApi {
     public ResponseEntity captcha(@RequestParam String phone) {
         //TODO 需要申请发送短信模板
         CaptchaParam captchaParam=new CaptchaParam();
-        captchaParam.setFreeSignName(FreeSignName.SGSL);
+        captchaParam.setFreeSignName(FreeSignName.FRUIT_DOCTOR);
         captchaParam.setPhoneNumber(phone);
         captchaParam.setApplicationName("和色果膳");
         return thirdpartyServerFeign.captcha(CaptchaTemplate.REGISTER,captchaParam);
@@ -401,7 +396,7 @@ public class FruitDoctorApi {
     @PutMapping("/info")
     @ApiOperation(value = "修改鲜果师信息")
     @ApiImplicitParam(paramType = "body", name = "fruitDoctor", value = "要更新的鲜果师成员", required = true, dataType = "FruitDoctor")
-    public ResponseEntity update(HttpServletRequest request,@RequestBody FruitDoctor fruitDoctor) throws AmqpException, JsonProcessingException {
+    public ResponseEntity update(HttpServletRequest request,@RequestBody FruitDoctor fruitDoctor) {
         String sessionId = session.id(request);
         String userId =  session.user(sessionId).getUser().get("userId").toString();
         FruitDoctor doctors = fruitDoctorService.selectByUserId(Long.valueOf(userId));
@@ -429,9 +424,9 @@ public class FruitDoctorApi {
                     keywordValue.setKeyword4Value("如有疑问请致电0731-85240088");
                     keywordValue.setSendToDoctor(false);
                     keywordValue.setUserId(fd.getUserId());
-
-                    rabbit.convertAndSend(FruitDoctorOrderExchange.FRUIT_TEMPLATE_MESSAGE.getExchangeName(),
-                            FruitDoctorOrderExchange.FRUIT_TEMPLATE_MESSAGE.getQueueName(), Jackson.json(keywordValue));
+                    //TODO 模板消息由消息总线改成 事件监听
+                   /* rabbit.convertAndSend(FruitDoctorOrderExchange.FRUIT_TEMPLATE_MESSAGE.getExchangeName(),
+                            FruitDoctorOrderExchange.FRUIT_TEMPLATE_MESSAGE.getQueueName(), Jackson.json(keywordValue));*/
                 }
             }
         }
