@@ -1,4 +1,4 @@
-package com.lhiot.healthygood.domain.good;
+package com.lhiot.healthygood.feign.model;
 
 import com.leon.microx.predefine.OnOff;
 import com.lhiot.healthygood.type.ShelfType;

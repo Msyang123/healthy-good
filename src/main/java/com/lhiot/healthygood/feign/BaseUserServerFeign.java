@@ -1,8 +1,8 @@
 package com.lhiot.healthygood.feign;
 
 import com.lhiot.healthygood.domain.user.UserBindingPhoneParam;
-import com.lhiot.healthygood.domain.user.UserDetailResult;
-import com.lhiot.healthygood.domain.user.WeChatRegisterParam;
+import com.lhiot.healthygood.feign.model.UserDetailResult;
+import com.lhiot.healthygood.feign.model.WeChatRegisterParam;
 import com.lhiot.healthygood.type.ApplicationType;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.http.ResponseEntity;

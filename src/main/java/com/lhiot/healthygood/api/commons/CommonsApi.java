@@ -1,14 +1,13 @@
 package com.lhiot.healthygood.api.commons;
 
-import com.alibaba.fastjson.JSONException;
 import com.leon.microx.util.DateTime;
-import com.leon.microx.util.Jackson;
 import com.leon.microx.util.StringUtils;
+import com.leon.microx.web.result.Pages;
 import com.leon.microx.web.result.Tips;
 import com.leon.microx.web.session.Sessions;
 import com.lhiot.healthygood.domain.common.DeliverTime;
-import com.lhiot.healthygood.domain.store.StoreResult;
 import com.lhiot.healthygood.feign.DeliverServiceFeign;
+import com.lhiot.healthygood.feign.model.Store;
 import com.lhiot.healthygood.service.common.CommonService;
 import com.lhiot.healthygood.util.FeginResponseTools;
 import io.swagger.annotations.Api;
@@ -53,7 +52,7 @@ public class CommonsApi {
     @Sessions.Uncheck
     @GetMapping("/custom-plan-delivery/times")
     @ApiOperation(value = "获取订单配送时间 定制订单使用")
-    public ResponseEntity<String> times() {
+    public ResponseEntity<Tips> times() {
         List<DeliverTime> times = new ArrayList<>();
 
         LocalDateTime begin = LocalDate.now().atTime(BEGIN_DELIVER_OF_DAY);
@@ -66,7 +65,7 @@ public class CommonsApi {
             times.add(DeliverTime.of(display, DateTime.convert(current), DateTime.convert(next)));
             current = next;
         }
-        return ResponseEntity.ok(Jackson.json(times));
+        return ResponseEntity.ok(new Tips().data(times));
     }
 
     @Sessions.Uncheck
@@ -85,8 +84,8 @@ public class CommonsApi {
     @Sessions.Uncheck
     @ApiOperation(value = "计算配送距离（收获地址与智能选择最近的门店）")
     @GetMapping("/delivery/distance")
-    public ResponseEntity testDeliveryNote(@RequestParam("address") String address) throws JSONException {
-        StoreResult storeResult = commonService.nearStore(address);
-        return ResponseEntity.ok(storeResult);
+    public ResponseEntity nearStore(@RequestParam("address") String address){
+        Pages<Store> storeResult = commonService.nearStore(address);
+        return Objects.isNull(storeResult)?ResponseEntity.badRequest().body("未找到门店"):ResponseEntity.ok(storeResult);
     }
 }
