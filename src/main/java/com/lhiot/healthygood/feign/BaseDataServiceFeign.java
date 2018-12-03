@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
  * 基础数据服务
  */
 @Component
-@FeignClient(value = "BASIC-DATA-SERVICE-V1-0")
+@FeignClient(value = "BASIC-DATA-SERVICE-V1-0-HUFAN")
 public interface BaseDataServiceFeign {
     /**
      * 根据id查询商品

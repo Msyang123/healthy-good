@@ -86,9 +86,8 @@ public class RegisterApplication{
     *申请时间
     */
     @JsonProperty("createTime")
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss",timezone = "GMT+8")
     @ApiModelProperty(value = "申请时间", dataType = "Date")
-    private java.util.Date createTime;
+    private java.util.Date createAt;
     
 
     /**
@@ -102,9 +101,8 @@ public class RegisterApplication{
     *审核时间
     */
     @JsonProperty("auditTime")
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss",timezone = "GMT+8")
     @ApiModelProperty(value = "审核时间", dataType = "Date")
-    private java.util.Date auditTime;
+    private java.util.Date auditAt;
     
 
     /**

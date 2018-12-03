@@ -105,7 +105,12 @@
     <!-- 根据用户编号查找鲜果师客户 -->
     <select id="selectByUserId" resultMap="BaseResultMap"
             parameterType="long"> select <include refid="Base_Column_List" />
-        from doctor_user where user_id = #{userId}
+        from doctor_customer where user_id = #{userId}
+    </select>
+
+    <select id="selectByDoctorId" resultMap="BaseResultMap"
+            parameterType="long"> select <include refid="Base_Column_List" />
+        from doctor_customer where doctor_id = #{doctorId}
     </select>
 
 
@@ -132,16 +137,19 @@
      <select id="pageDoctorUsers" resultMap="BaseResultMap"
         parameterType="com.lhiot.healthygood.domain.user.DoctorUser">
 	        select <include refid="Base_Column_List" />
-	        from doctor_user
+	        from doctor_customer
 	        <include refid="Base_Where_Condition" />
-	        <include refid="common.pager" />
+             <if test="rows != null and rows > 0 ">
+                 order by rank asc , id desc
+                 limit #{startRow} , #{rows}
+             </if>
     </select>
 
     <!--查询鲜果师客户总记录-->
     <select id="pageDoctorUserCounts" resultType="int"
         parameterType="com.lhiot.healthygood.domain.user.DoctorUser">
             select count(1)
-            from doctor_user
+            from doctor_customer
             <include refid="Base_Where_Condition" />
     </select>
 
@@ -151,12 +159,9 @@
         select d.id,
             d.remark,
             d.doctor_id,
-            d.user_id,
-            f.nickname,
-            f.avatar,
-            f.phone
-        from doctor_user d left join fruit_doctor_user f on d.user_id=f.id
-        where doctor_id=#{0} order by remark asc
+            d.user_id
+        from doctor_customer d
+        where doctor_id=#{0}
     </select>
 
 

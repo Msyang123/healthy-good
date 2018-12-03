@@ -25,7 +25,7 @@ public class CustomPlanSectionRelation{
     *id
     */
     @JsonProperty("id")
-    @ApiModelProperty(value = "id", dataType = "Long", readOnly = true)
+    @ApiModelProperty(value = "id", dataType = "Long")
     private Long id;
 
     /**

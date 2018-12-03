@@ -17,10 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.sql.Date;
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -62,9 +59,13 @@ public class CustomPlanSectionService {
         Long sectionId = customPlanSection.getId();
 
         // 添加定制板块和定制计划的关联
-        List<Long> planIds = customPlanSectionResultAdmin.getCustomPlanList().stream().map(CustomPlan::getId).collect(Collectors.toList());
+        List<CustomPlan> customPlanList = customPlanSectionResultAdmin.getCustomPlanList();
         List<Long> sorts = customPlanSectionResultAdmin.getRelationSorts();
-        if (Objects.nonNull(sectionId) && Objects.nonNull(planIds) && Objects.nonNull(sorts)) {
+        if (customPlanList.isEmpty() && sorts.isEmpty()){
+            return Tips.info(customPlanSection.getId() + "");
+        }
+        List<Long> planIds = customPlanSectionResultAdmin.getCustomPlanList().stream().map(CustomPlan::getId).collect(Collectors.toList());
+        if (Objects.nonNull(sectionId) && !planIds.isEmpty() && !sorts.isEmpty() ) {
             //先做幂等验证
             List<CustomPlanSectionRelation> relationList = customPlanSectionRelationMapper.selectRelationListBySectionId(sectionId, Joiner.on(",").join(planIds));
             if (!relationList.isEmpty()) {
@@ -111,8 +112,16 @@ public class CustomPlanSectionService {
      * @param ids
      * @return
      */
-    public boolean batchDeleteByIds(String ids) {
-        return customPlanSectionMapper.deleteByIds(Arrays.asList(ids.split(","))) > 0;
+    public Tips batchDeleteByIds(String ids) {
+        // 定制板块是否关联了定制计划
+        List<Map<String, Object>> relationList = customPlanSectionRelationMapper.findBySectionIdsAndPlanIds(ids, null);
+        if (!relationList.isEmpty()) {
+            List<String> resultList = new ArrayList<>();
+            relationList.forEach(section -> resultList.add(section.get("sectionId").toString()));
+            List<String> id = resultList.stream().distinct().collect(Collectors.toList());
+            return Tips.warn("以下定制板块id不可删除:" + id);
+        }
+        return customPlanSectionMapper.deleteByIds(Arrays.asList(ids.split(","))) > 0 ? Tips.info("删除成功") : Tips.warn("删除失败");
     }
 
     /**

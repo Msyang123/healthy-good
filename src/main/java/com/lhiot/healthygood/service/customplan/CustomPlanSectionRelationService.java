@@ -61,7 +61,6 @@ public class CustomPlanSectionRelationService {
             Tips.warn("定制计划与版块关联重复，添加失败");
         }
         List<CustomPlanSectionRelation> customPlanSectionRelationList = new ArrayList<>();
-        CustomPlanSectionRelation customPlanSectionRelation;
         // 获取计划id集合
         String[] planIdArrays = StringUtils.tokenizeToStringArray(planIds, ",");
         List<String> planIdList = Stream.of(planIdArrays).collect(Collectors.toList());
@@ -72,17 +71,14 @@ public class CustomPlanSectionRelationService {
         if (planIdList.isEmpty() || sortList.isEmpty() || planIdList.size() != sortList.size()) {
             return Tips.warn("定制计划id集合和排序集合要长度相等且不能为空");
         }
-        for (String planId : planIdList) {
-            customPlanSectionRelation = new CustomPlanSectionRelation();
+        planIdList.forEach(planId -> {
+            CustomPlanSectionRelation customPlanSectionRelation = new CustomPlanSectionRelation();
             customPlanSectionRelation.setSectionId(sectionId);
             customPlanSectionRelation.setPlanId(Long.valueOf(planId));
-            for (String sort : sortList) {
-                if (planIdList.indexOf(planId) == sortList.indexOf(sort)) {
-                    customPlanSectionRelation.setSort(Long.valueOf(sort));
-                }
-            }
+            customPlanSectionRelation.setSort(Long.valueOf(sortList.get(planIds.indexOf(planId))));
             customPlanSectionRelationList.add(customPlanSectionRelation);
-        }
+        });
+
         // 批量新增关联
         customPlanSectionRelationMapper.insertList(customPlanSectionRelationList);
         List<Long> idList = customPlanSectionRelationList.stream().map(CustomPlanSectionRelation::getId).collect(Collectors.toList());
@@ -99,36 +95,39 @@ public class CustomPlanSectionRelationService {
      */
     public Tips updateRelationList(Long sectionId, String planIds, String sorts) {
         List<CustomPlanSectionRelation> customPlanSectionRelationList = new ArrayList<>();
-        CustomPlanSectionRelation customPlanSectionRelation;
-        // 获取计划id集合
-        String[] planIdArrays = StringUtils.tokenizeToStringArray(planIds, ",");
-        List<String> planIdList = Stream.of(planIdArrays).collect(Collectors.toList());
-        // 获取排序集合
-        String[] sortArrays = StringUtils.tokenizeToStringArray(sorts, ",");
-        List<String> sortList = Stream.of(sortArrays).collect(Collectors.toList());
-        // 如果计划id集合和排序id集合不为空，且两个集合相等，存入List<CustomPlanSectionRelation>中
-        if (planIdList.isEmpty() || sortList.isEmpty() || planIdList.size() != sortList.size()) {
-            return Tips.warn("定制计划id集合和排序集合要长度相等且不能为空");
-        }
-        for (String planId : planIdList) {
-            customPlanSectionRelation = new CustomPlanSectionRelation();
-            customPlanSectionRelation.setSectionId(sectionId);
-            customPlanSectionRelation.setPlanId(Long.valueOf(planId));
-            for (String sort : sortList) {
-                if (planIdList.indexOf(planId) == sortList.indexOf(sort)) {
-                    customPlanSectionRelation.setSort(Long.valueOf(sort));
-                }
+        // 如果planIds为空，则只进行删除操作
+        if (Objects.isNull(planIds)) {
+            return customPlanSectionRelationMapper.deleteRelationList(sectionId, null) > 0 ? Tips.info("修改成功") : Tips.warn("修改失败");
+        } else if (Objects.nonNull(planIds) && Objects.nonNull(sorts)) {
+            // 如果planIds和sorts不为空，且长度相等，则只进行删除操作，再进行新增操作
+            // 获取计划id集合
+            String[] planIdArrays = StringUtils.tokenizeToStringArray(planIds, ",");
+            List<String> planIdList = Stream.of(planIdArrays).collect(Collectors.toList());
+            // 获取排序集合
+            String[] sortArrays = StringUtils.tokenizeToStringArray(sorts, ",");
+            List<String> sortList = Stream.of(sortArrays).collect(Collectors.toList());
+            // 如果计划id集合和排序id集合不为空，且两个集合相等，存入List<CustomPlanSectionRelation>中
+            if (planIdList.isEmpty() || sortList.isEmpty() || planIdList.size() != sortList.size()) {
+                return Tips.warn("定制计划id集合和排序集合要长度相等且不能为空");
             }
-            customPlanSectionRelationList.add(customPlanSectionRelation);
+            planIdList.forEach(planId -> {
+                CustomPlanSectionRelation customPlanSectionRelation = new CustomPlanSectionRelation();
+                customPlanSectionRelation.setSectionId(sectionId);
+                customPlanSectionRelation.setPlanId(Long.valueOf(planId));
+                customPlanSectionRelation.setSort(Long.valueOf(sortList.get(planIds.indexOf(planId))));
+                customPlanSectionRelationList.add(customPlanSectionRelation);
+            });
+
+            // 先批量删除 定制计划id为空，则删除该板块id的所有关联关系
+            boolean deleted = customPlanSectionRelationMapper.deleteRelationList(sectionId, null) > 0;
+            if (!deleted) {
+                Tips.warn("删除失败！");
+            }
+            // 再批量新增
+            customPlanSectionRelationMapper.insertList(customPlanSectionRelationList);
+            return Tips.info("修改成功");
         }
-        // 1、先批量删除 定制计划id为空，则删除该板块id的所有关联关系
-        boolean deleted = customPlanSectionRelationMapper.deleteRelationList(sectionId, null) > 0;
-        if (!deleted) {
-            Tips.warn("删除失败！");
-        }
-        // 2、再批量新增
-        customPlanSectionRelationMapper.insertList(customPlanSectionRelationList);
-        return Tips.info("修改成功");
+        return Tips.warn("修改失败");
     }
 
 
@@ -170,12 +169,13 @@ public class CustomPlanSectionRelationService {
      * @param sectionIds 板块ID集合
      * @return 存在定制计划的板块id集合
      */
-    public List<String> findBySectionIds(String sectionIds) {
+    public List<String> findBySectionIdsAndPlanIds(String sectionIds, String planIds) {
         List<String> resultList = new ArrayList<>();
-        List<Map<String, Object>> relationList = customPlanSectionRelationMapper.findBySectionIds(sectionIds);
-        // 定制板块ids去重
+        List<Map<String, Object>> relationList = customPlanSectionRelationMapper.findBySectionIdsAndPlanIds(sectionIds, planIds);
+        // 获取定制计划id和板块id
         relationList.forEach(section -> resultList.add(section.get("sectionId").toString()));
-        return resultList.stream().distinct().collect(Collectors.toList());
+        relationList.forEach(section -> resultList.add(section.get("planId").toString()));
+        return resultList;
     }
 
 }

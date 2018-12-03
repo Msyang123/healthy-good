@@ -129,7 +129,7 @@ public interface CustomPlanSectionRelationMapper {
      * @param sectionIds 定制板块id集合
      * @return 关联信息集合
      */
-    List<Map<String, Object>> findBySectionIds(@Param("sectionIds") String sectionIds);
+    List<Map<String, Object>> findBySectionIdsAndPlanIds(@Param("sectionIds") String sectionIds, @Param("planIds") String planIds);
 
     /**
      * 查询定制计划与版块关系记录

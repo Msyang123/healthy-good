@@ -94,7 +94,7 @@ public class FruitDoctor{
     @JsonProperty("createTime")
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss",timezone = "GMT+8")
     @ApiModelProperty(value = "注册时间", dataType = "Date")
-    private java.util.Date createTime;
+    private java.util.Date createAt;
     
 
     /**

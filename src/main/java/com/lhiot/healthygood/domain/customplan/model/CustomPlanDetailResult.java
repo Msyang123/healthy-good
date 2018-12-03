@@ -18,7 +18,7 @@ public class CustomPlanDetailResult {
      *
      */
     @JsonProperty("id")
-    @ApiModelProperty(value = "", dataType = "Long")
+    @ApiModelProperty(value = "定制计划id", dataType = "Long")
     private Long id;
     /**
      *名称
@@ -59,14 +59,15 @@ public class CustomPlanDetailResult {
     @JsonProperty("description")
     @ApiModelProperty(value = "描述", dataType = "String")
     private String description;
+
     /**
-     *描述
+     *价格
      */
-    @JsonProperty("description")
-    @ApiModelProperty(value = "描述", dataType = "Long")
+    @JsonProperty("price")
+    @ApiModelProperty(value = "价格", dataType = "Long")
     private Long price;
 
     @JsonProperty("standardList")
-    @ApiModelProperty(value = "", dataType = "List")
+    @ApiModelProperty(value = "规格信息集合", dataType = "List")
     private List<CustomPlanDatailStandardResult> standardList;
 }

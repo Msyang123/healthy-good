@@ -39,7 +39,7 @@
 
     <!--新增鲜果师申请记录-->
     <insert id="create" parameterType="com.lhiot.healthygood.domain.doctor.RegisterApplication" useGeneratedKeys="true" keyProperty="id">
-        insert into register_application
+        insert into fruit_doctor_qualification
         <trim prefix="(" suffix=")" suffixOverrides="," >
             <if test="idcardNo != null ">
                 idcard_no,
@@ -102,7 +102,7 @@
 
     <!--根据id修改鲜果师申请记录-->
     <update id="updateById" parameterType="com.lhiot.healthygood.domain.doctor.RegisterApplication">
-        update register_application
+        update fruit_doctor_qualification
         <set>
             <if test="id != null ">
                 id = #{id},
@@ -146,7 +146,7 @@
 
     <!--根据ids删除鲜果师申请记录-->
     <delete id="deleteByIds" parameterType="java.util.List">
-        delete from register_application where id in
+        delete from fruit_doctor_qualification where id in
         <foreach collection="list" item="item" open="("
             separator="," close=")">
             #{item}
@@ -157,7 +157,7 @@
     <!-- 根据id查找鲜果师申请记录 -->
 	<select id="selectById" resultMap="BaseResultMap"
 		parameterType="long"> select <include refid="Base_Column_List" />
-		from register_application where id = #{id}
+		from fruit_doctor_qualification where id = #{id}
 	</select>
 
 
@@ -165,7 +165,8 @@
     <select id="findLastApplicationById" resultMap="BaseResultMap"
             parameterType="long">
         select <include refid="Base_Column_List" />
-        from register_application where user_id = #{id} order by id desc limit 1
+        from fruit_doctor_qualification
+        where user_id = #{id} order by id desc limit 1
     </select>
 
     <!-- base where条件  -->
@@ -217,7 +218,10 @@
 	        select <include refid="Base_Column_List" />
 	        from register_application
 	        <include refid="Base_Where_Condition" />
-	        <include refid="common.pager" />
+             <if test="rows != null and rows > 0 ">
+                 order by rank asc , id desc
+                 limit #{startRow} , #{rows}
+             </if>
     </select>
 
     <!--查询鲜果师申请记录总记录-->

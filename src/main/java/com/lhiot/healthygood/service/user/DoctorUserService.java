@@ -99,6 +99,10 @@ public class DoctorUserService {
         return this.doctorUserMapper.selectByUserId(userId);
     }
 
+    public DoctorUser selectByDoctorId(Long doctorId){
+        return this.doctorUserMapper.selectByDoctorId(doctorId);
+    }
+
     /** 
     * Description: 查询鲜果师客户总记录数
     *  

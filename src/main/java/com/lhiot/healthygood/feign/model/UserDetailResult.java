@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
+import com.lhiot.healthygood.domain.user.FruitDoctor;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
@@ -15,7 +16,7 @@ import java.util.Date;
 public class UserDetailResult {
 
     @JsonSerialize(using = ToStringSerializer.class)
-    private String id;
+    private Long id;
 
     @ApiModelProperty(notes = "生日", dataType = "String")
     private String birthday;
@@ -75,5 +76,8 @@ public class UserDetailResult {
     @JsonIgnore
     @ApiModelProperty(value = "鲜果师id", dataType = "Long")
     private Long doctorId;
+
+
+    private FruitDoctor fruitDoctorInfo;
 
 }

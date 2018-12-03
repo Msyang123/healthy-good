@@ -48,7 +48,7 @@ public class DoctorUser{
     @JsonProperty("userId")
     @JsonSerialize(using = ToStringSerializer.class)
     @ApiModelProperty(value = "用户编号", dataType = "Long")
-    private String userId;
+    private Long userId;
 
     /**
      *微信昵称

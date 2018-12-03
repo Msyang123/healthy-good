@@ -23,26 +23,26 @@ public class CustomPlanSectionResult {
      *
      */
     @JsonProperty("id")
-    @ApiModelProperty(value = "", dataType = "Long")
+    @ApiModelProperty(value = "定制板块id", dataType = "Long")
     private Long id;
     /**
      *
      */
     @JsonProperty("sectionImage")
-    @ApiModelProperty(value = "", dataType = "String")
+    @ApiModelProperty(value = "定制板块图片", dataType = "String")
     private String image;
     /**
      *
      */
     @JsonProperty("sectionName")
-    @ApiModelProperty(value = "", dataType = "String")
+    @ApiModelProperty(value = "定制板块名称", dataType = "String")
     private String sectionName;
 
     /**
      *
      */
     @JsonProperty("sectionCode")
-    @ApiModelProperty(value = "", dataType = "String")
+    @ApiModelProperty(value = "定制板块编码", dataType = "String")
     @NotNull
     private String sectionCode;
     /**
@@ -50,11 +50,11 @@ public class CustomPlanSectionResult {
      */
     @JsonProperty("createAt")
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss",timezone = "GMT+8")
-    @ApiModelProperty(value = "", dataType = "Date", readOnly = true)
+    @ApiModelProperty(value = "创建时间", dataType = "Date", readOnly = true)
     private Date createAt;
 
     @JsonProperty("customPlanList")
-    @ApiModelProperty(value = "", dataType = "Pages")
+    @ApiModelProperty(value = "定制计划集合", dataType = "Pages")
     @NotNull
     private Pages<CustomPlan> customPlanList;
 
