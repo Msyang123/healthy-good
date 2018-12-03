@@ -6,6 +6,7 @@ import com.leon.microx.web.result.Tips;
 import com.leon.microx.web.session.Authority;
 import com.leon.microx.web.session.Sessions;
 import com.lhiot.healthygood.domain.doctor.Achievement;
+import com.lhiot.healthygood.feign.model.Store;
 import com.lhiot.healthygood.type.CaptchaTemplate;
 import com.lhiot.healthygood.type.FreeSignName;
 import com.lhiot.healthygood.domain.user.*;
@@ -21,6 +22,7 @@ import com.lhiot.healthygood.service.doctor.DoctorAchievementLogService;
 import com.lhiot.healthygood.service.user.DoctorUserService;
 import com.lhiot.healthygood.service.user.FruitDoctorService;
 import com.lhiot.healthygood.service.user.FruitDoctorUserService;
+import com.lhiot.healthygood.util.FeginResponseTools;
 import com.lhiot.healthygood.wechat.*;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
@@ -169,16 +171,15 @@ public class UserApi {
 
     @GetMapping ("/session")
     @ApiOperation(value = "根据sessionId重新获取session", response = String.class)
-    public ResponseEntity userInfo(HttpServletRequest request){
-        String sessionId = session.id(request);
-        String openId = session.user(sessionId).getUser().get("openId").toString();
+    public ResponseEntity userInfo(Sessions.User user){
+        String openId = user.getUser().get("openId").toString();
         ResponseEntity searchUserEntity= baseUserServerFeign.findByOpenId(openId);
         if (searchUserEntity.getStatusCode().isError()){
             return ResponseEntity.badRequest().body(searchUserEntity.getBody());
         }
         UserDetailResult searchUser = (UserDetailResult) searchUserEntity.getBody();
         if (Objects.isNull(searchUser)){
-            return ResponseEntity.badRequest().body("用户不存在！");
+            return ResponseEntity.badRequest().body(Tips.warn("用户不存在！"));
         }
         FruitDoctor fruitDoctor = fruitDoctorService.selectByUserId(Long.valueOf(searchUser.getId()));
         if (Objects.nonNull(fruitDoctor)){
@@ -299,17 +300,16 @@ public class UserApi {
     @PutMapping("/binding")
     @ApiOperation(value = "用户绑定手机号")
     @ApiImplicitParam(paramType = "body", name = "validateParam", value = "要用户注册", required = true, dataType = "ValidateParam")
-    public ResponseEntity bandPhone(@ApiIgnore HttpServletRequest request, @RequestBody ValidateParam validateParam) {
-        String sessionId = session.id(request);
-        Long userId = (Long) session.user(sessionId).getUser().get("userId");
+    public ResponseEntity bandPhone(@ApiIgnore Sessions.User user, @RequestBody ValidateParam validateParam) {
+        Long userId = (Long) user.getUser().get("userId");
         UserBindingPhoneParam userBindingPhoneParam = new UserBindingPhoneParam();
         userBindingPhoneParam.setPhone(validateParam.getPhoneNumber());
         userBindingPhoneParam.setApplicationType(ApplicationType.FRUIT_DOCTOR);
-        ResponseEntity userInfo = baseUserServerFeign.userBindingPhone(userId,userBindingPhoneParam);
-        if (userInfo.getStatusCode().isError()){
-            return ResponseEntity.badRequest().body(userInfo.getBody());
+        Tips<UserDetailResult> userDetailResultTips= FeginResponseTools.convertResponse(baseUserServerFeign.userBindingPhone(userId,userBindingPhoneParam));
+        if (userDetailResultTips.err()){
+            return ResponseEntity.badRequest().body(userDetailResultTips.getData());
         }
-        return ResponseEntity.ok(userInfo.getBody());
+        return ResponseEntity.ok(userDetailResultTips.getData());
     }
 
     @Sessions.Uncheck
@@ -328,12 +328,12 @@ public class UserApi {
         total.setOrderCountOfThisMonth(thisMonth.getOrderCount());
 
         //获取用户信息
-        ResponseEntity<UserDetailResult> userInfo = baseUserServerFeign.findById(userId);
-        if (userInfo.getStatusCode().isError()){
-            return ResponseEntity.badRequest().body(userInfo.getBody());
+        Tips<UserDetailResult> userDetailResultTips= FeginResponseTools.convertResponse(baseUserServerFeign.findById(userId));
+        if (userDetailResultTips.err()){
+            return ResponseEntity.badRequest().body(userDetailResultTips.getData());
         }
-        total.setAvatar(userInfo.getBody().getAvatar());
-        total.setDescription(userInfo.getBody().getDescription());
+        total.setAvatar(userDetailResultTips.getData().getAvatar());
+        total.setDescription(userDetailResultTips.getData().getDescription());
         return ResponseEntity.ok(total);
     }
 }

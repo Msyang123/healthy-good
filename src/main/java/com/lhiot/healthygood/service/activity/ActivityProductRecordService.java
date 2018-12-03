@@ -74,8 +74,8 @@ public class ActivityProductRecordService {
         return this.activityProductRecordMapper.selectById(id);
     }
 
-    public Integer selectRecordCount(Long userId){
-        return activityProductRecordMapper.selectRecordCount(userId);
+    public Integer selectRecordCount(ActivityProductRecord activityProductRecord){
+        return activityProductRecordMapper.selectRecordCount(activityProductRecord);
     }
 
     /** 

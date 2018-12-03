@@ -2,10 +2,7 @@ package com.lhiot.healthygood.api.activity;
 
 import com.leon.microx.util.BeanUtils;
 import com.leon.microx.web.session.Sessions;
-import com.lhiot.healthygood.domain.activity.ActivityProduct;
-import com.lhiot.healthygood.domain.activity.ActivityProducts;
-import com.lhiot.healthygood.domain.activity.NewSpecialResult;
-import com.lhiot.healthygood.domain.activity.SpecialProductActivity;
+import com.lhiot.healthygood.domain.activity.*;
 import com.lhiot.healthygood.feign.model.ProductShelf;
 import com.lhiot.healthygood.feign.BaseDataServiceFeign;
 import com.lhiot.healthygood.service.activity.ActivityProductRecordService;
@@ -87,7 +84,10 @@ public class NewSpecialActivityApi {
             product.setProductName(productShelf.getName());
             String sessionId = session.id(request);
             Long userId = Long.valueOf(session.user(sessionId).getUser().get("userId").toString());
-            Integer alreadyCount = activityProductRecordService.selectRecordCount(userId);
+            ActivityProductRecord activityProductRecord = new ActivityProductRecord();
+            activityProductRecord.setUserId(userId);
+            activityProductRecord.setProductShelfId(productShelf.getId());
+            Integer alreadyCount = activityProductRecordService.selectRecordCount(activityProductRecord);
             product.setAlreadyBuyCount(alreadyCount);
             product.setShelfId(item.getProductShelfId());
             activityProductsList.add(product);

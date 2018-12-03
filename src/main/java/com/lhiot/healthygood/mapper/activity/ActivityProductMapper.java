@@ -53,6 +53,8 @@ public interface ActivityProductMapper {
     */
     ActivityProduct selectById(Long id);
 
+    ActivityProduct selectActivityProduct(ActivityProduct activityProduct);
+
     /**
     * Description:查询活动商品列表
     *

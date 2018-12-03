@@ -54,7 +54,7 @@ public interface ActivityProductRecordMapper {
     */
     ActivityProductRecord selectById(Long id);
 
-    Integer selectRecordCount(Long userId);
+    Integer selectRecordCount(ActivityProductRecord activityProductRecord);
 
     /**
     * Description:查询活动商品购买记录列表

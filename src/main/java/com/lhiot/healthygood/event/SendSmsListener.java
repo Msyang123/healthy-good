@@ -1,5 +1,6 @@
 package com.lhiot.healthygood.event;
 
+import com.lhiot.healthygood.domain.user.ValidateParam;
 import com.lhiot.healthygood.feign.ThirdpartyServerFeign;
 import com.lhiot.healthygood.feign.model.AccountAuditParam;
 import com.lhiot.healthygood.feign.model.CaptchaParam;
@@ -10,6 +11,7 @@ import com.lhiot.healthygood.type.FreeSignName;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.event.EventListener;
+import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
@@ -51,5 +53,15 @@ public class SendSmsListener {
         parameters.setPhoneNumber(event.getPhone());
         parameters.setStatus(event.getAccountAuditStatus());
         thirdpartyServerFeign.accountAudit(parameters);
+    }
+
+    @Async
+    @EventListener
+    public void noNotify(SendValidateSmsEvent sendValidateSmsEvent){
+        //短信验证
+        ValidateParam smsValidateParam=new ValidateParam();
+        smsValidateParam.setCode(sendValidateSmsEvent.getCode());
+        smsValidateParam.setPhoneNumber(sendValidateSmsEvent.getPhone());
+        thirdpartyServerFeign.validate(CaptchaTemplate.REGISTER,smsValidateParam);
     }
 }
