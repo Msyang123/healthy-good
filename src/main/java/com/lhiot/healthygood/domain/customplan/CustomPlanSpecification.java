@@ -40,15 +40,15 @@ public class CustomPlanSpecification{
     *价格
     */
     @JsonProperty("price")
-    @ApiModelProperty(value = "价格", dataType = "String")
-    private String price;
+    @ApiModelProperty(value = "价格", dataType = "int")
+    private int price;
 
     /**
     *数量
     */
     @JsonProperty("quantity")
     @ApiModelProperty(value = "数量", dataType = "String")
-    private String quantity;
+    private int quantity;
 
     /**
     *描述
@@ -61,7 +61,7 @@ public class CustomPlanSpecification{
     *定制计划周期
     */
     @JsonProperty("planPeriod")
-    @ApiModelProperty(value = "定制计划周期", dataType = "String")
-    private String planPeriod;
+    @ApiModelProperty(value = "定制计划周期", dataType = "int")
+    private int planPeriod;
 
 }
