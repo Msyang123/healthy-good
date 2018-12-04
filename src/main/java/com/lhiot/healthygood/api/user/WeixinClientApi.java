@@ -1,7 +1,7 @@
 package com.lhiot.healthygood.api.user;
 
 import com.leon.microx.web.session.Sessions;
-import com.lhiot.healthygood.wechat.WeChatProperties;
+import com.lhiot.healthygood.config.HealthyGoodConfig;
 import com.lhiot.healthygood.wechat.WeChatUtil;
 import com.lhiot.healthygood.wechat.backmsg.*;
 import io.swagger.annotations.Api;
@@ -33,9 +33,9 @@ public class WeixinClientApi {
     private final WeChatUtil weChatUtil;
 
     @Autowired
-    public WeixinClientApi(RedissonClient redissonClient, WeChatProperties properties) {
+    public WeixinClientApi(RedissonClient redissonClient, HealthyGoodConfig healthyGoodConfig) {
         this.redissonClient = redissonClient;
-        this.weChatUtil = new WeChatUtil(properties);
+        this.weChatUtil = new WeChatUtil(healthyGoodConfig);
     }
 
     @Sessions.Uncheck

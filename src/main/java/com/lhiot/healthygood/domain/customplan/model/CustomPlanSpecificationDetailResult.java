@@ -16,7 +16,7 @@ public class CustomPlanSpecificationDetailResult {
      *
      */
     @JsonProperty("id")
-    @ApiModelProperty(value = "", dataType = "Long")
+    @ApiModelProperty(value = "定制规格id", dataType = "Long")
     private Long id;
 
     /**

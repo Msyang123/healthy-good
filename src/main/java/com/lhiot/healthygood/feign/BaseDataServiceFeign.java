@@ -5,13 +5,16 @@ import com.lhiot.healthygood.feign.model.*;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
 
 /**
  * 基础数据服务
  */
 @Component
-@FeignClient(value = "BASIC-DATA-SERVICE-V1-0")
+@FeignClient(value = "BASIC-DATA-SERVICE-V1-0-HUFAN")
 public interface BaseDataServiceFeign {
     /**
      * 根据id查询商品
@@ -50,12 +53,26 @@ public interface BaseDataServiceFeign {
     @RequestMapping(value="/product-shelves/{id}",method = RequestMethod.GET)
     ResponseEntity<ProductShelf> singleShelf(@PathVariable("id") Long shelfId);
 
+
+    /**
+     * 根据条件分页查询商品上架信息列表
+     * @param param
+     * @return
+     */
+    @RequestMapping(value="/product-shelves/pages",method = RequestMethod.POST)
+    ResponseEntity<Pages<ProductShelf>> searchProductShelves(@RequestBody ProductShelfParam param);
+
     /**
      * 根据位置查询门店所有列表根据距离排序
      */
     @RequestMapping(value = "/stores/search",method = RequestMethod.POST)
     ResponseEntity<Pages<Store>> searchStores(@RequestBody StoreSearchParam param);
 
+    /**
+     * 依据门店id查询门店信息
+     * @param id
+     * @return
+     */
     @RequestMapping(value="/stores/{id}",method = RequestMethod.GET)
     ResponseEntity<Store> findStoreById(@PathVariable("id") Long shelfId);
 
@@ -87,5 +104,14 @@ public interface BaseDataServiceFeign {
     @RequestMapping(value = "/product-sections/pages",method = RequestMethod.POST)
     ResponseEntity<Pages<ProductSection>> searchProductSection(@RequestBody ProductSectionParam param);
 
+
+    ResponseEntity<Store> findStoreById(@PathVariable("id") Long id);
+    /**
+     * 依据门店编码查询门店信息
+     * @param code
+     * @return
+     */
+    @RequestMapping(value="/stores/code/{code}",method = RequestMethod.GET)
+    ResponseEntity<Store> findStoreByCode(@PathVariable("code") String code);
 
 }

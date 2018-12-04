@@ -6,12 +6,10 @@
 */
 package com.lhiot.healthygood.wechat;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import lombok.Data;
-import lombok.Getter;
+import com.leon.microx.util.Jackson;
+import com.lhiot.healthygood.config.HealthyGoodConfig;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.ibatis.parsing.XPathParser;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
@@ -37,7 +35,6 @@ import java.util.Map.Entry;
  */
 @Slf4j
 @Service
-@Data
 public class WeChatUtil {
 	public final  String encoding = "UTF-8";
 
@@ -73,13 +70,12 @@ public class WeChatUtil {
 	public final String CREATE_WEIXIN_MENU="https://api.weixin.qq.com/cgi-bin/menu/create?access_token={0}";
 	
 	/************微信认证登录与支付配置*******************************************/
-	@Autowired
-	private WeChatProperties properties;
+	private final HealthyGoodConfig.WechatOauthConfig wechatConfig;
 
-	private ObjectMapper om = new ObjectMapper();
+	//private ObjectMapper om = new ObjectMapper();
 
-	public WeChatUtil(WeChatProperties properties) {
-		this.properties = properties;
+	public WeChatUtil(HealthyGoodConfig healthyGoodConfig) {
+		this.wechatConfig = healthyGoodConfig.getWechatOauth();
 	}
 	
 	/**
@@ -180,26 +176,26 @@ public class WeChatUtil {
 	 * @param code
 	 * @return
 	 */
-	public  AccessToken getAccessTokenByCode(final String appid, final String appsecrect, final String code) throws IOException {
+	public  AccessToken getAccessTokenByCode(final String appid, final String appsecrect, final String code){
 		String requestUrl = MessageFormat.format(OPEN_ID_URL, appid, appsecrect, code);
 		String result = null;
 		Map<String, Object> amapMap = null;
 		try{
 			log.info("获取accessToken:url="+requestUrl);
 			result = httpsRequest(requestUrl, "GET", null);
-			amapMap = om.readValue(result, Map.class);
+			amapMap = Jackson.map(result);
 		}catch (Exception e){
 			e.printStackTrace();
 			log.info("获取accessToken失败,重试第一次:url="+requestUrl);
 			try {
 				result = httpsRequest(requestUrl, "GET", null);
-				amapMap = om.readValue(result, Map.class);
+				amapMap = Jackson.map(result);
 				e.printStackTrace();;
 			}catch (Exception e2){
 				e2.printStackTrace();
 				log.info("获取accessToken失败,重试第二次:url="+requestUrl);
 				result = httpsRequest(requestUrl, "GET", null);
-				amapMap = om.readValue(result, Map.class);
+				amapMap = Jackson.map(result);
 				e2.printStackTrace();
 			}
 		}
@@ -253,13 +249,13 @@ public class WeChatUtil {
 	 * @param accessToken
 	 * @return JsapiTicket
 	 */
-	public  JsapiTicket getJsapiTicket(final String accessToken) throws IOException {
+	public  JsapiTicket getJsapiTicket(final String accessToken) {
 		String requestUrl = MessageFormat.format(TICKET_URL, accessToken);
 		String result = httpsRequest(requestUrl, "GET", null);
 		if (result == null) {
 			return null;
 		}
-		Map<String, Object> amapMap = om.readValue(result, Map.class);
+		Map<String, Object> amapMap = Jackson.map(result);
 		JsapiTicket ticket = new JsapiTicket();
 		ticket.setTicket(String.valueOf(amapMap.get("ticket")));
 		Integer expiresIn = Integer.valueOf(String.valueOf(amapMap.get("expires_in")));
@@ -274,10 +270,10 @@ public class WeChatUtil {
 	 * 获取接口访问凭证
 	 * @return Token
 	 */
-	public Token getToken() throws IOException {
-		String requestUrl = MessageFormat.format(TOKEN_URL, this.getProperties().getWeChatOauth().getAppId(), this.getProperties().getWeChatOauth().getAppSecret());
+	public Token getToken(){
+		String requestUrl = MessageFormat.format(TOKEN_URL, this.wechatConfig.getAppId(), this.wechatConfig.getAppSecret());
 		String result = httpsRequest(requestUrl, "GET", null);
-		Map<String, Object> amapMap = om.readValue(result, Map.class);
+		Map<String, Object> amapMap = Jackson.map(result);
 		log.info("WeChatUtil getToken"+result);
 		Token token = new Token();
 		token.setAccessToken(String.valueOf(amapMap.get("access_token")));
@@ -294,9 +290,8 @@ public class WeChatUtil {
 	 * 发送模板消息
 	 * @param message 
 	 * @return
-	 * @throws IOException 
 	 */
-	public String sendTemplateMessage(String message) throws IOException{
+	public String sendTemplateMessage(String message){
 		String requestUrl = MessageFormat.format(SEND_TEMPLATE_MESSAGE, this.getToken().getAccessToken());
 		String result = httpsRequest(requestUrl, "POST", message);
 		return result;
@@ -307,25 +302,25 @@ public class WeChatUtil {
 	 * @param refreshAccessToken
 	 * @return AccessToken
 	 */
-	public  AccessToken refreshAccessToken(String refreshAccessToken) throws IOException {
+	public  AccessToken refreshAccessToken(String refreshAccessToken){
 		//如果refreshAccessToken是空，就需要重新授权
 		if(StringUtils.isEmpty(refreshAccessToken))
 			return null;
-		String requestUrl = MessageFormat.format(OAUTH2_REFRESH_ACCESS_TOKEN, this.getProperties().getWeChatOauth().getAppId(), refreshAccessToken);
+		String requestUrl = MessageFormat.format(OAUTH2_REFRESH_ACCESS_TOKEN, this.wechatConfig.getAppId(), refreshAccessToken);
 		String result = null;
 		Map<String, Object> amapMap = null;
 		try{
 			result = httpsRequest(requestUrl, "GET", null);
-			amapMap = om.readValue(result, Map.class);
+			amapMap = Jackson.map(result);
 		}catch (Exception e){
 			e.printStackTrace();
 			try{
 				result = httpsRequest(requestUrl, "GET", null);
-				amapMap = om.readValue(result, Map.class);
+				amapMap = Jackson.map(result);
 			}catch (Exception e2){
 				e2.printStackTrace();
 				result = httpsRequest(requestUrl, "GET", null);
-				amapMap = om.readValue(result, Map.class);
+				amapMap = Jackson.map(result);
 			}
 
 		}

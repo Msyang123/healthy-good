@@ -17,18 +17,18 @@ public class CustomPlanDatailStandardResult {
      *周期
      */
     @JsonProperty("planPeriod")
-    @ApiModelProperty(value = "planPeriod", dataType = "String")
+    @ApiModelProperty(value = "定制周期（7-周 30-月）", dataType = "String")
     private String planPeriod;
     /**
      *规格List
      */
     @JsonProperty("specificationList")
-    @ApiModelProperty(value = "specificationList", dataType = "List")
+    @ApiModelProperty(value = "定制规格集合", dataType = "List")
     private List<CustomPlanSpecificationResult> specificationList;
     /**
      *产品
      */
     @JsonProperty("products")
-    @ApiModelProperty(value = "products", dataType = "List")
+    @ApiModelProperty(value = "定制商品集合", dataType = "List")
     private List<CustomPlanProductResult> products;
 }

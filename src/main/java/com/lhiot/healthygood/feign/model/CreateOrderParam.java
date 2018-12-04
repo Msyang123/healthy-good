@@ -7,11 +7,15 @@ import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
+import javax.validation.constraints.NotEmpty;
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
 import java.util.Date;
 import java.util.List;
 
 @Data
 @ApiModel
+@NotNull
 public class CreateOrderParam {
 
     private Long userId;
@@ -39,6 +43,8 @@ public class CreateOrderParam {
     @ApiModelProperty(notes = "是否允许退款YES是NO否", dataType = "AllowRefund")
     private AllowRefund allowRefund;
     @ApiModelProperty(notes = "商品列表", dataType = "OrderProduct")
+    @NotNull
+    @Size(min=1,max = 1000)
     private List<OrderProduct> orderProducts;
     @ApiModelProperty(notes = "门店信息", dataType = "OrderStoreParam")
     private OrderStore orderStore;

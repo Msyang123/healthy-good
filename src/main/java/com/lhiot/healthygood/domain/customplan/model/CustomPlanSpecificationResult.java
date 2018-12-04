@@ -22,7 +22,7 @@ public class CustomPlanSpecificationResult {
      *
      */
     @JsonProperty("id")
-    @ApiModelProperty(value = "", dataType = "Long", readOnly = true)
+    @ApiModelProperty(value = "定制规格id", dataType = "Long", readOnly = true)
     private Long id;
 
     /**
@@ -63,7 +63,7 @@ public class CustomPlanSpecificationResult {
     /**
      * 定制商品
      */
-    @ApiModelProperty(value = "定制商品", dataType = "List")
+    @ApiModelProperty(value = "定制计划商品", dataType = "List")
     @NotNull
     private List<CustomPlanProduct> customPlanProducts;
 
