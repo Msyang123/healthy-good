@@ -5,13 +5,17 @@ import com.leon.microx.util.Maps;
 import com.leon.microx.util.StringUtils;
 import com.leon.microx.web.result.Pages;
 import com.leon.microx.web.result.Tips;
-import com.leon.microx.web.result.Tuple;
-import com.lhiot.healthygood.domain.customplan.*;
+import com.lhiot.healthygood.domain.customplan.CustomPlan;
+import com.lhiot.healthygood.domain.customplan.CustomPlanProduct;
+import com.lhiot.healthygood.domain.customplan.CustomPlanSectionRelation;
+import com.lhiot.healthygood.domain.customplan.CustomPlanSpecification;
 import com.lhiot.healthygood.domain.customplan.model.*;
 import com.lhiot.healthygood.feign.BaseDataServiceFeign;
 import com.lhiot.healthygood.feign.model.ProductShelf;
-import com.lhiot.healthygood.mapper.customplan.*;
-import com.lhiot.healthygood.type.YesOrNo;
+import com.lhiot.healthygood.mapper.customplan.CustomPlanMapper;
+import com.lhiot.healthygood.mapper.customplan.CustomPlanProductMapper;
+import com.lhiot.healthygood.mapper.customplan.CustomPlanSectionRelationMapper;
+import com.lhiot.healthygood.mapper.customplan.CustomPlanSpecificationMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -24,7 +28,6 @@ import java.util.stream.Stream;
 @Service
 @Transactional
 public class CustomPlanService {
-    private final CustomPlanSectionMapper customPlanSectionMapper;
     private final CustomPlanMapper customPlanMapper;
     private final CustomPlanSpecificationMapper customPlanSpecificationMapper;
     private final CustomPlanSectionRelationMapper customPlanSectionRelationMapper;
@@ -33,56 +36,14 @@ public class CustomPlanService {
 
 
     @Autowired
-    public CustomPlanService(CustomPlanSectionMapper customPlanSectionMapper, CustomPlanMapper customPlanMapper,
+    public CustomPlanService(CustomPlanMapper customPlanMapper,
                              CustomPlanSpecificationMapper customPlanSpecificationMapper, CustomPlanSectionRelationMapper customPlanSectionRelationMapper,
                              BaseDataServiceFeign baseDataServiceFeign, CustomPlanProductMapper customPlanProductMapper) {
-        this.customPlanSectionMapper = customPlanSectionMapper;
         this.customPlanMapper = customPlanMapper;
         this.customPlanSpecificationMapper = customPlanSpecificationMapper;
         this.customPlanSectionRelationMapper = customPlanSectionRelationMapper;
         this.baseDataServiceFeign = baseDataServiceFeign;
         this.customPlanProductMapper = customPlanProductMapper;
-    }
-
-    /**
-     * 定制首页
-     *
-     * @return
-     */
-    public Tuple<CustomPlanSection> customPlanSectionTuple() {
-        //查询所有定制板块
-        List<CustomPlanSection> customPlanSections = customPlanSectionMapper.customPlanSectionTuple();
-        //找到定制板块下的定制计划（依据定制板块与定制计划关联表）
-        customPlanSections.forEach(customPlanSection -> {
-            //依据定制板块id查询下面定制计划列表
-            PlanSectionsParam planSectionsParam = new PlanSectionsParam();
-            planSectionsParam.setId(customPlanSection.getId());
-            planSectionsParam.setPage(1);
-            planSectionsParam.setRows(4);//只查询最多4个推荐定制计划
-            setCustomPlanSecionPlanItems(customPlanSection, planSectionsParam);
-        });
-        return Tuple.of(customPlanSections);
-    }
-
-    /**
-     * 设置定制计划板块的定制计划关联数据
-     *
-     * @param customPlanSection 当前定制板块
-     * @param planSectionsParam 查询定制计划查询条件
-     */
-    void setCustomPlanSecionPlanItems(CustomPlanSection customPlanSection, PlanSectionsParam planSectionsParam) {
-        if (null != customPlanSection) {
-            List<CustomPlan> customPlanList = customPlanMapper.findByCustomPlanSectionId(planSectionsParam);
-            customPlanSection.setCustomPlanList(Pages.of(Objects.isNull(customPlanList) ? 0 : customPlanList.size(), customPlanList));
-        }
-    }
-
-    public CustomPlanSection findComPlanSectionId(PlanSectionsParam planSectionsParam) {
-        CustomPlanSection customPlanSection = customPlanSectionMapper.selectById(planSectionsParam.getId());
-        if (Objects.equals(planSectionsParam.getNeedChild(), YesOrNo.YES)) {
-            setCustomPlanSecionPlanItems(customPlanSection, planSectionsParam);
-        }
-        return customPlanSection;
     }
 
     public CustomPlanDetailResult findDetail(Long id) {
