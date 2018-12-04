@@ -56,7 +56,18 @@ public interface CustomPlanSectionMapper {
     */
     CustomPlanSection selectById(Long id);
 
-    List<CustomPlanSection> selectBySectionCode(String code);
+    /**
+     * 定制首页
+     * @return
+     */
+    List<CustomPlanSection> customPlanSectionTuple();
+
+    /**
+     * 依据编码查询定制计划板块
+     * @param code
+     * @return
+     */
+    CustomPlanSection selectBySectionCode(String code);
     /**
     * Description:查询定制计划板块列表
     *

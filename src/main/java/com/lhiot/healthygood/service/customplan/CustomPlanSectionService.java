@@ -43,8 +43,8 @@ public class CustomPlanSectionService {
     // FIXME TCC事务回滚
     public Tips addCustomPlanSection(CustomPlanSectionResultAdmin customPlanSectionResultAdmin) {
         // 幂等添加
-        List<CustomPlanSection> customPlanSection1 = customPlanSectionMapper.selectBySectionCode(customPlanSectionResultAdmin.getSectionCode());
-        if (!customPlanSection1.isEmpty()) {
+        CustomPlanSection customPlanSection1 = customPlanSectionMapper.selectBySectionCode(customPlanSectionResultAdmin.getSectionCode());
+        if (Objects.nonNull(customPlanSection1)) {
             return Tips.warn("定制板块编码重复，添加失败");
         }
         CustomPlanSection customPlanSection = new CustomPlanSection();
@@ -61,11 +61,11 @@ public class CustomPlanSectionService {
         // 添加定制板块和定制计划的关联
         List<CustomPlan> customPlanList = customPlanSectionResultAdmin.getCustomPlanList();
         List<Long> sorts = customPlanSectionResultAdmin.getRelationSorts();
-        if (customPlanList.isEmpty() && sorts.isEmpty()){
+        if (customPlanList.isEmpty() && sorts.isEmpty()) {
             return Tips.info(customPlanSection.getId() + "");
         }
         List<Long> planIds = customPlanSectionResultAdmin.getCustomPlanList().stream().map(CustomPlan::getId).collect(Collectors.toList());
-        if (Objects.nonNull(sectionId) && !planIds.isEmpty() && !sorts.isEmpty() ) {
+        if (Objects.nonNull(sectionId) && !planIds.isEmpty() && !sorts.isEmpty()) {
             //先做幂等验证
             List<CustomPlanSectionRelation> relationList = customPlanSectionRelationMapper.selectRelationListBySectionId(sectionId, Joiner.on(",").join(planIds));
             if (!relationList.isEmpty()) {
