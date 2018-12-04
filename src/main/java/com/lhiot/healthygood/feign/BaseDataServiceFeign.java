@@ -5,10 +5,7 @@ import com.lhiot.healthygood.feign.model.*;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.*;
 
 /**
  * 基础数据服务
@@ -70,7 +67,7 @@ public interface BaseDataServiceFeign {
 
     /**
      * 依据门店id查询门店信息
-     * @param id
+     * @param shelfId
      * @return
      */
     @RequestMapping(value="/stores/{id}",method = RequestMethod.GET)
@@ -105,7 +102,6 @@ public interface BaseDataServiceFeign {
     ResponseEntity<Pages<ProductSection>> searchProductSection(@RequestBody ProductSectionParam param);
 
 
-    ResponseEntity<Store> findStoreById(@PathVariable("id") Long id);
     /**
      * 依据门店编码查询门店信息
      * @param code

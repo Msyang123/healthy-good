@@ -56,7 +56,7 @@ public class NewSpecialActivityApi {
             @ApiImplicitParam(paramType = "query", name = "rows", value = "数据多少条", dataType = "Integer",required = true)
     })
     @ApiOperation(value = "新品尝鲜活动商品列表")
-    public ResponseEntity specialActivity( HttpServletRequest request, @RequestParam Integer page, @RequestParam Integer rows){
+    public ResponseEntity specialActivity( Sessions.User user, @RequestParam Integer page, @RequestParam Integer rows){
         SpecialProductActivity specialProductActivity = specialProductActivityService.selectActivity();
         if (Objects.isNull(specialProductActivity)){
             return ResponseEntity.badRequest().body("没有开这个活动哦~");
@@ -82,8 +82,7 @@ public class NewSpecialActivityApi {
             BeanUtils.copyProperties(productShelf,product);
             product.setPrice(Objects.isNull(productShelf.getPrice()) ? productShelf.getOriginalPrice() : productShelf.getPrice());
             product.setProductName(productShelf.getName());
-            String sessionId = session.id(request);
-            Long userId = Long.valueOf(session.user(sessionId).getUser().get("userId").toString());
+            Long userId = Long.valueOf(user.getUser().get("userId").toString());
             ActivityProductRecord activityProductRecord = new ActivityProductRecord();
             activityProductRecord.setUserId(userId);
             activityProductRecord.setProductShelfId(productShelf.getId());

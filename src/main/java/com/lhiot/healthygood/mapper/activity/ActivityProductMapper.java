@@ -2,6 +2,7 @@ package com.lhiot.healthygood.mapper.activity;
 
 import com.lhiot.healthygood.domain.activity.ActivityProduct;
 import org.apache.ibatis.annotations.Mapper;
+import org.springframework.stereotype.Repository;
 
 import java.util.List;
 
@@ -11,6 +12,7 @@ import java.util.List;
 * @date 2018/11/24
 */
 @Mapper
+@Repository
 public interface ActivityProductMapper {
 
     /**

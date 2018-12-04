@@ -126,6 +126,12 @@
             <if test="activityPrice != null ">
                 and activity_price = #{activityPrice}
             </if>
+            <if test="productShelfIds != null ">
+                and product_shelf_id in
+                <foreach item="item" index="index" collection="productShelfIds.split(',')" open="(" separator="," close=")">
+                    ${item}
+                </foreach>
+            </if>
         </where>
     </sql>
 

@@ -5,7 +5,7 @@ import com.leon.microx.web.result.Tips;
 import com.lhiot.healthygood.feign.BaseDataServiceFeign;
 import com.lhiot.healthygood.feign.model.Store;
 import com.lhiot.healthygood.feign.model.StoreSearchParam;
-import com.lhiot.healthygood.type.ApplicationType;
+import com.lhiot.healthygood.feign.type.ApplicationType;
 import com.lhiot.healthygood.util.ConvertAddressToLacation;
 import com.lhiot.healthygood.util.FeginResponseTools;
 import lombok.extern.slf4j.Slf4j;
