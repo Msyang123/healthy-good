@@ -87,7 +87,7 @@ public class OrderApi {
 
         List<OrderProduct> orderProducts = orderParam.getOrderProducts();
         //依据上架ids查询上架商品信息
-        String[] shelfIds = orderProducts.parallelStream().map(OrderProduct::getShelfId).toArray(String[]::new);
+        String[] shelfIds = orderProducts.parallelStream().map(OrderProduct::getShelfId).map(String::valueOf).toArray(String[]::new);
 
         ProductShelfParam productShelfParam = new ProductShelfParam();
         productShelfParam.setIds(StringUtils.join(",", shelfIds));

@@ -16,8 +16,8 @@ public interface BaseDataServiceFeign {
     /**
      * 根据id查询商品
      */
-    @RequestMapping(value="/products/{id}",method = RequestMethod.POST)
-    ResponseEntity single(@PathVariable("id") Long productId);
+    @RequestMapping(value="/products/{id}",method = RequestMethod.GET)
+    ResponseEntity<Product> single(@PathVariable("id") Long productId);
 
     /**
      * 根据条件分页查询商品信息列表
