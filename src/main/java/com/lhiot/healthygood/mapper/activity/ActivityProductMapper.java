@@ -2,6 +2,8 @@ package com.lhiot.healthygood.mapper.activity;
 
 import com.lhiot.healthygood.domain.activity.ActivityProduct;
 import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
+import org.springframework.stereotype.Repository;
 
 import java.util.List;
 
@@ -11,6 +13,7 @@ import java.util.List;
 * @date 2018/11/24
 */
 @Mapper
+@Repository
 public interface ActivityProductMapper {
 
     /**
@@ -52,6 +55,27 @@ public interface ActivityProductMapper {
     * @date 2018/11/24 16:09:12
     */
     ActivityProduct selectById(Long id);
+
+    /**
+     * Description:根据id查找活动商品
+     *
+     * @param ids
+     * @return
+     * @author hufan
+     * @date 2018/12/03 16:09:12
+     */
+    List<ActivityProduct> selectByIds(@Param("ids") String ids);
+
+    /**
+     * Description:根据id查找活动商品
+     *
+     * @param specialProductActivityId
+     * @param productShelfId
+     * @return
+     * @author hufan
+     * @date 2018/12/03 18:42:15
+     */
+    ActivityProduct selectBySpecialIdAndShelfId(@Param("specialProductActivityId") Long specialProductActivityId,@Param("productShelfId") Long productShelfId);
 
     /**
     * Description:查询活动商品列表

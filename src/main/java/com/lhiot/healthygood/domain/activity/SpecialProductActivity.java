@@ -30,6 +30,12 @@ public class SpecialProductActivity{
     private Long id;
 
     /**
+     *活动id
+     */
+    @ApiModelProperty(notes="活动Id",dataType="Long")
+    private Long activityId;
+
+    /**
     *活动名称
     */
     @JsonProperty("activityName")

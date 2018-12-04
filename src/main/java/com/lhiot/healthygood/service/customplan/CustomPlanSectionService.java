@@ -140,7 +140,7 @@ public class CustomPlanSectionService {
             List<CustomPlanSectionRelationResult> customPlanSectionRelationResults = customPlanSectionRelationMapper.findPlanBySectionId(id);
             if (!customPlanSectionRelationResults.isEmpty()) {
                 List<CustomPlan> customPlans = customPlanSectionRelationResults.stream().map(CustomPlanSectionRelationResult::getCustomPlan).collect(Collectors.toList());
-                List<Long> relationIds = customPlanSectionRelationResults.stream().map(CustomPlanSectionRelationResult::getSort).collect(Collectors.toList());
+                List<Long> relationIds = customPlanSectionRelationResults.stream().map(CustomPlanSectionRelationResult::getId).collect(Collectors.toList());
                 customPlanSectionResultAdmin.setCustomPlanList(customPlans);
                 customPlanSectionResultAdmin.setRelationSorts(relationIds);
             }

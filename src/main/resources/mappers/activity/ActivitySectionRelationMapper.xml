@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.lhiot.healthygood.mapper.activity.ActivitySectionRelationMapper">
+    <resultMap id="BaseResultMap" type="com.lhiot.healthygood.domain.activity.ActivitySectionRelation">
+        <id column="id" property="id"/>
+        <result column="activity_id" property="activityId"/>
+        <result column="section_id" property="sectionId"/>
+    </resultMap>
+    
+    <sql id="columns">
+        <trim suffixOverrides=",">
+            id,
+            activity_id,
+            section_id,
+        </trim>
+    </sql>
+
+    <sql id="filter">
+        <trim prefix="where" prefixOverrides="and|or">
+            <if test="id != null">and id = #{id}</if>
+            <if test="activityId != null">and activity_id = #{activityId}</if>
+            <if test="sectionId != null">and section_id = #{sectionId}</if>
+        </trim>
+    </sql>
+
+    <select id="selectRelation" resultMap="BaseResultMap" parameterType="map">
+        select <include refid="columns"/> from activity_section_relation <include refid="filter"/>
+    </select>
+</mapper>

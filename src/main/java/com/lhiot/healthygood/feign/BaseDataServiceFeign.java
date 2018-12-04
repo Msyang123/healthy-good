@@ -80,4 +80,23 @@ public interface BaseDataServiceFeign {
     @RequestMapping(value="/stores/code/{code}",method = RequestMethod.GET)
     ResponseEntity<Store> findStoreByCode(@PathVariable("code") String code);
 
+
+    /**
+     * 添加版块与商品上架关系
+     * @param productSectionRelation
+     * @return
+     */
+    @PostMapping(value = "/product-section-relations")
+    ResponseEntity create(@RequestBody ProductSectionRelation productSectionRelation);
+
+
+    /**
+     * 批量删除版块与商品上架关系
+     * @param sectionId
+     * @param shelfIds
+     * @return
+     */
+    @DeleteMapping("/product-section-relations/batches")
+    ResponseEntity deleteBatch(@RequestParam("sectionId") Long sectionId, @RequestParam(value = "shelfIds", required = false) String shelfIds);
+
 }
