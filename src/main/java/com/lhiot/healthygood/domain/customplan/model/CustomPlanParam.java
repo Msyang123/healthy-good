@@ -2,6 +2,7 @@ package com.lhiot.healthygood.domain.customplan.model;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.lhiot.healthygood.domain.customplan.CustomPlanSpecification;
 import com.lhiot.healthygood.type.ValidOrInvalid;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
@@ -55,7 +56,7 @@ public class CustomPlanParam {
      */
     @ApiModelProperty(value = "定制计划规格集合", dataType = "CustomPlanSpecification")
     @NotNull
-    private List<CustomPlanSpecificationResult> customPlanSpecifications;
+    private List<CustomPlanSpecification> customPlanSpecifications;
 
     @ApiModelProperty(notes = "每页查询条数(为空或0不分页查所有)", dataType = "Integer")
     private Integer rows;

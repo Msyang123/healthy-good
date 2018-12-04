@@ -7,6 +7,7 @@ import com.leon.microx.web.session.Sessions;
 import com.leon.microx.web.swagger.ApiParamType;
 import com.lhiot.healthygood.domain.customplan.CustomPlan;
 import com.lhiot.healthygood.domain.customplan.CustomPlanProduct;
+import com.lhiot.healthygood.domain.customplan.CustomPlanSpecification;
 import com.lhiot.healthygood.domain.customplan.model.*;
 import com.lhiot.healthygood.service.customplan.CustomPlanService;
 import io.swagger.annotations.Api;
@@ -52,11 +53,11 @@ public class CustomPlanApi {
     }
 
     /**
-     * 定制计划详细信息
+     * 定制计划规格信息
      */
     @Sessions.Uncheck
     @GetMapping("/custom-plans-specification/{specificationId}")
-    @ApiOperation(value = "定制计划详细信息（定制计划详细信息页面）")
+    @ApiOperation(value = "定制计划规格信息（创建定制计划订单信息页面）")
     @ApiImplicitParam(paramType = ApiParamType.PATH, name = "specificationId", value = "定制计划规格id", dataType = "Long", required = true)
     public ResponseEntity<CustomPlanSpecificationDetailResult> specificationDetail(@PathVariable Long specificationId) {
         CustomPlanSpecificationDetailResult customPlanSpecificationDetailResult = customPlanService.findCustomPlanSpecificationDetail(specificationId);
@@ -105,9 +106,10 @@ public class CustomPlanApi {
         log.debug("修改定制计划\t param:{}", customPlanResult);
 
         List<CustomPlanProduct> customPlanProducts = new ArrayList<>();
-        List<CustomPlanSpecificationResult> customPlanSpecifications = customPlanResult.getCustomPlanSpecifications().stream().collect(Collectors.toList());
-        customPlanSpecifications.forEach(customPlanSpecification ->
-                customPlanProducts.addAll(customPlanSpecification.getCustomPlanProducts().stream().peek(customPlanProduct -> customPlanProduct.setPlanId(id)).collect(Collectors.toList())));
+        List<CustomPlanSpecification> customPlanSpecifications = customPlanResult.getCustomPlanSpecifications().stream().collect(Collectors.toList());
+        //TODO 不是在定制规格中添加定制商品 不是在规格中包含定制商品
+        /*customPlanSpecifications.forEach(customPlanSpecification ->
+                customPlanProducts.addAll(customPlanSpecification.getCustomPlanProducts().stream().peek(customPlanProduct -> customPlanProduct.setPlanId(id)).collect(Collectors.toList())));*/
         Tips tips = customPlanService.updateProduct(customPlanProducts);
         return !tips.err() ? ResponseEntity.ok().build() : ResponseEntity.badRequest().body(Tips.warn("修改信息失败!"));
     }

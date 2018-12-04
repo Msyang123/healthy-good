@@ -5,6 +5,7 @@ import org.apache.ibatis.annotations.Mapper;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Map;
 
 /**
 * Description:定制计划关联商品Mapper类
@@ -56,7 +57,12 @@ public interface CustomPlanProductMapper {
     */
     CustomPlanProduct selectById(Long id);
 
-    List<CustomPlanProduct> findByPlanId(Long planId);
+    /**
+     * 依据定制计划和周期查询定制商品列表
+     * @param param
+     * @return
+     */
+    List<CustomPlanProduct> findByPlanIdAndPerid(Map<String,Object> param);
 
     /**
     * Description:查询定制计划关联商品列表
