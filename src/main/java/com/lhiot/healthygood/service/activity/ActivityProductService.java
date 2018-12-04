@@ -74,6 +74,10 @@ public class ActivityProductService {
         return this.activityProductMapper.selectById(id);
     }
 
+    public ActivityProduct selectActivityProduct(ActivityProduct activityProduct){
+        return activityProductMapper.selectActivityProduct(activityProduct);
+    }
+
     /** 
     * Description: 查询活动商品总记录数
     *  

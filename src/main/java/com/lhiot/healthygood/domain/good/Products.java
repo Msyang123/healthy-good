@@ -1,10 +1,9 @@
-package com.lhiot.healthygood.feign.model;
+package com.lhiot.healthygood.domain.good;
 
 import com.leon.microx.predefine.OnOff;
 import com.lhiot.healthygood.type.ShelfType;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
-import jdk.nashorn.internal.ir.annotations.Ignore;
 import lombok.Data;
 
 import java.math.BigDecimal;
@@ -15,9 +14,7 @@ import java.util.Date;
  */
 @Data
 @ApiModel
-public class ProductShelf {
-    @ApiModelProperty(notes = "规格对象", dataType = "ProductSpecification", readOnly = true)
-    private ProductSpecification productSpecification;
+public class Products {
     @ApiModelProperty(notes = "主键Id", dataType = "Long", readOnly = true)
     private Long id;
     @ApiModelProperty(notes = "上架名称", dataType = "String")
@@ -46,12 +43,6 @@ public class ProductShelf {
     private Integer sorting;
     @ApiModelProperty(notes = "应用类型", dataType = "String")
     private String applicationType;
-    @ApiModelProperty(notes = "活动价格", dataType = "Integer")
-    private Integer activityPrice;
-    @ApiModelProperty(notes = "限制购买的份数", dataType = "Integer")
-    private Integer limitCount;
-    @ApiModelProperty(notes = "已经购买的份数", dataType = "Integer")
-    private Integer alreadyBuyAmount;
 
 
 }
