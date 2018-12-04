@@ -101,6 +101,12 @@
 		from activity_product where id = #{id}
 	</select>
 
+    <select id="selectActivityProduct" resultMap="BaseResultMap"
+            parameterType="com.lhiot.healthygood.domain.activity.ActivityProduct">
+        select <include refid="Base_Column_List" />
+        from activity_product <include refid="Base_Where_Condition" />
+    </select>
+
 
     <!-- base where条件  -->
     <sql id="Base_Where_Condition" >
@@ -119,6 +125,12 @@
             </if>
             <if test="activityPrice != null ">
                 and activity_price = #{activityPrice}
+            </if>
+            <if test="productShelfIds != null ">
+                and product_shelf_id in
+                <foreach item="item" index="index" collection="productShelfIds.split(',')" open="(" separator="," close=")">
+                    ${item}
+                </foreach>
             </if>
         </where>
     </sql>

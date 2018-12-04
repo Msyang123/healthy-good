@@ -2,10 +2,7 @@ package com.lhiot.healthygood.api.activity;
 
 import com.leon.microx.util.BeanUtils;
 import com.leon.microx.web.session.Sessions;
-import com.lhiot.healthygood.domain.activity.ActivityProduct;
-import com.lhiot.healthygood.domain.activity.ActivityProducts;
-import com.lhiot.healthygood.domain.activity.NewSpecialResult;
-import com.lhiot.healthygood.domain.activity.SpecialProductActivity;
+import com.lhiot.healthygood.domain.activity.*;
 import com.lhiot.healthygood.feign.model.ProductShelf;
 import com.lhiot.healthygood.feign.BaseDataServiceFeign;
 import com.lhiot.healthygood.service.activity.ActivityProductRecordService;
@@ -59,7 +56,7 @@ public class NewSpecialActivityApi {
             @ApiImplicitParam(paramType = "query", name = "rows", value = "数据多少条", dataType = "Integer",required = true)
     })
     @ApiOperation(value = "新品尝鲜活动商品列表")
-    public ResponseEntity specialActivity( HttpServletRequest request, @RequestParam Integer page, @RequestParam Integer rows){
+    public ResponseEntity specialActivity( Sessions.User user, @RequestParam Integer page, @RequestParam Integer rows){
         SpecialProductActivity specialProductActivity = specialProductActivityService.selectActivity();
         if (Objects.isNull(specialProductActivity)){
             return ResponseEntity.badRequest().body("没有开这个活动哦~");
@@ -85,9 +82,11 @@ public class NewSpecialActivityApi {
             BeanUtils.copyProperties(productShelf,product);
             product.setPrice(Objects.isNull(productShelf.getPrice()) ? productShelf.getOriginalPrice() : productShelf.getPrice());
             product.setProductName(productShelf.getName());
-            String sessionId = session.id(request);
-            Long userId = Long.valueOf(session.user(sessionId).getUser().get("userId").toString());
-            Integer alreadyCount = activityProductRecordService.selectRecordCount(userId);
+            Long userId = Long.valueOf(user.getUser().get("userId").toString());
+            ActivityProductRecord activityProductRecord = new ActivityProductRecord();
+            activityProductRecord.setUserId(userId);
+            activityProductRecord.setProductShelfId(productShelf.getId());
+            Integer alreadyCount = activityProductRecordService.selectRecordCount(activityProductRecord);
             product.setAlreadyBuyCount(alreadyCount);
             product.setShelfId(item.getProductShelfId());
             activityProductsList.add(product);

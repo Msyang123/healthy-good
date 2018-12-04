@@ -2,6 +2,7 @@ package com.lhiot.healthygood.mapper.user;
 
 import com.lhiot.healthygood.domain.user.FruitDoctor;
 import org.apache.ibatis.annotations.Mapper;
+import org.springframework.stereotype.Repository;
 
 import java.util.List;
 
@@ -10,6 +11,7 @@ import java.util.List;
 * @author yijun
 * @date 2018/07/26
 */
+@Repository
 @Mapper
 public interface FruitDoctorMapper {
 

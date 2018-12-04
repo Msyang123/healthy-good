@@ -125,7 +125,7 @@
 
     <select id="selectRecordCount" resultType="Integer" parameterType="long">
         select count(*)
-        from activity_product_record where user_id = #{id}
+        from activity_product_record <include refid="Base_Where_Condition" />
     </select>
 
     <!-- base where条件  -->
