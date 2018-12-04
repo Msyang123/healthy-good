@@ -80,6 +80,13 @@ public interface CustomPlanSpecificationMapper {
     List<CustomPlanSpecification> findByPlanIdAndPerid(Map<String,Object> param);
 
     /**
+     * 查找指定定制计划里面定制规格的最低价格
+     * @param planId
+     * @return
+     */
+    Long findMinPriceByPlanId(Long planId);
+
+    /**
      * 新增定制规格集合
      *
      * @param customPlanSpecifications 定制规格集合

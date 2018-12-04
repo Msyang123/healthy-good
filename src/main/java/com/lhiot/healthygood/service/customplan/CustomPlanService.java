@@ -1,5 +1,6 @@
 package com.lhiot.healthygood.service.customplan;
 
+import com.leon.microx.predefine.OnOff;
 import com.leon.microx.util.BeanUtils;
 import com.leon.microx.util.Maps;
 import com.leon.microx.util.StringUtils;
@@ -11,11 +12,14 @@ import com.lhiot.healthygood.domain.customplan.CustomPlanSectionRelation;
 import com.lhiot.healthygood.domain.customplan.CustomPlanSpecification;
 import com.lhiot.healthygood.domain.customplan.model.*;
 import com.lhiot.healthygood.feign.BaseDataServiceFeign;
+import com.lhiot.healthygood.feign.model.Product;
 import com.lhiot.healthygood.feign.model.ProductShelf;
+import com.lhiot.healthygood.feign.model.ProductShelfParam;
 import com.lhiot.healthygood.mapper.customplan.CustomPlanMapper;
 import com.lhiot.healthygood.mapper.customplan.CustomPlanProductMapper;
 import com.lhiot.healthygood.mapper.customplan.CustomPlanSectionRelationMapper;
 import com.lhiot.healthygood.mapper.customplan.CustomPlanSpecificationMapper;
+import com.lhiot.healthygood.util.FeginResponseTools;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -49,50 +53,80 @@ public class CustomPlanService {
     public CustomPlanDetailResult findDetail(Long id) {
         CustomPlanDetailResult result = new CustomPlanDetailResult();
         CustomPlan customPlan = customPlanMapper.selectById(id);
-        BeanUtils.of(result).populate(customPlan);
-        List<CustomPlanDatailStandardResult> customPlanDatailStandardResult = getCustomPlanDetailStandardResultList(customPlan);
-        result.setStandardList(customPlanDatailStandardResult);
+        if(Objects.isNull(customPlan))
+            return result;
+        BeanUtils.copyProperties(customPlan, result);
+        List<CustomPlanPeriodResult> customPlanPeriodResultList = getCustomPlanPeriodResultList(customPlan);
+        result.setCustomPlanPeriodResultList(customPlanPeriodResultList);
+        result.setPrice(customPlanSpecificationMapper.findMinPriceByPlanId(id));//最低定制规格价格
         return result;
     }
 
-    private List<CustomPlanDatailStandardResult> getCustomPlanDetailStandardResultList(CustomPlan customPlan) {
+    private List<CustomPlanPeriodResult> getCustomPlanPeriodResultList(CustomPlan customPlan) {
         //获取定制计划周期 - 周
-        List<CustomPlanDatailStandardResult> results = new ArrayList<>();
-        CustomPlanDatailStandardResult customPlanDatailStandardResult = getCustomPlanDetailStandardResult(customPlan, "7");
-        results.add(customPlanDatailStandardResult);
+        List<CustomPlanPeriodResult> results = new ArrayList<>();
+        CustomPlanPeriodResult customPlanPeriodOfWeekResult = getCustomPlanDetailStandardResult(customPlan, 7);
+        CustomPlanPeriodResult customPlanPeriodOfMonthResult = getCustomPlanDetailStandardResult(customPlan, 30);
+        results.add(customPlanPeriodOfWeekResult);
+        results.add(customPlanPeriodOfMonthResult);
         return results;
     }
 
-    private CustomPlanDatailStandardResult getCustomPlanDetailStandardResult(CustomPlan customPlan, String type) {
-        CustomPlanDatailStandardResult customPlanDatailStandardResult = new CustomPlanDatailStandardResult();
-        customPlanDatailStandardResult.setPlanPeriod(type);
-        //获取套餐列表
+    private CustomPlanPeriodResult getCustomPlanDetailStandardResult(CustomPlan customPlan, int type) {
+        CustomPlanPeriodResult customPlanPeriodResult = new CustomPlanPeriodResult();
+        customPlanPeriodResult.setPlanPeriod(type);
+        //获取套餐列表 依据定制计划id和周期类型
         Map<String, Object> param = new HashMap<>();
         param.put("planId", customPlan.getId());
         param.put("planPeriod", type);
         List<CustomPlanSpecification> customPlanSpecifications = customPlanSpecificationMapper.findByPlanIdAndPerid(param);
-        List<CustomPlanSpecificationResult> customPlanSpecificationResults = new ArrayList<>();
-        for (CustomPlanSpecification customPlanSpecification : customPlanSpecifications) {
-            CustomPlanSpecificationResult customPlanSpecificationResult = new CustomPlanSpecificationResult();
-            BeanUtils.of(customPlanSpecificationResult).populate(customPlanSpecification);
-            customPlanSpecificationResults.add(customPlanSpecificationResult);
-        }
-        customPlanDatailStandardResult.setSpecificationList(customPlanSpecificationResults);
+        customPlanPeriodResult.setSpecificationList(customPlanSpecifications);
         //获取定制产品信息
-        List<CustomPlanProduct> customPlanProducts = customPlanProductMapper.findByPlanId(customPlan.getId());
+        List<CustomPlanProduct> customPlanProducts = customPlanProductMapper.findByPlanIdAndPerid(param);
         List<CustomPlanProductResult> customPlanProductResults = new ArrayList<>();
-        for (CustomPlanProduct customPlanProduct : customPlanProducts) {
-            CustomPlanProductResult customPlanProductResult = new CustomPlanProductResult();
-            BeanUtils.of(customPlanProducts).populate(customPlanProduct);
-            //查询上架规格信息
-            Long productShelfId = customPlanProduct.getProductShelfId();
-            ProductShelf productShelf = baseDataServiceFeign.singleShelf(productShelfId).getBody();
-            BeanUtils.of(customPlanProductResult).populate(productShelf);
-            customPlanProductResults.add(customPlanProductResult);
-            // customPlanSectionRelation.
+
+        //依据上架ids查询上架商品信息
+        String[] shelfIds = customPlanProducts.parallelStream().map(CustomPlanProduct::getProductShelfId).map(String::valueOf).toArray(String[]::new);
+
+        ProductShelfParam productShelfParam = new ProductShelfParam();
+        productShelfParam.setIds(StringUtils.join(",", shelfIds));
+        productShelfParam.setShelfStatus(OnOff.ON);
+        //查找基础服务上架商品信息
+        Tips<Pages<ProductShelf>> productShelfTips = FeginResponseTools.convertResponse(baseDataServiceFeign.searchProductShelves(productShelfParam));
+        //如果查询失败直接不返回基础数据信息
+        if (productShelfTips.err()) {
+            customPlanProducts.forEach(customPlanProduct -> {
+                CustomPlanProductResult customPlanProductResult = new CustomPlanProductResult();
+                BeanUtils.copyProperties(customPlanProduct, customPlanProductResult);
+                customPlanProductResults.add(customPlanProductResult);
+            });
+            customPlanPeriodResult.setProducts(customPlanProductResults);
+            return customPlanPeriodResult;
         }
-        customPlanDatailStandardResult.setProducts(customPlanProductResults);
-        return customPlanDatailStandardResult;
+        //查询基础上架商品成功
+        Pages<ProductShelf> productShelfPages = productShelfTips.getData();
+
+        //设置定制商品中额外信息
+        customPlanProducts.forEach(customPlanProduct -> productShelfPages.getArray().stream()
+                //上架id相同的订单商品信息，通过基础服务获取的赋值给定制商品信息
+                .filter(productShelf -> Objects.equals(customPlanProduct.getProductShelfId(), productShelf.getId()))
+                .forEach(item -> {
+                    CustomPlanProductResult customPlanProductResult = new CustomPlanProductResult();
+                    BeanUtils.copyProperties(customPlanProduct, customPlanProductResult);
+                    customPlanProductResult.setImage(item.getImage());//设置上架图
+
+                    if(Objects.nonNull(item.getProductSpecification())) {
+                        Tips<Product> productTips = FeginResponseTools.convertResponse(baseDataServiceFeign.single(item.getProductSpecification().getProductId()));//查询商品益处
+                        if (!productTips.err()){
+                            customPlanProductResult.setBenefit(productTips.getData().getBenefit());
+                        }
+                    }
+                    customPlanProductResults.add(customPlanProductResult);
+                })
+        );
+        //设置定制计划商品信息
+        customPlanPeriodResult.setProducts(customPlanProductResults);
+        return customPlanPeriodResult;
     }
 
     public CustomPlanSpecificationDetailResult findCustomPlanSpecificationDetail(Long id) {
@@ -120,14 +154,7 @@ public class CustomPlanService {
             BeanUtils.copyProperties(item, customPlanResult);
             // 查询定制计划规格信息
             List<CustomPlanSpecification> customPlanSpecification = customPlanSpecificationMapper.findByPlanIdAndPerid(Maps.of("planId", item.getId(), "planPeriod", null));
-            // List<CustomPlanSpecification> 转换为 List<CustomPlanSpecificationResult> 并添加到结果中
-            List<CustomPlanSpecificationResult> customPlanSpecificationResultList = new ArrayList<>();
-            customPlanSpecification.forEach(specification -> {
-                CustomPlanSpecificationResult customPlanSpecificationResult = new CustomPlanSpecificationResult();
-                BeanUtils.copyProperties(specification, customPlanSpecificationResult);
-                customPlanSpecificationResultList.add(customPlanSpecificationResult);
-            });
-            customPlanResult.setCustomPlanSpecifications(customPlanSpecificationResultList);
+            customPlanResult.setCustomPlanSpecifications(customPlanSpecification);
             customPlanResultList.add(customPlanResult);
         });
         return Pages.of(total, customPlanResultList);
@@ -183,7 +210,7 @@ public class CustomPlanService {
             return Tips.warn("定制计划和定制板块关联失败");
         }
         // 添加定制计划规格  FIXME (定制规格和定制商品需要幂等添加？)
-        List<CustomPlanSpecificationResult> customPlanSpecificationResults = customPlanResult.getCustomPlanSpecifications();
+        List<CustomPlanSpecification> customPlanSpecificationResults = customPlanResult.getCustomPlanSpecifications();
         if (addCustomPlan && customPlanSpecificationResults != null && !customPlanSpecificationResults.isEmpty()) {
             customPlanSpecificationResults = customPlanSpecificationResults.stream()
                     .peek(specification -> specification.setPlanId(customPlanId))
@@ -199,7 +226,8 @@ public class CustomPlanService {
                 return Tips.warn("定制计划规格添加失败");
             }
             // 添加定制计划商品 TODO 新增定制周期和定制序号
-            customPlanSpecificationResults.stream()
+            //TODO 不是在定制规格中添加定制商品 不是在规格中包含定制商品
+/*            customPlanSpecificationResults.stream()
                     .forEach(customPlanSpecification -> {
                         List<CustomPlanProduct> customPlanProducts = customPlanSpecification.getCustomPlanProducts().stream()
                                 .peek(customPlanProduct -> customPlanProduct.setPlanId(customPlanId)).collect(Collectors.toList());
@@ -208,7 +236,7 @@ public class CustomPlanService {
                             Tips.warn("定制计划商品添加失败");
                         }
                         // FIXME ruturn Tips.warn("定制计划商品添加失败");
-                    });
+                    });*/
         }
         return Tips.info(customPlanId + "");
     }

@@ -169,6 +169,11 @@
         </if>
     </select>
 
+    <!--查找指定定制计划里面定制规格的最低价格-->
+    <select id="findMinPriceByPlanId" resultType="Long" parameterType="long">
+        select min(price) from custom_plan_specification where  plan_id =#{0}
+    </select>
+
     <!-- 批量新增定制计划集合 -->
     <insert id="insertList" parameterType="java.util.List">
         insert into custom_plan_specification (plan_id,price,quantity,description, plan_period)
