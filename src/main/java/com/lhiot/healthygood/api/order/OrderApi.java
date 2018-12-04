@@ -260,7 +260,7 @@ public class OrderApi {
 
     @Sessions.Uncheck
     @PostMapping("/orders/ali-pay/payment-callback")
-    @ApiOperation("订单支付微信回调-后端回调处理")
+    @ApiOperation("订单支付支付宝回调-后端回调处理")
     public ResponseEntity<String> aliPayPaymentCallback(HttpServletRequest request) {
         Map<String, Object> parameters = this.convertRequestParameters(request);
         //调用基础服务验证参数签名是否正确

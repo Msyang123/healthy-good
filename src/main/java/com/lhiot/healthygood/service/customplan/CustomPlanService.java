@@ -5,11 +5,13 @@ import com.leon.microx.util.Maps;
 import com.leon.microx.util.StringUtils;
 import com.leon.microx.web.result.Pages;
 import com.leon.microx.web.result.Tips;
+import com.leon.microx.web.result.Tuple;
 import com.lhiot.healthygood.domain.customplan.*;
 import com.lhiot.healthygood.domain.customplan.model.*;
-import com.lhiot.healthygood.feign.model.ProductShelf;
 import com.lhiot.healthygood.feign.BaseDataServiceFeign;
+import com.lhiot.healthygood.feign.model.ProductShelf;
 import com.lhiot.healthygood.mapper.customplan.*;
+import com.lhiot.healthygood.type.YesOrNo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -42,34 +44,45 @@ public class CustomPlanService {
         this.customPlanProductMapper = customPlanProductMapper;
     }
 
-    public List<CustomPlanSectionResult> findComPlanSectionByCode(String code) {
-        List<CustomPlanSectionResult> result = new ArrayList<>();
-        List<CustomPlanSection> customPlanSections = customPlanSectionMapper.selectBySectionCode(code);
-        for (CustomPlanSection customPlanSection : customPlanSections) {
+    /**
+     * 定制首页
+     *
+     * @return
+     */
+    public Tuple<CustomPlanSection> customPlanSectionTuple() {
+        //查询所有定制板块
+        List<CustomPlanSection> customPlanSections = customPlanSectionMapper.customPlanSectionTuple();
+        //找到定制板块下的定制计划（依据定制板块与定制计划关联表）
+        customPlanSections.forEach(customPlanSection -> {
+            //依据定制板块id查询下面定制计划列表
             PlanSectionsParam planSectionsParam = new PlanSectionsParam();
             planSectionsParam.setId(customPlanSection.getId());
             planSectionsParam.setPage(1);
-            planSectionsParam.setRows(4);
-            result.add(getCustomPlanSecionResult(customPlanSection, planSectionsParam));//只查询最多4个推荐定制计划
-        }
-        return result;
+            planSectionsParam.setRows(4);//只查询最多4个推荐定制计划
+            setCustomPlanSecionPlanItems(customPlanSection, planSectionsParam);
+        });
+        return Tuple.of(customPlanSections);
     }
 
-    CustomPlanSectionResult getCustomPlanSecionResult(CustomPlanSection customPlanSection, PlanSectionsParam planSectionsParam) {
-/*        if (null != customPlanSection) {
-            BeanUtils.of(customPlanSectionResult).populate(customPlanSection);
-            customPlanSectionResult.setImage(customPlanSection.getSectionImage());
+    /**
+     * 设置定制计划板块的定制计划关联数据
+     *
+     * @param customPlanSection 当前定制板块
+     * @param planSectionsParam 查询定制计划查询条件
+     */
+    void setCustomPlanSecionPlanItems(CustomPlanSection customPlanSection, PlanSectionsParam planSectionsParam) {
+        if (null != customPlanSection) {
             List<CustomPlan> customPlanList = customPlanMapper.findByCustomPlanSectionId(planSectionsParam);
-            customPlanSectionResult.setCustomPlanList(Pages.of(Objects.isNull(customPlanList)?0:customPlanList.size(),customPlanList));
-        }*/
-//customPlanSectionResult
-        //查询板块的定制计划
-        return null;
+            customPlanSection.setCustomPlanList(Pages.of(Objects.isNull(customPlanList) ? 0 : customPlanList.size(), customPlanList));
+        }
     }
 
-    public CustomPlanSectionResult findComPlanSectionId(PlanSectionsParam planSectionsParam) {
+    public CustomPlanSection findComPlanSectionId(PlanSectionsParam planSectionsParam) {
         CustomPlanSection customPlanSection = customPlanSectionMapper.selectById(planSectionsParam.getId());
-        return getCustomPlanSecionResult(customPlanSection, planSectionsParam);
+        if (Objects.equals(planSectionsParam.getNeedChild(), YesOrNo.YES)) {
+            setCustomPlanSecionPlanItems(customPlanSection, planSectionsParam);
+        }
+        return customPlanSection;
     }
 
     public CustomPlanDetailResult findDetail(Long id) {
@@ -112,7 +125,7 @@ public class CustomPlanService {
             BeanUtils.of(customPlanProducts).populate(customPlanProduct);
             //查询上架规格信息
             Long productShelfId = customPlanProduct.getProductShelfId();
-            ProductShelf  productShelf = baseDataServiceFeign.singleShelf(productShelfId).getBody();
+            ProductShelf productShelf = baseDataServiceFeign.singleShelf(productShelfId).getBody();
             BeanUtils.of(customPlanProductResult).populate(productShelf);
             customPlanProductResults.add(customPlanProductResult);
             // customPlanSectionRelation.

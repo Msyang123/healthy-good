@@ -2,13 +2,15 @@ package com.lhiot.healthygood.domain.customplan;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.leon.microx.web.result.Pages;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
 
-import java.util.List;
+import javax.validation.constraints.NotNull;
+import java.util.Date;
 
 /**
 * Description:定制计划板块实体类
@@ -31,7 +33,6 @@ public class CustomPlanSection{
     /**
     *
     */
-    @JsonProperty("image")
     @ApiModelProperty(value = "", dataType = "String")
     private String sectionImage;
 
@@ -69,6 +70,12 @@ public class CustomPlanSection{
     @JsonProperty("createAt")
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss",timezone = "GMT+8")
     @ApiModelProperty(value = "", dataType = "Date", readOnly = true)
-    private java.util.Date createAt;
+    private Date createAt;
+
+
+    @JsonProperty("customPlanList")
+    @ApiModelProperty(value = "定制计划集合", dataType = "Pages")
+    @NotNull
+    private Pages<CustomPlan> customPlanList;
 
 }

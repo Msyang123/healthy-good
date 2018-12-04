@@ -117,18 +117,25 @@
     </delete>
 
 
+
     <!-- 根据id查找定制计划板块 -->
 	<select id="selectById" resultMap="BaseResultMap"
 		parameterType="long"> select <include refid="Base_Column_List" />
 		from custom_plan_section where id = #{id}
 	</select>
 
-    <!-- 根据id查找定制计划板块 -->
-    <select id="selectBySectionCode" resultMap="BaseResultMap"
-            parameterType="string"> select <include refid="Base_Column_List" />
-        from custom_plan_section where section_code = #{sectionCode}
+    <!-- 首页查找定制计划板块列表 -->
+    <select id="customPlanSectionTuple" resultMap="BaseResultMap">
+        select <include refid="Base_Column_List" />
+        from custom_plan_section
     </select>
 
+    <!--依据code查询定制计划板块-->
+    <select id="selectBySectionCode" resultMap="BaseResultMap"
+            parameterType="string">
+        select <include refid="Base_Column_List" />
+        from custom_plan_section where section_code = #{0}
+    </select>
 
     <!-- base where条件  -->
     <sql id="Base_Where_Condition" >
