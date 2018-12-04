@@ -40,35 +40,6 @@ public class CustomPlanApi {
     }
 
     /**
-     * 定制计划板块-定制首页
-     */
-    @Sessions.Uncheck
-    @GetMapping("/custom-plan-sections")
-    @ApiOperation(value = "查询定制计划板块列表页（定制板块对应定制计划列表页）")
-    @ApiImplicitParam(paramType = ApiParamType.QUERY, name = "code", value = "定制板块编码", dataType = "String", required = true)
-    public ResponseEntity<List<CustomPlanSectionResult>> findByPositionCode(@RequestParam String code) {
-        List<CustomPlanSectionResult> productSectionResult = customPlanService.findComPlanSectionByCode(code);
-        return ResponseEntity.ok(productSectionResult);
-    }
-
-    /**
-     * 定制计划信息-定制板块页
-     */
-    @Sessions.Uncheck
-    @PostMapping("/custom-plan-sections/{id}/custom-plans")
-    @ApiOperation(value = "查询定制计划板块列表页（定制计划板块和该板块对应的分页定制计划列表）")
-    @ApiImplicitParams({
-            @ApiImplicitParam(paramType = ApiParamType.PATH, name = "id", value = "定制板块id", dataType = "Long", required = true),
-            @ApiImplicitParam(paramType = ApiParamType.BODY, name = "planSectionsParam", value = "定制板块", dataType = "PlanSectionsParam", required = true)
-    })
-    public ResponseEntity<CustomPlanSectionResult> findById(@PathVariable Long id, @RequestBody PlanSectionsParam planSectionsParam) {
-        planSectionsParam.setId(id);
-
-        CustomPlanSectionResult productSectionResult = customPlanService.findComPlanSectionId(planSectionsParam);
-        return ResponseEntity.ok(productSectionResult);
-    }
-
-    /**
      * 定制计划详细信息
      */
     @Sessions.Uncheck

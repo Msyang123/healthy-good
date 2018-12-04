@@ -6,6 +6,7 @@ import com.lhiot.healthygood.domain.doctor.DoctorAchievementLog;
 import com.lhiot.healthygood.domain.doctor.IncomeStat;
 import com.lhiot.healthygood.domain.doctor.TeamAchievement;
 import org.apache.ibatis.annotations.Mapper;
+import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.Map;
@@ -16,6 +17,7 @@ import java.util.Map;
 * @date 2018/07/26
 */
 @Mapper
+@Repository
 public interface DoctorAchievementLogMapper {
 
     /**

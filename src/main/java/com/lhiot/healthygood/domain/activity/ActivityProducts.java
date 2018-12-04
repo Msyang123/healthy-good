@@ -1,6 +1,7 @@
 package com.lhiot.healthygood.domain.activity;
 
 import com.lhiot.healthygood.type.ShelfType;
+import com.lhiot.healthygood.type.ValidOrInvalid;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
@@ -28,8 +29,8 @@ public class ActivityProducts {
     @ApiModelProperty(notes="商品名称",dataType="String")
     private String productName;
 
-    @ApiModelProperty(notes="当前状态（有效- VALID 无效-INVALID）",dataType="String")
-    private String status;
+    @ApiModelProperty(notes="当前状态（有效- VALID 无效-INVALID）",dataType="ValidOrInvalid")
+    private ValidOrInvalid status;
 
     @ApiModelProperty(notes="活动描述",dataType="String")
     private String description;

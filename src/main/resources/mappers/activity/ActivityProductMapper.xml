@@ -123,6 +123,12 @@
 		from activity_product where id = #{id}
 	</select>
 
+    <select id="selectActivityProduct" resultMap="BaseResultMap"
+            parameterType="com.lhiot.healthygood.domain.activity.ActivityProduct">
+        select <include refid="Base_Column_List" />
+        from activity_product <include refid="Base_Where_Condition" />
+    </select>
+
     <!-- 根据ids查找活动商品 -->
     <select id="selectByIds" resultMap="BaseResultMap"
             parameterType="long"> select <include refid="Base_Column_List" />
@@ -162,6 +168,12 @@
             </if>
             <if test="sort != null ">
                 and sort = #{sort}
+            </if>
+            <if test="productShelfIds != null ">
+                and product_shelf_id in
+                <foreach item="item" index="index" collection="productShelfIds.split(',')" open="(" separator="," close=")">
+                    ${item}
+                </foreach>
             </if>
         </where>
     </sql>

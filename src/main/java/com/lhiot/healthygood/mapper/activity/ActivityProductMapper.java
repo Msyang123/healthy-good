@@ -56,6 +56,8 @@ public interface ActivityProductMapper {
     */
     ActivityProduct selectById(Long id);
 
+    ActivityProduct selectActivityProduct(ActivityProduct activityProduct);
+
     /**
      * Description:根据id查找活动商品
      *

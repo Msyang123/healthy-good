@@ -1,7 +1,9 @@
 package com.lhiot.healthygood.mapper.customplan;
 
+import com.lhiot.healthygood.domain.customplan.CustomPlan;
 import com.lhiot.healthygood.domain.customplan.CustomPlanSection;
 import com.lhiot.healthygood.domain.customplan.model.CustomPlanSectionParam;
+import com.lhiot.healthygood.domain.customplan.model.PlanSectionsParam;
 import org.apache.ibatis.annotations.Mapper;
 import org.springframework.stereotype.Repository;
 
@@ -56,7 +58,18 @@ public interface CustomPlanSectionMapper {
     */
     CustomPlanSection selectById(Long id);
 
-    List<CustomPlanSection> selectBySectionCode(String code);
+    /**
+     * 定制首页
+     * @return
+     */
+    List<CustomPlanSection> customPlanSectionTuple();
+
+    /**
+     * 依据编码查询定制计划板块
+     * @param code
+     * @return
+     */
+    CustomPlanSection selectBySectionCode(String code);
     /**
     * Description:查询定制计划板块列表
     *
@@ -77,4 +90,6 @@ public interface CustomPlanSectionMapper {
     * @date 2018/11/22 12:09:27
     */
     int pageCustomPlanSectionCounts(CustomPlanSectionParam customPlanSectionParam);
+
+
 }

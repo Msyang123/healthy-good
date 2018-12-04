@@ -5,11 +5,17 @@ import com.leon.microx.util.Maps;
 import com.leon.microx.util.StringUtils;
 import com.leon.microx.web.result.Pages;
 import com.leon.microx.web.result.Tips;
-import com.lhiot.healthygood.domain.customplan.*;
+import com.lhiot.healthygood.domain.customplan.CustomPlan;
+import com.lhiot.healthygood.domain.customplan.CustomPlanProduct;
+import com.lhiot.healthygood.domain.customplan.CustomPlanSectionRelation;
+import com.lhiot.healthygood.domain.customplan.CustomPlanSpecification;
 import com.lhiot.healthygood.domain.customplan.model.*;
-import com.lhiot.healthygood.feign.model.ProductShelf;
 import com.lhiot.healthygood.feign.BaseDataServiceFeign;
-import com.lhiot.healthygood.mapper.customplan.*;
+import com.lhiot.healthygood.feign.model.ProductShelf;
+import com.lhiot.healthygood.mapper.customplan.CustomPlanMapper;
+import com.lhiot.healthygood.mapper.customplan.CustomPlanProductMapper;
+import com.lhiot.healthygood.mapper.customplan.CustomPlanSectionRelationMapper;
+import com.lhiot.healthygood.mapper.customplan.CustomPlanSpecificationMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,7 +28,6 @@ import java.util.stream.Stream;
 @Service
 @Transactional
 public class CustomPlanService {
-    private final CustomPlanSectionMapper customPlanSectionMapper;
     private final CustomPlanMapper customPlanMapper;
     private final CustomPlanSpecificationMapper customPlanSpecificationMapper;
     private final CustomPlanSectionRelationMapper customPlanSectionRelationMapper;
@@ -31,45 +36,14 @@ public class CustomPlanService {
 
 
     @Autowired
-    public CustomPlanService(CustomPlanSectionMapper customPlanSectionMapper, CustomPlanMapper customPlanMapper,
+    public CustomPlanService(CustomPlanMapper customPlanMapper,
                              CustomPlanSpecificationMapper customPlanSpecificationMapper, CustomPlanSectionRelationMapper customPlanSectionRelationMapper,
                              BaseDataServiceFeign baseDataServiceFeign, CustomPlanProductMapper customPlanProductMapper) {
-        this.customPlanSectionMapper = customPlanSectionMapper;
         this.customPlanMapper = customPlanMapper;
         this.customPlanSpecificationMapper = customPlanSpecificationMapper;
         this.customPlanSectionRelationMapper = customPlanSectionRelationMapper;
         this.baseDataServiceFeign = baseDataServiceFeign;
         this.customPlanProductMapper = customPlanProductMapper;
-    }
-
-    public List<CustomPlanSectionResult> findComPlanSectionByCode(String code) {
-        List<CustomPlanSectionResult> result = new ArrayList<>();
-        List<CustomPlanSection> customPlanSections = customPlanSectionMapper.selectBySectionCode(code);
-        for (CustomPlanSection customPlanSection : customPlanSections) {
-            PlanSectionsParam planSectionsParam = new PlanSectionsParam();
-            planSectionsParam.setId(customPlanSection.getId());
-            planSectionsParam.setPage(1);
-            planSectionsParam.setRows(4);
-            result.add(getCustomPlanSecionResult(customPlanSection, planSectionsParam));//只查询最多4个推荐定制计划
-        }
-        return result;
-    }
-
-    CustomPlanSectionResult getCustomPlanSecionResult(CustomPlanSection customPlanSection, PlanSectionsParam planSectionsParam) {
-/*        if (null != customPlanSection) {
-            BeanUtils.of(customPlanSectionResult).populate(customPlanSection);
-            customPlanSectionResult.setImage(customPlanSection.getSectionImage());
-            List<CustomPlan> customPlanList = customPlanMapper.findByCustomPlanSectionId(planSectionsParam);
-            customPlanSectionResult.setCustomPlanList(Pages.of(Objects.isNull(customPlanList)?0:customPlanList.size(),customPlanList));
-        }*/
-//customPlanSectionResult
-        //查询板块的定制计划
-        return null;
-    }
-
-    public CustomPlanSectionResult findComPlanSectionId(PlanSectionsParam planSectionsParam) {
-        CustomPlanSection customPlanSection = customPlanSectionMapper.selectById(planSectionsParam.getId());
-        return getCustomPlanSecionResult(customPlanSection, planSectionsParam);
     }
 
     public CustomPlanDetailResult findDetail(Long id) {
@@ -112,7 +86,7 @@ public class CustomPlanService {
             BeanUtils.of(customPlanProducts).populate(customPlanProduct);
             //查询上架规格信息
             Long productShelfId = customPlanProduct.getProductShelfId();
-            ProductShelf  productShelf = baseDataServiceFeign.singleShelf(productShelfId).getBody();
+            ProductShelf productShelf = baseDataServiceFeign.singleShelf(productShelfId).getBody();
             BeanUtils.of(customPlanProductResult).populate(productShelf);
             customPlanProductResults.add(customPlanProductResult);
             // customPlanSectionRelation.

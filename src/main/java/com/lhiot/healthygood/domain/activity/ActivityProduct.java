@@ -71,6 +71,10 @@ public class ActivityProduct {
     @ApiModelProperty(value = "序号", dataType = "Integer")
     private Integer sort;
 
+    @JsonProperty("productShelfIds")
+    @ApiModelProperty(value = "", dataType = "String")
+    private String productShelfIds;
+
     @ApiModelProperty(notes = "每页查询条数(为空或0不分页查所有)", dataType = "Integer")
     private Integer rows;
     @ApiModelProperty(notes = "当前页", dataType = "Integer")

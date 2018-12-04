@@ -18,7 +18,6 @@ import com.lhiot.healthygood.mapper.activity.ActivitySectionRelationMapper;
 import com.lhiot.healthygood.type.ActivityType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -30,14 +29,12 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 
 /**
- * Description:活动商品服务类
- *
- * @author yangjiawen
- * @date 2018/11/24
- */
+* Description:活动商品服务类
+* @author yangjiawen
+* @date 2018/11/24
+*/
 @Service
 @Transactional
-@Component
 public class ActivityProductService {
 
     private final ActivityProductMapper activityProductMapper;
@@ -202,15 +199,19 @@ public class ActivityProductService {
         return Pages.of(total, results);
     }
 
+    public ActivityProduct selectActivityProduct(ActivityProduct activityProduct){
+        return activityProductMapper.selectActivityProduct(activityProduct);
+    }
+
     /**
-     * Description: 查询活动商品总记录数
-     *
-     * @param activityProduct
-     * @return
-     * @author yangjiawen
-     * @date 2018/11/24 16:09:12
-     */
-    public int count(ActivityProduct activityProduct) {
+    * Description: 查询活动商品总记录数
+    *  
+    * @param activityProduct
+    * @return
+    * @author yangjiawen
+    * @date 2018/11/24 16:09:12
+    */  
+    public int count(ActivityProduct activityProduct){
         return this.activityProductMapper.pageActivityProductCounts(activityProduct);
     }
 

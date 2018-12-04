@@ -67,11 +67,41 @@ public interface BaseDataServiceFeign {
 
     /**
      * 依据门店id查询门店信息
-     * @param id
+     * @param shelfId
      * @return
      */
     @RequestMapping(value="/stores/{id}",method = RequestMethod.GET)
-    ResponseEntity<Store> findStoreById(@PathVariable("id") Long id);
+    ResponseEntity<Store> findStoreById(@PathVariable("id") Long shelfId);
+
+    /**
+     * 根据条件分页查询广告信息列表
+     * @param param
+     * @return
+     */
+    @RequestMapping(value = "/advertisements/pages",method = RequestMethod.POST)
+    ResponseEntity<Pages<Advertisement>> searchAdvertisementPages(@RequestBody AdvertisementParam param);
+
+    /**
+     * 根据Id查找商品版块
+     * @param sectionId
+     * @param includeShelves
+     * @param includeShelvesQty
+     * @return
+     */
+    @RequestMapping(value = "/product-sections/{id}",method = RequestMethod.GET)
+    ResponseEntity<ProductSection> singleProductSection(@PathVariable("id") Long sectionId,
+                          @RequestParam(value = "includeShelves", required = false) boolean includeShelves,
+                          @RequestParam(value = "includeShelvesQty", required = false) Long includeShelvesQty);
+
+    /**
+     * 根据条件分页查询商品版块信息列表
+     * @param param
+     * @return
+     */
+    @RequestMapping(value = "/product-sections/pages",method = RequestMethod.POST)
+    ResponseEntity<Pages<ProductSection>> searchProductSection(@RequestBody ProductSectionParam param);
+
+
     /**
      * 依据门店编码查询门店信息
      * @param code
