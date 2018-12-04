@@ -3,12 +3,10 @@ package com.lhiot.healthygood.api.customplan;
 import com.leon.microx.util.Maps;
 import com.leon.microx.web.result.Pages;
 import com.leon.microx.web.result.Tips;
-import com.leon.microx.web.result.Tuple;
 import com.leon.microx.web.session.Sessions;
 import com.leon.microx.web.swagger.ApiParamType;
 import com.lhiot.healthygood.domain.customplan.CustomPlan;
 import com.lhiot.healthygood.domain.customplan.CustomPlanProduct;
-import com.lhiot.healthygood.domain.customplan.CustomPlanSection;
 import com.lhiot.healthygood.domain.customplan.model.*;
 import com.lhiot.healthygood.service.customplan.CustomPlanService;
 import io.swagger.annotations.Api;
@@ -39,33 +37,6 @@ public class CustomPlanApi {
     @Autowired
     public CustomPlanApi(CustomPlanService customPlanService) {
         this.customPlanService = customPlanService;
-    }
-
-    /**
-     * 定制计划板块-定制首页
-     */
-    @Sessions.Uncheck
-    @GetMapping("/custom-plan-sections")
-    @ApiOperation(value = "查询定制计划板块列表页（定制板块对应定制计划列表页）")
-    public ResponseEntity<Tuple<CustomPlanSection>> customPlanSectionTuple() {
-        Tuple<CustomPlanSection> productSectionResult = customPlanService.customPlanSectionTuple();
-        return ResponseEntity.ok(productSectionResult);
-    }
-
-    /**
-     * 定制计划信息-定制板块页
-     */
-    @Sessions.Uncheck
-    @PostMapping("/custom-plan-sections/{id}/custom-plans")
-    @ApiOperation(value = "查询定制计划板块列表页（定制计划板块和该板块对应的分页定制计划列表）")
-    @ApiImplicitParams({
-            @ApiImplicitParam(paramType = ApiParamType.PATH, name = "id", value = "定制板块id", dataType = "Long", required = true),
-            @ApiImplicitParam(paramType = ApiParamType.BODY, name = "planSectionsParam", value = "定制板块", dataType = "PlanSectionsParam", required = true)
-    })
-    public ResponseEntity<CustomPlanSection> findById(@PathVariable Long id, @RequestBody PlanSectionsParam planSectionsParam) {
-        planSectionsParam.setId(id);
-        CustomPlanSection productSectionResult = customPlanService.findComPlanSectionId(planSectionsParam);
-        return ResponseEntity.ok(productSectionResult);
     }
 
     /**

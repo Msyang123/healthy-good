@@ -2,6 +2,7 @@ package com.lhiot.healthygood.domain.customplan.model;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.lhiot.healthygood.type.ValidOrInvalid;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
@@ -36,8 +37,8 @@ public class CustomPlanParam {
     private java.util.Date createAt;
     @ApiModelProperty(value = "到期规则", dataType = "String")
     private String overRule;
-    @ApiModelProperty(value = "定制计划状态 有效-VALID 无效-INVALID", dataType = "String")
-    private String status;
+    @ApiModelProperty(value = "定制计划状态 有效-VALID 无效-INVALID", dataType = "ValidOrInvalid")
+    private ValidOrInvalid status;
 
     /**
      * 定制计划和定制板块关联
