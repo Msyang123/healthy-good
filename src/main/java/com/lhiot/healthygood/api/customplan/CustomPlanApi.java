@@ -8,7 +8,9 @@ import com.leon.microx.web.swagger.ApiParamType;
 import com.lhiot.healthygood.domain.customplan.CustomPlan;
 import com.lhiot.healthygood.domain.customplan.CustomPlanProduct;
 import com.lhiot.healthygood.domain.customplan.CustomPlanSpecification;
-import com.lhiot.healthygood.domain.customplan.model.*;
+import com.lhiot.healthygood.domain.customplan.model.CustomPlanDetailResult;
+import com.lhiot.healthygood.domain.customplan.model.CustomPlanParam;
+import com.lhiot.healthygood.domain.customplan.model.CustomPlanResult;
 import com.lhiot.healthygood.service.customplan.CustomPlanService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
@@ -59,9 +61,9 @@ public class CustomPlanApi {
     @GetMapping("/custom-plans-specification/{specificationId}")
     @ApiOperation(value = "定制计划规格信息（创建定制计划订单信息页面）")
     @ApiImplicitParam(paramType = ApiParamType.PATH, name = "specificationId", value = "定制计划规格id", dataType = "Long", required = true)
-    public ResponseEntity<CustomPlanSpecificationDetailResult> specificationDetail(@PathVariable Long specificationId) {
-        CustomPlanSpecificationDetailResult customPlanSpecificationDetailResult = customPlanService.findCustomPlanSpecificationDetail(specificationId);
-        return ResponseEntity.ok(customPlanSpecificationDetailResult);
+    public ResponseEntity<CustomPlanSpecification> specificationDetail(@PathVariable Long specificationId) {
+        CustomPlanSpecification customPlanSpecification = customPlanService.findCustomPlanSpecificationDetail(specificationId);
+        return ResponseEntity.ok(customPlanSpecification);
     }
 
     @Sessions.Uncheck
