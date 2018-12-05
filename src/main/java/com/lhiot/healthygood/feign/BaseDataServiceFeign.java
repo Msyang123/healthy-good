@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.*;
  * 基础数据服务
  */
 @Component
-@FeignClient(value = "BASIC-DATA-SERVICE-V1-0-HUFAN")
+@FeignClient(value = "BASIC-DATA-SERVICE-V1-0")
 public interface BaseDataServiceFeign {
     /**
      * 根据id查询商品
@@ -109,5 +109,13 @@ public interface BaseDataServiceFeign {
      */
     @RequestMapping(value="/stores/code/{code}",method = RequestMethod.GET)
     ResponseEntity<Store> findStoreByCode(@PathVariable("code") String code);
+
+    /**
+     * 根据条件分页查询文章信息列表
+     * @param param
+     * @return
+     */
+    @RequestMapping(value = "/articles/pages",method = RequestMethod.POST)
+    ResponseEntity<Pages<Article>> searchArticle(@RequestBody ArticleParam param);
 
 }
