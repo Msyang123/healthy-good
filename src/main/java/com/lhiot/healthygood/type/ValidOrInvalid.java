@@ -6,8 +6,8 @@ import lombok.Getter;
  * 是否有效
  */
 public enum ValidOrInvalid {
-    Valid("有效"),
-    Invalid("无效");
+    VALID("有效"),
+    INVALID("无效");
 
     @Getter
     private String decription;
