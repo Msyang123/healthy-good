@@ -47,7 +47,7 @@ public class CustomPlanSpecification{
     *数量
     */
     @JsonProperty("quantity")
-    @ApiModelProperty(value = "数量", dataType = "String")
+    @ApiModelProperty(value = "数量", dataType = "int")
     private int quantity;
 
     /**
