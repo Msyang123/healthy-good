@@ -1,0 +1,173 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.lhiot.healthygood.mapper.customplan.CustomOrderMapper">
+
+    <!-- 数据库字段对象关系映射 -->
+    <resultMap id="BaseResultMap"
+        type="com.lhiot.healthygood.domain.customplan.CustomOrder" >
+        <id column="id" property="id"/>
+        <result column="user_id" property="userId" />
+        <result column="status" property="status" />
+        <result column="remaining_qty" property="remainingQty" />
+        <result column="delivery_type" property="deliveryType" />
+        <result column="total_qty" property="totalQty" />
+        <result column="plan_id" property="planId" />
+        <result column="price" property="price" />
+        <result column="create_at" property="createAt" />
+        <result column="delivery_address" property="deliveryAddress" />
+        <result column="delivery_time" property="deliveryTime" />
+        <result column="specification_id" property="specificationId" />
+        <result column="quantity" property="quantity" />
+        <result column="store_code" property="storeCode" />
+    </resultMap>
+
+    <!-- base查询字段  -->
+    <sql id="Base_Column_List" >
+        <trim suffixOverrides="," >
+            id,
+            user_id,
+            status,
+            remaining_qty,
+            delivery_type,
+            total_qty,
+            plan_id,
+            price,
+            create_at,
+            delivery_address,
+            delivery_time,
+            specification_id,
+            quantity,
+            store_code,
+        </trim>
+    </sql>
+
+    <!--新增定制计划-->
+    <insert id="create" parameterType="com.lhiot.healthygood.domain.customplan.CustomOrder" useGeneratedKeys="true" keyColumn="id" keyProperty="id">
+        insert into custom_order
+        <trim prefix="(" suffix=")" suffixOverrides="," >
+            <if test="userId != null ">
+                user_id,
+            </if>
+            <if test="status != null ">
+                status,
+            </if>
+            <if test="remainingQty != null ">
+                remaining_qty,
+            </if>
+            <if test="deliveryType != null ">
+                delivery_type,
+            </if>
+            <if test="totalQty != null ">
+                total_qty,
+            </if>
+            <if test="planId != null ">
+                plan_id,
+            </if>
+            <if test="price != null ">
+                price,
+            </if>
+            <if test="createAt != null ">
+                create_at,
+            </if>
+            <if test="deliveryAddress != null ">
+                delivery_address,
+            </if>
+            <if test="deliveryTime != null ">
+                delivery_time,
+            </if>
+            <if test="specificationId != null ">
+                specification_id,
+            </if>
+            <if test="quantity != null ">
+                quantity,
+            </if>
+            <if test="storeCode != null ">
+                store_code,
+            </if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides="," >
+            <if test="userId != null ">
+                #{userId},
+            </if>
+            <if test="status != null ">
+                #{status},
+            </if>
+            <if test="remainingQty != null ">
+                #{remainingQty},
+            </if>
+            <if test="deliveryType != null ">
+                #{deliveryType},
+            </if>
+            <if test="totalQty != null ">
+                #{totalQty},
+            </if>
+            <if test="planId != null ">
+                #{planId},
+            </if>
+            <if test="price != null ">
+                #{price},
+            </if>
+            <if test="createAt != null ">
+                #{createAt},
+            </if>
+            <if test="deliveryAddress != null ">
+                #{deliveryAddress},
+            </if>
+            <if test="deliveryTime != null ">
+                #{deliveryTime},
+            </if>
+            <if test="specificationId != null ">
+                #{specificationId},
+            </if>
+            <if test="quantity != null ">
+                #{quantity},
+            </if>
+            <if test="storeCode != null ">
+                #{storeCode},
+            </if>
+        </trim>
+    </insert>
+
+    <!-- 根据id查找定制计划 -->
+	<select id="selectById" resultMap="BaseResultMap" parameterType="long">
+        select <include refid="Base_Column_List" />
+		from custom_order where id = #{0}
+	</select>
+
+    <!-- base where条件  -->
+    <sql id="Base_Where_Condition" >
+        <where>
+            <if test="id != null ">
+                and id = #{id}
+            </if>
+            <if test="userId != null ">
+                and user_id =#{userId}
+            </if>
+            <if test="status != null ">
+                and status = #{status}
+            </if>
+        </where>
+    </sql>
+
+
+    <!--查询定制计划订单列表-->
+     <select id="pageCustomOrder" resultMap="BaseResultMap"
+        parameterType="com.lhiot.healthygood.domain.customplan.CustomOrder">
+	        select <include refid="Base_Column_List" />
+	        from custom_order
+	        <include refid="Base_Where_Condition" />
+            <if test="rows != null and rows > 0 ">
+                 order by create_at desc
+                 limit #{startRow} , #{rows}
+            </if>
+    </select>
+
+    <!--查询定制计划总记录-->
+    <select id="pageCustomOrderCounts" resultType="int"
+        parameterType="com.lhiot.healthygood.domain.customplan.CustomOrder">
+            select count(1)
+            from custom_order
+            <include refid="Base_Where_Condition" />
+    </select>
+
+</mapper>
