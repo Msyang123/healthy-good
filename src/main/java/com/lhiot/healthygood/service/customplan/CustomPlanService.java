@@ -23,6 +23,8 @@ import com.lhiot.healthygood.util.FeginResponseTools;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
 
 import java.time.Instant;
 import java.util.*;
@@ -251,7 +253,7 @@ public class CustomPlanService {
      * @param customPlanDetailResult
      * @return
      */
-    public boolean update(Long id, CustomPlanDetailResult customPlanDetailResult) {
+    public Tips update(Long id, CustomPlanDetailResult customPlanDetailResult) {
         CustomPlan customPlan = new CustomPlan();
         BeanUtils.copyProperties(customPlanDetailResult, customPlan);
         customPlan.setId(id);
@@ -308,26 +310,48 @@ public class CustomPlanService {
                 }
             });
         }
-        return customPlanMapper.updateById(customPlan) > 0;
+        return Tips.info("修改定制计划成功");
     }
 
 
     /**
      * 修改定制计划商品
      *
-     * @param customPlanProducts
+     * @param customPlanDetailResult
      * @return
      */
-    // FIXME 回滚操作
-    public Tips updateProduct(List<CustomPlanProduct> customPlanProducts) {
-        // 循环批量更新上架商品id
-        customPlanProducts.stream().forEach(customPlanProduct -> {
-            boolean addProduct = customPlanProductMapper.updateById(customPlanProduct) > 0;
-            if (!addProduct) {
-                Tips.warn("修改失败");
-            }
-        });
-        return Tips.info("修改成功");
+    public Tips updateProduct(Long id, CustomPlanDetailResult customPlanDetailResult) {
+        // 获取定制周期中的定制规格和定制计划列表
+        List<CustomPlanPeriodResult> customPlanPeriodResultList = customPlanDetailResult.getCustomPlanPeriodResultList();
+        if (!customPlanPeriodResultList.isEmpty() && customPlanPeriodResultList.size() > 0) {
+            customPlanPeriodResultList.forEach(customPlanPeriodResult -> {
+                Integer planPeriod = customPlanPeriodResult.getPlanPeriod();
+                // 修改定制计划商品
+                // 将List<CustomPlanProductResult>转换为List<CustomPlanProduct>
+                List<CustomPlanProductResult> planProductResultList = customPlanPeriodResult.getProducts();
+                List<CustomPlanProduct> customPlanProductList = new ArrayList<>();
+                planProductResultList.forEach(productResult -> {
+                    CustomPlanProduct planProduct = new CustomPlanProduct();
+                    BeanUtils.copyProperties(productResult, planProduct);
+                    planProduct.setPlanPeriod(planPeriod);
+                    planProduct.setPlanId(id);
+                    // 第几天排序为几
+                    planProduct.setSort(planProduct.getDayOfPeriod());
+                    customPlanProductList.add(planProduct);
+                });
+                // 先批量删除
+                boolean deleteCustomPlanProduct = customPlanProductMapper.deleteByPlanId(id) > 0;
+                if (!deleteCustomPlanProduct) {
+                    return;
+                }
+                // 再批量新增
+                boolean addCustomPlanProduct = customPlanProductMapper.insertList(customPlanProductList) > 0;
+                if (!addCustomPlanProduct) {
+                    return;//Tips.warn("定制计划商品添加失败");
+                }
+            });
+        }
+        return Tips.info("修改定制商品成功");
     }
 
 

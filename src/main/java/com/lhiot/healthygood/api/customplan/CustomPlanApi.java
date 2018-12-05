@@ -92,28 +92,22 @@ public class CustomPlanApi {
     @PutMapping("/custom-plans/{id}")
     public ResponseEntity update(@PathVariable("id") Long id, @Valid @RequestBody CustomPlanDetailResult customPlanDetailResult) {
         log.debug("修改定制计划\t param:{}", customPlanDetailResult);
-
-
-        return customPlanService.update(id, customPlanDetailResult) ? ResponseEntity.ok().build() : ResponseEntity.badRequest().body(Tips.warn("修改信息失败!"));
+        Tips tips = customPlanService.update(id, customPlanDetailResult);
+        return !tips.err() ? ResponseEntity.ok().build() : ResponseEntity.badRequest().body(Tips.warn("修改信息失败!"));
     }
 
     @Sessions.Uncheck
     @ApiOperation("修改定制计划商品(后台)")
     @ApiImplicitParams({
             @ApiImplicitParam(paramType = ApiParamType.PATH, name = "id", value = "定制计划id", dataType = "Long", required = true),
-            @ApiImplicitParam(paramType = ApiParamType.BODY, name = "customPlanResult", value = "定制计划商品", dataType = "CustomPlanResult", required = true)
+            @ApiImplicitParam(paramType = ApiParamType.BODY, name = "customPlanDetailResult", value = "定制计划商品", dataType = "CustomPlanDetailResult", required = true)
     })
     @PutMapping("/custom-plan-product/{id}")
-    public ResponseEntity updateProduct(@PathVariable("id") Long id, @RequestBody CustomPlanResult customPlanResult) {
-        log.debug("修改定制计划\t param:{}", customPlanResult);
+    public ResponseEntity updateProduct(@PathVariable("id") Long id, @RequestBody CustomPlanDetailResult customPlanDetailResult) {
+        log.debug("修改定制计划商品\t param:{}", customPlanDetailResult);
 
-        List<CustomPlanProduct> customPlanProducts = new ArrayList<>();
-        List<CustomPlanSpecification> customPlanSpecifications = customPlanResult.getCustomPlanSpecifications().stream().collect(Collectors.toList());
-        //TODO 不是在定制规格中添加定制商品 不是在规格中包含定制商品
-        /*customPlanSpecifications.forEach(customPlanSpecification ->
-                customPlanProducts.addAll(customPlanSpecification.getCustomPlanProducts().stream().peek(customPlanProduct -> customPlanProduct.setPlanId(id)).collect(Collectors.toList())));*/
-        Tips tips = customPlanService.updateProduct(customPlanProducts);
-        return !tips.err() ? ResponseEntity.ok().build() : ResponseEntity.badRequest().body(Tips.warn("修改信息失败!"));
+        Tips tips = customPlanService.updateProduct(id, customPlanDetailResult);
+        return !tips.err() ? ResponseEntity.ok().build() : ResponseEntity.badRequest().body(Tips.warn("修改定制商品失败!"));
     }
 
     @Sessions.Uncheck
