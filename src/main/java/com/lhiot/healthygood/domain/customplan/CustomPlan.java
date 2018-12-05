@@ -2,6 +2,7 @@ package com.lhiot.healthygood.domain.customplan;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.lhiot.healthygood.type.ValidOrInvalid;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
@@ -68,5 +69,12 @@ public class CustomPlan{
     */
     @JsonProperty("status")
     @ApiModelProperty(value = "VALID INVALID", dataType = "String")
-    private String status;
+    private ValidOrInvalid status;
+
+    /**
+     *创建人
+     */
+    @JsonProperty("createUser")
+    @ApiModelProperty(value = "创建人", dataType = "String")
+    private String createUser;
 }

@@ -7,9 +7,11 @@
         type="com.lhiot.healthygood.domain.activity.ActivityProduct" >
         <id column="id" property="id"/>
         <result column="activity_id" property="activityId" />
+        <result column="special_product_activity_id" property="specialProductActivityId" />
         <result column="activity_type" property="activityType" />
         <result column="product_shelf_id" property="productShelfId" />
         <result column="activity_price" property="activityPrice" />
+        <result column="sort" property="sort" />
     </resultMap>
 
     <!-- base查询字段  -->
@@ -17,9 +19,11 @@
         <trim suffixOverrides="," >
             id,
             activity_id,
+            special_product_activity_id,
             activity_type,
             product_shelf_id,
             activity_price,
+            sort,
         </trim>
     </sql>
 
@@ -33,6 +37,9 @@
             <if test="activityId != null ">
                 activity_id,
             </if>
+            <if test="specialProductActivityId != null ">
+                special_product_activity_id,
+            </if>
             <if test="activityType != null ">
                 activity_type,
             </if>
@@ -42,6 +49,9 @@
             <if test="activityPrice != null ">
                 activity_price,
             </if>
+            <if test="sort != null ">
+                sort,
+            </if>
         </trim>
         <trim prefix="values (" suffix=")" suffixOverrides="," >
             <if test="id != null ">
@@ -49,6 +59,9 @@
             </if>
             <if test="activityId != null ">
                 #{activityId},
+            </if>
+            <if test="specialProductActivityId != null ">
+                #{specialProductActivityId},
             </if>
             <if test="activityType != null ">
                 #{activityType},
@@ -58,6 +71,9 @@
             </if>
             <if test="activityPrice != null ">
                 #{activityPrice},
+            </if>
+            <if test="sort != null ">
+                #{sort},
             </if>
         </trim>
     </insert>
@@ -72,6 +88,9 @@
             <if test="activityId != null ">
                 activity_id = #{activityId},
             </if>
+            <if test="specialProductActivityId != null ">
+                special_product_activity_id = #{specialProductActivityId},
+            </if>
             <if test="activityType != null ">
                 activity_type = #{activityType},
             </if>
@@ -80,6 +99,9 @@
             </if>
             <if test="activityPrice != null ">
                 activity_price = #{activityPrice},
+            </if>
+            <if test="sort != null ">
+                sort = #{sort},
             </if>
         </set>
         where id=#{id}
@@ -107,6 +129,21 @@
         from activity_product <include refid="Base_Where_Condition" />
     </select>
 
+    <!-- 根据ids查找活动商品 -->
+    <select id="selectByIds" resultMap="BaseResultMap"
+            parameterType="long"> select <include refid="Base_Column_List" />
+        from activity_product where id in
+        <foreach item="item" index="index" collection="ids.split(',')" open="(" separator="," close=")">
+            ${item}
+        </foreach>
+    </select>
+
+
+    <!-- 根据新品尝鲜活动id和商品上架id查找活动商品 -->
+    <select id="selectBySpecialIdAndShelfId" resultMap="BaseResultMap"
+            parameterType="long"> select <include refid="Base_Column_List" />
+        from activity_product where special_product_activity_id = #{specialProductActivityId} and product_shelf_id = #{productShelfId}
+    </select>
 
     <!-- base where条件  -->
     <sql id="Base_Where_Condition" >
@@ -116,6 +153,9 @@
             </if>
             <if test="activityId != null ">
                 and activity_id = #{activityId}
+            </if>
+            <if test="specialProductActivityId != null ">
+                and special_product_activity_id = #{specialProductActivityId}
             </if>
             <if test="activityType != null ">
                 and activity_type = #{activityType}

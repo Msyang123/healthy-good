@@ -30,7 +30,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 @Service
-@Transactional
+@Transactional(rollbackFor = Exception.class)
 public class CustomPlanService {
     private final CustomPlanMapper customPlanMapper;
     private final CustomPlanSpecificationMapper customPlanSpecificationMapper;
@@ -53,8 +53,9 @@ public class CustomPlanService {
     public CustomPlanDetailResult findDetail(Long id) {
         CustomPlanDetailResult result = new CustomPlanDetailResult();
         CustomPlan customPlan = customPlanMapper.selectById(id);
-        if(Objects.isNull(customPlan))
+        if (Objects.isNull(customPlan)) {
             return result;
+        }
         BeanUtils.copyProperties(customPlan, result);
         List<CustomPlanPeriodResult> customPlanPeriodResultList = getCustomPlanPeriodResultList(customPlan);
         result.setCustomPlanPeriodResultList(customPlanPeriodResultList);
@@ -115,9 +116,9 @@ public class CustomPlanService {
                     BeanUtils.copyProperties(customPlanProduct, customPlanProductResult);
                     customPlanProductResult.setImage(item.getImage());//设置上架图
 
-                    if(Objects.nonNull(item.getProductSpecification())) {
+                    if (Objects.nonNull(item.getProductSpecification())) {
                         Tips<Product> productTips = FeginResponseTools.convertResponse(baseDataServiceFeign.single(item.getProductSpecification().getProductId()));//查询商品益处
-                        if (!productTips.err()){
+                        if (!productTips.err()) {
                             customPlanProductResult.setBenefit(productTips.getData().getBenefit());
                         }
                     }
@@ -160,19 +161,18 @@ public class CustomPlanService {
     /**
      * 新增定制计划
      *
-     * @param customPlanResult
+     * @param customPlanDetailResult
      * @return Tips信息  成功在message中返回Id
      */
-    // FIXME   TCC操作
-    public Tips addCustomPlan(CustomPlanResult customPlanResult) {
+    public Tips addCustomPlan(CustomPlanDetailResult customPlanDetailResult) {
         // 幂等添加 定制计划
-        CustomPlan customPlan1 = customPlanMapper.selectByName(customPlanResult.getName());
+        CustomPlan customPlan1 = customPlanMapper.selectByName(customPlanDetailResult.getName());
         if (Objects.nonNull(customPlan1)) {
             return Tips.warn("定制计划名称重复，添加失败");
         }
-        customPlanResult.setCreateAt(Date.from(Instant.now()));
         CustomPlan customPlan = new CustomPlan();
-        BeanUtils.copyProperties(customPlanResult, customPlan);
+        BeanUtils.copyProperties(customPlanDetailResult, customPlan);
+        customPlan.setCreateAt(Date.from(Instant.now()));
         boolean addCustomPlan = customPlanMapper.create(customPlan) > 0;
 
         if (!addCustomPlan) {
@@ -182,14 +182,14 @@ public class CustomPlanService {
         Long customPlanId = customPlan.getId();
 
         // 幂等添加 定制板块和定制计划的关联
-        List<CustomPlanSectionRelation> customPlanSectionRelations = customPlanSectionRelationMapper.selectRelationListByPlanId(customPlanId, customPlanResult.getCustomPlanSectionIds());
+        List<CustomPlanSectionRelation> customPlanSectionRelations = customPlanSectionRelationMapper.selectRelationListByPlanId(customPlanId, customPlanDetailResult.getCustomPlanSectionIds());
         if (!customPlanSectionRelations.isEmpty()) {
             return Tips.warn("定制计划与版块关联重复，添加失败");
         }
         List<CustomPlanSectionRelation> customPlanSectionRelation = new ArrayList<>();
-        String[] sectionIds = StringUtils.tokenizeToStringArray(customPlanResult.getCustomPlanSectionIds(), ",");
+        String[] sectionIds = StringUtils.tokenizeToStringArray(customPlanDetailResult.getCustomPlanSectionIds(), ",");
         List<String> sectionIdList = Stream.of(sectionIds).collect(Collectors.toList());
-        String[] sortIds = StringUtils.tokenizeToStringArray(customPlanResult.getSorts(), ",");
+        String[] sortIds = StringUtils.tokenizeToStringArray(customPlanDetailResult.getSorts(), ",");
         List<String> sortIdList = Stream.of(sortIds).collect(Collectors.toList());
         if (sectionIdList.isEmpty() || sortIdList.isEmpty() || sectionIdList.size() != sortIdList.size()) {
             return Tips.warn("关联板块ids和排序ids长度不一致");
@@ -206,34 +206,40 @@ public class CustomPlanService {
         if (!addRelation) {
             return Tips.warn("定制计划和定制板块关联失败");
         }
-        // 添加定制计划规格  FIXME (定制规格和定制商品需要幂等添加？)
-        List<CustomPlanSpecification> customPlanSpecificationResults = customPlanResult.getCustomPlanSpecifications();
-        if (addCustomPlan && customPlanSpecificationResults != null && !customPlanSpecificationResults.isEmpty()) {
-            customPlanSpecificationResults = customPlanSpecificationResults.stream()
-                    .peek(specification -> specification.setPlanId(customPlanId))
-                    .collect(Collectors.toList());
-            List<CustomPlanSpecification> customPlanSpecificationList = new ArrayList<>();
-            customPlanSpecificationResults.forEach(item -> {
-                CustomPlanSpecification customPlanSpecification = new CustomPlanSpecification();
-                BeanUtils.copyProperties(item, customPlanSpecification);
-                customPlanSpecificationList.add(customPlanSpecification);
+        // 获取定制周期中的定制规格和定制计划列表
+        List<CustomPlanPeriodResult> customPlanPeriodResultList = customPlanDetailResult.getCustomPlanPeriodResultList();
+        if (!customPlanPeriodResultList.isEmpty() && customPlanPeriodResultList.size() > 0) {
+            customPlanPeriodResultList.forEach(customPlanPeriodResult -> {
+                Integer planPeriod = customPlanPeriodResult.getPlanPeriod();
+
+                // 添加定制计划规格
+                List<CustomPlanSpecification> specificationList = customPlanPeriodResult.getSpecificationList();
+                specificationList.forEach(specification -> {
+                    specification.setPlanPeriod(planPeriod);
+                    specification.setPlanId(customPlanId);
+                });
+                boolean addCustomPlanSpecification = customPlanSpecificationMapper.insertList(specificationList) > 0;
+                if (!addCustomPlanSpecification) {
+                    return;//Tips.warn("定制计划规格添加失败");
+                }
+                // 添加定制计划商品
+                // 将List<CustomPlanProductResult>转换为List<CustomPlanProduct>
+                List<CustomPlanProductResult> planProductResultList = customPlanPeriodResult.getProducts();
+                List<CustomPlanProduct> customPlanProductList = new ArrayList<>();
+                planProductResultList.forEach(productResult -> {
+                    CustomPlanProduct planProduct = new CustomPlanProduct();
+                    BeanUtils.copyProperties(productResult, planProduct);
+                    planProduct.setPlanPeriod(planPeriod);
+                    planProduct.setPlanId(customPlanId);
+                    // 第几天排序为几
+                    planProduct.setSort(planProduct.getDayOfPeriod());
+                    customPlanProductList.add(planProduct);
+                });
+                boolean addCustomPlanProduct = customPlanProductMapper.insertList(customPlanProductList) > 0;
+                if (!addCustomPlanProduct) {
+                    return;//Tips.warn("定制计划商品添加失败");
+                }
             });
-            boolean addCustomPlanSpecification = customPlanSpecificationMapper.insertList(customPlanSpecificationList) > 0;
-            if (!addCustomPlanSpecification) {
-                return Tips.warn("定制计划规格添加失败");
-            }
-            // 添加定制计划商品 TODO 新增定制周期和定制序号
-            //TODO 不是在定制规格中添加定制商品 不是在规格中包含定制商品
-/*            customPlanSpecificationResults.stream()
-                    .forEach(customPlanSpecification -> {
-                        List<CustomPlanProduct> customPlanProducts = customPlanSpecification.getCustomPlanProducts().stream()
-                                .peek(customPlanProduct -> customPlanProduct.setPlanId(customPlanId)).collect(Collectors.toList());
-                        boolean addCustomPlanProduct = customPlanProductMapper.insertList(customPlanProducts) > 0;
-                        if (!addCustomPlanProduct) {
-                            Tips.warn("定制计划商品添加失败");
-                        }
-                        // FIXME ruturn Tips.warn("定制计划商品添加失败");
-                    });*/
         }
         return Tips.info(customPlanId + "");
     }
@@ -241,10 +247,67 @@ public class CustomPlanService {
     /**
      * 修改定制计划
      *
-     * @param customPlan
+     * @param id
+     * @param customPlanDetailResult
      * @return
      */
-    public boolean update(CustomPlan customPlan) {
+    public boolean update(Long id, CustomPlanDetailResult customPlanDetailResult) {
+        CustomPlan customPlan = new CustomPlan();
+        BeanUtils.copyProperties(customPlanDetailResult, customPlan);
+        customPlan.setId(id);
+        customPlan.setCreateAt(Date.from(Instant.now()));
+        boolean updateCustomPlan = customPlanMapper.updateById(customPlan) > 0;
+        if (!updateCustomPlan) {
+            Tips.warn("修饰定制计划失败");
+        }
+
+        // 获取定制周期中的定制规格和定制计划列表
+        List<CustomPlanPeriodResult> customPlanPeriodResultList = customPlanDetailResult.getCustomPlanPeriodResultList();
+        if (!customPlanPeriodResultList.isEmpty() && customPlanPeriodResultList.size() > 0) {
+            customPlanPeriodResultList.forEach(customPlanPeriodResult -> {
+                Integer planPeriod = customPlanPeriodResult.getPlanPeriod();
+
+                // 修改定制计划规格
+                List<CustomPlanSpecification> specificationList = customPlanPeriodResult.getSpecificationList();
+                specificationList.forEach(specification -> {
+                    specification.setPlanPeriod(planPeriod);
+                    specification.setPlanId(id);
+                });
+                // 先批量删除
+                boolean deleteCustomPlanSpecification = customPlanSpecificationMapper.deleteByPlanId(id) > 0;
+                if (!deleteCustomPlanSpecification) {
+                    return;
+                }
+                // 再批量新增
+                boolean addCustomPlanSpecification = customPlanSpecificationMapper.insertList(specificationList) > 0;
+                if (!addCustomPlanSpecification) {
+                    return;//Tips.warn("定制计划规格添加失败");
+                }
+                // 修改定制计划商品
+                // 将List<CustomPlanProductResult>转换为List<CustomPlanProduct>
+                List<CustomPlanProductResult> planProductResultList = customPlanPeriodResult.getProducts();
+                List<CustomPlanProduct> customPlanProductList = new ArrayList<>();
+                planProductResultList.forEach(productResult -> {
+                    CustomPlanProduct planProduct = new CustomPlanProduct();
+                    BeanUtils.copyProperties(productResult, planProduct);
+                    planProduct.setPlanPeriod(planPeriod);
+                    planProduct.setPlanId(id);
+                    // 第几天排序为几
+                    planProduct.setSort(planProduct.getDayOfPeriod());
+                    customPlanProductList.add(planProduct);
+                });
+                // 先批量删除
+                boolean deleteCustomPlanProduct = customPlanProductMapper.deleteByPlanId(id) > 0;
+                if (!deleteCustomPlanProduct) {
+                    return;
+                }
+                // 再批量新增
+                boolean addCustomPlanProduct = customPlanProductMapper.insertList(customPlanProductList) > 0;
+                if (!addCustomPlanProduct) {
+                    return;//Tips.warn("定制计划商品添加失败");
+                }
+            });
+        }
         return customPlanMapper.updateById(customPlan) > 0;
     }
 

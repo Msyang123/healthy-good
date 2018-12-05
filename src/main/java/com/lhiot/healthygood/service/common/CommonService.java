@@ -38,7 +38,7 @@ public class CommonService {
         }
         String[] locations= ((Map<String,String>)((List)locationMap.get("geocodes")).get(0)).get("location").split(",");
         StoreSearchParam storeSearchParam =new StoreSearchParam();
-        storeSearchParam.setApplicationType(ApplicationType.FRUIT_DOCTOR);
+        storeSearchParam.setApplicationType(ApplicationType.HEALTH_GOOD);
         storeSearchParam.setDistance(10000);//TODO 10km范围内
         storeSearchParam.setLat(Double.valueOf(locations[0]));
         storeSearchParam.setLng(Double.valueOf(locations[1]));

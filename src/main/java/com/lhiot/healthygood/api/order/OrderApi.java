@@ -67,7 +67,7 @@ public class OrderApi {
         Map<String, Object> sessionUserMap = user.getUser();
         Long userId = Long.valueOf(sessionUserMap.get("userId").toString());
         orderParam.setUserId(userId);//设置业务用户id
-        orderParam.setApplicationType(ApplicationType.FRUIT_DOCTOR);
+        orderParam.setApplicationType(ApplicationType.HEALTH_GOOD);
 
         String storeCode = orderParam.getOrderStore().getStoreCode();
         //判断门店是否存在
