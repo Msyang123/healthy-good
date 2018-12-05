@@ -47,6 +47,16 @@ public interface CustomPlanSpecificationMapper {
     int deleteByIds(List<String> ids);
 
     /**
+     * Description:根据计划id删除定制计划规格
+     *
+     * @param planId
+     * @return
+     * @author hufan
+     * @date 2018/11/22 12:09:27
+     */
+    int deleteByPlanId(Long planId);
+
+    /**
     * Description:根据id查找定制计划规格
     *
     * @param id

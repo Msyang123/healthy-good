@@ -89,7 +89,7 @@ public class OrderService {
                     DeliverOrder deliverOrder = new DeliverOrder();
                     deliverOrder.setAddress(orderDetailResult.getAddress());
                     deliverOrder.setAmountPayable(orderDetailResult.getAmountPayable());
-                    deliverOrder.setApplyType(ApplicationType.FRUIT_DOCTOR);
+                    deliverOrder.setApplyType(ApplicationType.HEALTH_GOOD);
                     deliverOrder.setBackUrl(StringUtils.format(deliverConfig.getBackUrl(), deliverConfig.getType()));//配置回调
                     deliverOrder.setContactPhone(orderDetailResult.getContactPhone());
                     deliverOrder.setCouponAmount(orderDetailResult.getCouponAmount());

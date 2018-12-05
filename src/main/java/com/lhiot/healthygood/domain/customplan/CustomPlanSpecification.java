@@ -61,7 +61,7 @@ public class CustomPlanSpecification{
     *定制计划周期
     */
     @JsonProperty("planPeriod")
-    @ApiModelProperty(value = "定制计划周期", dataType = "String")
-    private String planPeriod;
+    @ApiModelProperty(value = "定制计划周期", dataType = "Integer")
+    private Integer planPeriod;
 
 }

@@ -40,6 +40,8 @@ public class CustomPlanParam {
     private String overRule;
     @ApiModelProperty(value = "定制计划状态 有效-VALID 无效-INVALID", dataType = "ValidOrInvalid")
     private ValidOrInvalid status;
+    @ApiModelProperty(value = "创建人", dataType = "String")
+    private String createUser;
 
     /**
      * 定制计划和定制板块关联

@@ -7,7 +7,7 @@ import lombok.Getter;
  */
 public enum ApplicationType {
 
-    FRUIT_DOCTOR("和色果膳");
+    HEALTH_GOOD("和色果膳");
     @Getter
     private String description;
 
