@@ -42,9 +42,9 @@ public class CustomPlanProduct{
     /**
      *第x天
      */
-    @JsonProperty("dayN")
+    @JsonProperty("dayOfPeriod")
     @ApiModelProperty(value = "第x天", dataType = "Integer")
-    private Integer dayN;
+    private Integer dayOfPeriod;
 
     /**
      *定制周期（周、月）

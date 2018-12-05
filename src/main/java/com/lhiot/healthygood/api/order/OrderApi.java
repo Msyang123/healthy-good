@@ -87,7 +87,7 @@ public class OrderApi {
 
         List<OrderProduct> orderProducts = orderParam.getOrderProducts();
         //依据上架ids查询上架商品信息
-        String[] shelfIds = orderProducts.parallelStream().map(OrderProduct::getShelfId).toArray(String[]::new);
+        String[] shelfIds = orderProducts.parallelStream().map(OrderProduct::getShelfId).map(String::valueOf).toArray(String[]::new);
 
         ProductShelfParam productShelfParam = new ProductShelfParam();
         productShelfParam.setIds(StringUtils.join(",", shelfIds));
@@ -260,7 +260,7 @@ public class OrderApi {
 
     @Sessions.Uncheck
     @PostMapping("/orders/ali-pay/payment-callback")
-    @ApiOperation("订单支付微信回调-后端回调处理")
+    @ApiOperation("订单支付支付宝回调-后端回调处理")
     public ResponseEntity<String> aliPayPaymentCallback(HttpServletRequest request) {
         Map<String, Object> parameters = this.convertRequestParameters(request);
         //调用基础服务验证参数签名是否正确

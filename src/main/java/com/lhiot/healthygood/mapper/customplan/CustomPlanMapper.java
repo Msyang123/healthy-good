@@ -88,5 +88,10 @@ public interface CustomPlanMapper {
     */
     int pageCustomPlanCounts(CustomPlanParam customPlanParam);
 
+    /**
+     * 依据定制计划板块查询关联的定制计划
+     * @param planSectionsParam
+     * @return
+     */
     List<CustomPlan> findByCustomPlanSectionId(PlanSectionsParam planSectionsParam);
 }

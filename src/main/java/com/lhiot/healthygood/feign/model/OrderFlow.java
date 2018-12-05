@@ -10,10 +10,9 @@ import java.util.Date;
 /**
  * 订单操作流水记录
  */
-@EqualsAndHashCode(callSuper = false)
 @Data
 @ApiModel
-public class OrderFlow extends PagerRequestObject {
+public class OrderFlow{
     private Long id;
     private Long orderId;
     private OrderStatus status;

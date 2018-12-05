@@ -4,14 +4,18 @@ import com.google.common.base.Joiner;
 import com.leon.microx.util.BeanUtils;
 import com.leon.microx.web.result.Pages;
 import com.leon.microx.web.result.Tips;
+import com.leon.microx.web.result.Tuple;
 import com.lhiot.healthygood.domain.customplan.CustomPlan;
 import com.lhiot.healthygood.domain.customplan.CustomPlanSection;
 import com.lhiot.healthygood.domain.customplan.CustomPlanSectionRelation;
 import com.lhiot.healthygood.domain.customplan.model.CustomPlanSectionParam;
 import com.lhiot.healthygood.domain.customplan.model.CustomPlanSectionRelationResult;
 import com.lhiot.healthygood.domain.customplan.model.CustomPlanSectionResultAdmin;
+import com.lhiot.healthygood.domain.customplan.model.PlanSectionsParam;
+import com.lhiot.healthygood.mapper.customplan.CustomPlanMapper;
 import com.lhiot.healthygood.mapper.customplan.CustomPlanSectionMapper;
 import com.lhiot.healthygood.mapper.customplan.CustomPlanSectionRelationMapper;
+import com.lhiot.healthygood.type.YesOrNo;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -28,10 +32,12 @@ import java.util.stream.Collectors;
 public class CustomPlanSectionService {
     private final CustomPlanSectionMapper customPlanSectionMapper;
     private final CustomPlanSectionRelationMapper customPlanSectionRelationMapper;
+    private final CustomPlanMapper customPlanMapper;
 
-    public CustomPlanSectionService(CustomPlanSectionMapper customPlanSectionMapper, CustomPlanSectionRelationMapper customPlanSectionRelationMapper) {
+    public CustomPlanSectionService(CustomPlanSectionMapper customPlanSectionMapper, CustomPlanSectionRelationMapper customPlanSectionRelationMapper, CustomPlanMapper customPlanMapper) {
         this.customPlanSectionMapper = customPlanSectionMapper;
         this.customPlanSectionRelationMapper = customPlanSectionRelationMapper;
+        this.customPlanMapper = customPlanMapper;
     }
 
     /**
@@ -43,8 +49,8 @@ public class CustomPlanSectionService {
     // FIXME TCC事务回滚
     public Tips addCustomPlanSection(CustomPlanSectionResultAdmin customPlanSectionResultAdmin) {
         // 幂等添加
-        List<CustomPlanSection> customPlanSection1 = customPlanSectionMapper.selectBySectionCode(customPlanSectionResultAdmin.getSectionCode());
-        if (!customPlanSection1.isEmpty()) {
+        CustomPlanSection findCustomPlanSection = customPlanSectionMapper.selectBySectionCode(customPlanSectionResultAdmin.getSectionCode());
+        if (Objects.nonNull(findCustomPlanSection)) {
             return Tips.warn("定制板块编码重复，添加失败");
         }
         CustomPlanSection customPlanSection = new CustomPlanSection();
@@ -61,11 +67,11 @@ public class CustomPlanSectionService {
         // 添加定制板块和定制计划的关联
         List<CustomPlan> customPlanList = customPlanSectionResultAdmin.getCustomPlanList();
         List<Long> sorts = customPlanSectionResultAdmin.getRelationSorts();
-        if (customPlanList.isEmpty() && sorts.isEmpty()){
+        if (customPlanList.isEmpty() && sorts.isEmpty()) {
             return Tips.info(customPlanSection.getId() + "");
         }
         List<Long> planIds = customPlanSectionResultAdmin.getCustomPlanList().stream().map(CustomPlan::getId).collect(Collectors.toList());
-        if (Objects.nonNull(sectionId) && !planIds.isEmpty() && !sorts.isEmpty() ) {
+        if (Objects.nonNull(sectionId) && !planIds.isEmpty() && !sorts.isEmpty()) {
             //先做幂等验证
             List<CustomPlanSectionRelation> relationList = customPlanSectionRelationMapper.selectRelationListBySectionId(sectionId, Joiner.on(",").join(planIds));
             if (!relationList.isEmpty()) {
@@ -159,5 +165,47 @@ public class CustomPlanSectionService {
         boolean pageFlag = Objects.nonNull(param.getPage()) && Objects.nonNull(param.getRows()) && param.getPage() > 0 && param.getRows() > 0;
         int total = pageFlag ? customPlanSectionMapper.pageCustomPlanSectionCounts(param) : list.size();
         return Pages.of(total, list);
+    }
+
+
+    /**
+     * 定制首页
+     *
+     * @return
+     */
+    public Tuple<CustomPlanSection> customPlanSectionTuple() {
+        //查询所有定制板块
+        List<CustomPlanSection> customPlanSections = customPlanSectionMapper.customPlanSectionTuple();
+        //找到定制板块下的定制计划（依据定制板块与定制计划关联表）
+        customPlanSections.forEach(customPlanSection -> {
+            //依据定制板块id查询下面定制计划列表
+            PlanSectionsParam planSectionsParam = new PlanSectionsParam();
+            planSectionsParam.setId(customPlanSection.getId());
+            planSectionsParam.setPage(1);
+            planSectionsParam.setRows(4);//只查询最多4个推荐定制计划
+            setCustomPlanSectionPlanItems(customPlanSection, planSectionsParam);
+        });
+        return Tuple.of(customPlanSections);
+    }
+
+    /**
+     * 设置定制计划板块的定制计划关联数据
+     *
+     * @param customPlanSection 当前定制板块
+     * @param planSectionsParam 查询定制计划查询条件
+     */
+    void setCustomPlanSectionPlanItems(CustomPlanSection customPlanSection, PlanSectionsParam planSectionsParam) {
+        if (null != customPlanSection) {
+            List<CustomPlan> customPlanList = customPlanMapper.findByCustomPlanSectionId(planSectionsParam);
+            customPlanSection.setCustomPlanList(Pages.of(Objects.isNull(customPlanList) ? 0 : customPlanList.size(), customPlanList));
+        }
+    }
+
+    public CustomPlanSection findComPlanSectionId(PlanSectionsParam planSectionsParam) {
+        CustomPlanSection customPlanSection = customPlanSectionMapper.selectById(planSectionsParam.getId());
+        if (Objects.equals(planSectionsParam.getNeedChild(), YesOrNo.YES)) {
+            setCustomPlanSectionPlanItems(customPlanSection, planSectionsParam);
+        }
+        return customPlanSection;
     }
 }

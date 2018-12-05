@@ -7,7 +7,10 @@ import com.leon.microx.web.session.Sessions;
 import com.leon.microx.web.swagger.ApiParamType;
 import com.lhiot.healthygood.domain.customplan.CustomPlan;
 import com.lhiot.healthygood.domain.customplan.CustomPlanProduct;
-import com.lhiot.healthygood.domain.customplan.model.*;
+import com.lhiot.healthygood.domain.customplan.CustomPlanSpecification;
+import com.lhiot.healthygood.domain.customplan.model.CustomPlanDetailResult;
+import com.lhiot.healthygood.domain.customplan.model.CustomPlanParam;
+import com.lhiot.healthygood.domain.customplan.model.CustomPlanResult;
 import com.lhiot.healthygood.service.customplan.CustomPlanService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
@@ -40,35 +43,6 @@ public class CustomPlanApi {
     }
 
     /**
-     * 定制计划板块-定制首页
-     */
-    @Sessions.Uncheck
-    @GetMapping("/custom-plan-sections")
-    @ApiOperation(value = "查询定制计划板块列表页（定制板块对应定制计划列表页）")
-    @ApiImplicitParam(paramType = ApiParamType.QUERY, name = "code", value = "定制板块编码", dataType = "String", required = true)
-    public ResponseEntity<List<CustomPlanSectionResult>> findByPositionCode(@RequestParam String code) {
-        List<CustomPlanSectionResult> productSectionResult = customPlanService.findComPlanSectionByCode(code);
-        return ResponseEntity.ok(productSectionResult);
-    }
-
-    /**
-     * 定制计划信息-定制板块页
-     */
-    @Sessions.Uncheck
-    @PostMapping("/custom-plan-sections/{id}/custom-plans")
-    @ApiOperation(value = "查询定制计划板块列表页（定制计划板块和该板块对应的分页定制计划列表）")
-    @ApiImplicitParams({
-            @ApiImplicitParam(paramType = ApiParamType.PATH, name = "id", value = "定制板块id", dataType = "Long", required = true),
-            @ApiImplicitParam(paramType = ApiParamType.BODY, name = "planSectionsParam", value = "定制板块", dataType = "PlanSectionsParam", required = true)
-    })
-    public ResponseEntity<CustomPlanSectionResult> findById(@PathVariable Long id, @RequestBody PlanSectionsParam planSectionsParam) {
-        planSectionsParam.setId(id);
-
-        CustomPlanSectionResult productSectionResult = customPlanService.findComPlanSectionId(planSectionsParam);
-        return ResponseEntity.ok(productSectionResult);
-    }
-
-    /**
      * 定制计划详细信息
      */
     @Sessions.Uncheck
@@ -81,15 +55,15 @@ public class CustomPlanApi {
     }
 
     /**
-     * 定制计划详细信息
+     * 定制计划规格信息
      */
     @Sessions.Uncheck
     @GetMapping("/custom-plans-specification/{specificationId}")
-    @ApiOperation(value = "定制计划详细信息（定制计划详细信息页面）")
+    @ApiOperation(value = "定制计划规格信息（创建定制计划订单信息页面）")
     @ApiImplicitParam(paramType = ApiParamType.PATH, name = "specificationId", value = "定制计划规格id", dataType = "Long", required = true)
-    public ResponseEntity<CustomPlanSpecificationDetailResult> specificationDetail(@PathVariable Long specificationId) {
-        CustomPlanSpecificationDetailResult customPlanSpecificationDetailResult = customPlanService.findCustomPlanSpecificationDetail(specificationId);
-        return ResponseEntity.ok(customPlanSpecificationDetailResult);
+    public ResponseEntity<CustomPlanSpecification> specificationDetail(@PathVariable Long specificationId) {
+        CustomPlanSpecification customPlanSpecification = customPlanService.findCustomPlanSpecificationDetail(specificationId);
+        return ResponseEntity.ok(customPlanSpecification);
     }
 
     @Sessions.Uncheck
@@ -134,9 +108,10 @@ public class CustomPlanApi {
         log.debug("修改定制计划\t param:{}", customPlanResult);
 
         List<CustomPlanProduct> customPlanProducts = new ArrayList<>();
-        List<CustomPlanSpecificationResult> customPlanSpecifications = customPlanResult.getCustomPlanSpecifications().stream().collect(Collectors.toList());
-        customPlanSpecifications.forEach(customPlanSpecification ->
-                customPlanProducts.addAll(customPlanSpecification.getCustomPlanProducts().stream().peek(customPlanProduct -> customPlanProduct.setPlanId(id)).collect(Collectors.toList())));
+        List<CustomPlanSpecification> customPlanSpecifications = customPlanResult.getCustomPlanSpecifications().stream().collect(Collectors.toList());
+        //TODO 不是在定制规格中添加定制商品 不是在规格中包含定制商品
+        /*customPlanSpecifications.forEach(customPlanSpecification ->
+                customPlanProducts.addAll(customPlanSpecification.getCustomPlanProducts().stream().peek(customPlanProduct -> customPlanProduct.setPlanId(id)).collect(Collectors.toList())));*/
         Tips tips = customPlanService.updateProduct(customPlanProducts);
         return !tips.err() ? ResponseEntity.ok().build() : ResponseEntity.badRequest().body(Tips.warn("修改信息失败!"));
     }
