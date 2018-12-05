@@ -118,4 +118,12 @@ public interface BaseDataServiceFeign {
     @RequestMapping(value = "/articles/pages",method = RequestMethod.POST)
     ResponseEntity<Pages<Article>> searchArticle(@RequestBody ArticleParam param);
 
+    /**
+     * 根据Id查找文章
+     * @param id
+     * @return
+     */
+    @RequestMapping(value="/articles/{id}",method = RequestMethod.GET)
+    ResponseEntity<Article> singleArticle(@PathVariable("id") Long id);
+
 }

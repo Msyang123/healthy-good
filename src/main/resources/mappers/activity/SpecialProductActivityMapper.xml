@@ -123,7 +123,7 @@
 		from special_product_activity where id = #{id}
 	</select>
 
-    <select id="selectActivity" resultMap="BaseResultMap"  parameterType="Integer">
+    <select id="selectActivity" resultMap="BaseResultMap" >
         select <include refid="Base_Column_List" />
         from special_product_activity where status = 'VALID'
     </select>
@@ -164,7 +164,7 @@
 	        from special_product_activity
 	        <include refid="Base_Where_Condition" />
              <if test="rows != null and rows > 0 ">
-                 order by rank asc , id desc
+                 order by id desc
                  limit #{startRow} , #{rows}
              </if>
     </select>

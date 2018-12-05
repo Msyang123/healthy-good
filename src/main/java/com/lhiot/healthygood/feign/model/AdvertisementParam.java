@@ -24,7 +24,7 @@ public class AdvertisementParam {
     @ApiModelProperty(notes = "广告类别（PRODUCT_DETAILS- 商品详情 STORE_LIVE_TELECAST- 门店直播 MORE_AMUSEMENT- 多娱\n" +
             "EXTERNAL_LINKS- 外部链接）", dataType = "AdvertiseType")
     private AdvertiseType advertiseType;
-    @ApiModelProperty(notes = "广告状态（ON- 开启 OFF-关闭）", dataType = "AdvertiseStatus")
+    @ApiModelProperty(notes = "广告状态（ON- 开启 OFF-关闭）", dataType = "OnOff")
     private OnOff advertiseStatus;
     @ApiModelProperty(notes = "起始创建时间", dataType = "Date")
     private Date beginCreateAt;
