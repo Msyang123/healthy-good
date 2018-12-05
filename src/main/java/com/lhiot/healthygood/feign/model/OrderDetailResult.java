@@ -40,7 +40,7 @@ public class OrderDetailResult {
     private HdStatus hdStatus = HdStatus.NOT_SEND;
     @ApiModelProperty(notes = "海鼎备货时间",dataType = "Date")
     private Date hdStockAt;
-    @ApiModelProperty(notes = "订单状态", dataType = "OrderStatus")
+    @ApiModelProperty(notes = "订单状态", dataType = "CustomOrderStatus")
     private OrderStatus status = OrderStatus.WAIT_PAYMENT;
     @ApiModelProperty(notes = "收货人", dataType = "String")
     private String receiveUser;
