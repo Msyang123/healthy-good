@@ -1,18 +1,23 @@
 package com.lhiot.healthygood.api.advertisement;
 
+import com.leon.microx.predefine.OnOff;
 import com.leon.microx.web.result.Pages;
 import com.leon.microx.web.result.Tips;
 import com.leon.microx.web.session.Sessions;
+import com.lhiot.healthygood.domain.advertisement.AdvertismentParams;
 import com.lhiot.healthygood.feign.BaseDataServiceFeign;
 import com.lhiot.healthygood.feign.model.Advertisement;
 import com.lhiot.healthygood.feign.model.AdvertisementParam;
+import com.lhiot.healthygood.feign.type.AdvertiseType;
 import com.lhiot.healthygood.util.FeginResponseTools;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -33,17 +38,16 @@ public class AdvertisementApi {
     @Sessions.Uncheck
     @ApiOperation(value = "根据位置编码查询广告列表")
     @PostMapping("/advertisements/position")
-    ResponseEntity searchAdvertisementPages(@Valid @RequestParam Long code,@RequestParam Integer pages,@RequestParam Integer rows){
+    ResponseEntity searchAdvertisementPages(@RequestBody AdvertismentParams advertismentParams){
         AdvertisementParam advertisementParam = new AdvertisementParam();
-        advertisementParam.setPositionId(code);
-        advertisementParam.setPage(pages);
-        advertisementParam.setRows(rows);
+        BeanUtils.copyProperties(advertismentParams,advertisementParam);
+        advertisementParam.setAdvertiseStatus(OnOff.ON);
         ResponseEntity<Pages<Advertisement>> advertisements = baseDataServiceFeign.searchAdvertisementPages(advertisementParam);
         Tips tips = FeginResponseTools.convertResponse(advertisements);
         if (tips.err()){
             return ResponseEntity.badRequest().body(tips);
         }
-        return ResponseEntity.ok(advertisements.getBody().getArray());
+        return ResponseEntity.ok(tips.getData());
 
     }
 }

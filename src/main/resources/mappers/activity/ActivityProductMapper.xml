@@ -166,9 +166,6 @@
             <if test="activityPrice != null ">
                 and activity_price = #{activityPrice}
             </if>
-            <if test="sort != null ">
-                and sort = #{sort}
-            </if>
             <if test="productShelfIds != null ">
                 and product_shelf_id in
                 <foreach item="item" index="index" collection="productShelfIds.split(',')" open="(" separator="," close=")">
@@ -186,7 +183,7 @@
 	        from activity_product
 	        <include refid="Base_Where_Condition" />
              <if test="rows != null and rows > 0 ">
-                 order by id desc
+                 order by  id desc
                  limit #{startRow} , #{rows}
              </if>
      </select>

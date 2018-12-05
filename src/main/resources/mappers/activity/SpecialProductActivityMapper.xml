@@ -134,7 +134,7 @@
 		from special_product_activity where id = #{id}
 	</select>
 
-    <select id="selectActivity" resultMap="BaseResultMap"  parameterType="Integer">
+    <select id="selectActivity" resultMap="BaseResultMap" >
         select <include refid="Base_Column_List" />
         from special_product_activity where status = 'VALID'
     </select>

@@ -8,9 +8,6 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
 
-import javax.validation.constraints.NotNull;
-import java.util.List;
-
 /**
 * Description:定制计划规格实体类
 * @author zhangs
@@ -40,15 +37,15 @@ public class CustomPlanSpecification{
     *价格
     */
     @JsonProperty("price")
-    @ApiModelProperty(value = "价格", dataType = "String")
-    private String price;
+    @ApiModelProperty(value = "价格", dataType = "Integer")
+    private Integer price;
 
     /**
     *数量
     */
     @JsonProperty("quantity")
-    @ApiModelProperty(value = "数量", dataType = "String")
-    private String quantity;
+    @ApiModelProperty(value = "数量", dataType = "Integer")
+    private Integer quantity;
 
     /**
     *描述

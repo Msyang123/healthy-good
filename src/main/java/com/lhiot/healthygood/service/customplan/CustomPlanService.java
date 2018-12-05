@@ -130,11 +130,8 @@ public class CustomPlanService {
         return customPlanPeriodResult;
     }
 
-    public CustomPlanSpecificationDetailResult findCustomPlanSpecificationDetail(Long id) {
-        CustomPlanSpecificationDetailResult customPlanSpecificationDetailResult = new CustomPlanSpecificationDetailResult();
-        CustomPlanSpecification customPlanSpecification = customPlanSpecificationMapper.selectById(id);
-        BeanUtils.of(customPlanSpecification).populate(customPlanSpecificationDetailResult);
-        return customPlanSpecificationDetailResult;
+    public CustomPlanSpecification findCustomPlanSpecificationDetail(Long id) {
+        return customPlanSpecificationMapper.selectById(id);
     }
 
     /**
