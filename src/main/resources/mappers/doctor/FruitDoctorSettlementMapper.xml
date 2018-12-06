@@ -157,7 +157,8 @@
              ) res
             <include refid="Base_Where_Condition" />
              <if test="rows != null and rows > 0 ">
-                 order by rank asc , id desc
+                 order by case res.settlement_status when 'UNSETTLED' then 0 when 'SUCCESS' then 1 when 'EXPIRED' then 2 else 3 end asc,
+                 res.id desc
                  limit #{startRow} , #{rows}
              </if>
     </select>

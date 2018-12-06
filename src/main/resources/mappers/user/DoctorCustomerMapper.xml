@@ -140,7 +140,7 @@
 	        from doctor_customer
 	        <include refid="Base_Where_Condition" />
              <if test="rows != null and rows > 0 ">
-                 order by rank asc , id desc
+                 order by id desc
                  limit #{startRow} , #{rows}
              </if>
     </select>
