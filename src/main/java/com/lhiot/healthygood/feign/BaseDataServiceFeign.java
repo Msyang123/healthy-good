@@ -48,7 +48,7 @@ public interface BaseDataServiceFeign {
      * @return
      */
     @RequestMapping(value="/product-shelves/{id}",method = RequestMethod.GET)
-    ResponseEntity<ProductShelf> singleShelf(@PathVariable("id") Long shelfId);
+    ResponseEntity<ProductShelf> singleShelf(@PathVariable("id") Long shelfId,@RequestParam("includeProduct") boolean includeProduct);
 
 
     /**

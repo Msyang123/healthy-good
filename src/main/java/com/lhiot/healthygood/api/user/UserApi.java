@@ -207,7 +207,7 @@ public class UserApi {
             return ResponseEntity.badRequest().body(searchUserEntity.getBody());
         }
         UserDetailResult searchUser = (UserDetailResult) searchUserEntity.getBody();
-        Sessions.User sessionUser = session.create(request).user(Maps.of("userId", searchUser.getId(), "openId", searchUser.getOpenId())).timeToLive(30, TimeUnit.MINUTES)
+        Sessions.User sessionUser = session.create(request).user(Maps.of("userId", searchUser.getId(), "openId", searchUser.getOpenId())).timeToLive(3, TimeUnit.HOURS)
                 .authorities(Authority.of("/**", RequestMethod.values()));
         String sessionId = session.cache(sessionUser);
         return ResponseEntity.ok()
