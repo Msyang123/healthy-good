@@ -109,4 +109,13 @@ public interface FruitDoctorMapper {
      * @date 2018/08/21 12:08:13
      */
     FruitDoctor findSuperiorFruitDoctorByUserId(Long userId);
+
+    /**
+     * Description:根据用户id查询鲜果师信息
+     * @param userId
+     * @return
+     * @author hufan
+     * @date 2018/08/21 12:08:13
+     */
+    FruitDoctor findFruitDoctorByUserId(Long userId);
 }

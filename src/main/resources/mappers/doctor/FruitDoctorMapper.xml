@@ -354,7 +354,7 @@
 	        from fruit_doctor
 	        <include refid="Base_Where_Condition" />
              <if test="rows != null and rows > 0 ">
-                 order by rank asc , id desc
+                 order by id desc
                  limit #{startRow} , #{rows}
              </if>
     </select>
@@ -378,7 +378,7 @@
         from fruit_doctor f
         <include refid="Base_Where_Condition" />
         <if test="rows != null and rows > 0 ">
-            order by rank asc , id desc
+            order by id desc
             limit #{startRow} , #{rows}
         </if>
     </select>
@@ -397,5 +397,13 @@
         from doctor_user t1
         LEFT JOIN fruit_doctor t2 on t1.doctor_id = t2.id
         where t1.user_id = #{id}
+    </select>
+
+    <!--根据用户id查询上级鲜果师信息-->
+    <select id="findFruitDoctorByUserId" resultMap="BaseResultMap"
+            parameterType="Long">
+        select *
+        from doctor_user
+        where user_id = #{id}
     </select>
 </mapper>
