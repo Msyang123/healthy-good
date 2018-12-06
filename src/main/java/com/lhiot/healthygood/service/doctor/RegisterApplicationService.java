@@ -1,5 +1,6 @@
 package com.lhiot.healthygood.service.doctor;
 
+import com.leon.microx.web.result.Pages;
 import com.lhiot.healthygood.domain.doctor.RegisterApplication;
 import com.lhiot.healthygood.type.AuditStatus;
 import com.lhiot.healthygood.mapper.doctor.RegisterApplicationMapper;
@@ -11,6 +12,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Date;
+import java.util.List;
+import java.util.Objects;
 
 /**
 * Description:鲜果师申请记录服务类
@@ -42,7 +45,7 @@ public class RegisterApplicationService {
     * @date 2018/07/26 12:08:13
     */  
     public RegisterApplication create(RegisterApplication registerApplication){
-        registerApplication.setAuditStatus(AuditStatus.UNAUDITED.toString());
+        registerApplication.setAuditStatus(AuditStatus.UNAUDITED);
         registerApplication.setCreateAt(new Date());
         this.registerApplicationMapper.create(registerApplication);
         return registerApplication;
@@ -58,6 +61,39 @@ public class RegisterApplicationService {
      */
     public RegisterApplication findLastApplicationById(Long id){
         return this.registerApplicationMapper.findLastApplicationById(id);
+    }
+
+    /**
+     * Description:根据id修改鲜果师申请记录
+     *
+     * @param registerApplication
+     * @return
+     */
+    public int updateById(RegisterApplication registerApplication) {
+        return this.registerApplicationMapper.updateById(registerApplication);
+    }
+
+    /**
+     * Description: 查询鲜果师申请记录总记录数
+     *
+     * @param registerApplication
+     * @return
+     */
+    public int count(RegisterApplication registerApplication) {
+        return this.registerApplicationMapper.findCount(registerApplication);
+    }
+
+    /**
+     * Description: 查询鲜果师申请记录分页列表
+     *
+     * @param registerApplication
+     * @return
+     */
+    public Pages<RegisterApplication> pageList(RegisterApplication registerApplication) {
+        List<RegisterApplication> list = registerApplicationMapper.findList(registerApplication);
+        boolean pageFlag = Objects.nonNull(registerApplication.getPage()) && Objects.nonNull(registerApplication.getRows()) && registerApplication.getPage() > 0 && registerApplication.getRows() > 0;
+        int total = pageFlag ? this.count(registerApplication) : list.size();
+        return Pages.of(total, list);
     }
 
 }

@@ -91,7 +91,8 @@ public class CustomPlanApi {
     })
     @PutMapping("/custom-plans/{id}")
     public ResponseEntity update(@PathVariable("id") Long id, @Valid @RequestBody CustomPlanDetailResult customPlanDetailResult) {
-        log.debug("修改定制计划\t param:{}", customPlanDetailResult);
+        log.debug("修改定制计划\t id:{} param:{}", id,customPlanDetailResult);
+
         Tips tips = customPlanService.update(id, customPlanDetailResult);
         return !tips.err() ? ResponseEntity.ok().build() : ResponseEntity.badRequest().body(Tips.warn("修改信息失败!"));
     }
@@ -104,7 +105,7 @@ public class CustomPlanApi {
     })
     @PutMapping("/custom-plan-product/{id}")
     public ResponseEntity updateProduct(@PathVariable("id") Long id, @RequestBody CustomPlanDetailResult customPlanDetailResult) {
-        log.debug("修改定制计划商品\t param:{}", customPlanDetailResult);
+        log.debug("修改定制计划商品\t id:{} param:{}", id,customPlanDetailResult);
 
         Tips tips = customPlanService.updateProduct(id, customPlanDetailResult);
         return !tips.err() ? ResponseEntity.ok().build() : ResponseEntity.badRequest().body(Tips.warn("修改定制商品失败!"));

@@ -1,7 +1,9 @@
 package com.lhiot.healthygood.api.user;
 
+import com.leon.microx.web.result.Pages;
 import com.leon.microx.web.result.Tips;
 import com.leon.microx.web.session.Sessions;
+import com.leon.microx.web.swagger.ApiParamType;
 import com.lhiot.healthygood.domain.doctor.*;
 import com.lhiot.healthygood.domain.user.DoctorUser;
 import com.lhiot.healthygood.domain.user.FruitDoctor;
@@ -92,6 +94,35 @@ public class FruitDoctorApi {
         return ResponseEntity.ok(registerApplicationService.create(registerApplication));
     }
 
+    @Sessions.Uncheck
+    @ApiOperation(value = "根据id更新鲜果师申请记录(后台)")
+    @ApiImplicitParams({
+            @ApiImplicitParam(paramType = ApiParamType.PATH, name = "id", value = "主键id", dataType = "Long", required = true),
+            @ApiImplicitParam(paramType = "body", name = "registerApplication", value = "要更新的鲜果师申请记录", required = true, dataType = "RegisterApplication")
+    })
+    @PutMapping("/qualifications/{id}")
+    public ResponseEntity update(@PathVariable("id") Long id, @RequestBody RegisterApplication registerApplication){
+        log.debug("根据id更新鲜果师申请记录\t id:{} param:{}", id,registerApplication);
+
+        registerApplication.setId(id);
+        boolean updated = registerApplicationService.updateById(registerApplication) > 0;
+        if (!updated) {
+            ResponseEntity.badRequest().body("修改鲜果师申请记录失败");
+        }
+        // TODO 新增鲜果师成员记录
+        return  ResponseEntity.ok().build();
+    }
+
+    @Sessions.Uncheck
+    @ApiOperation(value = "根据条件分页查询鲜果师申请记录列表(后台)", response = RegisterApplication.class, responseContainer = "Set")
+    @ApiImplicitParam(paramType = ApiParamType.BODY, name = "registerApplication",value = "鲜果师申请信息",  dataType = "RegisterApplication",required = true)
+    @PostMapping("/qualifications/pages")
+    public ResponseEntity search(@RequestBody RegisterApplication registerApplication) {
+        log.debug("根据条件分页查询鲜果师申请记录列表\t param:{}", registerApplication);
+
+        Pages<RegisterApplication> pages = registerApplicationService.pageList(registerApplication);
+        return ResponseEntity.ok(pages);
+    }
 
     @PostMapping("/settlement")
     @ApiOperation(value = "申请提现红利")

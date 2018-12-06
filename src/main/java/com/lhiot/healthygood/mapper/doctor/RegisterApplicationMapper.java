@@ -67,23 +67,23 @@ public interface RegisterApplicationMapper {
     RegisterApplication findLastApplicationById(Long id);
 
     /**
-    * Description:查询鲜果师申请记录列表
-    *
-    * @param registerApplication
-    * @return
-    * @author yijun
-    * @date 2018/07/26 12:08:13
-    */
-     List<RegisterApplication> pageRegisterApplications(RegisterApplication registerApplication);
+     * Description:查询鲜果师申请记录列表
+     *
+     * @param registerApplication
+     * @return
+     * @author hufan
+     * @date 2018/11/26 18:56:50
+     */
+    List<RegisterApplication> findList(RegisterApplication registerApplication);
 
 
     /**
-    * Description: 查询鲜果师申请记录总记录数
-    *
-    * @param registerApplication
-    * @return
-    * @author yijun
-    * @date 2018/07/26 12:08:13
-    */
-    long pageRegisterApplicationCounts(RegisterApplication registerApplication);
+     * Description: 查询鲜果师申请记录总记录数
+     *
+     * @param registerApplication
+     * @return
+     * @author hufan
+     * @date 2018/11/26 18:56:50
+     */
+    int findCount(RegisterApplication registerApplication);
 }
