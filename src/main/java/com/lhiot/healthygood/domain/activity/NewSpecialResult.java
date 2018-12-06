@@ -26,5 +26,5 @@ public class NewSpecialResult {
     @ApiModelProperty(notes="限购数量",dataType="Integer")
     private Integer limitCount;
 
-    private List<ActivityProducts> activityProductsList;
+    private List<ActivityProducts> activityProductList;
 }

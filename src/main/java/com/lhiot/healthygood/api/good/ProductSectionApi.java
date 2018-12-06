@@ -1,6 +1,7 @@
 package com.lhiot.healthygood.api.good;
 
 import com.leon.microx.predefine.OnOff;
+import com.leon.microx.util.StringUtils;
 import com.leon.microx.web.result.Pages;
 import com.leon.microx.web.result.Tips;
 import com.leon.microx.web.session.Sessions;
@@ -8,12 +9,11 @@ import com.leon.microx.web.swagger.ApiParamType;
 import com.lhiot.healthygood.domain.activity.ActivityProduct;
 import com.lhiot.healthygood.domain.activity.ActivityProductRecord;
 import com.lhiot.healthygood.domain.activity.SpecialProductActivity;
+import com.lhiot.healthygood.domain.good.ProductDetailResult;
 import com.lhiot.healthygood.domain.good.ProductSearchParam;
 import com.lhiot.healthygood.feign.BaseDataServiceFeign;
-import com.lhiot.healthygood.feign.model.ProductSection;
-import com.lhiot.healthygood.feign.model.ProductSectionParam;
-import com.lhiot.healthygood.feign.model.ProductShelf;
-import com.lhiot.healthygood.feign.model.ProductShelfParam;
+import com.lhiot.healthygood.feign.model.*;
+import com.lhiot.healthygood.feign.type.AttachmentType;
 import com.lhiot.healthygood.service.activity.ActivityProductRecordService;
 import com.lhiot.healthygood.service.activity.ActivityProductService;
 import com.lhiot.healthygood.service.activity.SpecialProductActivityService;
@@ -25,10 +25,12 @@ import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
@@ -88,6 +90,12 @@ public class ProductSectionApi {
         productSectionParam.setPositionId(id);
         productSectionParam.setIncludeShelves(flags);
         ResponseEntity<Pages<ProductSection>> pagesResponseEntity = baseDataServiceFeign.searchProductSection(productSectionParam);
+        List<ProductSection> productSections = pagesResponseEntity.getBody().getArray();
+        productSections.stream().filter(Objects::nonNull).forEach(productSection ->{
+            productSection.getProductShelfList().stream().filter(Objects::nonNull).forEach(productShelf -> {
+                productShelf.setPrice(Objects.isNull(productShelf.getPrice()) ? productShelf.getOriginalPrice() : productShelf.getPrice());
+            });
+        } );
         Tips tips = FeginResponseTools.convertResponse(pagesResponseEntity);
         if (tips.err()) {
             return ResponseEntity.badRequest().body(tips);
@@ -95,12 +103,18 @@ public class ProductSectionApi {
         return ResponseEntity.ok(pagesResponseEntity.getBody().getArray());
     }
 
+    public void setPrice(List<ProductShelf> productShelves){
+        productShelves.stream().filter(Objects::nonNull).forEach(productShelf -> {
+            productShelf.setPrice(Objects.isNull(productShelf.getPrice()) ? productShelf.getOriginalPrice() : productShelf.getPrice());
+        });
+    }
+
 
     @GetMapping("/product/{id}")
     @ApiImplicitParam(paramType = ApiParamType.PATH, name = "id", value = "商品上架Id", dataType = "Long", required = true)
     @ApiOperation(value = "查询商品详情", response = ProductShelf.class, responseContainer = "Set")
     public ResponseEntity singeProduct(Sessions.User user, @PathVariable(value = "id") Long id) {
-        ResponseEntity<ProductShelf> productShelfResponseEntity = baseDataServiceFeign.singleShelf(id);
+        ResponseEntity<ProductShelf> productShelfResponseEntity = baseDataServiceFeign.singleShelf(id,true);
         Tips tips = FeginResponseTools.convertResponse(productShelfResponseEntity);
         if (tips.err()) {
             return ResponseEntity.badRequest().body(tips);
@@ -109,6 +123,30 @@ public class ProductSectionApi {
         if (Objects.isNull(productShelf)){
             return ResponseEntity.badRequest().body(Tips.info("没有数据"));
         }
+        ProductDetailResult detailResult = new ProductDetailResult();
+        BeanUtils.copyProperties(productShelf,detailResult);
+        //商品图片对象
+        Product product = productShelf.getProductSpecification().getProduct();
+        List<String> subImgs = new ArrayList<>();
+        List<String> detailImgs = new ArrayList<>();
+        List<String> mainImags = new ArrayList<>();
+        product.getAttachments().stream().filter(Objects::nonNull).forEach(productAttachment -> {
+            switch (productAttachment.getAttachmentType()){
+                case SUB_IMG:
+                    subImgs.add(productAttachment.getUrl());
+                    break;
+                case DETAIL_IMG:
+                    detailImgs.add(productAttachment.getUrl());
+                    break;
+                case MAIN_IMG:
+                    mainImags.add(productAttachment.getUrl());
+                default:
+                    break;
+            }
+        });
+        detailResult.setSubImage(StringUtils.collectionToDelimitedString(subImgs,","));
+        detailResult.setDetail(StringUtils.collectionToDelimitedString(detailImgs,","));
+
         ActivityProductRecord activityProductRecord = new ActivityProductRecord();
         SpecialProductActivity specialProductActivity = specialProductActivityService.selectActivity();
         if (Objects.nonNull(specialProductActivity)){
@@ -121,12 +159,12 @@ public class ProductSectionApi {
                 activityProductRecord.setUserId(userId);
                 activityProductRecord.setProductShelfId(id);
                 Integer alreadyCount = activityProductRecordService.selectRecordCount(activityProductRecord);
-                productShelf.setActivityPrice(activityProducts.getActivityPrice());
-                productShelf.setLimitCount(specialProductActivity.getLimitCount());
-                productShelf.setAlreadyBuyAmount(alreadyCount);
+                detailResult.setActivityPrice(activityProducts.getActivityPrice());
+                detailResult.setLimitCount(specialProductActivity.getLimitCount());
+                detailResult.setAlreadyBuyAmount(alreadyCount);
             }
         }
-        return ResponseEntity.ok(productShelf);
+        return ResponseEntity.ok(detailResult);
     }
 
     @GetMapping("/product/cart")
@@ -161,6 +199,7 @@ public class ProductSectionApi {
                         productShelf.setActivityPrice(item.getActivityPrice());
                         productShelf.setAlreadyBuyAmount(alreadyCount);
                         productShelf.setLimitCount(specialProductActivity.getLimitCount());
+                        productShelf.setPrice(Objects.isNull(productShelf.getPrice()) ? productShelf.getOriginalPrice() : productShelf.getPrice());
                     }));
         }
 
@@ -184,6 +223,7 @@ public class ProductSectionApi {
         if (tips.err()) {
             return ResponseEntity.badRequest().body(tips.getData());
         }
+        this.setPrice(tips.getData().getArray());
         return ResponseEntity.ok(tips.getData());
     }
 
