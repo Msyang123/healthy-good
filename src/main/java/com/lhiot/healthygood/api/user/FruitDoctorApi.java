@@ -164,13 +164,63 @@ public class FruitDoctorApi {
         settlementApplication.setAmount(amount);
         settlementApplication.setDoctorId(fruitDoctor.getId());
         settlementApplication.setCreateAt(Date.from(Instant.now()));
-        settlementApplication.setSettlementStatus(SettlementStatus.UNSETTLED.toString());
+        settlementApplication.setSettlementStatus(SettlementStatus.UNSETTLED);
         int result = settlementApplicationService.create(settlementApplication);
         Tips tips = new Tips();
         if (result > 0) {
             return ResponseEntity.ok(Tips.info("申请成功！"));
         }
         return ResponseEntity.badRequest().body(Tips.warn("申请失败！"));
+    }
+
+    @Sessions.Uncheck
+    @ApiOperation(value = "结算申请修改-已结算(后台)")
+    @ApiImplicitParams({
+            @ApiImplicitParam(paramType = ApiParamType.PATH, name = "id", value = "结算申请id", required = true, dataType = "Long"),
+            @ApiImplicitParam(paramType = ApiParamType.BODY, name = "settlementApplication", value = "要修改的结算申请信息",dataType = "SettlementApplication", required = true)
+    })
+    @PutMapping("/settlement/{id}")
+    public ResponseEntity updateSettlement(@PathVariable("id") Long id, @RequestBody SettlementApplication settlementApplication) {
+        log.debug("结算申请修改-已结算\t id:{},param:{}", id, settlementApplication);
+
+        // 已结算才进行修改，且只能结算一次，成功后不可修改
+        if (Objects.equals(SettlementStatus.SUCCESS,settlementApplication.getSettlementStatus())){
+            SettlementApplication findSettlementApplication = settlementApplicationService.selectById(id);
+            // 结算用户是否一致
+            if (!Objects.equals(findSettlementApplication.getDoctorId(),settlementApplication.getDoctorId())) {
+                return ResponseEntity.badRequest().body(Tips.warn("要结算的用户不一致，结算失败"));
+            }
+            // 该条结算记录是否已结算过
+            if (Objects.equals(SettlementStatus.SUCCESS,findSettlementApplication.getSettlementStatus())){
+                return ResponseEntity.badRequest().body(Tips.warn("请勿重复结算"));
+            }
+            FruitDoctor findFruitDoctor = fruitDoctorService.selectById(settlementApplication.getDoctorId());
+            if (Objects.isNull(findFruitDoctor)) {
+                return ResponseEntity.badRequest().body(Tips.warn("鲜果师不存在！"));
+            }
+            // 该鲜果师的可结算金额是否大于申请结算金额
+            if (settlementApplication.getAmount() > findFruitDoctor.getBalance()){
+                return ResponseEntity.badRequest().body(Tips.warn("申请结算金额大于用户可结算金额，结算失败"));
+            }
+
+            // 进行结算和鲜果师可结算金额扣减
+            settlementApplication.setId(id);
+            settlementApplication.setDealAt(Date.from(Instant.now()));
+            Tips tips = settlementApplicationService.updateById(settlementApplication, findFruitDoctor);
+            return tips.err() ? ResponseEntity.badRequest().body(Tips.warn(tips.getMessage())) : ResponseEntity.ok().build();
+        }
+        return ResponseEntity.badRequest().body(Tips.warn("结算状态不正确！"));
+    }
+
+    @Sessions.Uncheck
+    @ApiOperation(value = "结算申请分页查询(后台)")
+    @ApiImplicitParam(paramType = ApiParamType.BODY, name = "settlementApplication", value = "结算申请分页查询条件", dataType = "SettlementApplication", required = true)
+    @PostMapping("/settlement/pages")
+    public ResponseEntity search(@RequestBody SettlementApplication settlementApplication){
+        log.debug("结算申请分页查询\t param:{}", settlementApplication);
+
+        Pages<SettlementApplication> settlementApplicationPages = settlementApplicationService.pageList(settlementApplication);
+        return ResponseEntity.ok(settlementApplicationPages);
     }
 
     @PostMapping("/relation")
