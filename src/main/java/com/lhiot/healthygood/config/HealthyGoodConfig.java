@@ -48,13 +48,22 @@ public class HealthyGoodConfig {
     @Data
     @ToString
     public static class WechatPayConfig {
-        private String callbackUrl;
+        private String orderCallbackUrl;
+
+        private String rechargeCallbackUrl;
+
+        private String activityCallbackUrl;
+
+        //调用的基础服务微信支付账户简称
+        private String configName;
     }
 
     @Data
     @ToString
     public static class AliPayConfig {
         private String callbackUrl;
+        //调用的基础服务支付宝支付账户简称
+        private String configName;
     }
 
     @Data

@@ -1,47 +1,40 @@
 package com.lhiot.healthygood.feign.model;
 
-import com.leon.microx.util.Maps;
-import com.lhiot.healthygood.type.FreeSignName;
+import com.lhiot.healthygood.feign.type.ApplicationType;
+import com.lhiot.healthygood.feign.type.CoordinateSystem;
+import com.lhiot.healthygood.feign.type.DeliverType;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.ToString;
 
-import javax.validation.constraints.NotBlank;
-
 /**
- * @author Leon (234239150@qq.com) created in 11:27 18.9.15
+ * @author yj  created in 11:27 18.9.15
  */
 @Data
 @ApiModel
 @ToString
-public class DeliveryParam implements PayloadConverter {
+public class DeliveryParam{
 
-    @NotBlank(message = "手机号不能为空")
-    @ApiModelProperty(notes = "接收短信的手机号", required = true, dataType = "String")
-    private String phoneNumber;
+    @ApiModelProperty(notes = "应用类型", required = true, dataType = "ApplicationType")
+    private ApplicationType applicationType;
 
-    @ApiModelProperty(notes = "模版签名（固定值。枚举: 恰果果, 水果熟了微商城, 视食, 水果熟了）", required = true, dataType = "FreeSignName", example = "LH_QGG, SGSL_WX_SHOP, FOOD_SEE, SGSL")
-    private FreeSignName freeSignName;
+    @ApiModelProperty(notes = "配送回调地址", required = true, dataType = "String")
+    private String backUrl;
 
-    @NotBlank(message = "脱敏订单编号不能为空")
-    @ApiModelProperty(notes = "脱敏订单编号（订单编号后6位）", required = true, dataType = "String")
-    private String desensitizedOrderId;
+    @ApiModelProperty(notes = "坐标系）", required = true, dataType = "CoordinateSystem")
+    private CoordinateSystem coordinate;
 
-    @NotBlank(message = "门店名称不能为空")
-    @ApiModelProperty(notes = "门店名称", required = true, dataType = "String")
-    private String storeName;
+    @ApiModelProperty(notes = "配送时间对象", required = true, dataType = "DeliverTime")
+    private DeliverTime deliverTime;
 
-    @ApiModelProperty(notes = "扩展参数（一般是JSON格式的字符串）", dataType = "String")
-    private String extend;
+    @ApiModelProperty(notes = "配送类型", dataType = "DeliverType")
+    private DeliverType deliveryType;
 
-    @Override
-    public Payload toPayload() {
-        Payload payload = new Payload(phoneNumber, freeSignName, extend);
-        payload.withVars(() -> Maps.of(
-                "orderid", this.getDesensitizedOrderId(),
-                "storename", this.getStoreName()
-        ));
-        return payload;
-    }
+    @ApiModelProperty(notes = "纬度",dataType = "Double")
+    private Double lat;
+
+    @ApiModelProperty(notes = "经度",dataType = "Double")
+    private Double lng;
+
 }
