@@ -11,6 +11,7 @@
         <result column="quantity" property="quantity"/>
         <result column="description" property="description"/>
         <result column="plan_period" property="planPeriod"/>
+        <result column="image" property="image"/>
     </resultMap>
 
     <!-- base查询字段  -->
@@ -22,6 +23,7 @@
             quantity,
             description,
             plan_period,
+            image,
         </trim>
     </sql>
 
@@ -48,6 +50,9 @@
             <if test="planPeriod != null ">
                 plan_period,
             </if>
+            <if test="image != null ">
+                image,
+            </if>
         </trim>
         <trim prefix="values (" suffix=")" suffixOverrides=",">
             <if test="id != null ">
@@ -67,6 +72,9 @@
             </if>
             <if test="planPeriod != null ">
                 #{planPeriod},
+            </if>
+            <if test="image != null ">
+                #{image},
             </if>
         </trim>
     </insert>
@@ -92,6 +100,9 @@
             </if>
             <if test="planPeriod != null ">
                 plan_period = #{planPeriod},
+            </if>
+            <if test="image != null ">
+                image = #{image},
             </if>
         </set>
         where id=#{id}

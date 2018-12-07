@@ -8,6 +8,7 @@ import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.ToString;
 
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -71,7 +72,7 @@ public class DeliverOrder {
     private Double lat;
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
     @ApiModelProperty(value = "配送时间", dataType = "Date")
-    private java.util.Date deliveryTime;
+    private Date deliveryTime;
 
     @ApiModelProperty(value = "配送订单商品", dataType = "List")
     private List<DeliverProduct> deliverOrderProductList;

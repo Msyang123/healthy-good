@@ -164,6 +164,7 @@
         <if test="planPeriod != null ">
             and plan_period = #{planPeriod}
         </if>
+        order by sort asc
     </select>
 
     <!--批量新增关系-->

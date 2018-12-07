@@ -64,10 +64,12 @@ public interface ThirdpartyServerFeign {
 
 
     /**
-     * 门店减库存
+     * 门店减库存 已废弃
+     * @see OrderServiceFeign sendOrderToHd()
      * @param orderInfo
      * @return
      */
+    @Deprecated
     @RequestMapping(value = "/hd/inventory", method = RequestMethod.PUT)
     ResponseEntity<String> reduce(@RequestBody HdOrderInfo orderInfo);
 

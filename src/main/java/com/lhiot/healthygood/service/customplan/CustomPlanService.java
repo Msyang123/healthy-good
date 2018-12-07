@@ -56,28 +56,28 @@ public class CustomPlanService {
         if(Objects.isNull(customPlan))
             return result;
         BeanUtils.copyProperties(customPlan, result);
-        List<CustomPlanPeriodResult> customPlanPeriodResultList = getCustomPlanPeriodResultList(customPlan);
+        List<CustomPlanPeriodResult> customPlanPeriodResultList = getCustomPlanPeriodResultList(id);
         result.setCustomPlanPeriodResultList(customPlanPeriodResultList);
         result.setPrice(customPlanSpecificationMapper.findMinPriceByPlanId(id));//最低定制规格价格
         return result;
     }
 
-    private List<CustomPlanPeriodResult> getCustomPlanPeriodResultList(CustomPlan customPlan) {
+    private List<CustomPlanPeriodResult> getCustomPlanPeriodResultList(Long customPlanId) {
         //获取定制计划周期 - 周
         List<CustomPlanPeriodResult> results = new ArrayList<>();
-        CustomPlanPeriodResult customPlanPeriodOfWeekResult = getCustomPlanDetailStandardResult(customPlan, 7);
-        CustomPlanPeriodResult customPlanPeriodOfMonthResult = getCustomPlanDetailStandardResult(customPlan, 30);
+        CustomPlanPeriodResult customPlanPeriodOfWeekResult = getCustomPlanDetailStandardResult(customPlanId, 7);
+        CustomPlanPeriodResult customPlanPeriodOfMonthResult = getCustomPlanDetailStandardResult(customPlanId, 30);
         results.add(customPlanPeriodOfWeekResult);
         results.add(customPlanPeriodOfMonthResult);
         return results;
     }
 
-    private CustomPlanPeriodResult getCustomPlanDetailStandardResult(CustomPlan customPlan, int type) {
+    private CustomPlanPeriodResult getCustomPlanDetailStandardResult(Long customPlanId, int type) {
         CustomPlanPeriodResult customPlanPeriodResult = new CustomPlanPeriodResult();
         customPlanPeriodResult.setPlanPeriod(type);
         //获取套餐列表 依据定制计划id和周期类型
         Map<String, Object> param = new HashMap<>();
-        param.put("planId", customPlan.getId());
+        param.put("planId", customPlanId);
         param.put("planPeriod", type);
         List<CustomPlanSpecification> customPlanSpecifications = customPlanSpecificationMapper.findByPlanIdAndPerid(param);
         customPlanPeriodResult.setSpecificationList(customPlanSpecifications);
@@ -86,7 +86,7 @@ public class CustomPlanService {
         List<CustomPlanProductResult> customPlanProductResults = new ArrayList<>();
 
         //依据上架ids查询上架商品信息
-        String[] shelfIds = customPlanProducts.parallelStream().map(CustomPlanProduct::getProductShelfId).map(String::valueOf).toArray(String[]::new);
+        Object[] shelfIds = customPlanProducts.parallelStream().map(CustomPlanProduct::getProductShelfId).map(String::valueOf).toArray(String[]::new);
 
         ProductShelfParam productShelfParam = new ProductShelfParam();
         productShelfParam.setIds(StringUtils.join(",", shelfIds));

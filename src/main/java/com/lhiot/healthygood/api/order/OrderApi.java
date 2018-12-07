@@ -1,11 +1,14 @@
 package com.lhiot.healthygood.api.order;
 
 import com.leon.microx.predefine.OnOff;
-import com.leon.microx.util.*;
+import com.leon.microx.util.BeanUtils;
+import com.leon.microx.util.Calculator;
+import com.leon.microx.util.StringUtils;
 import com.leon.microx.web.result.Pages;
 import com.leon.microx.web.result.Tips;
 import com.leon.microx.web.result.Tuple;
 import com.leon.microx.web.session.Sessions;
+import com.lhiot.healthygood.config.HealthyGoodConfig;
 import com.lhiot.healthygood.feign.BaseDataServiceFeign;
 import com.lhiot.healthygood.feign.OrderServiceFeign;
 import com.lhiot.healthygood.feign.PaymentServiceFeign;
@@ -14,28 +17,23 @@ import com.lhiot.healthygood.feign.model.*;
 import com.lhiot.healthygood.feign.type.ApplicationType;
 import com.lhiot.healthygood.feign.type.DeliverType;
 import com.lhiot.healthygood.feign.type.OrderStatus;
+import com.lhiot.healthygood.feign.type.SourceType;
 import com.lhiot.healthygood.service.order.OrderService;
+import com.lhiot.healthygood.util.ConvertRequestToMap;
 import com.lhiot.healthygood.util.FeginResponseTools;
+import com.lhiot.healthygood.util.RealClientIp;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiOperation;
-import lombok.Cleanup;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.lang.Nullable;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -49,14 +47,21 @@ public class OrderApi {
     private final OrderServiceFeign orderServiceFeign;
     private final PaymentServiceFeign paymentServiceFeign;
     private final OrderService orderService;
+    private final HealthyGoodConfig.WechatPayConfig wechatPayConfig;
 
     @Autowired
-    public OrderApi(BaseDataServiceFeign baseDataServiceFeign, ThirdpartyServerFeign thirdpartyServerFeign, OrderServiceFeign orderServiceFeign, PaymentServiceFeign paymentServiceFeign, OrderService orderService) {
+    public OrderApi(BaseDataServiceFeign baseDataServiceFeign,
+                    ThirdpartyServerFeign thirdpartyServerFeign,
+                    OrderServiceFeign orderServiceFeign,
+                    PaymentServiceFeign paymentServiceFeign,
+                    OrderService orderService,
+                    HealthyGoodConfig healthyGoodConfig) {
         this.baseDataServiceFeign = baseDataServiceFeign;
         this.thirdpartyServerFeign = thirdpartyServerFeign;
         this.orderServiceFeign = orderServiceFeign;
         this.paymentServiceFeign = paymentServiceFeign;
         this.orderService = orderService;
+        this.wechatPayConfig = healthyGoodConfig.getWechatPay();
     }
 
     @PostMapping("/orders")
@@ -68,6 +73,7 @@ public class OrderApi {
         Long userId = Long.valueOf(sessionUserMap.get("userId").toString());
         orderParam.setUserId(userId);//设置业务用户id
         orderParam.setApplicationType(ApplicationType.FRUIT_DOCTOR);
+        orderParam.setOrderType("NORMAL");//普通订单
 
         String storeCode = orderParam.getOrderStore().getStoreCode();
         //判断门店是否存在
@@ -115,7 +121,8 @@ public class OrderApi {
                 if (Objects.equals(productShelf.getProductSpecification().getBarcode(), businv.get("barCode"))
                         && productShelf.getProductSpecification().getLimitInventory() > Double.valueOf(businv.get("qty").toString())) {
                     return ResponseEntity.badRequest().body(
-                            Tips.of(HttpStatus.BAD_REQUEST, String.format("%s实际库存%s低于安全库存%d，不允许销售", productShelf.getProductSpecification().getBarcode(), businv.get("qty").toString(), productShelf.getProductSpecification().getLimitInventory())));
+                            Tips.warn(String.format("%s实际库存%s低于安全库存%d，不允许销售", productShelf.getProductSpecification().getBarcode(), businv.get("qty").toString(), productShelf.getProductSpecification().getLimitInventory()))
+                    );
                 }
             }
         }
@@ -176,6 +183,7 @@ public class OrderApi {
         if (Objects.isNull(validateResult) || validateResult.getStatusCode().isError()) {
             return validateResult;
         }
+        //TODO 依据状态不同处理不同接口调用
         Tips refundOrderTips = FeginResponseTools.convertResponse(orderServiceFeign.refundOrder(orderCode, returnOrderParam));
         if (refundOrderTips.err()) {
             return ResponseEntity.badRequest().body(refundOrderTips);
@@ -200,6 +208,8 @@ public class OrderApi {
     @ApiOperation("我的鲜果师客户订单列表")
     public ResponseEntity<Tips> customersOrders(@RequestParam(value = "orderStatus", required = false) OrderStatus orderStatus, Sessions.User user) {
         //TODO
+
+        //xxx
         Tips tips = new Tips();
         tips.setData(Tuple.empty());
         return ResponseEntity.ok(tips);
@@ -207,7 +217,12 @@ public class OrderApi {
 
     @GetMapping("/orders/{orderCode}/detail")
     @ApiOperation("根据订单code查询订单详情")
-    public ResponseEntity<Tips> orderDetial(@Valid @NotBlank @PathVariable("orderCode") String orderCode) {
+    public ResponseEntity<Tips> orderDetial(@Valid @NotBlank @PathVariable("orderCode") String orderCode, Sessions.User user) {
+        Long userId = Long.valueOf(user.getUser().get("userId").toString());
+        ResponseEntity<Tips> validateResult = validateOrderOwner(userId, orderCode);
+        if (Objects.isNull(validateResult) || validateResult.getStatusCode().isError()) {
+            return validateResult;
+        }
         Tips<OrderDetailResult> orderDetailResultTips = FeginResponseTools.convertResponse(orderServiceFeign.orderDetail(orderCode, true, true));
         if (orderDetailResultTips.err()) {
             return ResponseEntity.badRequest().body(orderDetailResultTips);
@@ -220,6 +235,7 @@ public class OrderApi {
     public ResponseEntity<Tips> countStatus(Sessions.User user) {
 
         //TODO 待实现
+        //xxx
         /*
          * {
          *   waitPaymentCount:待付款数量,
@@ -231,43 +247,31 @@ public class OrderApi {
     }
 
     @PostMapping("/orders/{orderCode}/payment-sign")
-    @ApiOperation("订单支付签名")
-    public ResponseEntity<Tips> paymentSign(@Valid @NotBlank @PathVariable("orderCode") String orderCode, Sessions.User user) {
+    @ApiOperation("订单微信支付签名")
+    public ResponseEntity<Tips> paymentSign(@Valid @NotBlank @PathVariable("orderCode") String orderCode, HttpServletRequest request, Sessions.User user) {
         Long userId = Long.valueOf(user.getUser().get("userId").toString());
+        String openId = user.getUser().get("openId").toString();
         ResponseEntity<Tips> validateResult = validateOrderOwner(userId, orderCode);
         if (Objects.isNull(validateResult) || validateResult.getStatusCode().isError()) {
             return validateResult;
         }
         OrderDetailResult orderDetailResult = (OrderDetailResult) validateResult.getBody().getData();
-        //TODO orderService设置签名信息
-        paymentServiceFeign.paymentSign();//TODO 基础服务未完善
-        return ResponseEntity.ok().build();
-    }
-
-    @Sessions.Uncheck
-    @PostMapping("/orders/wx-pay/payment-callback")
-    @ApiOperation("订单支付微信回调-后端回调处理")
-    public ResponseEntity<String> wxPayPaymentCallback(HttpServletRequest request) {
-        Map<String, Object> parameters = this.convertRequestParameters(request);
-        //调用基础服务验证参数签名是否正确
-        paymentServiceFeign.paymentSign();//TODO 基础服务未完善
-        //获取订单号 修改订单状态
-        orderServiceFeign.updateOrderStatus("", OrderStatus.WAIT_SEND_OUT);//TODO 需要基础服务提供
-        return ResponseEntity.ok("<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
-                + "<xml><return_code><![CDATA[SUCCESS]]></return_code>"
-                + "<return_msg><![CDATA[OK]]></return_msg></xml>");
-    }
-
-    @Sessions.Uncheck
-    @PostMapping("/orders/ali-pay/payment-callback")
-    @ApiOperation("订单支付支付宝回调-后端回调处理")
-    public ResponseEntity<String> aliPayPaymentCallback(HttpServletRequest request) {
-        Map<String, Object> parameters = this.convertRequestParameters(request);
-        //调用基础服务验证参数签名是否正确
-        paymentServiceFeign.paymentSign();//TODO 基础服务未完善
-        //获取订单号 修改订单状态
-        orderServiceFeign.updateOrderStatus("", OrderStatus.WAIT_SEND_OUT);//TODO 需要基础服务提供
-        return ResponseEntity.ok("success");
+        PaySign paySign = new PaySign();
+        paySign.setApplicationType(ApplicationType.FRUIT_DOCTOR);
+        paySign.setBackUrl(wechatPayConfig.getOrderCallbackUrl());
+        paySign.setClientIp(RealClientIp.getRealIp(request));//获取客户端真实ip
+        paySign.setConfigName(wechatPayConfig.getConfigName());//微信支付简称
+        paySign.setFee(orderDetailResult.getAmountPayable() + orderDetailResult.getDeliveryAmount());
+        paySign.setMemo("普通订单支付");
+        paySign.setOpenid(openId);
+        paySign.setSourceType(SourceType.ORDER);
+        paySign.setUserId(userId);
+        paySign.setAttach(orderCode);
+        Tips<String> wxSignResponse = FeginResponseTools.convertResponse(paymentServiceFeign.wxSign(paySign));
+        if (wxSignResponse.err()) {
+            return ResponseEntity.badRequest().body(wxSignResponse);
+        }
+        return ResponseEntity.ok(wxSignResponse);
     }
 
 
@@ -275,7 +279,7 @@ public class OrderApi {
     @PostMapping("/orders/hd-callback")
     @ApiOperation(value = "海鼎回调-后端回调处理")
     public ResponseEntity haidingCallback(HttpServletRequest request) {
-        Map<String, Object> parameters = this.convertRequestParameters(request);
+        Map<String, Object> parameters = ConvertRequestToMap.convertRequestParameters(request);
 
         Tips hdCallbackDeal = orderService.hdCallbackDeal(parameters);
         if (hdCallbackDeal.err()) {
@@ -290,7 +294,7 @@ public class OrderApi {
     public ResponseEntity deliverCallback(@PathVariable("deliverType") DeliverType deliverType, HttpServletRequest request) {
 
         //依据deliverType配送类型处理
-        Map<String, Object> parameters = this.convertRequestParameters(request);
+        Map<String, Object> parameters = ConvertRequestToMap.convertRequestParameters(request);
 
         Tips deliverCallbackDeal = orderService.deliverCallbackDeal(parameters);
         if (deliverCallbackDeal.err()) {
@@ -308,33 +312,10 @@ public class OrderApi {
             return ResponseEntity.badRequest().body(orderDetailResultTips);
         }
         if (!Objects.equals(orderDetailResultTips.getData().getUserId(), userId)) {
-            return ResponseEntity.badRequest().body(Tips.of(HttpStatus.BAD_REQUEST, "当前操作订单不属于登录用户"));
+            return ResponseEntity.badRequest().body(Tips.warn("当前操作订单不属于登录用户"));
         }
         return ResponseEntity.ok(orderDetailResultTips);
     }
 
-    /**
-     * 将request中流转换成Map参数
-     *
-     * @param request
-     * @return
-     */
-    @Nullable
-    private Map<String, Object> convertRequestParameters(HttpServletRequest request) {
-        Map<String, Object> parameters = null;
-        try (InputStream inputStream = request.getInputStream()) {
-            if (Objects.nonNull(inputStream)) {
-                @Cleanup BufferedReader in = new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8));
-                String parameterString = StringUtils.collectionToDelimitedString(IOUtils.readLines(in), "");
-                log.info("request转换成字符串结果：{}", parameterString);
-                if (StringUtils.isNotBlank(parameterString)) {
-                    parameters = Jackson.map(parameterString);
-                }
-            }
-        } catch (IOException ignore) {
-            log.error("convertRequestParameters", ignore);
-        }
-        return parameters;
-    }
 
 }

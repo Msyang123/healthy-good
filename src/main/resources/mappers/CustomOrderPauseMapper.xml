@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.lhiot.healthygood.mapper.customplan.CustomOrderPauseMapper">
+
+    <!-- 数据库字段对象关系映射 -->
+    <resultMap id="BaseResultMap"
+        type="com.lhiot.healthygood.domain.customplan.CustomOrderPause" >
+        <id column="id" property="id"/>
+        <result column="custom_order_id" property="customOrderId" />
+        <result column="create_at" property="createAt" />
+        <result column="pause_begin_at" property="pauseBeginAt" />
+        <result column="pause_end_at" property="pauseEndAt" />
+    </resultMap>
+
+    <!-- base查询字段  -->
+    <sql id="Base_Column_List" >
+        <trim suffixOverrides="," >
+            id,
+            custom_order_id,
+            create_at,
+            pause_begin_at,
+            pause_end_at,
+        </trim>
+    </sql>
+
+    <!--新增定制计划-->
+    <insert id="create" parameterType="com.lhiot.healthygood.domain.customplan.CustomOrderPause" useGeneratedKeys="true" keyColumn="id" keyProperty="id">
+        insert into custom_order_pause
+        <trim prefix="(" suffix=")" suffixOverrides="," >
+            <if test="customOrderId != null ">
+                custom_order_id,
+            </if>
+            <if test="createAt != null ">
+                create_at,
+            </if>
+            <if test="pauseBeginAt != null ">
+                pause_begin_at,
+            </if>
+            <if test="pauseEndAt != null ">
+                pause_end_at,
+            </if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides="," >
+            <if test="customOrderId != null ">
+                #{customOrderId},
+            </if>
+            <if test="createAt != null ">
+                ${createAt},
+            </if>
+            <if test="pauseBeginAt != null ">
+                {pauseBeginAt},
+            </if>
+            <if test="pauseEndAt != null ">
+                {pauseEndAt},
+            </if>
+        </trim>
+    </insert>
+
+    <delete id="deleteByCustomOrderId" parameterType="Long">
+      delete from custom_order_pause where custom_order_id = #{0}
+    </delete>
+
+    <!-- 根据customOrderId查找 -->
+	<select id="selectByCustomOrderId" resultMap="BaseResultMap" parameterType="Long">
+        select <include refid="Base_Column_List" />
+		from custom_order_pause where custom_order_id = #{0}
+	</select>
+</mapper>
