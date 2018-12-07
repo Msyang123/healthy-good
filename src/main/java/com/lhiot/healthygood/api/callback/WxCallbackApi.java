@@ -100,7 +100,7 @@ public class WxCallbackApi {
         Long userId = Long.valueOf(parameters.get("attach"));
         //给用户加鲜果币
         BalanceOperationParam balanceOperationParam = new BalanceOperationParam();
-        balanceOperationParam.setApplicationType(ApplicationType.FRUIT_DOCTOR);
+        balanceOperationParam.setApplicationType(ApplicationType.HEALTH_GOOD);
         balanceOperationParam.setMoney(Long.valueOf(parameters.get("total_fee")));
         balanceOperationParam.setOperation(OperationStatus.ADD);
         balanceOperationParam.setSourceId(parameters.get("out_trade_no"));

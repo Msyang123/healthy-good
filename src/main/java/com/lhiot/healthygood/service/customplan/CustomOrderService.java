@@ -161,7 +161,7 @@ public class CustomOrderService {
     public Tips extraction(CustomOrder customOrder, String remark) {
         CreateOrderParam orderParam = new CreateOrderParam();
         orderParam.setUserId(customOrder.getUserId());//设置业务用户id
-        orderParam.setApplicationType(ApplicationType.FRUIT_DOCTOR);
+        orderParam.setApplicationType(ApplicationType.HEALTH_GOOD);
         orderParam.setAddress(customOrder.getDeliveryAddress());//定制收货地址
         orderParam.setContactPhone(customOrder.getContactPhone());
         orderParam.setNickname(customOrder.getReceiveUser());
@@ -221,7 +221,7 @@ public class CustomOrderService {
             return Tips.warn("未找到定制计划中的套餐");
 
         //查找基础服务上架商品信息
-        Tips<ProductShelf> productShelfTips = FeginResponseTools.convertResponse(baseDataServiceFeign.singleShelf(customPlanProductResult.getProductShelfId()));
+        Tips<ProductShelf> productShelfTips = FeginResponseTools.convertResponse(baseDataServiceFeign.singleShelf(customPlanProductResult.getProductShelfId(),true));
         if (productShelfTips.err()) {
             return productShelfTips;
         }
