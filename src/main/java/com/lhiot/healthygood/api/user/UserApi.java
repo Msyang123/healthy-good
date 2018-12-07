@@ -207,7 +207,7 @@ public class UserApi {
             return ResponseEntity.badRequest().body(searchUserEntity.getBody());
         }
         UserDetailResult searchUser = (UserDetailResult) searchUserEntity.getBody();
-        Sessions.User sessionUser = session.create(request).user(Maps.of("userId", searchUser.getId(), "openId", searchUser.getOpenId())).timeToLive(30, TimeUnit.MINUTES)
+        Sessions.User sessionUser = session.create(request).user(Maps.of("userId", searchUser.getId(), "openId", searchUser.getOpenId())).timeToLive(3, TimeUnit.HOURS)
                 .authorities(Authority.of("/**", RequestMethod.values()));
         String sessionId = session.cache(sessionUser);
         return ResponseEntity.ok()
@@ -295,7 +295,7 @@ public class UserApi {
     @ApiImplicitParam(paramType = "query", name = "phone", value = "发送用户注册验证码对应手机号", required = true, dataType = "String")
     public ResponseEntity captcha(@RequestParam String phone) {
         //TODO 需要申请发送短信模板
-        ResponseEntity<UserDetailResult> user = baseUserServerFeign.findByPhone(phone, ApplicationType.FRUIT_DOCTOR);
+        ResponseEntity<UserDetailResult> user = baseUserServerFeign.findByPhone(phone, ApplicationType.HEALTH_GOOD);
         if (user.getStatusCodeValue() > 200 && Objects.nonNull(user.getBody())) {
             return ResponseEntity.badRequest().body("用户已注册");
         }
@@ -313,7 +313,7 @@ public class UserApi {
         Long userId = (Long) user.getUser().get("userId");
         UserBindingPhoneParam userBindingPhoneParam = new UserBindingPhoneParam();
         userBindingPhoneParam.setPhone(validateParam.getPhoneNumber());
-        userBindingPhoneParam.setApplicationType(ApplicationType.FRUIT_DOCTOR);
+        userBindingPhoneParam.setApplicationType(ApplicationType.HEALTH_GOOD);
         Tips<UserDetailResult> userDetailResultTips = FeginResponseTools.convertResponse(baseUserServerFeign.userBindingPhone(userId, userBindingPhoneParam));
         if (userDetailResultTips.err()) {
             return ResponseEntity.badRequest().body(userDetailResultTips.getData());

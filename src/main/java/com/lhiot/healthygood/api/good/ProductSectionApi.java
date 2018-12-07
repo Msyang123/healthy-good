@@ -1,6 +1,7 @@
 package com.lhiot.healthygood.api.good;
 
 import com.leon.microx.predefine.OnOff;
+import com.leon.microx.util.StringUtils;
 import com.leon.microx.web.result.Pages;
 import com.leon.microx.web.result.Tips;
 import com.leon.microx.web.session.Sessions;
@@ -8,26 +9,28 @@ import com.leon.microx.web.swagger.ApiParamType;
 import com.lhiot.healthygood.domain.activity.ActivityProduct;
 import com.lhiot.healthygood.domain.activity.ActivityProductRecord;
 import com.lhiot.healthygood.domain.activity.SpecialProductActivity;
+import com.lhiot.healthygood.domain.good.ProductDetailResult;
 import com.lhiot.healthygood.domain.good.ProductSearchParam;
 import com.lhiot.healthygood.feign.BaseDataServiceFeign;
-import com.lhiot.healthygood.feign.model.ProductSection;
-import com.lhiot.healthygood.feign.model.ProductSectionParam;
-import com.lhiot.healthygood.feign.model.ProductShelf;
-import com.lhiot.healthygood.feign.model.ProductShelfParam;
+import com.lhiot.healthygood.feign.model.*;
+import com.lhiot.healthygood.feign.type.AttachmentType;
 import com.lhiot.healthygood.service.activity.ActivityProductRecordService;
 import com.lhiot.healthygood.service.activity.ActivityProductService;
 import com.lhiot.healthygood.service.activity.SpecialProductActivityService;
 import com.lhiot.healthygood.type.ShelfType;
+import com.lhiot.healthygood.type.YesOrNo;
 import com.lhiot.healthygood.util.FeginResponseTools;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
@@ -53,11 +56,16 @@ public class ProductSectionApi {
     @GetMapping("/product-sections/{id}")
     @ApiImplicitParams({
             @ApiImplicitParam(paramType = ApiParamType.PATH, name = "id", value = "板块编号", dataType = "Long", required = true),
-            @ApiImplicitParam(paramType = ApiParamType.QUERY, name = "flag", value = "是否查询商品信息", dataType = "Boolean")
+            @ApiImplicitParam(paramType = ApiParamType.QUERY, name = "flag", value = "是否查询商品信息", dataType = "YesOrNo")
     })
     @ApiOperation(value = "某个商品板块的商品信息列表", response = ProductSection.class)
-    public ResponseEntity productSections(@PathVariable("id") Long id, @RequestParam(value = "flag", required = false) boolean flag) {
-        ResponseEntity<ProductSection> productSectionResponseEntity = baseDataServiceFeign.singleProductSection(id, flag, null);
+    public ResponseEntity productSections(@PathVariable("id") Long id, @RequestParam(value = "flag") YesOrNo flag) {
+        boolean flags = false;
+        if (Objects.equals(flag.toString(),"YES")){
+            flags = true;
+
+        }
+        ResponseEntity<ProductSection> productSectionResponseEntity = baseDataServiceFeign.singleProductSection(id, flags, null);
         Tips tips = FeginResponseTools.convertResponse(productSectionResponseEntity);
         if (tips.err()) {
             return ResponseEntity.badRequest().body(tips);
@@ -69,19 +77,36 @@ public class ProductSectionApi {
     @PostMapping("/product-sections/position")
     @ApiImplicitParams({
             @ApiImplicitParam(paramType = ApiParamType.QUERY, name = "id", value = "位置编号", dataType = "Long", required = true),
-            @ApiImplicitParam(paramType = ApiParamType.QUERY, name = "flag", value = "是否查询商品信息", dataType = "Boolean")
+            @ApiImplicitParam(paramType = ApiParamType.QUERY, name = "flag", value = "是否查询商品信息", dataType = "YesOrNo")
     })
     @ApiOperation(value = "根据位置编码查询所有商品板块列表（商品信息可选）", response = ProductSection.class, responseContainer = "Set")
-    public ResponseEntity positionProductSection(@RequestParam(value = "positionId") Long id, @RequestParam(value = "flag", required = false) boolean flag) {
+    public ResponseEntity positionProductSection(@RequestParam(value = "id") Long id, @RequestParam(value = "flag") YesOrNo flag) {
+        boolean flags = false;
+        if (Objects.equals(flag.toString(),"YES")){
+            flags = true;
+
+        }
         ProductSectionParam productSectionParam = new ProductSectionParam();
         productSectionParam.setPositionId(id);
-        productSectionParam.setIncludeShelves(flag);
+        productSectionParam.setIncludeShelves(flags);
         ResponseEntity<Pages<ProductSection>> pagesResponseEntity = baseDataServiceFeign.searchProductSection(productSectionParam);
+        List<ProductSection> productSections = pagesResponseEntity.getBody().getArray();
+        productSections.stream().filter(Objects::nonNull).forEach(productSection ->{
+            productSection.getProductShelfList().stream().filter(Objects::nonNull).forEach(productShelf -> {
+                productShelf.setPrice(Objects.isNull(productShelf.getPrice()) ? productShelf.getOriginalPrice() : productShelf.getPrice());
+            });
+        } );
         Tips tips = FeginResponseTools.convertResponse(pagesResponseEntity);
         if (tips.err()) {
             return ResponseEntity.badRequest().body(tips);
         }
-        return ResponseEntity.badRequest().body(pagesResponseEntity.getBody());
+        return ResponseEntity.ok(pagesResponseEntity.getBody().getArray());
+    }
+
+    public void setPrice(List<ProductShelf> productShelves){
+        productShelves.stream().filter(Objects::nonNull).forEach(productShelf -> {
+            productShelf.setPrice(Objects.isNull(productShelf.getPrice()) ? productShelf.getOriginalPrice() : productShelf.getPrice());
+        });
     }
 
 
@@ -89,28 +114,57 @@ public class ProductSectionApi {
     @ApiImplicitParam(paramType = ApiParamType.PATH, name = "id", value = "商品上架Id", dataType = "Long", required = true)
     @ApiOperation(value = "查询商品详情", response = ProductShelf.class, responseContainer = "Set")
     public ResponseEntity singeProduct(Sessions.User user, @PathVariable(value = "id") Long id) {
-        ResponseEntity<ProductShelf> productShelfResponseEntity = baseDataServiceFeign.singleShelf(id);
+        ResponseEntity<ProductShelf> productShelfResponseEntity = baseDataServiceFeign.singleShelf(id,true);
         Tips tips = FeginResponseTools.convertResponse(productShelfResponseEntity);
         if (tips.err()) {
             return ResponseEntity.badRequest().body(tips);
         }
         ProductShelf productShelf = productShelfResponseEntity.getBody();
+        if (Objects.isNull(productShelf)){
+            return ResponseEntity.badRequest().body(Tips.info("没有数据"));
+        }
+        ProductDetailResult detailResult = new ProductDetailResult();
+        BeanUtils.copyProperties(productShelf,detailResult);
+        //商品图片对象
+        Product product = productShelf.getProductSpecification().getProduct();
+        List<String> subImgs = new ArrayList<>();
+        List<String> detailImgs = new ArrayList<>();
+        List<String> mainImags = new ArrayList<>();
+        product.getAttachments().stream().filter(Objects::nonNull).forEach(productAttachment -> {
+            switch (productAttachment.getAttachmentType()){
+                case SUB_IMG:
+                    subImgs.add(productAttachment.getUrl());
+                    break;
+                case DETAIL_IMG:
+                    detailImgs.add(productAttachment.getUrl());
+                    break;
+                case MAIN_IMG:
+                    mainImags.add(productAttachment.getUrl());
+                default:
+                    break;
+            }
+        });
+        detailResult.setSubImage(StringUtils.collectionToDelimitedString(subImgs,","));
+        detailResult.setDetail(StringUtils.collectionToDelimitedString(detailImgs,","));
+
         ActivityProductRecord activityProductRecord = new ActivityProductRecord();
         SpecialProductActivity specialProductActivity = specialProductActivityService.selectActivity();
-        Long userId = Long.valueOf(user.getUser().get("userId").toString());
-        ActivityProduct activityProduct = new ActivityProduct();
-        activityProduct.setProductShelfId(id);
-        ActivityProduct activityProducts = activityProductService.selectActivityProduct(activityProduct);
-        //如果是新品尝鲜的商品先要查出活动价格以及用户购买次数和限制购买次数
-        if (Objects.nonNull(specialProductActivity) && Objects.nonNull(activityProducts)) {
-            activityProductRecord.setUserId(userId);
-            activityProductRecord.setProductShelfId(id);
-            Integer alreadyCount = activityProductRecordService.selectRecordCount(activityProductRecord);
-            productShelf.setActivityPrice(activityProducts.getActivityPrice());
-            productShelf.setLimitCount(specialProductActivity.getLimitCount());
-            productShelf.setAlreadyBuyAmount(alreadyCount);
+        if (Objects.nonNull(specialProductActivity)){
+            Long userId = Long.valueOf(user.getUser().get("userId").toString());
+            ActivityProduct activityProduct = new ActivityProduct();
+            activityProduct.setProductShelfId(id);
+            ActivityProduct activityProducts = activityProductService.selectActivityProduct(activityProduct);
+            //如果是新品尝鲜的商品先要查出活动价格以及用户购买次数和限制购买次数
+            if (Objects.nonNull(activityProducts)) {
+                activityProductRecord.setUserId(userId);
+                activityProductRecord.setProductShelfId(id);
+                Integer alreadyCount = activityProductRecordService.selectRecordCount(activityProductRecord);
+                detailResult.setActivityPrice(activityProducts.getActivityPrice());
+                detailResult.setLimitCount(specialProductActivity.getLimitCount());
+                detailResult.setAlreadyBuyAmount(alreadyCount);
+            }
         }
-        return ResponseEntity.ok(productShelf);
+        return ResponseEntity.ok(detailResult);
     }
 
     @GetMapping("/product/cart")
@@ -119,7 +173,7 @@ public class ProductSectionApi {
     public ResponseEntity cart(Sessions.User user, @RequestParam(value = "ids") String ids) {
         ProductShelfParam productShelfParam = new ProductShelfParam();
         productShelfParam.setIds(ids);
-        productShelfParam.setApplicationType("FRUIT_DOCTOR");
+        productShelfParam.setApplicationType("HEALTH_GOOD");
         ResponseEntity<Pages<ProductShelf>> pagesResponseEntity = baseDataServiceFeign.searchProductShelves(productShelfParam);
         Tips tips = FeginResponseTools.convertResponse(pagesResponseEntity);
         if (tips.err()) {
@@ -145,6 +199,7 @@ public class ProductSectionApi {
                         productShelf.setActivityPrice(item.getActivityPrice());
                         productShelf.setAlreadyBuyAmount(alreadyCount);
                         productShelf.setLimitCount(specialProductActivity.getLimitCount());
+                        productShelf.setPrice(Objects.isNull(productShelf.getPrice()) ? productShelf.getOriginalPrice() : productShelf.getPrice());
                     }));
         }
 
@@ -157,7 +212,7 @@ public class ProductSectionApi {
     @ApiOperation(value = "查询/搜索商品")
     public ResponseEntity<Pages> searchProduct(@RequestBody ProductSearchParam productSearchParam) {
         ProductShelfParam productShelfParam = new ProductShelfParam();
-        productShelfParam.setApplicationType("FRUIT_DOCTOR");
+        productShelfParam.setApplicationType("HEALTH_GOOD");
         productShelfParam.setKeyword(productSearchParam.getKeywords());
         productShelfParam.setShelfStatus(OnOff.ON);
         productShelfParam.setShelfType(ShelfType.NORMAL);
@@ -168,6 +223,7 @@ public class ProductSectionApi {
         if (tips.err()) {
             return ResponseEntity.badRequest().body(tips.getData());
         }
+        this.setPrice(tips.getData().getArray());
         return ResponseEntity.ok(tips.getData());
     }
 

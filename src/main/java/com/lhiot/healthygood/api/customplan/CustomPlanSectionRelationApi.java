@@ -38,7 +38,7 @@ public class CustomPlanSectionRelationApi {
     })
     @PutMapping("/custom-plan-section-relations/batches")
     public ResponseEntity updateBatch(@RequestParam("sectionId") Long sectionId, @RequestParam(value = "planIds", required = false) String planIds, @RequestParam(value = "sorts", required = false) String sorts) {
-        log.debug("批量修改定制版块与定制计划关系\t param:{}", sectionId, planIds, sorts);
+        log.debug("批量修改定制版块与定制计划关系\t sectionId: {}, planIds: {},param:{}", sectionId, planIds, sorts);
 
         Tips tips = customPlanSectionRelationService.updateRelationList(sectionId, planIds, sorts);
         return !tips.err() ? ResponseEntity.ok().build() : ResponseEntity.badRequest().body(Tips.warn("批量修改定制版块与定制计划关系失败！"));

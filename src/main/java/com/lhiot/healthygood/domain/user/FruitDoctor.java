@@ -5,6 +5,8 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
+import com.lhiot.healthygood.type.DoctorStatus;
+import com.lhiot.healthygood.type.Hot;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
@@ -78,8 +80,8 @@ public class FruitDoctor{
     *鲜果师状态 VALID正常  INVALID已停用
     */
     @JsonProperty("doctorStatus")
-    @ApiModelProperty(value = "鲜果师状态 VALID正常  INVALID已停用", dataType = "String")
-    private String doctorStatus;
+    @ApiModelProperty(value = "鲜果师状态 VALID正常  INVALID已停用", dataType = "DoctorStatus")
+    private DoctorStatus doctorStatus;
 
     /**
     *鲜果师头衔
@@ -136,8 +138,8 @@ public class FruitDoctor{
     *明星鲜果师 NO普通鲜果师YES明星鲜果师
     */
     @JsonProperty("hot")
-    @ApiModelProperty(value = "明星鲜果师 NO普通鲜果师YES明星鲜果师", dataType = "String")
-    private String hot;
+    @ApiModelProperty(value = "明星鲜果师 NO普通鲜果师YES明星鲜果师", dataType = "Hot")
+    private Hot hot;
 
     /**
     *剩余可结算金额

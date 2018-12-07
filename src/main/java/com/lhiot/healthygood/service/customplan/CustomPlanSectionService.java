@@ -16,6 +16,7 @@ import com.lhiot.healthygood.mapper.customplan.CustomPlanMapper;
 import com.lhiot.healthygood.mapper.customplan.CustomPlanSectionMapper;
 import com.lhiot.healthygood.mapper.customplan.CustomPlanSectionRelationMapper;
 import com.lhiot.healthygood.type.YesOrNo;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -34,6 +35,7 @@ public class CustomPlanSectionService {
     private final CustomPlanSectionRelationMapper customPlanSectionRelationMapper;
     private final CustomPlanMapper customPlanMapper;
 
+    @Autowired
     public CustomPlanSectionService(CustomPlanSectionMapper customPlanSectionMapper, CustomPlanSectionRelationMapper customPlanSectionRelationMapper, CustomPlanMapper customPlanMapper) {
         this.customPlanSectionMapper = customPlanSectionMapper;
         this.customPlanSectionRelationMapper = customPlanSectionRelationMapper;
@@ -146,7 +148,7 @@ public class CustomPlanSectionService {
             List<CustomPlanSectionRelationResult> customPlanSectionRelationResults = customPlanSectionRelationMapper.findPlanBySectionId(id);
             if (!customPlanSectionRelationResults.isEmpty()) {
                 List<CustomPlan> customPlans = customPlanSectionRelationResults.stream().map(CustomPlanSectionRelationResult::getCustomPlan).collect(Collectors.toList());
-                List<Long> relationIds = customPlanSectionRelationResults.stream().map(CustomPlanSectionRelationResult::getSort).collect(Collectors.toList());
+                List<Long> relationIds = customPlanSectionRelationResults.stream().map(CustomPlanSectionRelationResult::getId).collect(Collectors.toList());
                 customPlanSectionResultAdmin.setCustomPlanList(customPlans);
                 customPlanSectionResultAdmin.setRelationSorts(relationIds);
             }

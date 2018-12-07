@@ -16,7 +16,7 @@ import java.util.Date;
 @Data
 @ApiModel
 public class ProductShelf {
-    @ApiModelProperty(notes = "规格对象", dataType = "ProductSpecification", readOnly = true)
+    @ApiModelProperty(notes = "规格对象", dataType = "ProductSpecification")
     private ProductSpecification productSpecification;
     @ApiModelProperty(notes = "主键Id", dataType = "Long", readOnly = true)
     private Long id;

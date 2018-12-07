@@ -172,7 +172,7 @@
 	        from custom_plan_section
 	        <include refid="Base_Where_Condition" />
          <if test="rows != null and rows > 0 ">
-             order by create_at desc
+             order by id desc
              limit #{startRow} , #{rows}
          </if>
     </select>

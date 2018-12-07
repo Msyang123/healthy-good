@@ -12,6 +12,7 @@
         <result column="create_at" property="createAt" />
         <result column="over_rule" property="overRule" />
         <result column="status" property="status" />
+        <result column="create_user" property="createUser" />
     </resultMap>
 
     <!-- base查询字段  -->
@@ -24,6 +25,7 @@
             create_at,
             over_rule,
             status,
+            create_user,
         </trim>
     </sql>
 
@@ -52,6 +54,9 @@
             <if test="status != null ">
                 status,
             </if>
+            <if test="createUser != null ">
+                create_user,
+            </if>
         </trim>
         <trim prefix="values (" suffix=")" suffixOverrides="," >
             <if test="id != null ">
@@ -74,6 +79,9 @@
             </if>
             <if test="status != null ">
                 #{status},
+            </if>
+            <if test="createUser != null ">
+                #{createUser},
             </if>
         </trim>
     </insert>
@@ -103,6 +111,9 @@
             <if test="status != null ">
                 status = #{status},
             </if>
+            <if test="createUser != null ">
+                create_user = #{createUser},
+            </if>
         </set>
         where id=#{id}
     </update>
@@ -115,7 +126,6 @@
             #{item}
         </foreach>
     </delete>
-
 
     <!-- 根据id查找定制计划 -->
 	<select id="selectById" resultMap="BaseResultMap"
@@ -154,6 +164,9 @@
             <if test="status != null ">
                 and status = #{status}
             </if>
+            <if test="createUser != null ">
+                and create_user = #{createUser}
+            </if>
         </where>
     </sql>
 
@@ -165,7 +178,7 @@
 	        from custom_plan
 	        <include refid="Base_Where_Condition" />
             <if test="rows != null and rows > 0 ">
-                 order by create_at desc
+                 order by id desc
                  limit #{startRow} , #{rows}
             </if>
     </select>
@@ -189,6 +202,7 @@
         t1.create_at,
         t1.over_rule,
         t1.status
+        t1.create_user
         from custom_plan t1
         left join custom_plan_section_relation t2
         on t1.id = t2.plan_id

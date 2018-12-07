@@ -2,6 +2,7 @@ package com.lhiot.healthygood.domain.customplan.model;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.lhiot.healthygood.type.ValidOrInvalid;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
@@ -21,11 +22,11 @@ public class CustomPlanDetailResult {
     @ApiModelProperty(value = "定制计划id", dataType = "Long")
     private Long id;
     /**
-     *名称
+     *状态
      */
     @JsonProperty("status")
-    @ApiModelProperty(value = "状态", dataType = "String")
-    private String status;
+    @ApiModelProperty(value = "状态 VALID-有效, INVALID-无效;", dataType = "String")
+    private ValidOrInvalid status;
     /**
      *创建时间
      */
@@ -33,6 +34,13 @@ public class CustomPlanDetailResult {
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss",timezone = "GMT+8")
     @ApiModelProperty(value = "创建时间", dataType = "Date")
     private java.util.Date createAt;
+
+    /**
+     *到期规则
+     */
+    @JsonProperty("overRule")
+    @ApiModelProperty(value = "到期规则", dataType = "String")
+    private String overRule;
 
     /**
      *名称
@@ -70,4 +78,12 @@ public class CustomPlanDetailResult {
     @JsonProperty("customPlanPeriodResultList")
     @ApiModelProperty(value = "周期类型", dataType = "List")
     private List<CustomPlanPeriodResult> customPlanPeriodResultList;
+
+    /**
+     * 定制计划和定制板块关联
+     */
+    @ApiModelProperty(value = "定制板块关联定制计划排序，英文逗号分隔", dataType = "String")
+    private String sorts;
+    @ApiModelProperty(value = "定制板块ids，英文逗号分隔", dataType = "String")
+    private String customPlanSectionIds;
 }

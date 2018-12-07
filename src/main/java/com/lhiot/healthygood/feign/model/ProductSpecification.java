@@ -1,11 +1,12 @@
 package com.lhiot.healthygood.feign.model;
 
-import com.lhiot.healthygood.feign.type.AvailableStatus;
+import com.leon.microx.predefine.Use;
 import com.lhiot.healthygood.feign.type.InventorySpecification;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
+import javax.validation.constraints.NotNull;
 import java.math.BigDecimal;
 import java.util.Date;
 
@@ -15,10 +16,13 @@ import java.util.Date;
 @Data
 @ApiModel
 public class ProductSpecification {
-    @ApiModelProperty(notes = "主键Id", dataType = "Long")
+    @ApiModelProperty(notes = "主键Id", dataType = "Long", readOnly = true)
     private Long id;
+    @NotNull(message = "商品ID不能为空")
     @ApiModelProperty(notes = "商品ID", dataType = "Long")
     private Long productId;
+    @ApiModelProperty(notes = "商品对象", dataType = "Product", readOnly = true)
+    private Product product;
     @ApiModelProperty(notes = "商品条码", dataType = "String")
     private String barcode;
     @ApiModelProperty(notes = "打包单位", dataType = "String")
@@ -31,8 +35,8 @@ public class ProductSpecification {
     private Integer limitInventory;
     @ApiModelProperty(notes = "是否为库存规格：YES-是，NO-否", dataType = "InventorySpecification")
     private InventorySpecification inventorySpecification;
-    @ApiModelProperty(notes = "是否可用：YES-可用，NO-不可用", dataType = "AvailableStatus")
-    private AvailableStatus availableStatus;
+    @ApiModelProperty(notes = "是否可用：ENABLE-可用，DISABLE-不可用", dataType = "Use")
+    private Use availableStatus;
     @ApiModelProperty(notes = "创建时间", dataType = "Date", readOnly = true)
     private Date createAt;
 }

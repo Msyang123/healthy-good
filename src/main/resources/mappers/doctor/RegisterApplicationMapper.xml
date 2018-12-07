@@ -16,6 +16,7 @@
         <result column="create_at" property="createAt" />
         <result column="real_name" property="realName" />
         <result column="audit_at" property="auditAt" />
+        <result column="audit_user" property="auditUser" />
         <result column="user_id" property="userId" />
     </resultMap>
 
@@ -33,6 +34,7 @@
             create_at,
             real_name,
             audit_at,
+            audit_user,
             user_id,
         </trim>
     </sql>
@@ -137,6 +139,9 @@
             <if test="auditAt != null ">
                 audit_at = #{auditAt},
             </if>
+            <if test="auditUser != null ">
+                audit_user = #{auditUser},
+            </if>
             <if test="userId != null ">
                 user_id = #{userId},
             </if>
@@ -172,64 +177,38 @@
     <!-- base where条件  -->
     <sql id="Base_Where_Condition" >
         <where>
-            <if test="id != null ">
-                and id = #{id}
-            </if>
-            <if test="idcardNo != null ">
-                and idcard_no like concat('%',#{idcardNo},'%')
-            </if>
-            <if test="phone != null ">
-                and phone like concat('%',#{phone},'%')
-            </if>
-            <if test="idcardFront != null ">
-                and idcard_front = #{idcardFront}
-            </if>
-            <if test="idcardReverse != null ">
-                and idcard_reverse = #{idcardReverse}
-            </if>
-            <if test="credentials != null ">
-                and credentials = #{credentials}
-            </if>
-            <if test="failureReason != null ">
-                and failure_reason = #{failureReason}
-            </if>
-            <if test="auditStatus != null ">
-                and audit_status = #{auditStatus}
-            </if>
-            <if test="createAt != null ">
-                and create_at = #{createAt}
-            </if>
-            <if test="realName != null ">
-                and real_name like concat('%',#{realName},'%')
-            </if>
-            <if test="auditAt != null ">
-                and audit_at = #{auditAt}
-            </if>
-            <if test="userId != null ">
-                and user_id = #{userId}
-            </if>
+            <if test="id != null ">and id = #{id}</if>
+            <if test="idcardNo != null and idcardNo != '' ">and idcard_no like concat('%',#{idcardNo}, '%')</if>
+            <if test="phone != null and phone != '' ">and phone like concat('%',#{phone}, '%')</if>
+            <if test="idcardFront != null and idcardFront != '' ">and idcard_front = #{idcardFront}</if>
+            <if test="idcardReverse != null and idcardReverse != '' "> and idcard_reverse = #{idcardReverse}</if>
+            <if test="credentials != null and credentials != '' ">and credentials = #{credentials}</if>
+            <if test="failureReason != null and failureReason != '' ">and failure_reason like concat('%',#{failureReason}, '%')</if>
+            <if test="auditStatus != null ">and audit_status = #{auditStatus}</if>
+            <if test="realName != null and realName != '' ">and real_name like concat('%',#{realName}, '%')</if>
+            <if test="auditAt != null ">and audit_at = #{auditAt}</if>
+            <if test="auditUser != null and auditUser != '' ">and audit_user like concat('%',#{auditUser}, '%')</if>
+            <if test="userId != null ">and user_id = #{userId}</if>
+            <if test="beginCreateAt != null">and create_at <![CDATA[ >= ]]> #{beginCreateAt}</if>
+            <if test="endCreateAt != null">and create_at <![CDATA[ <= ]]> #{endCreateAt}</if>
         </where>
     </sql>
 
-
     <!--查询鲜果师申请记录列表-->
-     <select id="pageRegisterApplications" resultMap="BaseResultMap"
-        parameterType="com.lhiot.healthygood.domain.doctor.RegisterApplication">
-	        select <include refid="Base_Column_List" />
-	        from register_application
-	        <include refid="Base_Where_Condition" />
-             <if test="rows != null and rows > 0 ">
-                 order by rank asc , id desc
-                 limit #{startRow} , #{rows}
-             </if>
+    <select id="findList" resultMap="BaseResultMap"
+            parameterType="com.lhiot.healthygood.domain.doctor.RegisterApplication">
+        select <include refid="Base_Column_List" />
+        from fruit_doctor_qualification
+        <include refid="Base_Where_Condition" />
+        order by case audit_status when 'UNAUDITED' then 0 when 'AGREE' then 1 when 'REJECT' then 2 else 3 end asc, id desc
     </select>
 
     <!--查询鲜果师申请记录总记录-->
-    <select id="pageRegisterApplicationCounts" resultType="long"
-        parameterType="com.lhiot.healthygood.domain.doctor.RegisterApplication">
-            select count(1)
-            from register_application
-            <include refid="Base_Where_Condition" />
+    <select id="findCount" resultType="int"
+            parameterType="com.lhiot.healthygood.domain.doctor.RegisterApplication">
+        select count(1)
+        from fruit_doctor_qualification
+        <include refid="Base_Where_Condition" />
     </select>
 
 </mapper>

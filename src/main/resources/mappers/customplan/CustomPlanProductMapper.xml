@@ -106,6 +106,13 @@
     </delete>
 
 
+
+    <!--根据planIds删除定制计划-->
+    <delete id="deleteByPlanId" parameterType="Long">
+        delete from custom_plan_product where plan_id  = #{planId}
+    </delete>
+
+
     <!-- 根据id查找定制计划关联商品 -->
 	<select id="selectById" resultMap="BaseResultMap"
 		parameterType="long"> select <include refid="Base_Column_List" />

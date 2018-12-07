@@ -1,12 +1,15 @@
 package com.lhiot.healthygood.domain.doctor;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.lhiot.healthygood.type.AuditStatus;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
+
+import java.util.Date;
 
 /**
 * Description:鲜果师申请记录实体类
@@ -79,8 +82,8 @@ public class RegisterApplication{
     *审核状态（UNAUDITED待审核  AGREE审核通过  REJECT审核不通过）
     */
     @JsonProperty("auditStatus")
-    @ApiModelProperty(value = "审核状态（UNAUDITED待审核  AGREE审核通过  REJECT审核不通过）", dataType = "String")
-    private String auditStatus;
+    @ApiModelProperty(value = "审核状态（UNAUDITED待审核  AGREE审核通过  REJECT审核不通过）", dataType = "AuditStatus")
+    private AuditStatus auditStatus;
 
     /**
     *申请时间
@@ -103,7 +106,13 @@ public class RegisterApplication{
     @JsonProperty("auditTime")
     @ApiModelProperty(value = "审核时间", dataType = "Date")
     private java.util.Date auditAt;
-    
+
+    /**
+     *审核人
+     */
+    @JsonProperty("auditUser")
+    @ApiModelProperty(value = "审核人", dataType = "String")
+    private String auditUser;
 
     /**
     *用户id
@@ -111,5 +120,34 @@ public class RegisterApplication{
     @JsonProperty("userId")
     @ApiModelProperty(value = "用户id", dataType = "Long")
     private Long userId;
+
+
+    /**
+     *起始创建时间
+     */
+    @JsonProperty("beginCreateAt")
+    @ApiModelProperty(notes = "起始创建时间", dataType = "Date")
+    private Date beginCreateAt;
+
+    /**
+     *截止创建时间
+     */
+    @JsonProperty("endCreateAt")
+    @ApiModelProperty(notes = "截止创建时间", dataType = "Date")
+    private Date endCreateAt;
+
+    @ApiModelProperty(notes = "每页查询条数(为空或0不分页查所有)", dataType = "Integer")
+    private Integer rows;
+    @ApiModelProperty(notes = "当前页", dataType = "Integer")
+    private Integer page;
+    @ApiModelProperty(hidden = true)
+    private Integer startRow;
+    @JsonIgnore
+    public Integer getStartRow() {
+        if (this.rows != null && this.rows > 0) {
+            return (this.page != null && this.page > 0 ? this.page - 1 : 0) * this.rows;
+        }
+        return null;
+    }
 
 }
