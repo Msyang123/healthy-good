@@ -10,7 +10,8 @@ public enum CustomOrderStatus {
     INVALID("已失效"),
     PAUSE_DELIVERY("暂停配送"),
     CUSTOMING("定制中"),
-    FINISHED("已结束");
+    FINISHED("已结束"),
+    ALL("所有");
 
     @Getter
     private String description;

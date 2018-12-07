@@ -10,6 +10,7 @@ import lombok.ToString;
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotBlank;
 import java.util.Date;
+import java.util.List;
 
 @Data
 @ToString(callSuper = true)
@@ -18,6 +19,9 @@ public class CustomOrder {
 
     @ApiModelProperty(hidden = true)
     private Long id;
+
+    @ApiModelProperty(hidden = true)
+    private String customOrderCode;
 
     @ApiModelProperty(hidden = true)
     private Long userId;
@@ -51,6 +55,14 @@ public class CustomOrder {
     @Min(value = 1L)
     private Long specificationId;
 
+    @ApiModelProperty(notes = "收货人", dataType = "String")
+    @NotBlank(message = "收货人")
+    private String receiveUser;
+
+    @ApiModelProperty(notes = "联系电话", dataType = "String")
+    @NotBlank(message = "联系电话")
+    private String contactPhone;
+
     @ApiModelProperty(notes = "客户要求配送时间", dataType = "String")
     @NotBlank(message = "客户要求配送时间不能为空")
     private String deliveryTime;
@@ -62,4 +74,10 @@ public class CustomOrder {
     @ApiModelProperty(notes = "门店编码", dataType = "String")
     @NotBlank(message = "门店编码不能为空")
     private String storeCode;
+
+    @ApiModelProperty(notes = "购买的定制计划", dataType = "CustomPlan")
+    private CustomPlan customPlan;
+
+    @ApiModelProperty(notes = "配送记录", dataType = "List")
+    private List<CustomOrderDelivery> customOrderDeliveryList;
 }
