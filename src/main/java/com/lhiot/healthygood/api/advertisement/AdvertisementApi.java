@@ -38,7 +38,7 @@ public class AdvertisementApi {
     @Sessions.Uncheck
     @ApiOperation(value = "根据位置编码查询广告列表")
     @PostMapping("/advertisements/position")
-    ResponseEntity searchAdvertisementPages(@RequestBody AdvertismentParams advertismentParams){
+    public ResponseEntity searchAdvertisementPages(@RequestBody AdvertismentParams advertismentParams){
         AdvertisementParam advertisementParam = new AdvertisementParam();
         BeanUtils.copyProperties(advertismentParams,advertisementParam);
         advertisementParam.setAdvertiseStatus(OnOff.ON);

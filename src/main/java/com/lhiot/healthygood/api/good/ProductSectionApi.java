@@ -58,19 +58,11 @@ public class ProductSectionApi {
             @ApiImplicitParam(paramType = ApiParamType.PATH, name = "id", value = "板块编号", dataType = "Long", required = true),
             @ApiImplicitParam(paramType = ApiParamType.QUERY, name = "flag", value = "是否查询商品信息", dataType = "YesOrNo")
     })
-    @ApiOperation(value = "某个商品板块的商品信息列表", response = ProductSection.class)
-    public ResponseEntity productSections(@PathVariable("id") Long id, @RequestParam(value = "flag") YesOrNo flag) {
-        boolean flags = false;
-        if (Objects.equals(flag.toString(),"YES")){
-            flags = true;
-
-        }
-        ResponseEntity<ProductSection> productSectionResponseEntity = baseDataServiceFeign.singleProductSection(id, flags, null);
+    @ApiOperation(value = "某个商品板块的商品信息列表")
+    public ResponseEntity<Tips> productSections(@PathVariable("id") Long id, @RequestParam(value = "flag") YesOrNo flag) {
+        ResponseEntity<ProductSection> productSectionResponseEntity = baseDataServiceFeign.singleProductSection(id, Objects.equals(flag,YesOrNo.YES), null);
         Tips tips = FeginResponseTools.convertResponse(productSectionResponseEntity);
-        if (tips.err()) {
-            return ResponseEntity.badRequest().body(tips);
-        }
-        return ResponseEntity.badRequest().body(productSectionResponseEntity.getBody());
+        return FeginResponseTools.returnTipsResponse(tips);
     }
 
     @Sessions.Uncheck
@@ -79,7 +71,7 @@ public class ProductSectionApi {
             @ApiImplicitParam(paramType = ApiParamType.QUERY, name = "id", value = "位置编号", dataType = "Long", required = true),
             @ApiImplicitParam(paramType = ApiParamType.QUERY, name = "flag", value = "是否查询商品信息", dataType = "YesOrNo")
     })
-    @ApiOperation(value = "根据位置编码查询所有商品板块列表（商品信息可选）", response = ProductSection.class, responseContainer = "Set")
+    @ApiOperation(value = "根据位置编码查询所有商品板块列表（商品信息可选）")
     public ResponseEntity positionProductSection(@RequestParam(value = "id") Long id, @RequestParam(value = "flag") YesOrNo flag) {
         boolean flags = false;
         if (Objects.equals(flag.toString(),"YES")){
@@ -91,11 +83,11 @@ public class ProductSectionApi {
         productSectionParam.setIncludeShelves(flags);
         ResponseEntity<Pages<ProductSection>> pagesResponseEntity = baseDataServiceFeign.searchProductSection(productSectionParam);
         List<ProductSection> productSections = pagesResponseEntity.getBody().getArray();
-        productSections.stream().filter(Objects::nonNull).forEach(productSection ->{
-            productSection.getProductShelfList().stream().filter(Objects::nonNull).forEach(productShelf -> {
-                productShelf.setPrice(Objects.isNull(productShelf.getPrice()) ? productShelf.getOriginalPrice() : productShelf.getPrice());
-            });
-        } );
+        productSections.stream().filter(Objects::nonNull).forEach(productSection ->
+            productSection.getProductShelfList().stream().filter(Objects::nonNull).forEach(productShelf ->
+                productShelf.setPrice(Objects.isNull(productShelf.getPrice()) ? productShelf.getOriginalPrice() : productShelf.getPrice())
+            )
+        );
         Tips tips = FeginResponseTools.convertResponse(pagesResponseEntity);
         if (tips.err()) {
             return ResponseEntity.badRequest().body(tips);
@@ -112,8 +104,8 @@ public class ProductSectionApi {
 
     @GetMapping("/product/{id}")
     @ApiImplicitParam(paramType = ApiParamType.PATH, name = "id", value = "商品上架Id", dataType = "Long", required = true)
-    @ApiOperation(value = "查询商品详情", response = ProductShelf.class, responseContainer = "Set")
-    public ResponseEntity singeProduct(Sessions.User user, @PathVariable(value = "id") Long id) {
+    @ApiOperation(value = "查询商品详情")
+    public ResponseEntity<Tips> singeProduct(Sessions.User user, @PathVariable(value = "id") Long id) {
         ResponseEntity<ProductShelf> productShelfResponseEntity = baseDataServiceFeign.singleShelf(id,true);
         Tips tips = FeginResponseTools.convertResponse(productShelfResponseEntity);
         if (tips.err()) {
@@ -164,7 +156,9 @@ public class ProductSectionApi {
                 detailResult.setAlreadyBuyAmount(alreadyCount);
             }
         }
-        return ResponseEntity.ok(detailResult);
+        Tips tipsResult= new Tips();
+        tipsResult.setData(detailResult);
+        return ResponseEntity.ok(tipsResult);
     }
 
     @GetMapping("/product/cart")

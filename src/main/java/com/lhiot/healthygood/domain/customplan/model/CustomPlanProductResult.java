@@ -32,7 +32,7 @@ public class CustomPlanProductResult {
     /**
      *上架Id
      */
-    @JsonProperty("productShelfId")
+    @JsonProperty("shelfId")
     @ApiModelProperty(value = "商品上架Id", dataType = "Long")
     private Long productShelfId;
 

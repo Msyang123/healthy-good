@@ -88,7 +88,7 @@ public class CustomOrderApi {
 
     @PostMapping("/custom-orders/{orderCode}/payment-sign")
     @ApiOperation(value = "定制计划支付时微信签名")
-    public ResponseEntity create(@PathVariable("orderCode") String orderCode, HttpServletRequest request, Sessions.User user) {
+    public ResponseEntity paymentSign(@PathVariable("orderCode") String orderCode, HttpServletRequest request, Sessions.User user) {
         String openId = user.getUser().get("openId").toString();
         Long userId = Long.valueOf(user.getUser().get("userId").toString());
         ResponseEntity<Tips> validateOrderOwner = validateOrderOwner(userId, orderCode);

@@ -201,7 +201,7 @@
         t1.image,
         t1.create_at,
         t1.over_rule,
-        t1.status
+        t1.status,
         t1.create_user
         from custom_plan t1
         left join custom_plan_section_relation t2

@@ -1,15 +1,15 @@
 package com.lhiot.healthygood.feign;
 
+import com.leon.microx.web.result.Pages;
 import com.leon.microx.web.result.Tuple;
 import com.lhiot.healthygood.feign.model.*;
 import com.lhiot.healthygood.feign.type.OrderStatus;
+import com.lhiot.healthygood.feign.type.OrderType;
 import com.lhiot.healthygood.feign.type.RefundStatus;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.web.bind.annotation.*;
-
-import javax.validation.constraints.NotNull;
 
 @Component
 @FeignClient("BASE-ORDER-SERVICE-V1-0")
@@ -43,26 +43,30 @@ public interface OrderServiceFeign {
 
     @RequestMapping(value = "/orders/user/{userId}", method = RequestMethod.GET)
     ResponseEntity<Tuple<OrderDetailResult>> ordersByUserId(@PathVariable("userId") Long userId,
-                                                            @RequestParam(value = "orderType", required = false) String orderType,
+                                                            @RequestParam(value = "orderType", required = false) OrderType orderType,
                                                             @RequestParam(value = "orderStatus", required = false) OrderStatus orderStatus);
+
+    //分页查询订单列表
+    @RequestMapping(value = "/orders/pages", method = RequestMethod.POST)
+    ResponseEntity<Pages<OrderDetailResult>> ordersPages(@RequestBody BaseOrderParam baseOrderParam);
 
     /*********************订单退款***************************************************/
 
     //订单未发送海鼎，退款
     @RequestMapping(value = "/orders/{orderCode}/not-send-hd/refund", method = RequestMethod.PUT)
-    ResponseEntity notSendHdRefundOrder(@PathVariable("orderCode") String orderCode, @NotNull @RequestBody ReturnOrderParam returnOrderParam);
+    ResponseEntity notSendHdRefundOrder(@PathVariable("orderCode") String orderCode, @RequestBody ReturnOrderParam returnOrderParam);
 
     //备货退货，确认收到货，进行退款
     @RequestMapping(value = "/orders/{orderCode}/refund", method = RequestMethod.PUT)
-    ResponseEntity refundOrder(@PathVariable("orderCode") String orderCode, @NotNull @RequestBody ReturnOrderParam returnOrderParam);
+    ResponseEntity refundOrder(@PathVariable("orderCode") String orderCode, @RequestBody ReturnOrderParam returnOrderParam);
 
     //海鼎备货后提交退货
     @RequestMapping(value = "/orders/{orderCode}/returns", method = RequestMethod.PUT)
-    ResponseEntity returnsRefundOrder(@PathVariable("orderCode") String orderCode, @NotNull @RequestBody ReturnOrderParam returnOrderParam);
+    ResponseEntity returnsRefundOrder(@PathVariable("orderCode") String orderCode, @RequestBody ReturnOrderParam returnOrderParam);
 
     //订单发送海鼎，未备货退货
     @RequestMapping(value = "/orders/{orderCode}/send-hd/refund", method = RequestMethod.PUT)
-    ResponseEntity sendHdRefundOrder(@PathVariable("orderCode") String orderCode, @NotNull @RequestBody ReturnOrderParam returnOrderParam);
+    ResponseEntity sendHdRefundOrder(@PathVariable("orderCode") String orderCode, @RequestBody ReturnOrderParam returnOrderParam);
 
     //退款确认，修改订单状态
     @RequestMapping(value = "/orders/{orderCode}/refund/confirmation", method = RequestMethod.PUT)

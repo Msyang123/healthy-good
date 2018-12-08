@@ -75,7 +75,7 @@ public interface DoctorUserMapper {
      */
     DoctorUser selectById(Long id);
 
-    DoctorUser selectByDoctorId(Long doctorId);
+    List<DoctorUser> selectByDoctorId(Long doctorId);
 
     /**
     * Description:查询鲜果师客户列表
