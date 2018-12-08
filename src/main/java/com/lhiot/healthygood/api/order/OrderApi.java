@@ -259,7 +259,7 @@ public class OrderApi {
 
     @GetMapping("/orders/count/status")
     @ApiOperation("统计我的用户订单各状态数量")
-    public ResponseEntity<Tips<Map<String, Integer>>> countStatus(Sessions.User user) {
+    public ResponseEntity<Tips<Map>> countStatus(Sessions.User user) {
         Long userId = Long.valueOf(user.getUser().get("userId").toString());
 
         Map<String, Integer> result = new HashMap<>(3);
@@ -284,7 +284,7 @@ public class OrderApi {
         } else {
             result.put("returningCount", 0);
         }
-        Tips<Map<String, Integer>> tips = new Tips<>();
+        Tips<Map> tips = new Tips<>();
         tips.data(result);
         return ResponseEntity.ok(tips);
     }
