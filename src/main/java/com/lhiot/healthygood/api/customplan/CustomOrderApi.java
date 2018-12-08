@@ -8,7 +8,6 @@ import com.leon.microx.web.swagger.ApiHideBodyProperty;
 import com.leon.microx.web.swagger.ApiParamType;
 import com.lhiot.healthygood.config.HealthyGoodConfig;
 import com.lhiot.healthygood.domain.customplan.CustomOrder;
-import com.lhiot.healthygood.domain.customplan.CustomOrderDelivery;
 import com.lhiot.healthygood.domain.customplan.CustomOrderPause;
 import com.lhiot.healthygood.feign.BaseUserServerFeign;
 import com.lhiot.healthygood.feign.PaymentServiceFeign;
@@ -31,8 +30,6 @@ import org.springframework.web.bind.annotation.*;
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 import javax.validation.constraints.NotBlank;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Objects;
 
 @Api(description = "购买定制计划")
@@ -242,23 +239,21 @@ public class CustomOrderApi {
 
     @Sessions.Uncheck
     @PostMapping("/custom-orders/pages")
-    @ApiOperation(value = "根据条件分页查询定制订单信息列表(后台)")
-    @ApiHideBodyProperty({"user","customOrderDeliveryList","customPlan"})
-    public ResponseEntity<Tips> search(@RequestBody CustomOrder customOrder) {
+    @ApiOperation(value = "根据条件分页查询定制订单信息列表(后台)", response = CustomOrder.class, responseContainer = "Set")
+    @ApiHideBodyProperty({"user", "customOrderDeliveryList", "customPlan"})
+    public ResponseEntity search(@RequestBody CustomOrder customOrder) {
         log.debug("根据条件分页查询定制订单信息列表\t param:{}", customOrder);
 
         Pages<CustomOrder> pages = customOrderService.pageList(customOrder);
-        Tips<Pages<CustomOrder>> tips = new Tips();
-        tips.setData(pages);
-        return ResponseEntity.ok(tips);
+        return ResponseEntity.ok(pages);
     }
 
     @Sessions.Uncheck
     @GetMapping("/custom-orders/{orderCode}")
-    @ApiOperation(value = "根据id查询定制订单信息(后台)")
+    @ApiOperation(value = "根据orderCode查询定制订单信息(后台)", response = CustomOrder.class)
     @ApiImplicitParam(paramType = ApiParamType.PATH, name = "orderCode", value = "定制订单id", dataType = "String", required = true)
-    @ApiHideBodyProperty({"user","customOrderDeliveryList","customPlan"})
-    public ResponseEntity<Tips> search(@PathVariable("orderCode") String orderCode) {
+    @ApiHideBodyProperty({"user", "customOrderDeliveryList", "customPlan"})
+    public ResponseEntity selectByCode(@PathVariable("orderCode") String orderCode) {
         log.debug("根据条件分页查询定制订单信息列表\t param:{}", orderCode);
 
         Tips<CustomOrder> tips = customOrderService.selectByCode(orderCode, true);
@@ -275,10 +270,7 @@ public class CustomOrderApi {
         UserDetailResult userDetailResult = userEntity.getBody();
         customOrder.setNickname(userDetailResult.getNickname());
         customOrder.setPhone(userDetailResult.getPhone());
-
-        Tips<CustomOrder> customOrderTips = new Tips();
-        customOrderTips.setData(customOrder);
-        return ResponseEntity.ok(customOrderTips);
+        return ResponseEntity.ok(customOrder);
     }
 
 }
