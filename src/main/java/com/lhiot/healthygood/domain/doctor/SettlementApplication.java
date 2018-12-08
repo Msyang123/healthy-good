@@ -1,77 +1,86 @@
 package com.lhiot.healthygood.domain.doctor;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.lhiot.healthygood.type.SettlementStatus;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
 
+import java.util.Date;
+
 /**
-* Description:结算申请实体类
-* @author yijun
-* @date 2018/07/26
-*/
+ * Description:结算申请实体类
+ *
+ * @author yijun
+ * @date 2018/07/26
+ */
 @Data
 @ToString(callSuper = true)
 @ApiModel
 @NoArgsConstructor
-public class SettlementApplication{
+public class SettlementApplication {
 
     /**
-    *id
-    */
+     * id
+     */
     @JsonProperty("id")
     @ApiModelProperty(value = "id", dataType = "Long")
     private Long id;
 
     /**
-    *申请人（鲜果师编号）
-    */
+     * 申请人（鲜果师编号）
+     */
     @JsonProperty("doctorId")
     @ApiModelProperty(value = "申请人（鲜果师编号）", dataType = "Long")
     private Long doctorId;
 
     /**
-     *申请时间
+     * 申请时间
      */
     @JsonProperty("createAt")
     @ApiModelProperty(value = "申请时间", dataType = "Date")
     private java.util.Date createAt;
 
     /**
-    *申请提取金额
-    */
+     * 申请提取金额
+     */
     @JsonProperty("amount")
     @ApiModelProperty(value = "申请提取金额", dataType = "Integer")
     private Integer amount;
 
     /**
-    *结算状态(UNSETTLED-未处理  SUCCESS-已成功  EXPIRED-已过期)
-    */
+     * 结算状态(UNSETTLED-未处理  SUCCESS-已成功  EXPIRED-已过期)
+     */
     @JsonProperty("settlementStatus")
-    @ApiModelProperty(value = "结算状态(UNSETTLED-未处理  SUCCESS-已成功  EXPIRED-已过期)", dataType = "String")
-    private String settlementStatus;
+    @ApiModelProperty(value = "结算状态(UNSETTLED-未处理  SUCCESS-已成功  EXPIRED-已过期)", dataType = "SettlementStatus")
+    private SettlementStatus settlementStatus;
 
     /**
-    *处理时间
-    */
+     * 处理时间
+     */
     @JsonProperty("dealAt")
     @ApiModelProperty(value = "处理时间", dataType = "Date")
     private java.util.Date dealAt;
 
-    //开始时间   用与搜索条件
-    @JsonIgnore
-    private String startTime;
-    //结束时间   用与搜索条件
-    @JsonIgnore
-    private String endTime;
+    /**
+     *起始创建时间
+     */
+    @JsonProperty("beginCreateAt")
+    @ApiModelProperty(notes = "起始创建时间(用于搜索)", dataType = "Date")
+    private Date beginCreateAt;
 
     /**
-     *申请人（鲜果师编号）
+     *截止创建时间
+     */
+    @JsonProperty("endCreateAt")
+    @ApiModelProperty(notes = "截止创建时间(用于搜索)", dataType = "Date")
+    private Date endCreateAt;
+
+    /**
+     * 申请人（鲜果师编号）
      */
     @JsonProperty("realName")
     @ApiModelProperty(value = "申请人（鲜果师名称）", dataType = "String")

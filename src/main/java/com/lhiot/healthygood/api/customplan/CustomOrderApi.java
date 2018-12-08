@@ -85,7 +85,7 @@ public class CustomOrderApi {
         }
         CustomOrder customOrder = (CustomOrder) validateOrderOwner.getBody().getData();
         PaySign paySign = new PaySign();
-        paySign.setApplicationType(ApplicationType.FRUIT_DOCTOR);
+        paySign.setApplicationType(ApplicationType.HEALTH_GOOD);
         paySign.setBackUrl(wechatPayConfig.getActivityCallbackUrl());
         paySign.setClientIp(RealClientIp.getRealIp(request));//获取客户端真实ip
         paySign.setConfigName(wechatPayConfig.getConfigName());//微信支付简称

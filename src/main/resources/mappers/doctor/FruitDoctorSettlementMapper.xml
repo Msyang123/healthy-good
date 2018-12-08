@@ -137,8 +137,8 @@
             <if test="realName != null ">
                 and realName  like concat('%',#{realName},'%')
             </if>
-            <if test="startTime != null">and create_at &gt;= #{startTime} </if>
-            <if test="endTime != null">and create_at &lt;= #{endTime} </if>
+            <if test="beginCreateAt != null">and create_at <![CDATA[ >= ]]> #{beginCreateAt} </if>
+            <if test="endCreateAt != null">and create_at <![CDATA[ <= ]]> #{endCreateAt} </if>
         </where>
     </sql>
 
