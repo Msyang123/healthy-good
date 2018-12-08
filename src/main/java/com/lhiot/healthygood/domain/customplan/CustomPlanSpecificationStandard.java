@@ -1,6 +1,5 @@
 package com.lhiot.healthygood.domain.customplan;
 
-
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
@@ -9,34 +8,22 @@ import lombok.NoArgsConstructor;
 import lombok.ToString;
 
 /**
-* Description:定制计划规格实体类
-* @author zhangs
-* @date 2018/11/22
+* Description:定制计划规格基础数据实体类
+* @author hufan
+* @date 2018/12/08
 */
 @Data
+@ToString(callSuper = true)
 @ApiModel
-public class CustomPlanSpecification{
+@NoArgsConstructor
+public class CustomPlanSpecificationStandard{
 
     /**
     *
     */
     @JsonProperty("id")
-    @ApiModelProperty(value = "", dataType = "Long")
+    @ApiModelProperty(value = "规格基础id", dataType = "Long")
     private Long id;
-
-    /**
-    *定制计划id
-    */
-    @JsonProperty("planId")
-    @ApiModelProperty(value = "定制计划id", dataType = "Long")
-    private Long planId;
-
-    /**
-    *价格
-    */
-    @JsonProperty("price")
-    @ApiModelProperty(value = "价格", dataType = "Integer")
-    private Integer price;
 
     /**
     *数量
@@ -53,20 +40,10 @@ public class CustomPlanSpecification{
     private String description;
 
     /**
-    *定制计划周期
+    *定制说明配图
     */
-    @JsonProperty("planPeriod")
-    @ApiModelProperty(value = "定制计划周期", dataType = "Integer")
-    private Integer planPeriod;
-
     @JsonProperty("image")
     @ApiModelProperty(value = "定制说明配图", dataType = "String")
     private String image;
-
-    @JsonProperty("standardId")
-    @ApiModelProperty(value = "定制规格基础id", dataType = "Long")
-    private Long standardId;
-
-
 
 }

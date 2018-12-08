@@ -1,13 +1,18 @@
 package com.lhiot.healthygood.api.customplan;
 
+import com.leon.microx.web.result.Pages;
 import com.leon.microx.web.result.Tips;
 import com.leon.microx.web.result.Tuple;
 import com.leon.microx.web.session.Sessions;
+import com.leon.microx.web.swagger.ApiHideBodyProperty;
+import com.leon.microx.web.swagger.ApiParamType;
 import com.lhiot.healthygood.config.HealthyGoodConfig;
 import com.lhiot.healthygood.domain.customplan.CustomOrder;
 import com.lhiot.healthygood.domain.customplan.CustomOrderPause;
+import com.lhiot.healthygood.feign.BaseUserServerFeign;
 import com.lhiot.healthygood.feign.PaymentServiceFeign;
 import com.lhiot.healthygood.feign.model.PaySign;
+import com.lhiot.healthygood.feign.model.UserDetailResult;
 import com.lhiot.healthygood.feign.type.ApplicationType;
 import com.lhiot.healthygood.feign.type.SourceType;
 import com.lhiot.healthygood.service.customplan.CustomOrderService;
@@ -15,6 +20,7 @@ import com.lhiot.healthygood.type.CustomOrderStatus;
 import com.lhiot.healthygood.util.FeginResponseTools;
 import com.lhiot.healthygood.util.RealClientIp;
 import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,17 +40,20 @@ public class CustomOrderApi {
     private final CustomOrderService customOrderService;
     private final PaymentServiceFeign paymentServiceFeign;
     private final HealthyGoodConfig.WechatPayConfig wechatPayConfig;
+    private final BaseUserServerFeign baseUserServerFeign;
 
     @Autowired
-    public CustomOrderApi(CustomOrderService customOrderService, PaymentServiceFeign paymentServiceFeign, HealthyGoodConfig healthyGoodConfig) {
+    public CustomOrderApi(CustomOrderService customOrderService, PaymentServiceFeign paymentServiceFeign, HealthyGoodConfig healthyGoodConfig, BaseUserServerFeign baseUserServerFeign) {
 
         this.customOrderService = customOrderService;
         this.paymentServiceFeign = paymentServiceFeign;
         this.wechatPayConfig = healthyGoodConfig.getWechatPay();
+        this.baseUserServerFeign = baseUserServerFeign;
     }
 
     @PostMapping("/custom-orders")
     @ApiOperation(value = "立即定制-创建定制计划")
+    @ApiHideBodyProperty({"id", "beginCreateAt", "endCreateAt", "user", "rows", "page"})
     public ResponseEntity create(@Valid @RequestBody CustomOrder customOrder, Sessions.User user) {
         Long userId = Long.valueOf(user.getUser().get("userId").toString());
         customOrder.setUserId(userId);
@@ -204,12 +213,12 @@ public class CustomOrderApi {
         if (validateOrderOwner.getStatusCode().isError()) {
             return validateOrderOwner;
         }
-        CustomOrder customOrder = customOrderService.selectByCode(orderCode, true);
-        if (Objects.isNull(customOrder)) {
-            return ResponseEntity.badRequest().body(Tips.warn("未找到定制订单"));
+        Tips<CustomOrder> tips = customOrderService.selectByCode(orderCode, true);
+        if (tips.err()) {
+            return ResponseEntity.badRequest().body(Tips.warn(tips.getMessage()));
         }
         Tips<CustomOrder> customOrderTips = new Tips();
-        customOrderTips.setData(customOrder);
+        customOrderTips.setData(tips.getData());
         return ResponseEntity.ok(customOrderTips);
     }
 
@@ -227,4 +236,41 @@ public class CustomOrderApi {
         tips.setData(customOrder);
         return ResponseEntity.ok(tips);
     }
+
+    @Sessions.Uncheck
+    @PostMapping("/custom-orders/pages")
+    @ApiOperation(value = "根据条件分页查询定制订单信息列表(后台)", response = CustomOrder.class, responseContainer = "Set")
+    @ApiHideBodyProperty({"user", "customOrderDeliveryList", "customPlan"})
+    public ResponseEntity search(@RequestBody CustomOrder customOrder) {
+        log.debug("根据条件分页查询定制订单信息列表\t param:{}", customOrder);
+
+        Pages<CustomOrder> pages = customOrderService.pageList(customOrder);
+        return ResponseEntity.ok(pages);
+    }
+
+    @Sessions.Uncheck
+    @GetMapping("/custom-orders/{orderCode}")
+    @ApiOperation(value = "根据orderCode查询定制订单信息(后台)", response = CustomOrder.class)
+    @ApiImplicitParam(paramType = ApiParamType.PATH, name = "orderCode", value = "定制订单id", dataType = "String", required = true)
+    @ApiHideBodyProperty({"user", "customOrderDeliveryList", "customPlan"})
+    public ResponseEntity selectByCode(@PathVariable("orderCode") String orderCode) {
+        log.debug("根据条件分页查询定制订单信息列表\t param:{}", orderCode);
+
+        Tips<CustomOrder> tips = customOrderService.selectByCode(orderCode, true);
+        if (tips.err()) {
+            return ResponseEntity.badRequest().body(Tips.warn(tips.getMessage()));
+        }
+        CustomOrder customOrder = tips.getData();
+
+        // 查找用户信息
+        ResponseEntity<UserDetailResult> userEntity = baseUserServerFeign.findById(customOrder.getUserId());
+        if (userEntity.getStatusCode().isError()) {
+            return ResponseEntity.badRequest().body(Tips.warn("查找用户信息失败"));
+        }
+        UserDetailResult userDetailResult = userEntity.getBody();
+        customOrder.setNickname(userDetailResult.getNickname());
+        customOrder.setPhone(userDetailResult.getPhone());
+        return ResponseEntity.ok(customOrder);
+    }
+
 }

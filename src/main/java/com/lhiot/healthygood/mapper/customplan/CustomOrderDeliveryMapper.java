@@ -2,6 +2,7 @@ package com.lhiot.healthygood.mapper.customplan;
 
 import com.lhiot.healthygood.domain.customplan.CustomOrderDelivery;
 import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -28,7 +29,7 @@ public interface CustomOrderDeliveryMapper {
 
     int updateByOrderCode(String orderCode);
 
-    List<CustomOrderDelivery> selectByCustomOrderId(Long customOrderId);
+    List<CustomOrderDelivery> selectByCustomOrderId(@Param("planId") Long planId,@Param("customOrderId") Long customOrderId);
 
 
 }

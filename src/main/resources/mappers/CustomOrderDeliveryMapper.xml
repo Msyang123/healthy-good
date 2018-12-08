@@ -124,10 +124,11 @@
 
     <!-- 根据customOrderId查找 -->
     <select id="selectByCustomOrderId" resultMap="BaseResultMap" parameterType="Long">
-        select
-        <include refid="Base_Column_List"/>
-        from  custom_plan_product p left join custom_order_delivery d
+        select <include refid="Base_Column_List"/>
+        from
+        (select * from custom_plan_product where plan_id = #{planId} order by sort asc) p
+        left join
+        (select * from custom_order_delivery where custom_order_id = #{customOrderId}) d
         on p.id= d.custom_plan_product_id
-        where d.custom_order_id = #{0} order by p.sort asc
     </select>
 </mapper>
