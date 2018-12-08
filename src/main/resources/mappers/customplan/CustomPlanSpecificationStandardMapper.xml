@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.lhiot.healthygood.mapper.customplan.CustomPlanSpecificationStandardMapper">
+
+    <!-- 数据库字段对象关系映射 -->
+    <resultMap id="BaseResultMap"
+        type="com.lhiot.healthygood.domain.customplan.CustomPlanSpecificationStandard" >
+        <id column="id" property="id"/>
+        <result column="quantity" property="quantity" />
+        <result column="description" property="description" />
+        <result column="image" property="image" />
+    </resultMap>
+
+    <!-- base查询字段  -->
+    <sql id="Base_Column_List" >
+        <trim suffixOverrides="," >
+            id,
+            quantity,
+            description,
+            image,
+        </trim>
+    </sql>
+
+    <!--新增定制计划规格基础数据-->
+    <insert id="create" parameterType="com.lhiot.healthygood.domain.customplan.CustomPlanSpecificationStandard" useGeneratedKeys="true" keyProperty="id">
+        insert into custom_plan_specification_standard
+        <trim prefix="(" suffix=")" suffixOverrides="," >
+            <if test="id != null ">
+                id,
+            </if>
+            <if test="quantity != null ">
+                quantity,
+            </if>
+            <if test="description != null ">
+                description,
+            </if>
+            <if test="image != null ">
+                image,
+            </if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides="," >
+            <if test="id != null ">
+                #{id},
+            </if>
+            <if test="quantity != null ">
+                #{quantity},
+            </if>
+            <if test="description != null ">
+                #{description},
+            </if>
+            <if test="image != null ">
+                #{image},
+            </if>
+        </trim>
+    </insert>
+
+    <!--根据id修改定制计划规格基础数据-->
+    <update id="updateById" parameterType="com.lhiot.healthygood.domain.customplan.CustomPlanSpecificationStandard">
+        update custom_plan_specification_standard
+        <set>
+            <if test="id != null ">
+                id = #{id},
+            </if>
+            <if test="quantity != null ">
+                quantity = #{quantity},
+            </if>
+            <if test="description != null ">
+                description = #{description},
+            </if>
+            <if test="image != null ">
+                image = #{image},
+            </if>
+        </set>
+        where id=#{id}
+    </update>
+
+    <!--根据ids删除定制计划规格基础数据-->
+    <delete id="deleteByIds" parameterType="java.util.List">
+        delete from custom_plan_specification_standard where id in
+        <foreach collection="list" item="item" open="("
+            separator="," close=")">
+            #{item}
+        </foreach>
+    </delete>
+
+
+    <!-- 根据id查找定制计划规格基础数据 -->
+	<select id="selectById" resultMap="BaseResultMap"
+		parameterType="long"> select <include refid="Base_Column_List" />
+		from custom_plan_specification_standard where id = #{id}
+	</select>
+
+
+    <!-- base where条件  -->
+    <sql id="Base_Where_Condition" >
+        <where>
+            <if test="id != null ">
+                    and id = #{id}
+            </if>
+            <if test="quantity != null ">
+                    and quantity = #{quantity}
+            </if>
+            <if test="description != null and description != '' ">
+                    and description like concat('%',#{description}, '%')
+            </if>
+            <if test="image != null">
+                    and image = #{image}
+            </if>
+        </where>
+    </sql>
+
+
+    <!--查询定制计划规格基础数据列表-->
+     <select id="pageCustomPlanSpecificationStandards" resultMap="BaseResultMap"
+        parameterType="com.lhiot.healthygood.domain.customplan.model.CustomPlanSpecificationStandardParam">
+	        select <include refid="Base_Column_List" />
+	        from custom_plan_specification_standard
+	        <include refid="Base_Where_Condition" />
+            order by quantity asc
+    </select>
+
+    <!--查询定制计划规格基础数据总记录-->
+    <select id="pageCustomPlanSpecificationStandardCounts" resultType="int"
+        parameterType="com.lhiot.healthygood.domain.customplan.model.CustomPlanSpecificationStandardParam">
+            select count(1)
+            from custom_plan_specification_standard
+            <include refid="Base_Where_Condition" />
+    </select>
+
+    <!--查询定制计划规格基础数据列表-->
+    <select id="findList" resultMap="BaseResultMap">
+        select <include refid="Base_Column_List" />
+        from custom_plan_specification_standard
+        order by quantity asc
+    </select>
+
+</mapper>

@@ -213,7 +213,7 @@ public class FruitDoctorApi {
     }
 
     @Sessions.Uncheck
-    @ApiOperation(value = "结算申请分页查询(后台)")
+    @ApiOperation(value = "结算申请分页查询(后台)",response = SettlementApplication.class, responseContainer = "Set")
     @ApiImplicitParam(paramType = ApiParamType.BODY, name = "settlementApplication", value = "结算申请分页查询条件", dataType = "SettlementApplication", required = true)
     @PostMapping("/settlement/pages")
     public ResponseEntity search(@RequestBody SettlementApplication settlementApplication){
