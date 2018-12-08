@@ -96,10 +96,10 @@ public class CustomPlanSectionApi {
     }
 
     @Sessions.Uncheck
-    @ApiOperation(value = "根据条件分页查询定制板块信息列表(后台)", response = CustomPlanSection.class, responseContainer = "Set")
+    @ApiOperation(value = "根据条件分页查询定制板块信息列表(后台)", response = Pages.class)
     @ApiImplicitParam(paramType = ApiParamType.BODY, name = "param", value = "查询条件", dataType = "CustomPlanSectionParam")
     @PostMapping("/custom-plan-sections/pages")
-    public ResponseEntity search(@RequestBody CustomPlanSectionParam param) {
+    public ResponseEntity<Pages<CustomPlanSection>> search(@RequestBody CustomPlanSectionParam param) {
         log.debug("根据条件分页查询定制板块信息列表\t param:{}", param);
 
         Pages<CustomPlanSection> pages = customPlanSectionService.findList(param);
@@ -112,7 +112,7 @@ public class CustomPlanSectionApi {
      */
     @Sessions.Uncheck
     @GetMapping("/custom-plan-sections")
-    @ApiOperation(value = "查询定制计划板块列表页（定制板块对应定制计划列表页）")
+    @ApiOperation(value = "查询定制计划板块列表页（定制板块对应定制计划列表页）",response = Tuple.class)
     public ResponseEntity<Tuple<CustomPlanSection>> customPlanSectionTuple() {
         Tuple<CustomPlanSection> productSectionResult = customPlanSectionService.customPlanSectionTuple();
         return ResponseEntity.ok(productSectionResult);

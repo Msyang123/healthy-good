@@ -53,10 +53,9 @@ public class FruitDoctorApi {
     private final DoctorAchievementLogService doctorAchievementLogService;
     private final CardUpdateLogService cardUpdateLogService;
     private final BaseUserServerFeign baseUserServerFeign;
-    private Sessions session;
 
     @Autowired
-    public FruitDoctorApi(ThirdpartyServerFeign thirdpartyServerFeign, RegisterApplicationService registerApplicationService, SettlementApplicationService settlementApplicationService, DoctorUserService doctorUserService, FruitDoctorService fruitDoctorService, DoctorAchievementLogService doctorAchievementLogService, CardUpdateLogService cardUpdateLogService, BaseUserServerFeign baseUserServerFeign, Sessions session) {
+    public FruitDoctorApi(ThirdpartyServerFeign thirdpartyServerFeign, RegisterApplicationService registerApplicationService, SettlementApplicationService settlementApplicationService, DoctorUserService doctorUserService, FruitDoctorService fruitDoctorService, DoctorAchievementLogService doctorAchievementLogService, CardUpdateLogService cardUpdateLogService, BaseUserServerFeign baseUserServerFeign) {
         this.thirdpartyServerFeign = thirdpartyServerFeign;
         this.registerApplicationService = registerApplicationService;
         this.settlementApplicationService = settlementApplicationService;
@@ -65,7 +64,6 @@ public class FruitDoctorApi {
         this.doctorAchievementLogService = doctorAchievementLogService;
         this.cardUpdateLogService = cardUpdateLogService;
         this.baseUserServerFeign = baseUserServerFeign;
-        this.session = session;
     }
 
     @Sessions.Uncheck
@@ -227,16 +225,18 @@ public class FruitDoctorApi {
     @ApiOperation(value = "添加鲜果师客户 关注鲜果师(绑定)")
     @ApiImplicitParam(paramType = "body", name = "doctorUser", value = "要添加的鲜果师客户", required = true, dataType = "DoctorUser")
     public ResponseEntity bindingDoctor(Sessions.User user, @RequestBody DoctorUser doctorUser) {
-        String userId = user.getUser().get("userId").toString();
-        FruitDoctor fruitDoctor = fruitDoctorService.selectByUserId(Long.valueOf(userId));
+        Long userId = Long.valueOf(user.getUser().get("userId").toString());
+
+        FruitDoctor fruitDoctor = fruitDoctorService.selectByUserId(doctorUser.getDoctorId());
         if (Objects.isNull(fruitDoctor)) {
             return ResponseEntity.badRequest().body(Tips.warn("鲜果师不存在"));
         }
-        DoctorUser dUser = doctorUserService.selectByDoctorId(fruitDoctor.getId());
+        DoctorUser dUser = doctorUserService.selectByUserId(userId);
         if (Objects.nonNull(dUser)) {
             return ResponseEntity.badRequest().body(Tips.warn("您已经绑定该鲜果师了"));
         }
         doctorUser.setDoctorId(fruitDoctor.getId());
+        doctorUser.setUserId(userId);
         doctorUserService.create(doctorUser);
         return ResponseEntity.ok(Tips.info("绑定成功！"));
     }
@@ -276,7 +276,7 @@ public class FruitDoctorApi {
 
     @GetMapping("/page")
     @ApiOperation(value = "查询鲜果师成员分页列表", response = FruitDoctor.class, responseContainer = "Set")
-    public ResponseEntity pageQuery(Sessions.User user, FruitDoctor fruitDoctor1) {
+    public ResponseEntity pageQuery(Sessions.User user) {
         String userId = user.getUser().get("userId").toString();
         FruitDoctor fruitDoctor = fruitDoctorService.selectByUserId(Long.valueOf(userId));
         if (Objects.isNull(fruitDoctor)) {

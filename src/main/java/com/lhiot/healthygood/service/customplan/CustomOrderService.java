@@ -1,6 +1,6 @@
 package com.lhiot.healthygood.service.customplan;
 
-//import com.leon.microx.id.Generator;
+import com.leon.microx.id.Generator;
 import com.leon.microx.util.Calculator;
 import com.leon.microx.web.result.Tips;
 import com.leon.microx.web.result.Tuple;
@@ -17,6 +17,7 @@ import com.lhiot.healthygood.feign.ThirdpartyServerFeign;
 import com.lhiot.healthygood.feign.model.*;
 import com.lhiot.healthygood.feign.type.AllowRefund;
 import com.lhiot.healthygood.feign.type.ApplicationType;
+import com.lhiot.healthygood.feign.type.OrderType;
 import com.lhiot.healthygood.mapper.customplan.CustomOrderDeliveryMapper;
 import com.lhiot.healthygood.mapper.customplan.CustomOrderMapper;
 import com.lhiot.healthygood.mapper.customplan.CustomOrderPauseMapper;
@@ -55,7 +56,7 @@ public class CustomOrderService {
     private final CustomOrderMapper customOrderMapper;
     private final CustomOrderPauseMapper customOrderPauseMapper;
     private final CustomOrderDeliveryMapper customOrderDeliveryMapper;
-    //private final Generator<Long> generator;
+    private final Generator<Long> generator;
     //暂停开始结束时间
     private static final LocalTime BEGIN_PAUSE_OF_DAY = LocalTime.parse("00:00:00");
     private static final LocalTime END_PAUSE_OF_DAY = LocalTime.parse("23:59:59");
@@ -69,9 +70,8 @@ public class CustomOrderService {
                               CustomOrderMapper customOrderMapper,
                               CustomPlanSpecificationMapper customPlanSpecificationMapper,
                               CustomOrderPauseMapper customOrderPauseMapper,
-                              CustomOrderDeliveryMapper customOrderDeliveryMapper
-            //,
-            //                  Generator<Long> generator
+                              CustomOrderDeliveryMapper customOrderDeliveryMapper,
+                              Generator<Long> generator
     ) {
         this.customPlanService = customPlanService;
         this.baseDataServiceFeign = baseDataServiceFeign;
@@ -81,7 +81,7 @@ public class CustomOrderService {
         this.customPlanSpecificationMapper = customPlanSpecificationMapper;
         this.customOrderPauseMapper = customOrderPauseMapper;
         this.customOrderDeliveryMapper = customOrderDeliveryMapper;
-        //this.generator = generator;
+        this.generator = generator;
     }
 
     /**
@@ -95,8 +95,8 @@ public class CustomOrderService {
         if (Objects.isNull(customPlanSpecification))
             return Tips.warn("未找到定制规格");
         //和色果膳定制计划订单号
-        //String orderCode = generator.get(0, "HGCP");
-        //customOrder.setCustomOrderCode(orderCode);
+        String orderCode = generator.get(0, "HGCP");
+        customOrder.setCustomOrderCode(orderCode);
         customOrder.setStatus(CustomOrderStatus.WAIT_PAYMENT);
         customOrder.setCreateAt(Date.from(Instant.now()));
         customOrder.setPrice(customPlanSpecification.getPrice());
@@ -168,7 +168,7 @@ public class CustomOrderService {
         orderParam.setReceiveUser(customOrder.getReceiveUser());
         orderParam.setReceivingWay(ReceivingWay.TO_THE_HOME);//所有的都是送货上门
         orderParam.setAllowRefund(AllowRefund.YES);//允许退货
-        orderParam.setOrderType("CUSTOM");//定制订单
+        orderParam.setOrderType(OrderType.CUSTOM);//定制订单
         orderParam.setRemark(remark);
         String deliveryTime = customOrder.getDeliveryTime();
         LocalDate pauseBegin = LocalDate.now();//当天
@@ -195,7 +195,7 @@ public class CustomOrderService {
         CustomPlanDetailResult customPlanDetailResult = customPlanService.findDetail(customOrder.getPlanId());
         if (Objects.isNull(customPlanDetailResult))
             return Tips.warn("未找到定制计划");
-        List<CustomPlanPeriodResult> customPlanPeriodResultList = customPlanDetailResult.getCustomPlanPeriodResultList();
+        List<CustomPlanPeriodResult> customPlanPeriodResultList = customPlanDetailResult.getPeriodList();
         CustomPlanPeriodResult currentOrderPlanPeriod = null;
         //查找当前的购买的定制计划的定制计划规则
         for (CustomPlanPeriodResult item : customPlanPeriodResultList) {

@@ -1,15 +1,21 @@
 package com.lhiot.healthygood.service.order;
 
-import com.leon.microx.util.Calculator;
+import com.leon.microx.util.Jackson;
+import com.leon.microx.util.Position;
 import com.leon.microx.util.StringUtils;
 import com.leon.microx.web.result.Tips;
 import com.lhiot.healthygood.config.HealthyGoodConfig;
 import com.lhiot.healthygood.feign.BaseDataServiceFeign;
 import com.lhiot.healthygood.feign.DeliverServiceFeign;
 import com.lhiot.healthygood.feign.OrderServiceFeign;
-import com.lhiot.healthygood.feign.model.*;
+import com.lhiot.healthygood.feign.model.DeliverTime;
+import com.lhiot.healthygood.feign.model.DeliverUpdate;
+import com.lhiot.healthygood.feign.model.DeliveryParam;
+import com.lhiot.healthygood.feign.model.OrderDetailResult;
 import com.lhiot.healthygood.feign.type.*;
+import com.lhiot.healthygood.service.common.CommonService;
 import com.lhiot.healthygood.type.ReceivingWay;
+import com.lhiot.healthygood.util.FeginResponseTools;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -18,17 +24,15 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.RequestBody;
 
-import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.time.ZonedDateTime;
-import java.util.*;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
  * Description:服务类
  *
  * @author yangjiawen
- * @date 2018/07/26
  */
 @Service
 @Transactional
@@ -38,22 +42,20 @@ public class OrderService {
     private final OrderServiceFeign orderServiceFeign;
     private final DeliverServiceFeign deliverServiceFeign;
     private final BaseDataServiceFeign baseDataServiceFeign;
-    private final HealthyGoodConfig.WechatPayConfig wechatPayConfig;
-    private final HealthyGoodConfig.AliPayConfig aliPayConfig;
     private final HealthyGoodConfig.DeliverConfig deliverConfig;
+    private final CommonService commonService;
 
     @Autowired
     public OrderService(OrderServiceFeign orderServiceFeign,
                         DeliverServiceFeign deliverServiceFeign,
                         BaseDataServiceFeign baseDataServiceFeign,
-                        HealthyGoodConfig healthyGoodConfig) {
+                        HealthyGoodConfig healthyGoodConfig, CommonService commonService) {
 
         this.orderServiceFeign = orderServiceFeign;
         this.deliverServiceFeign = deliverServiceFeign;
         this.baseDataServiceFeign = baseDataServiceFeign;
-        this.wechatPayConfig = healthyGoodConfig.getWechatPay();
-        this.aliPayConfig = healthyGoodConfig.getAliAay();
         this.deliverConfig = healthyGoodConfig.getDeliver();
+        this.commonService = commonService;
     }
 
     //处理海鼎回调
@@ -86,74 +88,28 @@ public class OrderService {
                     orderServiceFeign.updateOrderStatus(orderDetailResult.getCode(), OrderStatus.RECEIVED);
                 } else {
                     //发送到配送(达达)
-                    DeliverOrder deliverOrder = new DeliverOrder();
-                    deliverOrder.setAddress(orderDetailResult.getAddress());
-                    deliverOrder.setAmountPayable(orderDetailResult.getAmountPayable());
-                    deliverOrder.setApplyType(ApplicationType.HEALTH_GOOD);
-                    deliverOrder.setBackUrl(StringUtils.format(deliverConfig.getBackUrl(), deliverConfig.getType()));//配置回调
-                    deliverOrder.setContactPhone(orderDetailResult.getContactPhone());
-                    deliverOrder.setCouponAmount(orderDetailResult.getCouponAmount());
+                    DeliveryParam deliveryParam=new DeliveryParam();
+                    deliveryParam.setApplicationType(ApplicationType.HEALTH_GOOD);
+                    deliveryParam.setBackUrl(StringUtils.format(deliverConfig.getBackUrl(), deliverConfig.getType()));//配置回调
+                    deliveryParam.setCoordinate(CoordinateSystem.AMAP);
 
-                    ZoneId zoneId = ZoneId.systemDefault();
-                    LocalDateTime current = LocalDateTime.now();
-                    ZonedDateTime zdt = current.atZone(zoneId);
-                    Date dateStart = Date.from(zdt.toInstant());
-
-                    deliverOrder.setCreateAt(dateStart);
-
-                    current.plusHours(1);//加一个小时
-                    Date dateEnd = Date.from(zdt.toInstant());
-                    deliverOrder.setDeliverTime(DeliverTime.of("立即配送", dateStart, dateEnd));
-                    deliverOrder.setDeliveryFee(orderDetailResult.getDeliveryAmount());
-                    deliverOrder.setHdOrderCode(orderDetailResult.getHdOrderCode());
-                    ResponseEntity<Store> storeResponseEntity = baseDataServiceFeign.findStoreByCode(orderDetailResult.getOrderStore().getStoreCode());
-                    if (Objects.nonNull(storeResponseEntity) && storeResponseEntity.getStatusCode().is2xxSuccessful()) {
-                        deliverOrder.setLat(storeResponseEntity.getBody().getLatitude().doubleValue());//TODO 配送经纬度不是门店的经纬度，是收货地址的经纬度
-                        deliverOrder.setLng(storeResponseEntity.getBody().getLongitude().doubleValue());
-                    } else {
-                        log.error("查询门店信息失败", orderDetailResult.getOrderStore().getStoreCode());
-                        deliverOrder.setLat(0.00);
-                        deliverOrder.setLng(0.00);
+                    deliveryParam.setDeliverTime(Jackson.object(orderDetailResult.getDeliverTime(),DeliverTime.class));
+                    deliveryParam.setDeliveryType(DeliverType.valueOf(deliverConfig.getType()));
+                    Position.GCJ02 position = commonService.getPositionFromAddres(orderDetailResult.getAddress());//地址转经纬度
+                    if(Objects.isNull(position)){
+                        log.error("查询收货地址经纬度信息失败{}", orderDetailResult.getAddress());
+                        deliveryParam.setLat(0.0);
+                        deliveryParam.setLng(0.0);
+                    }else{
+                        deliveryParam.setLat(position.getLatitude());
+                        deliveryParam.setLng(position.getLongitude());
                     }
-                    deliverOrder.setOrderId(orderDetailResult.getId());
-                    deliverOrder.setOrderCode(orderDetailResult.getCode());
-                    deliverOrder.setReceiveUser(orderDetailResult.getReceiveUser());
-                    deliverOrder.setRemark(orderDetailResult.getRemark());
-                    deliverOrder.setStoreCode(orderDetailResult.getOrderStore().getStoreCode());
-                    deliverOrder.setStoreName(orderDetailResult.getOrderStore().getStoreName());
-                    deliverOrder.setTotalAmount(orderDetailResult.getTotalAmount());
-                    deliverOrder.setUserId(orderDetailResult.getUserId());
+                    ResponseEntity updateOrderToDeliveryResponse = orderServiceFeign.updateOrderToDelivery(orderDetailResult.getCode(),deliveryParam);
 
-                    List<DeliverProduct> deliverProductList = new ArrayList<>(orderDetailResult.getOrderProductList().size());
-                    orderDetailResult.getOrderProductList().forEach(item -> {
-                        DeliverProduct deliverProduct = new DeliverProduct();
-                        deliverProduct.setBarcode(item.getBarcode());
-                        deliverProduct.setBaseWeight(item.getTotalWeight().doubleValue());
-                        deliverProduct.setDeliverBaseOrderId(orderDetailResult.getId());
-                        deliverProduct.setDiscountPrice(item.getDiscountPrice());
-                        deliverProduct.setImage(item.getImage());
-                        deliverProduct.setLargeImage(item.getImage());
-                        deliverProduct.setPrice(item.getTotalPrice());
-                        deliverProduct.setProductName(item.getProductName());
-                        deliverProduct.setProductQty(item.getProductQty());
-                        deliverProduct.setSmallImage(item.getImage());
-                        deliverProduct.setStandardPrice((int) Calculator.div(item.getTotalPrice(), item.getProductQty()));
-                        deliverProduct.setStandardQty(Double.valueOf(item.getShelfQty().toString()));
-                        deliverProductList.add(deliverProduct);
-                    });
-                    deliverOrder.setDeliverOrderProductList(deliverProductList);//填充订单商品
-
-                    //发送达达配送
-                    ResponseEntity<Tips> deliverResponseEntity = deliverServiceFeign.create(DeliverType.valueOf(deliverConfig.getType()), CoordinateSystem.AMAP, deliverOrder);
-
-                    if (Objects.nonNull(deliverResponseEntity) && deliverResponseEntity.getStatusCode().is2xxSuccessful()) {
-                        //设置成已发货
-                        ResponseEntity sendOutResponse = orderServiceFeign.updateOrderStatus(orderDetailResult.getCode(), OrderStatus.SEND_OUT);
-                        if (Objects.nonNull(sendOutResponse) && sendOutResponse.getStatusCode().is2xxSuccessful()) {
-                            log.info("调用基础服务修改为已发货状态正常{}", orderCode);
-                        } else {
-                            log.error("调用基础服务修改为已发货状态错误{}", orderCode);
-                        }
+                    if (Objects.nonNull(updateOrderToDeliveryResponse) && updateOrderToDeliveryResponse.getStatusCode().is2xxSuccessful()) {
+                        log.info("调用基础服务修改为已发货状态正常{}", orderCode);
+                    }else{
+                        log.error("调用基础服务修改为已发货状态错误{}", orderCode);
                     }
                 }
                 return Tips.of(HttpStatus.OK, orderCode);
@@ -161,9 +117,12 @@ public class OrderService {
                 log.info("订单退货回调*********");
                 if (Objects.equals(OrderStatus.RETURNING, orderDetailResult.getStatus())) {
                     log.info("给用户退款", orderDetailResult);
-                    //退款
-                    //判断退款是否成功
-                    //改订单为退款成功
+                    Tips refundOrderTips = FeginResponseTools.convertResponse(orderServiceFeign.refundOrder(orderDetailResult.getCode(),null));//此处为用户依据申请了退货了，海鼎回调中不需要再告知基础服务退货列表
+                    if(refundOrderTips.err()){
+                        log.error("调用基础服务 refundOrder失败{}",orderDetailResult);
+                        return Tips.of(HttpStatus.BAD_REQUEST, String.valueOf(orderDetailResultResponseEntity.getBody()));
+                    }
+                    //TODO 发起用户退款 等待用户退款回调然后发送orderServiceFeign.refundConfirmation
                 }
             } else {
                 log.info("hd other group message= " + map.get("group"));

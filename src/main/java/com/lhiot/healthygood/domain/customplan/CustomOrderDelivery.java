@@ -1,6 +1,7 @@
 package com.lhiot.healthygood.domain.customplan;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.lhiot.healthygood.type.CustomOrderDeliveryStatus;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
@@ -19,6 +20,7 @@ public class CustomOrderDelivery {
     @ApiModelProperty(hidden = true)
     private Long id;
 
+    @JsonProperty("shelfId")
     @ApiModelProperty(dataType = "Long",hidden = true, notes = "商品上架id")
     private Long productShelfId;
 

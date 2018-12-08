@@ -36,6 +36,10 @@
             <artifactId>microx-starter-probe</artifactId>
         </dependency>
         <dependency>
+            <groupId>com.leon.microx.common</groupId>
+            <artifactId>microx-redis-core</artifactId>
+        </dependency>
+        <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-configuration-processor</artifactId>
             <optional>true</optional>
@@ -90,11 +94,6 @@
             <groupId>com.lhiot.dc</groupId>
             <artifactId>dictionary-client</artifactId>
             <version>1.0</version>
-        </dependency>
-        <dependency>
-            <groupId>com.leon.microx.common</groupId>
-            <artifactId>microx-redis-core</artifactId>
-            <version>2.0-20180620</version>
         </dependency>
         <!-- utils -->
         <dependency>

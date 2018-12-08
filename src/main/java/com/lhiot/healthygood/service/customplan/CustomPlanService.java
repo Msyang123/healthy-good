@@ -23,8 +23,6 @@ import com.lhiot.healthygood.util.FeginResponseTools;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestBody;
 
 import java.time.Instant;
 import java.util.*;
@@ -60,7 +58,7 @@ public class CustomPlanService {
         }
         BeanUtils.copyProperties(customPlan, result);
         List<CustomPlanPeriodResult> customPlanPeriodResultList = getCustomPlanPeriodResultList(id);
-        result.setCustomPlanPeriodResultList(customPlanPeriodResultList);
+        result.setPeriodList(customPlanPeriodResultList);
         result.setPrice(customPlanSpecificationMapper.findMinPriceByPlanId(id));//最低定制规格价格
         return result;
     }
@@ -89,10 +87,10 @@ public class CustomPlanService {
         List<CustomPlanProductResult> customPlanProductResults = new ArrayList<>();
 
         //依据上架ids查询上架商品信息
-        Object[] shelfIds = customPlanProducts.parallelStream().map(CustomPlanProduct::getProductShelfId).map(String::valueOf).toArray(String[]::new);
+        Object[] shelfIds = customPlanProducts.parallelStream().map(CustomPlanProduct::getProductShelfId).map(String::valueOf).toArray(Object[]::new);
 
         ProductShelfParam productShelfParam = new ProductShelfParam();
-        productShelfParam.setIds(StringUtils.join(",", shelfIds));
+        productShelfParam.setIds(StringUtils.arrayToCommaDelimitedString(shelfIds));
         productShelfParam.setShelfStatus(OnOff.ON);
         //查找基础服务上架商品信息
         Tips<Pages<ProductShelf>> productShelfTips = FeginResponseTools.convertResponse(baseDataServiceFeign.searchProductShelves(productShelfParam));
@@ -209,7 +207,7 @@ public class CustomPlanService {
             return Tips.warn("定制计划和定制板块关联失败");
         }
         // 获取定制周期中的定制规格和定制计划列表
-        List<CustomPlanPeriodResult> customPlanPeriodResultList = customPlanDetailResult.getCustomPlanPeriodResultList();
+        List<CustomPlanPeriodResult> customPlanPeriodResultList = customPlanDetailResult.getPeriodList();
         if (!customPlanPeriodResultList.isEmpty() && customPlanPeriodResultList.size() > 0) {
             customPlanPeriodResultList.forEach(customPlanPeriodResult -> {
                 Integer planPeriod = customPlanPeriodResult.getPlanPeriod();
@@ -264,7 +262,7 @@ public class CustomPlanService {
         }
 
         // 获取定制周期中的定制规格和定制计划列表
-        List<CustomPlanPeriodResult> customPlanPeriodResultList = customPlanDetailResult.getCustomPlanPeriodResultList();
+        List<CustomPlanPeriodResult> customPlanPeriodResultList = customPlanDetailResult.getPeriodList();
         if (!customPlanPeriodResultList.isEmpty() && customPlanPeriodResultList.size() > 0) {
             // 批量删除定制规格
             boolean deleteCustomPlanSpecification = customPlanSpecificationMapper.deleteByPlanId(id) > 0;
@@ -324,7 +322,7 @@ public class CustomPlanService {
      */
     public Tips updateProduct(Long id, CustomPlanDetailResult customPlanDetailResult) {
         // 获取定制周期中的定制规格和定制计划列表
-        List<CustomPlanPeriodResult> customPlanPeriodResultList = customPlanDetailResult.getCustomPlanPeriodResultList();
+        List<CustomPlanPeriodResult> customPlanPeriodResultList = customPlanDetailResult.getPeriodList();
         if (!customPlanPeriodResultList.isEmpty() && customPlanPeriodResultList.size() > 0) {
             // 批量删除定制商品
             boolean deleteCustomPlanProduct = customPlanProductMapper.deleteByPlanId(id) > 0;
