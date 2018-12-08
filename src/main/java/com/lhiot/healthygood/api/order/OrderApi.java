@@ -72,7 +72,7 @@ public class OrderApi {
         Map<String, Object> sessionUserMap = user.getUser();
         Long userId = Long.valueOf(sessionUserMap.get("userId").toString());
         orderParam.setUserId(userId);//设置业务用户id
-        orderParam.setApplicationType(ApplicationType.FRUIT_DOCTOR);
+        orderParam.setApplicationType(ApplicationType.HEALTH_GOOD);
         orderParam.setOrderType("NORMAL");//普通订单
 
         String storeCode = orderParam.getOrderStore().getStoreCode();
@@ -257,7 +257,7 @@ public class OrderApi {
         }
         OrderDetailResult orderDetailResult = (OrderDetailResult) validateResult.getBody().getData();
         PaySign paySign = new PaySign();
-        paySign.setApplicationType(ApplicationType.FRUIT_DOCTOR);
+        paySign.setApplicationType(ApplicationType.HEALTH_GOOD);
         paySign.setBackUrl(wechatPayConfig.getOrderCallbackUrl());
         paySign.setClientIp(RealClientIp.getRealIp(request));//获取客户端真实ip
         paySign.setConfigName(wechatPayConfig.getConfigName());//微信支付简称
