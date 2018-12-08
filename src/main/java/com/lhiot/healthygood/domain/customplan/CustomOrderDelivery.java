@@ -62,5 +62,4 @@ public class CustomOrderDelivery {
 
     @ApiModelProperty(notes = "备注", dataType = "String")
     private String remark;
-
 }

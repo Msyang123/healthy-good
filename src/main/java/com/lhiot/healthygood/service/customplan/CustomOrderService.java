@@ -2,12 +2,12 @@ package com.lhiot.healthygood.service.customplan;
 
 //import com.leon.microx.id.Generator;
 import com.leon.microx.util.Calculator;
+import com.leon.microx.util.StringUtils;
+import com.leon.microx.web.result.Pages;
 import com.leon.microx.web.result.Tips;
 import com.leon.microx.web.result.Tuple;
-import com.lhiot.healthygood.domain.customplan.CustomOrder;
-import com.lhiot.healthygood.domain.customplan.CustomOrderDelivery;
-import com.lhiot.healthygood.domain.customplan.CustomOrderPause;
-import com.lhiot.healthygood.domain.customplan.CustomPlanSpecification;
+import com.lhiot.healthygood.domain.activity.model.ActivityProductResult;
+import com.lhiot.healthygood.domain.customplan.*;
 import com.lhiot.healthygood.domain.customplan.model.CustomPlanDetailResult;
 import com.lhiot.healthygood.domain.customplan.model.CustomPlanPeriodResult;
 import com.lhiot.healthygood.domain.customplan.model.CustomPlanProductResult;
@@ -35,6 +35,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.*;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * Description:定制订单服务类
@@ -328,7 +329,7 @@ public class CustomOrderService {
         List<CustomOrder> customOrderList = customOrderMapper.pageCustomOrder(customOrderParam);
         if (needChlid) {
             customOrderList.forEach(item -> {
-                item.setCustomOrderDeliveryList(customOrderDeliveryMapper.selectByCustomOrderId(item.getId()));//设置定制配送记录
+                item.setCustomOrderDeliveryList(customOrderDeliveryMapper.selectByCustomOrderId(item.getPlanId(),item.getId()));//设置定制配送记录
                 item.setCustomPlan(customPlanService.findById(item.getPlanId()));//设置定制计划
             });
         }
@@ -343,15 +344,61 @@ public class CustomOrderService {
      * @return
      */
     @Nullable
-    public CustomOrder selectByCode(String orderCode, boolean needChlid) {
+    public Tips<CustomOrder> selectByCode(String orderCode, boolean needChlid) {
         CustomOrder customOrder = customOrderMapper.selectByCode(orderCode);
-        if (Objects.isNull(customOrder))
-            return null;
-        if (needChlid && Objects.nonNull(customOrder)) {
-            customOrder.setCustomOrderDeliveryList(customOrderDeliveryMapper.selectByCustomOrderId(customOrder.getId()));//设置定制配送记录
-            customOrder.setCustomPlan(customPlanService.findById(customOrder.getPlanId()));//设置定制计划
+        if (Objects.isNull(customOrder)){
+            return Tips.warn("未找到定制订单");
         }
-        return customOrder;
+        if (needChlid && Objects.nonNull(customOrder)) {
+            List<CustomOrderDelivery> customOrderDeliveryList = customOrderDeliveryMapper.selectByCustomOrderId(customOrder.getPlanId(),customOrder.getId());
+            // 设置定制配送记录
+            customOrder.setCustomOrderDeliveryList(customOrderDeliveryList);
+            // 设置定制计划
+            customOrder.setCustomPlan(customPlanService.findById(customOrder.getPlanId()));
+            // 查找定制计划套餐详情
+            List<Long> shelfIdList = customOrderDeliveryList.stream().map(CustomOrderDelivery::getProductShelfId).collect(Collectors.toList());
+            String shelfIds = StringUtils.collectionToDelimitedString(shelfIdList,",");
+            ProductShelfParam productShelfParam = new ProductShelfParam();
+            productShelfParam.setIds(shelfIds);
+            ResponseEntity<Pages<ProductShelf>> productEntity = baseDataServiceFeign.searchProductShelves(productShelfParam);
+            if (productEntity.getStatusCode().isError()) {
+                return Tips.warn(productEntity.getBody().toString());
+            }
+            List<ProductShelf> productShelfList = productEntity.getBody().getArray();
+            productShelfList.forEach(productShelf -> {
+                customOrderDeliveryList.forEach(customOrderDelivery -> {
+                    if (Objects.equals(productShelf.getId(),customOrderDelivery.getProductShelfId())) {
+                        customOrderDelivery.setProductName(productShelf.getName());
+                        customOrderDelivery.setImage(productShelf.getImage());
+                    }
+                });
+            });
+        }
+        Tips<CustomOrder> tips = new Tips<>();
+        tips.setData(customOrder);
+        return tips;
+    }
+
+    /**
+     * 查询定制订单总记录数
+     * @param customOrder
+     * @return
+     */
+    public int count(CustomOrder customOrder) {
+        return this.customOrderMapper.pageCustomOrderCounts(customOrder);
+    }
+
+    /**
+     * 查询定制订单总记录
+     * @param customOrder
+     * @return
+     */
+    public Pages<CustomOrder> pageList(CustomOrder customOrder) {
+        int total = 0;
+        if (customOrder.getRows() != null && customOrder.getRows() > 0 ){
+            total = this.count(customOrder);
+        }
+        return Pages.of(total, this.customOrderMapper.pageCustomOrder(customOrder));
     }
 
 }

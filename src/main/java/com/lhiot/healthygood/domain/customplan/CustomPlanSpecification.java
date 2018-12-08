@@ -14,9 +14,7 @@ import lombok.ToString;
 * @date 2018/11/22
 */
 @Data
-@ToString(callSuper = true)
 @ApiModel
-@NoArgsConstructor
 public class CustomPlanSpecification{
 
     /**

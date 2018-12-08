@@ -1,5 +1,7 @@
 package com.lhiot.healthygood.domain.customplan;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.lhiot.healthygood.type.CustomOrderBuyType;
 import com.lhiot.healthygood.type.CustomOrderStatus;
 import io.swagger.annotations.ApiModel;
@@ -45,6 +47,7 @@ public class CustomOrder {
     @ApiModelProperty(value = "购买价格",dataType = "Integer",hidden = true)
     private Integer price;
 
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss",timezone = "GMT+8")
     @ApiModelProperty(value = "创建时间",dataType = "Date",hidden = true)
     private Date createAt;
 
@@ -80,4 +83,35 @@ public class CustomOrder {
 
     @ApiModelProperty(notes = "配送记录", dataType = "List")
     private List<CustomOrderDelivery> customOrderDeliveryList;
+
+    @ApiModelProperty(notes = "下单用户昵称", dataType = "String")
+    private String nickname;
+
+    @ApiModelProperty(notes = "下单用户手机号码", dataType = "String")
+    private String phone;
+
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss",timezone = "GMT+8")
+    @ApiModelProperty(notes = "起始创建时间", dataType = "Date")
+    private Date beginCreateAt;
+
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss",timezone = "GMT+8")
+    @ApiModelProperty(notes = "截止创建时间", dataType = "Date")
+    private Date endCreateAt;
+
+    @ApiModelProperty(notes = "每页查询条数(为空或0不分页查所有)", dataType = "Integer")
+    private Integer rows;
+    @ApiModelProperty(notes = "当前页", dataType = "Integer")
+    private Integer page;
+
+    @ApiModelProperty(hidden = true)
+    private Integer startRow;
+
+    @JsonIgnore
+    public Integer getStartRow() {
+        if (this.rows != null && this.rows > 0) {
+            return (this.page != null && this.page > 0 ? this.page - 1 : 0) * this.rows;
+        }
+        return null;
+    }
+
 }
