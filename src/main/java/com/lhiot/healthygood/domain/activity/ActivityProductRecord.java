@@ -18,6 +18,7 @@ public class ActivityProductRecord{
     @ApiModelProperty(notes="userId",dataType="Long")
     private Long userId;
 
+    @JsonProperty("shelfId")
     @ApiModelProperty(notes="商品上架ID",dataType="Long")
     private Long productShelfId;
 

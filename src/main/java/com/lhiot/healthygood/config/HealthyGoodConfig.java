@@ -71,6 +71,7 @@ public class HealthyGoodConfig {
     public static class DeliverConfig {
         private String type;
         private String backUrl;
+        private double distance;//门店配送距离(km)
     }
 }
 

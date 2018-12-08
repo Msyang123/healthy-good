@@ -108,7 +108,7 @@ public class DateCalculation {
         ZonedDateTime zonedDateTime = localDate.atStartOfDay(ZoneId.systemDefault());
         Instant instant1 = zonedDateTime.toInstant();
         Date from = Date.from(instant1);
-        return DateTime.format(from,  FOMART_1);//DateTime.DEFAULT_FORMATTER.toString() TODO 需要研究一下
+        return DateTime.format(from,  FOMART_1);//DateTime.DEFAULT_FORMATTER.toString()
     }
 
     public static void main(String[] args) {

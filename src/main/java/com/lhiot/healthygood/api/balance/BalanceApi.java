@@ -64,26 +64,15 @@ public class BalanceApi {
     }
 
 
-
-/*    @Sessions.Uncheck
-    @PostMapping("/recharge/ali-pay/payment-callback")
-    @ApiOperation("充值支付支付宝回调-后端回调处理")
-    public ResponseEntity<String> aliPayPaymentCallback(HttpServletRequest request) {
-        Map<String, Object> parameters = ConvertRequestToMap.convertRequestParameters(request);
-        //调用基础服务验证参数签名是否正确
-        //paymentServiceFeign.paymentSign();//TODO 基础服务未完善
-        //修改充值状态
-        return ResponseEntity.ok("success");
-    }*/
-
     @PostMapping("/balance/payment")
     @ApiOperation(value = "鲜果币支付接口")
-    public ResponseEntity balancePayment(@RequestParam("fee") Integer fee, @RequestParam("orderCode") String orderCode, Sessions.User user) {
+    public ResponseEntity balancePayment(@RequestParam("orderCode") String orderCode, Sessions.User user) {
         Long userId = Long.valueOf(user.getUser().get("userId").toString());
         ResponseEntity<Tips> validateResult = validateOrderOwner(userId, orderCode);
         if (Objects.isNull(validateResult) || validateResult.getStatusCode().isError()) {
             return validateResult;
         }
+        OrderDetailResult orderDetailResult= (OrderDetailResult) validateResult.getBody().getData();
         //TODO paymentServiceFeign.  调用鲜果币支付接口
         return ResponseEntity.ok().build();
     }

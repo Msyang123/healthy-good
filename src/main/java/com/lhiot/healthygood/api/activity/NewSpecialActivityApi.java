@@ -21,7 +21,6 @@ import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -41,10 +40,9 @@ public class NewSpecialActivityApi {
     private final ActivityProductRecordService activityProductRecordService;
     private final ActivityProductService activityProductService;
     private final BaseDataServiceFeign baseDataServiceFeign;
-    private Sessions session;
 
     @Autowired
-    public NewSpecialActivityApi(ObjectProvider<Sessions> sessionsObjectProvider,
+    public NewSpecialActivityApi(
                                  SpecialProductActivityService specialProductActivityService,
                                  ActivityProductRecordService activityProductRecordService,
                                  ActivityProductService activityProductService,
@@ -53,7 +51,6 @@ public class NewSpecialActivityApi {
         this.activityProductRecordService = activityProductRecordService;
         this.activityProductService = activityProductService;
         this.baseDataServiceFeign = baseDataServiceFeign;
-        this.session = sessionsObjectProvider.getIfAvailable();
     }
 
     @PostMapping("/activities/specials/products")

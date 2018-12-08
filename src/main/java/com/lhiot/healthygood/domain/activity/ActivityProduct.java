@@ -52,7 +52,7 @@ public class ActivityProduct {
     /**
     *
     */
-    @JsonProperty("productShelfId")
+    @JsonProperty("shelfId")
     @ApiModelProperty(value = "商品上架id", dataType = "Long")
     @NotNull(message = "商品上架id不为空")
     private Long productShelfId;

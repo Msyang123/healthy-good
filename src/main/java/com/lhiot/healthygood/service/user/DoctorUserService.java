@@ -99,7 +99,7 @@ public class DoctorUserService {
         return this.doctorUserMapper.selectByUserId(userId);
     }
 
-    public DoctorUser selectByDoctorId(Long doctorId){
+    public List<DoctorUser> selectByDoctorId(Long doctorId){
         return this.doctorUserMapper.selectByDoctorId(doctorId);
     }
 
