@@ -65,4 +65,10 @@ public class CustomPlanSpecification{
     @ApiModelProperty(value = "定制说明配图", dataType = "String")
     private String image;
 
+    @JsonProperty("standardId")
+    @ApiModelProperty(value = "定制规格基础id", dataType = "Long")
+    private Long standardId;
+
+
+
 }
