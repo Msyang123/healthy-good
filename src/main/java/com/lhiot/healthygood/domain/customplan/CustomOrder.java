@@ -1,5 +1,7 @@
 package com.lhiot.healthygood.domain.customplan;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.lhiot.healthygood.type.CustomOrderBuyType;
 import com.lhiot.healthygood.type.CustomOrderStatus;
 import io.swagger.annotations.ApiModel;
@@ -10,6 +12,7 @@ import lombok.ToString;
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotBlank;
 import java.util.Date;
+import java.util.List;
 
 @Data
 @ToString(callSuper = true)
@@ -18,6 +21,9 @@ public class CustomOrder {
 
     @ApiModelProperty(hidden = true)
     private Long id;
+
+    @ApiModelProperty(hidden = true)
+    private String customOrderCode;
 
     @ApiModelProperty(hidden = true)
     private Long userId;
@@ -41,6 +47,7 @@ public class CustomOrder {
     @ApiModelProperty(value = "购买价格",dataType = "Integer",hidden = true)
     private Integer price;
 
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss",timezone = "GMT+8")
     @ApiModelProperty(value = "创建时间",dataType = "Date",hidden = true)
     private Date createAt;
 
@@ -50,6 +57,14 @@ public class CustomOrder {
     @ApiModelProperty(notes = "定制计划规格id", dataType = "Long")
     @Min(value = 1L)
     private Long specificationId;
+
+    @ApiModelProperty(notes = "收货人", dataType = "String")
+    @NotBlank(message = "收货人")
+    private String receiveUser;
+
+    @ApiModelProperty(notes = "联系电话", dataType = "String")
+    @NotBlank(message = "联系电话")
+    private String contactPhone;
 
     @ApiModelProperty(notes = "客户要求配送时间", dataType = "String")
     @NotBlank(message = "客户要求配送时间不能为空")
@@ -62,4 +77,41 @@ public class CustomOrder {
     @ApiModelProperty(notes = "门店编码", dataType = "String")
     @NotBlank(message = "门店编码不能为空")
     private String storeCode;
+
+    @ApiModelProperty(notes = "购买的定制计划", dataType = "CustomPlan")
+    private CustomPlan customPlan;
+
+    @ApiModelProperty(notes = "配送记录", dataType = "List")
+    private List<CustomOrderDelivery> customOrderDeliveryList;
+
+    @ApiModelProperty(notes = "下单用户昵称", dataType = "String")
+    private String nickname;
+
+    @ApiModelProperty(notes = "下单用户手机号码", dataType = "String")
+    private String phone;
+
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss",timezone = "GMT+8")
+    @ApiModelProperty(notes = "起始创建时间", dataType = "Date")
+    private Date beginCreateAt;
+
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss",timezone = "GMT+8")
+    @ApiModelProperty(notes = "截止创建时间", dataType = "Date")
+    private Date endCreateAt;
+
+    @ApiModelProperty(notes = "每页查询条数(为空或0不分页查所有)", dataType = "Integer")
+    private Integer rows;
+    @ApiModelProperty(notes = "当前页", dataType = "Integer")
+    private Integer page;
+
+    @ApiModelProperty(hidden = true)
+    private Integer startRow;
+
+    @JsonIgnore
+    public Integer getStartRow() {
+        if (this.rows != null && this.rows > 0) {
+            return (this.page != null && this.page > 0 ? this.page - 1 : 0) * this.rows;
+        }
+        return null;
+    }
+
 }

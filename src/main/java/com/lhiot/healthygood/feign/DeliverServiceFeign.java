@@ -17,7 +17,11 @@ import java.util.Map;
 @FeignClient("delivery-service-v1-0")
 public interface DeliverServiceFeign {
 
-    //发送配送单
+    /**
+     * 发送配送单 已废弃
+     * @see OrderServiceFeign updateOrderToDelivery()
+     */
+    @Deprecated
     @RequestMapping(value = "/{deliverType}/delivery-notes", method = RequestMethod.POST)
     ResponseEntity create(@PathVariable("deliverType") DeliverType type, @RequestParam("coordinate") CoordinateSystem coordinate, @RequestBody DeliverOrder deliverOrder);
 

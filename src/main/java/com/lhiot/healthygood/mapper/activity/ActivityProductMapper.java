@@ -72,12 +72,12 @@ public interface ActivityProductMapper {
      * Description:根据id查找活动商品
      *
      * @param specialProductActivityId
-     * @param productShelfId
+     * @param shelfId
      * @return
      * @author hufan
      * @date 2018/12/03 18:42:15
      */
-    ActivityProduct selectBySpecialIdAndShelfId(@Param("specialProductActivityId") Long specialProductActivityId,@Param("productShelfId") Long productShelfId);
+    ActivityProduct selectBySpecialIdAndShelfId(@Param("specialProductActivityId") Long specialProductActivityId,@Param("shelfId") Long shelfId);
 
     /**
     * Description:查询活动商品列表

@@ -30,7 +30,7 @@ public class CustomPlanSectionRelationApi {
     }
 
     @Sessions.Uncheck
-    @ApiOperation("批量修改定制版块与定制计划关系")
+    @ApiOperation("批量修改定制版块与定制计划关系(后台)")
     @ApiImplicitParams({
             @ApiImplicitParam(paramType = ApiParamType.QUERY, name = "sectionId", value = "定制版块Id", dataType = "Long", required = true),
             @ApiImplicitParam(paramType = ApiParamType.QUERY, name = "planIds", value = "多个定制计划Id以英文逗号分隔", dataType = "String"),

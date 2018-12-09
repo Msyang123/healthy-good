@@ -2,6 +2,7 @@ package com.lhiot.healthygood.feign.model;
 
 import com.lhiot.healthygood.feign.type.AllowRefund;
 import com.lhiot.healthygood.feign.type.ApplicationType;
+import com.lhiot.healthygood.feign.type.OrderType;
 import com.lhiot.healthygood.type.ReceivingWay;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
@@ -20,7 +21,7 @@ public class CreateOrderParam {
 
     private Long userId;
     private ApplicationType applicationType;
-    private String orderType;
+    private OrderType orderType;
     private ReceivingWay receivingWay;
     private Integer couponAmount = 0;
     private Integer totalAmount;

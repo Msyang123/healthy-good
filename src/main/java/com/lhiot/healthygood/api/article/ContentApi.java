@@ -31,17 +31,14 @@ public class ContentApi {
     @Sessions.Uncheck
     @GetMapping("/faqs")
     @ApiImplicitParam(paramType = ApiParamType.QUERY, name = "categoryEnName", value = "分类英文名称", dataType = "String")
-    @ApiOperation(value = "常见问题",response = FaqCategory.class, responseContainer = "List")
-    public ResponseEntity faqs(@RequestParam String categoryEnName){
+    @ApiOperation(value = "常见问题",response = FaqCategory.class,responseContainer = "List")
+    public ResponseEntity<Tips> faqs(@RequestParam String categoryEnName){
         FaqParam faqParam = new FaqParam();
         faqParam.setCategoryEnName(categoryEnName);
         faqParam.setApplicationType("FRUIT_DOCTOR");
         ResponseEntity<List<FaqCategory>> faqListRes = contentServiceFeign.faqList(faqParam);
         Tips tips = FeginResponseTools.convertResponse(faqListRes);
-        if (tips.err()){
-            return ResponseEntity.badRequest().body(tips);
-        }
-        return ResponseEntity.ok(tips.getData());
+        return FeginResponseTools.returnTipsResponse(tips);
     }
 
     @PostMapping("/feedback")

@@ -1,5 +1,6 @@
 package com.lhiot.healthygood.domain.activity.model;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
@@ -22,6 +23,7 @@ public class ActivityProductResult {
     private Long specialProductActivityId;
     @ApiModelProperty(value = "活动类型", dataType = "String")
     private String activityType;
+    @JsonProperty("shelfId")
     @ApiModelProperty(value = "商品上架id", dataType = "Long")
     private Long productShelfId;
     @ApiModelProperty(value = "活动价", dataType = "Integer")

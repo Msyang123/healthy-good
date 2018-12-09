@@ -11,6 +11,8 @@
         <result column="quantity" property="quantity"/>
         <result column="description" property="description"/>
         <result column="plan_period" property="planPeriod"/>
+        <result column="image" property="image"/>
+        <result column="standard_id" property="standardId"/>
     </resultMap>
 
     <!-- base查询字段  -->
@@ -22,6 +24,8 @@
             quantity,
             description,
             plan_period,
+            image,
+            standard_id,
         </trim>
     </sql>
 
@@ -48,6 +52,12 @@
             <if test="planPeriod != null ">
                 plan_period,
             </if>
+            <if test="image != null ">
+                image,
+            </if>
+            <if test="standardId != null ">
+                standard_id,
+            </if>
         </trim>
         <trim prefix="values (" suffix=")" suffixOverrides=",">
             <if test="id != null ">
@@ -67,6 +77,12 @@
             </if>
             <if test="planPeriod != null ">
                 #{planPeriod},
+            </if>
+            <if test="image != null ">
+                #{image},
+            </if>
+            <if test="standardId != null ">
+                #{standardId},
             </if>
         </trim>
     </insert>
@@ -92,6 +108,12 @@
             </if>
             <if test="planPeriod != null ">
                 plan_period = #{planPeriod},
+            </if>
+            <if test="image != null ">
+                image = #{image},
+            </if>
+            <if test="standardId != null ">
+                standard_id = #{standardId},
             </if>
         </set>
         where id=#{id}
@@ -141,6 +163,12 @@
             <if test="planPeriod != null ">
                 and plan_period = #{planPeriod}
             </if>
+            <if test="image != null ">
+                and image = #{image}
+            </if>
+            <if test="standardId != null ">
+                and standard_id = #{standardId}
+            </if>
         </where>
     </sql>
 
@@ -181,7 +209,7 @@
 
     <!-- 批量新增定制计划集合 -->
     <insert id="insertList" parameterType="java.util.List">
-        insert into custom_plan_specification (plan_id,price,quantity,description, plan_period)
+        insert into custom_plan_specification (plan_id,price,quantity,description, plan_period, image, standard_id)
         values
         <foreach collection="list" item="item" index="index" separator=",">
             (
@@ -189,7 +217,9 @@
             #{item.price},
             #{item.quantity},
             #{item.description},
-            #{item.planPeriod}
+            #{item.planPeriod},
+            #{item.image},
+            #{item.standardId}
             )
         </foreach>
     </insert>

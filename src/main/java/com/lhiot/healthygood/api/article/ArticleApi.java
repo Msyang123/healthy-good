@@ -32,29 +32,23 @@ public class ArticleApi {
     @Sessions.Uncheck
     @PostMapping("/articles/search")
     @ApiImplicitParam(paramType = ApiParamType.BODY, name = "articleSearchParam", value = "文章搜索条件", dataType = "ArticleSearchParam")
-    @ApiOperation(value = "查询/搜索文章")
-    public ResponseEntity searchArticle(@RequestBody ArticleSearchParam articleSearchParam){
+    @ApiOperation(value = "查询/搜索文章",response = Article.class,responseContainer = "List")
+    public ResponseEntity<Tips> searchArticle(@RequestBody ArticleSearchParam articleSearchParam){
         ArticleParam articleParam = new ArticleParam();
         BeanUtils.copyProperties(articleSearchParam,articleParam);
         articleParam.setArticleStatus(ArticleStatus.PUBLISH);
         ResponseEntity<Pages<Article>> searchArticle = baseDataServiceFeign.searchArticle(articleParam);
         Tips<Pages<Article>> tips = FeginResponseTools.convertResponse(searchArticle);
-        if (tips.err()) {
-            return ResponseEntity.badRequest().body(tips.getData());
-        }
-        return  ResponseEntity.ok(tips.getData());
+        return FeginResponseTools.returnTipsResponse(tips);
     }
 
     @Sessions.Uncheck
     @GetMapping("/articles/{id}")
     @ApiImplicitParam(paramType = ApiParamType.PATH, name = "id", value = "文章编号", dataType = "Long")
-    @ApiOperation(value = "根据id查询文章详情", response = Article.class, responseContainer = "Set")
-    public ResponseEntity article(@PathVariable(value = "id") Long id){
+    @ApiOperation(value = "根据id查询文章详情",response = Article.class)
+    public ResponseEntity<Tips> article(@PathVariable(value = "id") Long id){
         ResponseEntity<Article> articleResponseEntity = baseDataServiceFeign.singleArticle(id,true);
         Tips<Article> tips = FeginResponseTools.convertResponse(articleResponseEntity);
-        if (tips.err()){
-            return ResponseEntity.badRequest().body(tips.getData());
-        }
-        return ResponseEntity.ok(tips.getData());
+        return FeginResponseTools.returnTipsResponse(tips);
     }
 }

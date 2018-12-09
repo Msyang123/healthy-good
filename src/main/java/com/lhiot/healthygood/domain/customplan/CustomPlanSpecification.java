@@ -14,9 +14,7 @@ import lombok.ToString;
 * @date 2018/11/22
 */
 @Data
-@ToString(callSuper = true)
 @ApiModel
-@NoArgsConstructor
 public class CustomPlanSpecification{
 
     /**
@@ -60,5 +58,15 @@ public class CustomPlanSpecification{
     @JsonProperty("planPeriod")
     @ApiModelProperty(value = "定制计划周期", dataType = "Integer")
     private Integer planPeriod;
+
+    @JsonProperty("image")
+    @ApiModelProperty(value = "定制说明配图", dataType = "String")
+    private String image;
+
+    @JsonProperty("standardId")
+    @ApiModelProperty(value = "定制规格基础id", dataType = "Long")
+    private Long standardId;
+
+
 
 }

@@ -4,27 +4,57 @@
 
     <!-- 数据库字段对象关系映射 -->
     <resultMap id="BaseResultMap"
-        type="com.lhiot.healthygood.domain.customplan.CustomOrder" >
+               type="com.lhiot.healthygood.domain.customplan.CustomOrder">
         <id column="id" property="id"/>
-        <result column="user_id" property="userId" />
-        <result column="status" property="status" />
-        <result column="remaining_qty" property="remainingQty" />
-        <result column="delivery_type" property="deliveryType" />
-        <result column="total_qty" property="totalQty" />
-        <result column="plan_id" property="planId" />
-        <result column="price" property="price" />
-        <result column="create_at" property="createAt" />
-        <result column="delivery_address" property="deliveryAddress" />
-        <result column="delivery_time" property="deliveryTime" />
-        <result column="specification_id" property="specificationId" />
-        <result column="quantity" property="quantity" />
-        <result column="store_code" property="storeCode" />
+        <result column="custom_order_code" property="customOrderCode"/>
+        <result column="user_id" property="userId"/>
+        <result column="status" property="status"/>
+        <result column="remaining_qty" property="remainingQty"/>
+        <result column="delivery_type" property="deliveryType"/>
+        <result column="total_qty" property="totalQty"/>
+        <result column="plan_id" property="planId"/>
+        <result column="price" property="price"/>
+        <result column="create_at" property="createAt"/>
+        <result column="delivery_address" property="deliveryAddress"/>
+        <result column="delivery_time" property="deliveryTime"/>
+        <result column="specification_id" property="specificationId"/>
+        <result column="quantity" property="quantity"/>
+        <result column="store_code" property="storeCode"/>
+    </resultMap>
+
+    <!-- 数据库连表查询字段对象关系映射 -->
+    <resultMap id="BaseDetailResultMap"
+               type="com.lhiot.healthygood.domain.customplan.CustomOrder">
+        <id column="id" property="id"/>
+        <result column="custom_order_code" property="customOrderCode"/>
+        <result column="user_id" property="userId"/>
+        <result column="status" property="status"/>
+        <result column="remaining_qty" property="remainingQty"/>
+        <result column="delivery_type" property="deliveryType"/>
+        <result column="total_qty" property="totalQty"/>
+        <result column="plan_id" property="planId"/>
+        <result column="price" property="price"/>
+        <result column="create_at" property="createAt"/>
+        <result column="delivery_address" property="deliveryAddress"/>
+        <result column="delivery_time" property="deliveryTime"/>
+        <result column="specification_id" property="specificationId"/>
+        <result column="quantity" property="quantity"/>
+        <result column="store_code" property="storeCode"/>
+        <association property="customPlan" javaType="com.lhiot.healthygood.domain.customplan.CustomPlan">
+            <id column="p_id" property="id"/>
+            <result column="p_name" property="name"/>
+            <result column="p_description" property="description"/>
+            <result column="p_image" property="image"/>
+            <result column="p_over_rule" property="overRule"/>
+            <result column="p_status" property="status"/>
+        </association>
     </resultMap>
 
     <!-- base查询字段  -->
-    <sql id="Base_Column_List" >
-        <trim suffixOverrides="," >
+    <sql id="Base_Column_List">
+        <trim suffixOverrides=",">
             id,
+            custom_order_code,
             user_id,
             status,
             remaining_qty,
@@ -33,6 +63,8 @@
             plan_id,
             price,
             create_at,
+            receive_user,
+            contact_phone,
             delivery_address,
             delivery_time,
             specification_id,
@@ -41,12 +73,47 @@
         </trim>
     </sql>
 
+    <!-- detail查询字段  -->
+    <sql id="Detail_Column_List">
+        <trim suffixOverrides=",">
+            o.id,
+            o.custom_order_code,
+            o.user_id,
+            o.status,
+            o.remaining_qty,
+            o.delivery_type,
+            o.total_qty,
+            o.plan_id,
+            o.price,
+            o.create_at,
+            o.receive_user,
+            o.contact_phone,
+            o.delivery_address,
+            o.delivery_time,
+            o.specification_id,
+            o.quantity,
+            o.store_code,
+
+            p.id p_id,
+            p.name p_name,
+            p.description p_description,
+            p.image p_image,
+            p.over_rule p_over_rule,
+            p.status p_status,
+        </trim>
+    </sql>
+
+
     <!--新增定制计划-->
-    <insert id="create" parameterType="com.lhiot.healthygood.domain.customplan.CustomOrder" useGeneratedKeys="true" keyColumn="id" keyProperty="id">
+    <insert id="create" parameterType="com.lhiot.healthygood.domain.customplan.CustomOrder" useGeneratedKeys="true"
+            keyColumn="id" keyProperty="id">
         insert into custom_order
-        <trim prefix="(" suffix=")" suffixOverrides="," >
+        <trim prefix="(" suffix=")" suffixOverrides=",">
             <if test="userId != null ">
                 user_id,
+            </if>
+            <if test="customOrderCode != null ">
+                custom_order_code,
             </if>
             <if test="status != null ">
                 status,
@@ -69,6 +136,12 @@
             <if test="createAt != null ">
                 create_at,
             </if>
+            <if test="receiveUser != null ">
+                receive_user,
+            </if>
+            <if test="contactPhone != null ">
+                contact_phone,
+            </if>
             <if test="deliveryAddress != null ">
                 delivery_address,
             </if>
@@ -85,9 +158,12 @@
                 store_code,
             </if>
         </trim>
-        <trim prefix="values (" suffix=")" suffixOverrides="," >
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
             <if test="userId != null ">
                 #{userId},
+            </if>
+            <if test="customOrderCode != null ">
+                #{customOrderCode},
             </if>
             <if test="status != null ">
                 #{status},
@@ -110,6 +186,12 @@
             <if test="createAt != null ">
                 #{createAt},
             </if>
+            <if test="receiveUser != null ">
+                #{receiveUser},
+            </if>
+            <if test="contactPhone != null ">
+                #{contactPhone},
+            </if>
             <if test="deliveryAddress != null ">
                 #{deliveryAddress},
             </if>
@@ -128,46 +210,89 @@
         </trim>
     </insert>
 
-    <!-- 根据id查找定制计划 -->
-	<select id="selectById" resultMap="BaseResultMap" parameterType="long">
-        select <include refid="Base_Column_List" />
-		from custom_order where id = #{0}
-	</select>
+    <update id="updateByCode" parameterType="com.lhiot.healthygood.domain.customplan.CustomOrder">
+        update custom_order
+        <set>
+            <if test="status != null ">
+                status = #{status},
+            </if>
+            <if test="deliveryTime != null ">
+                delivery_time = #{deliveryTime},
+            </if>
+            <if test="remainingQty != null ">
+                remaining_qty = remaining_qty-1,
+            </if>
+        </set>
+        where custom_order_code=#{customOrderCode}
+    </update>
+
+    <!-- 根据code查找定制计划 -->
+    <select id="selectByCode" resultMap="BaseResultMap" parameterType="String">
+        select
+        <include refid="Base_Column_List"/>
+        from custom_order where custom_order_code = #{0}
+    </select>
 
     <!-- base where条件  -->
-    <sql id="Base_Where_Condition" >
+    <sql id="Base_Where_Condition">
         <where>
             <if test="id != null ">
                 and id = #{id}
             </if>
+            <if test="customOrderCode != null ">
+                and custom_order_code =#{customOrderCode}
+            </if>
             <if test="userId != null ">
                 and user_id =#{userId}
             </if>
-            <if test="status != null ">
+            <if test="status != null and status!='ALL'">
                 and status = #{status}
+            </if>
+            <if test="contactPhone != null and contactPhone != ''">
+                and contact_phone = #{contactPhone}
+            </if>
+            <if test="quantity != null">
+                and quantity = #{quantity}
+            </if>
+            <if test="totalQty != null">
+                and total_qty = #{totalQty}
+            </if>
+            <if test="beginCreateAt != null">
+                and create_at <![CDATA[ >= ]]> #{beginCreateAt}
+            </if>
+            <if test="endCreateAt != null">
+                and create_at <![CDATA[ <= ]]> #{endCreateAt}
             </if>
         </where>
     </sql>
 
 
     <!--查询定制计划订单列表-->
-     <select id="pageCustomOrder" resultMap="BaseResultMap"
-        parameterType="com.lhiot.healthygood.domain.customplan.CustomOrder">
-	        select <include refid="Base_Column_List" />
-	        from custom_order
-	        <include refid="Base_Where_Condition" />
-            <if test="rows != null and rows > 0 ">
-                 order by id desc
-                 limit #{startRow} , #{rows}
-            </if>
+    <select id="pageCustomOrder" resultMap="BaseDetailResultMap"
+            parameterType="com.lhiot.healthygood.domain.customplan.CustomOrder">
+        select <include refid="Detail_Column_List"/>
+        from custom_order o
+        left join custom_plan p on p.id = o.plan_id
+        <include refid="Base_Where_Condition"/>
+        <if test="rows != null and rows > 0 ">
+            order by o.id desc
+            limit #{startRow} , #{rows}
+        </if>
     </select>
 
     <!--查询定制计划总记录-->
     <select id="pageCustomOrderCounts" resultType="int"
-        parameterType="com.lhiot.healthygood.domain.customplan.CustomOrder">
-            select count(1)
-            from custom_order
-            <include refid="Base_Where_Condition" />
+            parameterType="com.lhiot.healthygood.domain.customplan.CustomOrder">
+        select count(1)
+        from custom_order
+        left join custom_plan p on plan_id = p.id
+        <include refid="Base_Where_Condition"/>
     </select>
 
+
+    <select id="statusCount" resultType="map" parameterType="Long">
+      select count(1) as waitPaymentCount,
+      (select count(1)from custom_order where user_id= #{0} and status in('CUSTOMING','PAUSE_DELIVERY')) as waitPaymentCount
+      from custom_order where status='WAIT_PAYMENT' and user_id= #{0}
+    </select>
 </mapper>

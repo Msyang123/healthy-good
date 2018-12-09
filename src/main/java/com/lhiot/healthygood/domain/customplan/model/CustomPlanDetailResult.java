@@ -75,9 +75,9 @@ public class CustomPlanDetailResult {
     @ApiModelProperty(value = "定制计划中定制规格最低价格", dataType = "Long")
     private Long price;
 
-    @JsonProperty("customPlanPeriodResultList")
+    @JsonProperty("periodList")
     @ApiModelProperty(value = "周期类型", dataType = "List")
-    private List<CustomPlanPeriodResult> customPlanPeriodResultList;
+    private List<CustomPlanPeriodResult> periodList;
 
     /**
      * 定制计划和定制板块关联
