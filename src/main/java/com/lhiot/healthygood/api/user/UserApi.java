@@ -293,11 +293,13 @@ public class UserApi {
     @PostMapping("/sms/captcha")
     @ApiOperation(value = "发送申请验证码短信")
     @ApiImplicitParam(paramType = "query", name = "phone", value = "发送用户注册验证码对应手机号", required = true, dataType = "String")
-    public ResponseEntity captcha(@RequestParam String phone) {
+    public ResponseEntity captcha(Sessions.User user,@RequestParam String phone) {
+        Long userId = Long.valueOf(user.getUser().get("userId").toString());
         //TODO 需要申请发送短信模板
-        ResponseEntity<UserDetailResult> user = baseUserServerFeign.findByPhone(phone, ApplicationType.HEALTH_GOOD);
-        if (user.getStatusCodeValue() > 200 && Objects.nonNull(user.getBody())) {
-            return ResponseEntity.badRequest().body("用户已注册");
+        ResponseEntity<UserDetailResult> userDetailResultResponseEntity = baseUserServerFeign.findById(userId);
+        Tips<UserDetailResult> userDetailResultTips = FeginResponseTools.convertResponse(userDetailResultResponseEntity);
+        if (userDetailResultTips.err()) {
+            return ResponseEntity.badRequest().body(userDetailResultTips.getData());
         }
         CaptchaParam captchaParam = new CaptchaParam();
         captchaParam.setApplicationName("和色果膳商城");

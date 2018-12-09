@@ -51,5 +51,7 @@ public class Article {
     private String keywords;
     @ApiModelProperty(notes = "jobTitle", dataType = "String")
     private String jobTitle;
+    @ApiModelProperty(notes = "阅读量", dataType = "Integer")
+    private Integer readAmount;
 
 }

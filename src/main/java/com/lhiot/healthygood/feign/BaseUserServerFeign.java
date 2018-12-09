@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.*;
 public interface BaseUserServerFeign {
 
 
+
 	/**
 	 * 根据id查询公共用户
 	 */
