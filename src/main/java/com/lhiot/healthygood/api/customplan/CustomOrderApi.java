@@ -8,9 +8,11 @@ import com.leon.microx.web.swagger.ApiHideBodyProperty;
 import com.leon.microx.web.swagger.ApiParamType;
 import com.lhiot.healthygood.config.HealthyGoodConfig;
 import com.lhiot.healthygood.domain.customplan.CustomOrder;
+import com.lhiot.healthygood.domain.customplan.CustomOrderGroupCount;
 import com.lhiot.healthygood.domain.customplan.CustomOrderPause;
 import com.lhiot.healthygood.feign.BaseUserServerFeign;
 import com.lhiot.healthygood.feign.PaymentServiceFeign;
+import com.lhiot.healthygood.feign.model.OrderDetailResult;
 import com.lhiot.healthygood.feign.model.PaySign;
 import com.lhiot.healthygood.feign.model.UserDetailResult;
 import com.lhiot.healthygood.feign.type.ApplicationType;
@@ -54,18 +56,15 @@ public class CustomOrderApi {
     @PostMapping("/custom-orders")
     @ApiOperation(value = "立即定制-创建定制计划")
     @ApiHideBodyProperty({"id", "beginCreateAt", "endCreateAt", "user", "rows", "page"})
-    public ResponseEntity create(@Valid @RequestBody CustomOrder customOrder, Sessions.User user) {
+    public ResponseEntity<Tips> create(@Valid @RequestBody CustomOrder customOrder, Sessions.User user) {
         Long userId = Long.valueOf(user.getUser().get("userId").toString());
         customOrder.setUserId(userId);
         Tips result = customOrderService.createCustomOrder(customOrder);
-        if (result.err()) {
-            return ResponseEntity.badRequest().body(result);
-        }
-        return ResponseEntity.ok(result);
+        return FeginResponseTools.returnTipsResponse(result);
     }
 
     @DeleteMapping("/custom-orders/{orderCode}")
-    @ApiOperation(value = "取消购买定制计划")
+    @ApiOperation(value = "取消购买定制计划", response = String.class)
     public ResponseEntity<Tips> cancel(@PathVariable("orderCode") String orderCode, Sessions.User user) {
         Long userId = Long.valueOf(user.getUser().get("userId").toString());
         ResponseEntity<Tips> validateOrderOwner = validateOrderOwner(userId, orderCode);
@@ -84,8 +83,8 @@ public class CustomOrderApi {
     }
 
     @PostMapping("/custom-orders/{orderCode}/payment-sign")
-    @ApiOperation(value = "定制计划支付时微信签名")
-    public ResponseEntity paymentSign(@PathVariable("orderCode") String orderCode, HttpServletRequest request, Sessions.User user) {
+    @ApiOperation(value = "定制计划支付时微信签名", response = String.class)
+    public ResponseEntity<Tips> paymentSign(@PathVariable("orderCode") String orderCode, HttpServletRequest request, Sessions.User user) {
         String openId = user.getUser().get("openId").toString();
         Long userId = Long.valueOf(user.getUser().get("userId").toString());
         ResponseEntity<Tips> validateOrderOwner = validateOrderOwner(userId, orderCode);
@@ -105,15 +104,12 @@ public class CustomOrderApi {
         paySign.setUserId(userId);
         paySign.setAttach(orderCode);//定制订单code
         Tips<String> wxSignResponse = FeginResponseTools.convertResponse(paymentServiceFeign.wxSign(paySign));
-        if (wxSignResponse.err()) {
-            return ResponseEntity.badRequest().body(wxSignResponse);
-        }
-        return ResponseEntity.ok(wxSignResponse);
+        return FeginResponseTools.returnTipsResponse(wxSignResponse);
     }
 
 
     @PutMapping("/custom-orders/{orderCode}/delivery-suspension")
-    @ApiOperation(value = "修改个人购买计划状态（暂停配送）")
+    @ApiOperation(value = "修改个人购买计划状态（暂停配送）", response = String.class)
     public ResponseEntity<Tips> deliverySuspension(@PathVariable("orderCode") String orderCode, @Valid @RequestBody CustomOrderPause customOrderPause, Sessions.User user) {
         Long userId = Long.valueOf(user.getUser().get("userId").toString());
         ResponseEntity<Tips> validateOrderOwner = validateOrderOwner(userId, orderCode);
@@ -134,7 +130,7 @@ public class CustomOrderApi {
 
 
     @PutMapping("/custom-orders/{orderCode}/delivery-recovery")
-    @ApiOperation(value = "修改个人购买计划状态（恢复配送）")
+    @ApiOperation(value = "修改个人购买计划状态（恢复配送）", response = String.class)
     public ResponseEntity<Tips> deliveryRecovery(@PathVariable("orderCode") String orderCode, Sessions.User user) {
         Long userId = Long.valueOf(user.getUser().get("userId").toString());
         ResponseEntity<Tips> validateOrderOwner = validateOrderOwner(userId, orderCode);
@@ -154,7 +150,7 @@ public class CustomOrderApi {
     }
 
     @PutMapping("/custom-orders/{orderCode}/delivery-time")
-    @ApiOperation(value = "修改个人购买计划配送时间")
+    @ApiOperation(value = "修改个人购买计划配送时间", response = String.class)
     public ResponseEntity<Tips> deliveryTime(@PathVariable("orderCode") String orderCode,
                                              @Valid @NotBlank @RequestParam("deliveryTime") String deliveryTime, Sessions.User user) {
         Long userId = Long.valueOf(user.getUser().get("userId").toString());
@@ -171,7 +167,7 @@ public class CustomOrderApi {
     }
 
     @PostMapping("/custom-orders/{orderCode}/extraction")
-    @ApiOperation(value = "手动提取套餐")
+    @ApiOperation(value = "手动提取套餐", response = OrderDetailResult.class)
     public ResponseEntity<Tips> extraction(@PathVariable("orderCode") String orderCode, @RequestParam("remark") String remark, Sessions.User user) {
         Long userId = Long.valueOf(user.getUser().get("userId").toString());
         ResponseEntity<Tips> validateOrderOwner = validateOrderOwner(userId, orderCode);
@@ -192,7 +188,7 @@ public class CustomOrderApi {
 
     @GetMapping("/custom-orders/count/status")
     @ApiOperation(value = "我的定制订单状态统计")
-    public ResponseEntity<Tips> statusCount(Sessions.User user) {
+    public ResponseEntity<Tips<CustomOrderGroupCount>> statusCount(Sessions.User user) {
         Long userId = Long.valueOf(user.getUser().get("userId").toString());
         return ResponseEntity.ok(customOrderService.statusCount(userId));
     }
@@ -206,7 +202,7 @@ public class CustomOrderApi {
     }
 
     @GetMapping("/custom-orders/{orderCode}/detail")
-    @ApiOperation(value = "个人购买定制计划-定制详情")
+    @ApiOperation(value = "个人购买定制计划-定制详情",response = CustomOrder.class)
     public ResponseEntity<Tips> customOrderDetail(@PathVariable("orderCode") String orderCode, Sessions.User user) {
         Long userId = Long.valueOf(user.getUser().get("userId").toString());
         ResponseEntity<Tips> validateOrderOwner = validateOrderOwner(userId, orderCode);
@@ -215,25 +211,8 @@ public class CustomOrderApi {
         }
         Tips<CustomOrder> tips = customOrderService.selectByCode(orderCode, true);
         if (tips.err()) {
-            return ResponseEntity.badRequest().body(Tips.warn(tips.getMessage()));
+            return ResponseEntity.badRequest().body(tips);
         }
-        Tips<CustomOrder> customOrderTips = new Tips();
-        customOrderTips.setData(tips.getData());
-        return ResponseEntity.ok(customOrderTips);
-    }
-
-    //验证是否属于当前用户的订单
-    private ResponseEntity<Tips> validateOrderOwner(Long userId, String customOrderCode) {
-
-        CustomOrder customOrder = customOrderService.selectByCode(customOrderCode);
-        if (Objects.isNull(customOrder)) {
-            return ResponseEntity.badRequest().body(Tips.warn("未找到定制订单"));
-        }
-        if (!Objects.equals(customOrder.getUserId(), userId)) {
-            return ResponseEntity.badRequest().body(Tips.warn("当前操作订单不属于登录用户"));
-        }
-        Tips tips = new Tips();
-        tips.setData(customOrder);
         return ResponseEntity.ok(tips);
     }
 
@@ -273,4 +252,18 @@ public class CustomOrderApi {
         return ResponseEntity.ok(customOrder);
     }
 
+    //验证是否属于当前用户的订单
+    private ResponseEntity<Tips> validateOrderOwner(Long userId, String customOrderCode) {
+
+        CustomOrder customOrder = customOrderService.selectByCode(customOrderCode);
+        if (Objects.isNull(customOrder)) {
+            return ResponseEntity.badRequest().body(Tips.warn("未找到定制订单"));
+        }
+        if (!Objects.equals(customOrder.getUserId(), userId)) {
+            return ResponseEntity.badRequest().body(Tips.warn("当前操作订单不属于登录用户"));
+        }
+        Tips tips = new Tips();
+        tips.setData(customOrder);
+        return ResponseEntity.ok(tips);
+    }
 }

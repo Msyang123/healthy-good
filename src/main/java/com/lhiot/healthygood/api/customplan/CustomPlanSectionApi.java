@@ -129,9 +129,11 @@ public class CustomPlanSectionApi {
             @ApiImplicitParam(paramType = ApiParamType.PATH, name = "id", value = "定制板块id", dataType = "Long", required = true),
             @ApiImplicitParam(paramType = ApiParamType.BODY, name = "planSectionsParam", value = "定制板块", dataType = "PlanSectionsParam", required = true)
     })
-    public ResponseEntity<CustomPlanSection> findById(@PathVariable Long id, @RequestBody PlanSectionsParam planSectionsParam) {
+    public ResponseEntity<Tips<CustomPlanSection>> findById(@PathVariable Long id, @RequestBody PlanSectionsParam planSectionsParam) {
         planSectionsParam.setId(id);
         CustomPlanSection productSectionResult = customPlanSectionService.findComPlanSectionId(planSectionsParam);
-        return ResponseEntity.ok(productSectionResult);
+        Tips tips =new Tips();
+        tips.setData(productSectionResult);
+        return ResponseEntity.ok(tips);
     }
 }
