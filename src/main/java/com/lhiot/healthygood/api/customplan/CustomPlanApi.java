@@ -5,8 +5,7 @@ import com.leon.microx.web.result.Pages;
 import com.leon.microx.web.result.Tips;
 import com.leon.microx.web.session.Sessions;
 import com.leon.microx.web.swagger.ApiParamType;
-import com.lhiot.healthygood.domain.customplan.CustomPlan;
-import com.lhiot.healthygood.domain.customplan.CustomPlanProduct;
+import com.lhiot.dc.dictionary.module.Dictionary;
 import com.lhiot.healthygood.domain.customplan.CustomPlanSpecification;
 import com.lhiot.healthygood.domain.customplan.model.CustomPlanDetailResult;
 import com.lhiot.healthygood.domain.customplan.model.CustomPlanParam;
@@ -23,9 +22,7 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
 import java.net.URI;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * 定制计划api /custom-plan-sections
@@ -47,11 +44,13 @@ public class CustomPlanApi {
      */
     @Sessions.Uncheck
     @GetMapping("/custom-plans/{id}")
-    @ApiOperation(value = "定制计划详细信息（定制计划详细信息页面）", response = CustomPlanDetailResult.class)
+    @ApiOperation(value = "定制计划详细信息（定制计划详细信息页面）")
     @ApiImplicitParam(paramType = ApiParamType.PATH, name = "id", value = "定制计划id", dataType = "Long", required = true)
-    public ResponseEntity customPlans(@PathVariable Long id) {
+    public ResponseEntity<Tips<CustomPlanDetailResult>> customPlans(@PathVariable Long id) {
         CustomPlanDetailResult customPlanDetailResult = customPlanService.findDetail(id);
-        return ResponseEntity.ok(customPlanDetailResult);
+        Tips<CustomPlanDetailResult> tips = new Tips<>();
+        tips.setData(customPlanDetailResult);
+        return ResponseEntity.ok(tips);
     }
 
     /**
@@ -61,9 +60,11 @@ public class CustomPlanApi {
     @GetMapping("/custom-plans-specification/{specificationId}")
     @ApiOperation(value = "定制计划规格信息（创建定制计划订单信息页面）")
     @ApiImplicitParam(paramType = ApiParamType.PATH, name = "specificationId", value = "定制计划规格id", dataType = "Long", required = true)
-    public ResponseEntity<CustomPlanSpecification> specificationDetail(@PathVariable Long specificationId) {
+    public ResponseEntity<Tips<CustomPlanSpecification>> specificationDetail(@PathVariable Long specificationId) {
         CustomPlanSpecification customPlanSpecification = customPlanService.findCustomPlanSpecificationDetail(specificationId);
-        return ResponseEntity.ok(customPlanSpecification);
+        Tips tips = new Tips();
+        tips.setData(customPlanSpecification);
+        return ResponseEntity.ok(tips);
     }
 
     @Sessions.Uncheck
@@ -136,7 +137,7 @@ public class CustomPlanApi {
     @Sessions.Uncheck
     @GetMapping("/custom-plans/image")
     @ApiOperation(value = "获取定制计划套餐配置说明图")
-    public ResponseEntity customPlanImage(){
+    public ResponseEntity<List<Dictionary.Entry>> customPlanImage(){
         return ResponseEntity.ok(customPlanService.dictionaryOptional("customPlanImage").get().getEntries());
     }
 }

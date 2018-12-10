@@ -9,6 +9,7 @@ import com.leon.microx.web.result.Tips;
 import com.leon.microx.web.result.Tuple;
 import com.leon.microx.web.session.Sessions;
 import com.lhiot.healthygood.config.HealthyGoodConfig;
+import com.lhiot.healthygood.domain.order.OrderGroupCount;
 import com.lhiot.healthygood.domain.user.DoctorUser;
 import com.lhiot.healthygood.domain.user.FruitDoctor;
 import com.lhiot.healthygood.feign.BaseDataServiceFeign;
@@ -36,7 +37,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -72,7 +72,7 @@ public class OrderApi {
     }
 
     @PostMapping("/orders")
-    @ApiOperation("和色果膳--创建订单")
+    @ApiOperation(value = "和色果膳--创建订单",response = OrderDetailResult.class)
     @ApiImplicitParam(paramType = "body", name = "orderParam", dataType = "CreateOrderParam", required = true, value = "创建订单传入参数")
     public ResponseEntity<Tips> createOrder(@Valid @RequestBody CreateOrderParam orderParam, Sessions.User user) {
 
@@ -178,7 +178,7 @@ public class OrderApi {
 
 
     @PutMapping("/orders/{orderCode}/refund")
-    @ApiOperation("订单退货")
+    @ApiOperation(value = "订单退货",response = String.class)
     @ApiImplicitParams({
             @ApiImplicitParam(paramType = "path", name = "orderCode", dataType = "String", required = true, value = "订单编码"),
             @ApiImplicitParam(paramType = "body", name = "returnOrderParam", dataType = "ReturnOrderParam", required = true, value = "退货参数")
@@ -217,7 +217,7 @@ public class OrderApi {
     }
 
     @GetMapping("/orders/pages")
-    @ApiOperation("我的用户订单列表")
+    @ApiOperation(value = "我的用户订单列表",response = OrderDetailResult.class,responseContainer = "List")
     public ResponseEntity<Tips> orderPages(@RequestParam(value = "orderStatus", required = false) OrderStatus orderStatus,
                                            Sessions.User user) {
         Long userId = Long.valueOf(user.getUser().get("userId").toString());
@@ -226,7 +226,7 @@ public class OrderApi {
     }
 
     @GetMapping("/orders/fruit-doctor/customers")
-    @ApiOperation("我的鲜果师客户订单列表")
+    @ApiOperation(value = "我的鲜果师客户订单列表",response = OrderDetailResult.class,responseContainer = "List")
     public ResponseEntity<Tips> customersOrders(@RequestParam(value = "orderStatus", required = false) OrderStatus orderStatus, Sessions.User user) {
         String userId = user.getUser().get("userId").toString();
         FruitDoctor fruitDoctor = fruitDoctorService.selectByUserId(Long.valueOf(userId));
@@ -246,7 +246,7 @@ public class OrderApi {
     }
 
     @GetMapping("/orders/{orderCode}/detail")
-    @ApiOperation("根据订单code查询订单详情")
+    @ApiOperation(value = "根据订单code查询订单详情",response = OrderDetailResult.class)
     public ResponseEntity<Tips> orderDetial(@Valid @NotBlank @PathVariable("orderCode") String orderCode, Sessions.User user) {
         Long userId = Long.valueOf(user.getUser().get("userId").toString());
         ResponseEntity<Tips> validateResult = validateOrderOwner(userId, orderCode);
@@ -259,38 +259,38 @@ public class OrderApi {
 
     @GetMapping("/orders/count/status")
     @ApiOperation("统计我的用户订单各状态数量")
-    public ResponseEntity<Tips<Map>> countStatus(Sessions.User user) {
+    public ResponseEntity<Tips<OrderGroupCount>> countStatus(Sessions.User user) {
         Long userId = Long.valueOf(user.getUser().get("userId").toString());
 
-        Map<String, Integer> result = new HashMap<>(3);
+        OrderGroupCount orderGroupCount =new OrderGroupCount();
         ResponseEntity<Tuple<OrderDetailResult>> waitPayment = orderServiceFeign.ordersByUserId(userId, OrderType.NORMAL, OrderStatus.WAIT_PAYMENT);
         Tips<Tuple<OrderDetailResult>> waitPaymentTips = FeginResponseTools.convertResponse(waitPayment);
         if (waitPaymentTips.err()) {
-            result.put("waitPaymentCount", waitPaymentTips.getData().getArray().size());
+            orderGroupCount.setWaitPaymentCount(waitPaymentTips.getData().getArray().size());
         } else {
-            result.put("waitPaymentCount", 0);
+            orderGroupCount.setWaitPaymentCount(0);
         }
         ResponseEntity<Tuple<OrderDetailResult>> waitReceive = orderServiceFeign.ordersByUserId(userId, OrderType.NORMAL, OrderStatus.DISPATCHING);//配送中
         Tips<Tuple<OrderDetailResult>> waitReceiveTips = FeginResponseTools.convertResponse(waitReceive);
         if (waitReceiveTips.err()) {
-            result.put("waitReceiveCount", waitReceiveTips.getData().getArray().size());
+            orderGroupCount.setWaitReceiveCount(waitReceiveTips.getData().getArray().size());
         } else {
-            result.put("waitReceiveCount", 0);
+            orderGroupCount.setWaitReceiveCount(0);
         }
         ResponseEntity<Tuple<OrderDetailResult>> returning = orderServiceFeign.ordersByUserId(userId, OrderType.NORMAL, OrderStatus.RETURNING);
         Tips<Tuple<OrderDetailResult>> returningTips = FeginResponseTools.convertResponse(returning);
         if (returningTips.err()) {
-            result.put("returningCount", returningTips.getData().getArray().size());
+            orderGroupCount.setReturningCount(returningTips.getData().getArray().size());
         } else {
-            result.put("returningCount", 0);
+            orderGroupCount.setReturningCount(0);
         }
-        Tips<Map> tips = new Tips<>();
-        tips.data(result);
+        Tips<OrderGroupCount> tips = new Tips<>();
+        tips.data(orderGroupCount);
         return ResponseEntity.ok(tips);
     }
 
     @PostMapping("/orders/{orderCode}/payment-sign")
-    @ApiOperation("订单微信支付签名")
+    @ApiOperation(value = "订单微信支付签名",response = String.class)
     public ResponseEntity<Tips> paymentSign(@Valid @NotBlank @PathVariable("orderCode") String orderCode, HttpServletRequest request, Sessions.User user) {
         Long userId = Long.valueOf(user.getUser().get("userId").toString());
         String openId = user.getUser().get("openId").toString();

@@ -6,7 +6,6 @@ import com.leon.microx.util.StringUtils;
 import com.leon.microx.web.result.Pages;
 import com.leon.microx.web.result.Tips;
 import com.leon.microx.web.result.Tuple;
-import com.lhiot.healthygood.domain.activity.model.ActivityProductResult;
 import com.lhiot.healthygood.domain.customplan.*;
 import com.lhiot.healthygood.domain.customplan.model.CustomPlanDetailResult;
 import com.lhiot.healthygood.domain.customplan.model.CustomPlanPeriodResult;
@@ -307,8 +306,8 @@ public class CustomOrderService {
      * @param userId 用户id
      * @return
      */
-    public Tips<Map> statusCount(Long userId) {
-        Tips<Map> tips = new Tips<>();
+    public Tips<CustomOrderGroupCount> statusCount(Long userId) {
+        Tips<CustomOrderGroupCount> tips = new Tips<>();
         tips.setData(customOrderMapper.statusCount(userId));
         return tips;
     }

@@ -41,7 +41,7 @@ public class BalanceApi {
 
     @PostMapping("/recharge/payment-sign")
     @ApiOperation("充值签名")
-    public ResponseEntity<Tips> paymentSign(@RequestParam("fee") Integer fee, HttpServletRequest request, Sessions.User user) {
+    public ResponseEntity<Tips<String>> paymentSign(@RequestParam("fee") Integer fee, HttpServletRequest request, Sessions.User user) {
         String openId = user.getUser().get("openId").toString();
         Long userId = Long.valueOf(user.getUser().get("userId").toString());
 
