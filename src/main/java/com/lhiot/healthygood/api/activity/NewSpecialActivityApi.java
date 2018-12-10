@@ -56,17 +56,17 @@ public class NewSpecialActivityApi {
     @PostMapping("/activities/specials/products")
     @ApiImplicitParam(paramType = ApiParamType.BODY, name = "pagesParam", value = "分页对象", dataType = "PagesParam",required = true)
     @ApiOperation(value = "新品尝鲜活动商品列表",response = NewSpecialResult.class)
-    public ResponseEntity specialActivity(Sessions.User user, @RequestBody PagesParam pagesParam){
+    public ResponseEntity<Tips> specialActivity(Sessions.User user, @RequestBody PagesParam pagesParam){
         SpecialProductActivity specialProductActivity = specialProductActivityService.selectActivity();
         if (Objects.isNull(specialProductActivity)){
-            return ResponseEntity.badRequest().body("没有开这个活动哦~");
+            return ResponseEntity.badRequest().body(Tips.warn("没有开这个活动哦"));
         }
         ActivityProduct activityProduct = new ActivityProduct();
         activityProduct.setActivityId(specialProductActivity.getId());
         BeanUtils.copyProperties(pagesParam,activityProduct);
         List<ActivityProduct> activityProductsList = activityProductService.activityProductList(activityProduct);
         if (Objects.isNull(activityProductsList) || activityProductsList.size() <= 0){
-            return ResponseEntity.badRequest().body("活动商品是空的~");
+            return ResponseEntity.badRequest().body(Tips.warn("活动商品是空的~"));
         }
         List<ActivityProducts> activityProducts = new ArrayList<ActivityProducts>();
 
@@ -98,8 +98,9 @@ public class NewSpecialActivityApi {
         NewSpecialResult newSpecialResult = new NewSpecialResult();
         BeanUtils.copyProperties(specialProductActivity,newSpecialResult);
         newSpecialResult.setActivityProductList(activityProducts);
-
-        return ResponseEntity.ok(newSpecialResult);
+        Tips tips = new Tips();
+        tips.setData(newSpecialResult);
+        return ResponseEntity.ok(tips);
     }
 
 
@@ -149,10 +150,12 @@ public class NewSpecialActivityApi {
     @ApiOperation(value = "根据条件分页查询新品尝鲜活动商品信息列表(后台)", response = ActivityProductResult.class, responseContainer = "Set")
     @ApiImplicitParam(paramType = ApiParamType.BODY, name = "param", value = "查询条件", dataType = "ActivityProductParam")
     @PostMapping("/activity-products/pages")
-    public ResponseEntity search(@RequestBody ActivityProductParam param) {
+    public ResponseEntity<Tips> search(@RequestBody ActivityProductParam param) {
         log.debug("根据条件分页查询新品尝鲜活动商品信息列表\t param:{}", param);
 
         Pages<ActivityProductResult> pages = activityProductService.findList(param);
-        return ResponseEntity.ok(pages);
+        Tips tips = new Tips();
+        tips.setData(pages);
+        return ResponseEntity.ok(tips);
     }
 }

@@ -40,10 +40,6 @@ public class AdvertisementApi {
         advertisementParam.setAdvertiseStatus(OnOff.ON);
         ResponseEntity<Pages<Advertisement>> advertisements = baseDataServiceFeign.searchAdvertisementPages(advertisementParam);
         Tips tips = FeginResponseTools.convertResponse(advertisements);
-        if (tips.err()){
-            return ResponseEntity.badRequest().body(tips);
-        }
-        return ResponseEntity.ok(tips.getData());
-
+        return FeginResponseTools.returnTipsResponse(tips);
     }
 }

@@ -86,7 +86,7 @@ public class BalanceApi {
             return ResponseEntity.badRequest().body(orderDetailResultTips);
         }
         if (!Objects.equals(orderDetailResultTips.getData().getUserId(), userId)) {
-            return ResponseEntity.badRequest().body(Tips.of(HttpStatus.BAD_REQUEST, "当前操作订单不属于登录用户"));
+            return ResponseEntity.badRequest().body(Tips.warn( "当前操作订单不属于登录用户"));
         }
         return ResponseEntity.ok(orderDetailResultTips);
     }
