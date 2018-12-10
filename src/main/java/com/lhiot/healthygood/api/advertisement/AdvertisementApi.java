@@ -2,13 +2,11 @@ package com.lhiot.healthygood.api.advertisement;
 
 import com.leon.microx.predefine.OnOff;
 import com.leon.microx.web.result.Pages;
-import com.leon.microx.web.result.Tips;
 import com.leon.microx.web.session.Sessions;
 import com.lhiot.healthygood.domain.advertisement.AdvertismentParams;
 import com.lhiot.healthygood.feign.BaseDataServiceFeign;
 import com.lhiot.healthygood.feign.model.Advertisement;
 import com.lhiot.healthygood.feign.model.AdvertisementParam;
-import com.lhiot.healthygood.util.FeginResponseTools;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
@@ -32,14 +30,12 @@ public class AdvertisementApi {
     }
 
     @Sessions.Uncheck
-    @ApiOperation(value = "根据位置编码查询广告列表", response = Advertisement.class )
+    @ApiOperation(value = "根据位置编码查询广告列表")
     @PostMapping("/advertisements/position")
-    public ResponseEntity searchAdvertisementPages(@RequestBody AdvertismentParams advertismentParams){
+    public ResponseEntity<Pages<Advertisement>> searchAdvertisementPages(@RequestBody AdvertismentParams advertismentParams){
         AdvertisementParam advertisementParam = new AdvertisementParam();
         BeanUtils.copyProperties(advertismentParams,advertisementParam);
         advertisementParam.setAdvertiseStatus(OnOff.ON);
-        ResponseEntity<Pages<Advertisement>> advertisements = baseDataServiceFeign.searchAdvertisementPages(advertisementParam);
-        Tips tips = FeginResponseTools.convertResponse(advertisements);
-        return FeginResponseTools.returnTipsResponse(tips);
+       return baseDataServiceFeign.searchAdvertisementPages(advertisementParam);
     }
 }

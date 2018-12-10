@@ -3,7 +3,6 @@ package com.lhiot.healthygood.api.good;
 import com.leon.microx.predefine.OnOff;
 import com.leon.microx.util.StringUtils;
 import com.leon.microx.web.result.Pages;
-import com.leon.microx.web.result.Tips;
 import com.leon.microx.web.session.Sessions;
 import com.leon.microx.web.swagger.ApiParamType;
 import com.lhiot.healthygood.domain.activity.ActivityProduct;
@@ -18,7 +17,6 @@ import com.lhiot.healthygood.service.activity.ActivityProductService;
 import com.lhiot.healthygood.service.activity.SpecialProductActivityService;
 import com.lhiot.healthygood.type.ShelfType;
 import com.lhiot.healthygood.type.YesOrNo;
-import com.lhiot.healthygood.util.FeginResponseTools;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
@@ -57,11 +55,9 @@ public class ProductSectionApi {
             @ApiImplicitParam(paramType = ApiParamType.PATH, name = "id", value = "板块编号", dataType = "Long", required = true),
             @ApiImplicitParam(paramType = ApiParamType.QUERY, name = "flag", value = "是否查询商品信息", dataType = "YesOrNo")
     })
-    @ApiOperation(value = "某个商品板块的商品信息列表",response = ProductSection.class)
-    public ResponseEntity<Tips> productSections(@PathVariable("id") Long id, @RequestParam(value = "flag") YesOrNo flag) {
-        ResponseEntity<ProductSection> productSectionResponseEntity = baseDataServiceFeign.singleProductSection(id, Objects.equals(flag,YesOrNo.YES), null);
-        Tips tips = FeginResponseTools.convertResponse(productSectionResponseEntity);
-        return FeginResponseTools.returnTipsResponse(tips);
+    @ApiOperation(value = "某个商品板块的商品信息列表")
+    public ResponseEntity<ProductSection> productSections(@PathVariable("id") Long id, @RequestParam(value = "flag") YesOrNo flag) {
+        return baseDataServiceFeign.singleProductSection(id, Objects.equals(flag,YesOrNo.YES), null);
     }
 
     @Sessions.Uncheck
@@ -71,7 +67,7 @@ public class ProductSectionApi {
             @ApiImplicitParam(paramType = ApiParamType.QUERY, name = "flag", value = "是否查询商品信息", dataType = "YesOrNo")
     })
     @ApiOperation(value = "根据位置编码查询所有商品板块列表（商品信息可选）",response = ProductSection.class)
-    public ResponseEntity<Tips> positionProductSection(@RequestParam(value = "id") Long id, @RequestParam(value = "flag") YesOrNo flag) {
+    public ResponseEntity<Pages<ProductSection>> positionProductSection(@RequestParam(value = "id") Long id, @RequestParam(value = "flag") YesOrNo flag) {
         boolean flags = false;
         if (Objects.equals(flag.toString(),"YES")){
             flags = true;
@@ -87,11 +83,10 @@ public class ProductSectionApi {
                 productShelf.setPrice(Objects.isNull(productShelf.getPrice()) ? productShelf.getOriginalPrice() : productShelf.getPrice())
             )
         );
-        Tips tips = FeginResponseTools.convertResponse(pagesResponseEntity);
-        return FeginResponseTools.returnTipsResponse(tips);
+        return pagesResponseEntity;
     }
 
-    public void setPrice(List<ProductShelf> productShelves){
+    private void setPrice(List<ProductShelf> productShelves){
         productShelves.stream().filter(Objects::nonNull).forEach(productShelf -> {
             productShelf.setPrice(Objects.isNull(productShelf.getPrice()) ? productShelf.getOriginalPrice() : productShelf.getPrice());
         });
@@ -101,15 +96,15 @@ public class ProductSectionApi {
     @GetMapping("/product/{id}")
     @ApiImplicitParam(paramType = ApiParamType.PATH, name = "id", value = "商品上架Id", dataType = "Long", required = true)
     @ApiOperation(value = "查询商品详情",response = ProductDetailResult.class)
-    public ResponseEntity<Tips> singeProduct(Sessions.User user, @PathVariable(value = "id") Long id) {
+    public ResponseEntity singeProduct(Sessions.User user, @PathVariable(value = "id") Long id) {
         ResponseEntity<ProductShelf> productShelfResponseEntity = baseDataServiceFeign.singleShelf(id,true);
-        Tips tips = FeginResponseTools.convertResponse(productShelfResponseEntity);
-        if (tips.err()) {
-            return ResponseEntity.badRequest().body(tips);
+
+        if (Objects.isNull(productShelfResponseEntity)|| productShelfResponseEntity.getStatusCode().isError()) {
+            return productShelfResponseEntity;
         }
         ProductShelf productShelf = productShelfResponseEntity.getBody();
         if (Objects.isNull(productShelf)){
-            return ResponseEntity.badRequest().body(Tips.warn("没有数据"));
+            return ResponseEntity.badRequest().body("没有数据");
         }
         ProductDetailResult detailResult = new ProductDetailResult();
         BeanUtils.copyProperties(productShelf,detailResult);
@@ -152,22 +147,19 @@ public class ProductSectionApi {
                 detailResult.setAlreadyBuyAmount(alreadyCount);
             }
         }
-        Tips tipsResult= new Tips();
-        tipsResult.setData(detailResult);
-        return ResponseEntity.ok(tipsResult);
+        return ResponseEntity.ok(detailResult);
     }
 
     @GetMapping("/product/cart")
     @ApiImplicitParam(paramType = ApiParamType.QUERY, name = "ids", value = "商品上架Ids", dataType = "String", required = true)
     @ApiOperation(value = "查询用户购物车商品", response = ProductShelf.class, responseContainer = "List")
-    public ResponseEntity<Tips> cart(Sessions.User user, @RequestParam(value = "ids") String ids) {
+    public ResponseEntity cart(Sessions.User user, @RequestParam(value = "ids") String ids) {
         ProductShelfParam productShelfParam = new ProductShelfParam();
         productShelfParam.setIds(ids);
         productShelfParam.setApplicationType("HEALTH_GOOD");
         ResponseEntity<Pages<ProductShelf>> pagesResponseEntity = baseDataServiceFeign.searchProductShelves(productShelfParam);
-        Tips tips = FeginResponseTools.convertResponse(pagesResponseEntity);
-        if (tips.err()) {
-            return ResponseEntity.badRequest().body(tips);
+        if (Objects.isNull(pagesResponseEntity)|| pagesResponseEntity.getStatusCode().isError()) {
+            return ResponseEntity.badRequest().body(pagesResponseEntity);
         }
         List<ProductShelf> productShelves = pagesResponseEntity.getBody().getArray();
         //新品尝鲜商品
@@ -192,17 +184,15 @@ public class ProductSectionApi {
                         productShelf.setPrice(Objects.isNull(productShelf.getPrice()) ? productShelf.getOriginalPrice() : productShelf.getPrice());
                     }));
         }
-        Tips result = new Tips(); //TODO 可否在Tips里面写个静态的 setData方法
-        result.setData(productShelves);
 
-        return ResponseEntity.ok(result);
+        return pagesResponseEntity;
     }
 
     @Sessions.Uncheck
     @ApiImplicitParam(paramType = ApiParamType.BODY, name = "productSearchParam", value = "搜索商品条件", dataType = "ProductSearchParam", required = true)
     @PostMapping("/product/search")
-    @ApiOperation(value = "查询/搜索商品",response = ProductShelf.class )
-    public ResponseEntity<Tips> searchProduct(@RequestBody ProductSearchParam productSearchParam) {
+    @ApiOperation(value = "查询/搜索商品")
+    public ResponseEntity<Pages<ProductShelf>> searchProduct(@RequestBody ProductSearchParam productSearchParam) {
         ProductShelfParam productShelfParam = new ProductShelfParam();
         productShelfParam.setApplicationType("HEALTH_GOOD");
         productShelfParam.setKeyword(productSearchParam.getKeywords());
@@ -210,13 +200,7 @@ public class ProductSectionApi {
         productShelfParam.setShelfType(ShelfType.NORMAL);
         productShelfParam.setPage(productSearchParam.getPage());
         productShelfParam.setRows(productSearchParam.getRows());
-        ResponseEntity<Pages<ProductShelf>> pagesResponseEntity = baseDataServiceFeign.searchProductShelves(productShelfParam);
-        Tips<Pages<ProductShelf>> tips = FeginResponseTools.convertResponse(pagesResponseEntity);
-        if (tips.err()) {
-            return ResponseEntity.badRequest().body(tips);
-        }
-        this.setPrice(tips.getData().getArray());
-        return ResponseEntity.ok(tips);
+        return baseDataServiceFeign.searchProductShelves(productShelfParam);
     }
 
 }
