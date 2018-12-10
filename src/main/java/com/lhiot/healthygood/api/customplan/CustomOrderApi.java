@@ -54,7 +54,7 @@ public class CustomOrderApi {
     }
 
     @PostMapping("/custom-orders")
-    @ApiOperation(value = "立即定制-创建定制计划")
+    @ApiOperation(value = "立即定制-创建定制计划",response = CustomOrder.class)
     @ApiHideBodyProperty({"id", "beginCreateAt", "endCreateAt", "user", "rows", "page"})
     public ResponseEntity<Tips> create(@Valid @RequestBody CustomOrder customOrder, Sessions.User user) {
         Long userId = Long.valueOf(user.getUser().get("userId").toString());

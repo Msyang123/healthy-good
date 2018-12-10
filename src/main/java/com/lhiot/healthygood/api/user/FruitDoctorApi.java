@@ -442,7 +442,7 @@ public class FruitDoctorApi {
         return ResponseEntity.ok(cardUpdateLogService.create(cardUpdateLog)>0 ? Tips.info("添加成功") : Tips.warn("添加失败"));
     }
 
-    @ApiOperation(value = "查询鲜果师银行卡信息", notes = "根据session里的doctorId查询", response = CardUpdateLog.class, responseContainer = "Set")
+    @ApiOperation(value = "查询鲜果师银行卡信息", notes = "根据session里的doctorId查询", response = CardUpdateLog.class)
     @GetMapping("/bank-card")
     public ResponseEntity<Tips> findCardUpdateLog(Sessions.User user) {
         String userId = user.getUser().get("userId").toString();
@@ -467,7 +467,7 @@ public class FruitDoctorApi {
     }
 
     @GetMapping("/customers")
-    @ApiOperation(value = "查询鲜果师客户列表")
+    @ApiOperation(value = "查询鲜果师客户列表",response = DoctorUser.class,responseContainer = "List")
     public ResponseEntity<Tips> doctorCustomers(Sessions.User user) throws BadHanyuPinyinOutputFormatCombination {
         String userId = user.getUser().get("userId").toString();
         FruitDoctor fruitDoctor = fruitDoctorService.selectByUserId(Long.valueOf(userId));

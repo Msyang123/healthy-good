@@ -52,7 +52,7 @@ public class CommonsApi {
     @Sessions.Uncheck
     @GetMapping("/custom-plan-delivery/times")
     @ApiOperation(value = "获取订单配送时间 定制订单使用")
-    public ResponseEntity<Tips<DeliverTime>> times() {
+    public ResponseEntity<Tips<List<DeliverTime>>> times() {
         List<DeliverTime> times = new ArrayList<>();
 
         LocalDateTime begin = LocalDate.now().atTime(BEGIN_DELIVER_OF_DAY);
@@ -75,10 +75,7 @@ public class CommonsApi {
         //查询今天和明天的配送时间列表
         ResponseEntity<Map<String,Object>> deliverTimesEntity = deliverServiceFeign.deliverTimes(null);
         Tips<Map<String,Object>> tips = FeginResponseTools.convertResponse(deliverTimesEntity);
-        if(tips.err()){
-            return ResponseEntity.badRequest().body(tips);
-        }
-        return ResponseEntity.ok(tips);
+        return FeginResponseTools.returnTipsResponse(tips);
     }
 
     @Sessions.Uncheck
