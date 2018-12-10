@@ -13,7 +13,6 @@ import com.lhiot.healthygood.domain.good.ProductDetailResult;
 import com.lhiot.healthygood.domain.good.ProductSearchParam;
 import com.lhiot.healthygood.feign.BaseDataServiceFeign;
 import com.lhiot.healthygood.feign.model.*;
-import com.lhiot.healthygood.feign.type.AttachmentType;
 import com.lhiot.healthygood.service.activity.ActivityProductRecordService;
 import com.lhiot.healthygood.service.activity.ActivityProductService;
 import com.lhiot.healthygood.service.activity.SpecialProductActivityService;
@@ -72,7 +71,7 @@ public class ProductSectionApi {
             @ApiImplicitParam(paramType = ApiParamType.QUERY, name = "flag", value = "是否查询商品信息", dataType = "YesOrNo")
     })
     @ApiOperation(value = "根据位置编码查询所有商品板块列表（商品信息可选）",response = ProductSection.class)
-    public ResponseEntity positionProductSection(@RequestParam(value = "id") Long id, @RequestParam(value = "flag") YesOrNo flag) {
+    public ResponseEntity<Tips> positionProductSection(@RequestParam(value = "id") Long id, @RequestParam(value = "flag") YesOrNo flag) {
         boolean flags = false;
         if (Objects.equals(flag.toString(),"YES")){
             flags = true;
@@ -89,10 +88,7 @@ public class ProductSectionApi {
             )
         );
         Tips tips = FeginResponseTools.convertResponse(pagesResponseEntity);
-        if (tips.err()) {
-            return ResponseEntity.badRequest().body(tips);
-        }
-        return ResponseEntity.ok(pagesResponseEntity.getBody().getArray());
+        return FeginResponseTools.returnTipsResponse(tips);
     }
 
     public void setPrice(List<ProductShelf> productShelves){
@@ -113,7 +109,7 @@ public class ProductSectionApi {
         }
         ProductShelf productShelf = productShelfResponseEntity.getBody();
         if (Objects.isNull(productShelf)){
-            return ResponseEntity.badRequest().body(Tips.info("没有数据"));
+            return ResponseEntity.badRequest().body(Tips.warn("没有数据"));
         }
         ProductDetailResult detailResult = new ProductDetailResult();
         BeanUtils.copyProperties(productShelf,detailResult);
@@ -164,7 +160,7 @@ public class ProductSectionApi {
     @GetMapping("/product/cart")
     @ApiImplicitParam(paramType = ApiParamType.QUERY, name = "ids", value = "商品上架Ids", dataType = "String", required = true)
     @ApiOperation(value = "查询用户购物车商品", response = ProductShelf.class, responseContainer = "List")
-    public ResponseEntity cart(Sessions.User user, @RequestParam(value = "ids") String ids) {
+    public ResponseEntity<Tips> cart(Sessions.User user, @RequestParam(value = "ids") String ids) {
         ProductShelfParam productShelfParam = new ProductShelfParam();
         productShelfParam.setIds(ids);
         productShelfParam.setApplicationType("HEALTH_GOOD");
@@ -196,15 +192,17 @@ public class ProductSectionApi {
                         productShelf.setPrice(Objects.isNull(productShelf.getPrice()) ? productShelf.getOriginalPrice() : productShelf.getPrice());
                     }));
         }
+        Tips result = new Tips(); //TODO 可否在Tips里面写个静态的 setData方法
+        result.setData(productShelves);
 
-        return ResponseEntity.ok(productShelves);
+        return ResponseEntity.ok(result);
     }
 
     @Sessions.Uncheck
     @ApiImplicitParam(paramType = ApiParamType.BODY, name = "productSearchParam", value = "搜索商品条件", dataType = "ProductSearchParam", required = true)
     @PostMapping("/product/search")
-    @ApiOperation(value = "查询/搜索商品")
-    public ResponseEntity<Pages> searchProduct(@RequestBody ProductSearchParam productSearchParam) {
+    @ApiOperation(value = "查询/搜索商品",response = ProductShelf.class )
+    public ResponseEntity<Tips> searchProduct(@RequestBody ProductSearchParam productSearchParam) {
         ProductShelfParam productShelfParam = new ProductShelfParam();
         productShelfParam.setApplicationType("HEALTH_GOOD");
         productShelfParam.setKeyword(productSearchParam.getKeywords());
@@ -215,10 +213,10 @@ public class ProductSectionApi {
         ResponseEntity<Pages<ProductShelf>> pagesResponseEntity = baseDataServiceFeign.searchProductShelves(productShelfParam);
         Tips<Pages<ProductShelf>> tips = FeginResponseTools.convertResponse(pagesResponseEntity);
         if (tips.err()) {
-            return ResponseEntity.badRequest().body(tips.getData());
+            return ResponseEntity.badRequest().body(tips);
         }
         this.setPrice(tips.getData().getArray());
-        return ResponseEntity.ok(tips.getData());
+        return ResponseEntity.ok(tips);
     }
 
 }

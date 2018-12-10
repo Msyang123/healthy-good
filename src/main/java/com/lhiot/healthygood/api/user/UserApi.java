@@ -180,11 +180,12 @@ public class UserApi {
 
     @GetMapping("/session")
     @ApiOperation(value = "根据sessionId重新获取session", response = String.class)
-    public ResponseEntity userInfo(Sessions.User user) {
+    public ResponseEntity<Tips> userInfo(Sessions.User user) {
         String openId = user.getUser().get("openId").toString();
         ResponseEntity searchUserEntity = baseUserServerFeign.findByOpenId(openId);
-        if (searchUserEntity.getStatusCode().isError()) {
-            return ResponseEntity.badRequest().body(searchUserEntity.getBody());
+        Tips tips = FeginResponseTools.convertResponse(searchUserEntity);
+        if (tips.err()) {
+            return ResponseEntity.badRequest().body(tips);
         }
         UserDetailResult searchUser = (UserDetailResult) searchUserEntity.getBody();
         if (Objects.isNull(searchUser)) {
@@ -195,7 +196,8 @@ public class UserApi {
             searchUser.setFruitDoctor(true);
             searchUser.setFruitDoctorInfo(fruitDoctor);
         }
-        return ResponseEntity.ok(searchUser);
+        tips.setData(searchUser);
+        return ResponseEntity.ok(tips);
     }
 
     @Sessions.Uncheck
@@ -217,8 +219,8 @@ public class UserApi {
 
     @Sessions.Uncheck
     @GetMapping("/wechat/token")
-    @ApiOperation(value = "微信oauth Token 全局缓存的", response = Token.class)
-    public ResponseEntity<Token> token() throws IOException {
+    @ApiOperation(value = "微信oauth Token 全局缓存的")
+    public ResponseEntity<Tips<Token>> token() throws IOException {
         RMapCache<String, Token> cache = redissonClient.getMapCache(PREFIX_REDIS + "token");
         Token token = cache.get("token");
         //先从缓存中获取 如果为空再去微信服务器获取
@@ -226,13 +228,15 @@ public class UserApi {
             token = weChatUtil.getToken();
             cache.put("token", token, 2, TimeUnit.HOURS);//缓存2小时
         }
-        return ResponseEntity.ok(token);
+        Tips tips = new Tips();
+        tips.setData(token);
+        return ResponseEntity.ok(tips);
     }
 
     @Sessions.Uncheck
     @GetMapping("/wechat/ticket")
-    @ApiOperation(value = "微信oauth jsapiTicket", response = JsapiTicket.class)
-    public ResponseEntity<JsapiPaySign> jsapiTicket(@RequestParam("url") String url) throws IOException {
+    @ApiOperation(value = "微信oauth jsapiTicket")
+    public ResponseEntity<Tips<JsapiPaySign>> jsapiTicket(@RequestParam("url") String url) throws IOException {
         log.info("============================>获取jsapiTicket");
         RMapCache<String, Object> cache = redissonClient.getMapCache(PREFIX_REDIS + "token");
         Token token = (Token) cache.get("token");
@@ -272,7 +276,9 @@ public class UserApi {
         jsapiPaySign.setTimestamp(timestamp);
         jsapiPaySign.setSignature(signature);
         log.info("===============================>jsapiPaySign:" + jsapiPaySign);
-        return ResponseEntity.ok(jsapiPaySign);
+        Tips tips = new Tips();
+        tips.setData(jsapiPaySign);
+        return ResponseEntity.ok(tips);
     }
 
     private Map<String, String> paramsToMap(HttpServletRequest request) {
@@ -294,19 +300,19 @@ public class UserApi {
     @PostMapping("/sms/captcha")
     @ApiOperation(value = "发送申请验证码短信")
     @ApiImplicitParam(paramType = "query", name = "phone", value = "发送用户注册验证码对应手机号", required = true, dataType = "String")
-    public ResponseEntity captcha(Sessions.User user,@RequestParam String phone) {
+    public ResponseEntity<Tips> captcha(Sessions.User user, @RequestParam String phone) {
         Long userId = Long.valueOf(user.getUser().get("userId").toString());
         //TODO 需要申请发送短信模板
         ResponseEntity<UserDetailResult> userDetailResultResponseEntity = baseUserServerFeign.findById(userId);
         Tips<UserDetailResult> userDetailResultTips = FeginResponseTools.convertResponse(userDetailResultResponseEntity);
         if (userDetailResultTips.err()) {
-            return ResponseEntity.badRequest().body(userDetailResultTips.getData());
+            return ResponseEntity.badRequest().body(userDetailResultTips);
         }
         CaptchaParam captchaParam = new CaptchaParam();
         captchaParam.setApplicationName("和色果膳商城");
         captchaParam.setPhoneNumber(phone);
         captchaParam.setFreeSignName(FreeSignName.FRUIT_DOCTOR);
-        return thirdpartyServerFeign.captcha(CaptchaTemplate.REGISTER, captchaParam);
+        return ResponseEntity.ok(FeginResponseTools.convertResponse(thirdpartyServerFeign.captcha(CaptchaTemplate.REGISTER, captchaParam)));
     }
 
     @PutMapping("/binding")
@@ -318,17 +324,14 @@ public class UserApi {
         userBindingPhoneParam.setPhone(validateParam.getPhoneNumber());
         userBindingPhoneParam.setApplicationType(ApplicationType.HEALTH_GOOD);
         Tips<UserDetailResult> userDetailResultTips = FeginResponseTools.convertResponse(baseUserServerFeign.userBindingPhone(userId, userBindingPhoneParam));
-        if (userDetailResultTips.err()) {
-            return ResponseEntity.badRequest().body(userDetailResultTips.getMessage());
-        }
-        return ResponseEntity.ok("绑定成功");
+        return FeginResponseTools.returnTipsResponse(userDetailResultTips);
     }
 
     @Sessions.Uncheck
-    @ApiOperation("统计用户总计消费数及本月消费数")
+    @ApiOperation(value = "统计用户总计消费数及本月消费数",response = Achievement.class)
     @ApiImplicitParam(paramType = "path", name = "userId", dataType = "Long", required = true, value = "用户id")
     @GetMapping("/{userId}/consumption")
-    public ResponseEntity<?> findUserAchievement(@PathVariable Long userId) {
+    public ResponseEntity<Tips> findUserAchievement(@PathVariable Long userId) {
         //统计本月订单数和消费额
         Achievement thisMonth =
                 doctorAchievementLogService.achievement(DateTypeEnum.MONTH, PeriodType.current, null, true, false, userId);
@@ -342,11 +345,13 @@ public class UserApi {
         //获取用户信息
         Tips<UserDetailResult> userDetailResultTips = FeginResponseTools.convertResponse(baseUserServerFeign.findById(userId));
         if (userDetailResultTips.err()) {
-            return ResponseEntity.badRequest().body(userDetailResultTips.getData());
+            return ResponseEntity.badRequest().body(userDetailResultTips);
         }
         total.setAvatar(userDetailResultTips.getData().getAvatar());
         total.setDescription(userDetailResultTips.getData().getDescription());
-        return ResponseEntity.ok(total);
+        Tips tips = new Tips();
+        tips.setData(total);
+        return ResponseEntity.ok(tips);
     }
 
 
