@@ -221,7 +221,7 @@ public class FruitDoctorApi {
         return ResponseEntity.ok(settlementApplicationPages);
     }
 
-    @PostMapping("/relation")
+ /*   @PostMapping("/relation")
     @ApiOperation(value = "添加鲜果师客户 关注鲜果师(绑定)")
     @ApiImplicitParam(paramType = "body", name = "doctorUser", value = "要添加的鲜果师客户", required = true, dataType = "DoctorUser")
     public ResponseEntity bindingDoctor(Sessions.User user, @RequestBody DoctorUser doctorUser) {
@@ -239,7 +239,7 @@ public class FruitDoctorApi {
         doctorUser.setUserId(userId);
         doctorUserService.create(doctorUser);
         return ResponseEntity.ok(Tips.info("绑定成功！"));
-    }
+    }*/
 
     @PutMapping("/remark")
     @ApiOperation(value = "鲜果师修改用户备注")

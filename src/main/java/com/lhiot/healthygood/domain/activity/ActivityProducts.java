@@ -10,7 +10,7 @@ import lombok.NoArgsConstructor;
 import java.math.BigDecimal;
 
 @Data
-@ApiModel("新品尝鲜活动商品")
+@ApiModel(description = "新品尝鲜活动商品")
 @NoArgsConstructor
 public class ActivityProducts {
 

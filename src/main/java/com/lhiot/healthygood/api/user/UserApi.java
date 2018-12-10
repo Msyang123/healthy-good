@@ -13,6 +13,7 @@ import com.lhiot.healthygood.domain.user.UserBindingPhoneParam;
 import com.lhiot.healthygood.domain.user.ValidateParam;
 import com.lhiot.healthygood.feign.BaseUserServerFeign;
 import com.lhiot.healthygood.feign.ThirdpartyServerFeign;
+import com.lhiot.healthygood.feign.model.BalanceLogParam;
 import com.lhiot.healthygood.feign.model.CaptchaParam;
 import com.lhiot.healthygood.feign.model.UserDetailResult;
 import com.lhiot.healthygood.feign.model.WeChatRegisterParam;
@@ -293,11 +294,13 @@ public class UserApi {
     @PostMapping("/sms/captcha")
     @ApiOperation(value = "发送申请验证码短信")
     @ApiImplicitParam(paramType = "query", name = "phone", value = "发送用户注册验证码对应手机号", required = true, dataType = "String")
-    public ResponseEntity captcha(@RequestParam String phone) {
+    public ResponseEntity captcha(Sessions.User user,@RequestParam String phone) {
+        Long userId = Long.valueOf(user.getUser().get("userId").toString());
         //TODO 需要申请发送短信模板
-        ResponseEntity<UserDetailResult> user = baseUserServerFeign.findByPhone(phone, ApplicationType.HEALTH_GOOD);
-        if (user.getStatusCodeValue() > 200 && Objects.nonNull(user.getBody())) {
-            return ResponseEntity.badRequest().body("用户已注册");
+        ResponseEntity<UserDetailResult> userDetailResultResponseEntity = baseUserServerFeign.findById(userId);
+        Tips<UserDetailResult> userDetailResultTips = FeginResponseTools.convertResponse(userDetailResultResponseEntity);
+        if (userDetailResultTips.err()) {
+            return ResponseEntity.badRequest().body(userDetailResultTips.getData());
         }
         CaptchaParam captchaParam = new CaptchaParam();
         captchaParam.setApplicationName("和色果膳商城");
@@ -316,9 +319,9 @@ public class UserApi {
         userBindingPhoneParam.setApplicationType(ApplicationType.HEALTH_GOOD);
         Tips<UserDetailResult> userDetailResultTips = FeginResponseTools.convertResponse(baseUserServerFeign.userBindingPhone(userId, userBindingPhoneParam));
         if (userDetailResultTips.err()) {
-            return ResponseEntity.badRequest().body(userDetailResultTips.getData());
+            return ResponseEntity.badRequest().body(userDetailResultTips.getMessage());
         }
-        return ResponseEntity.ok(userDetailResultTips.getData());
+        return ResponseEntity.ok("绑定成功");
     }
 
     @Sessions.Uncheck
@@ -345,4 +348,9 @@ public class UserApi {
         total.setDescription(userDetailResultTips.getData().getDescription());
         return ResponseEntity.ok(total);
     }
+
+
+    /*public ResponseEntity findUserBalanceLog(@RequestBody BalanceLogParam param){
+        ResponseEntity baseUserServerFeign.searchBalanceLog(param);
+    }*/
 }

@@ -1,11 +1,14 @@
 package com.lhiot.healthygood.service.customplan;
 
+import com.esotericsoftware.kryo.util.IdentityMap;
 import com.leon.microx.predefine.OnOff;
 import com.leon.microx.util.BeanUtils;
 import com.leon.microx.util.Maps;
 import com.leon.microx.util.StringUtils;
 import com.leon.microx.web.result.Pages;
 import com.leon.microx.web.result.Tips;
+import com.lhiot.dc.dictionary.DictionaryClient;
+import com.lhiot.dc.dictionary.module.Dictionary;
 import com.lhiot.healthygood.domain.customplan.CustomPlan;
 import com.lhiot.healthygood.domain.customplan.CustomPlanProduct;
 import com.lhiot.healthygood.domain.customplan.CustomPlanSectionRelation;
@@ -37,17 +40,19 @@ public class CustomPlanService {
     private final CustomPlanSectionRelationMapper customPlanSectionRelationMapper;
     private final BaseDataServiceFeign baseDataServiceFeign;
     private final CustomPlanProductMapper customPlanProductMapper;
+    private DictionaryClient dictionaryClient;
 
 
     @Autowired
     public CustomPlanService(CustomPlanMapper customPlanMapper,
                              CustomPlanSpecificationMapper customPlanSpecificationMapper, CustomPlanSectionRelationMapper customPlanSectionRelationMapper,
-                             BaseDataServiceFeign baseDataServiceFeign, CustomPlanProductMapper customPlanProductMapper) {
+                             BaseDataServiceFeign baseDataServiceFeign, CustomPlanProductMapper customPlanProductMapper, DictionaryClient dictionaryClient) {
         this.customPlanMapper = customPlanMapper;
         this.customPlanSpecificationMapper = customPlanSpecificationMapper;
         this.customPlanSectionRelationMapper = customPlanSectionRelationMapper;
         this.baseDataServiceFeign = baseDataServiceFeign;
         this.customPlanProductMapper = customPlanProductMapper;
+        this.dictionaryClient = dictionaryClient;
     }
 
     public CustomPlanDetailResult findDetail(Long id) {
@@ -133,6 +138,12 @@ public class CustomPlanService {
     public CustomPlanSpecification findCustomPlanSpecificationDetail(Long id) {
         return customPlanSpecificationMapper.selectById(id);
     }
+
+    public Optional<Dictionary> dictionaryOptional(String code){
+        Optional<Dictionary> optional = dictionaryClient.dictionary(code);
+         return optional;
+    }
+
 
     /**
      * 根据条件查询定制计划信息列表

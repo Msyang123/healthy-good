@@ -132,4 +132,11 @@ public class CustomPlanApi {
         Pages<CustomPlanResult> pages = customPlanService.findList(param);
         return ResponseEntity.ok(pages);
     }
+
+    @Sessions.Uncheck
+    @GetMapping("/custom-plans/image")
+    @ApiOperation(value = "获取定制计划套餐配置说明图")
+    public ResponseEntity customPlanImage(){
+        return ResponseEntity.ok(customPlanService.dictionaryOptional("customPlanImage").get().getEntries());
+    }
 }

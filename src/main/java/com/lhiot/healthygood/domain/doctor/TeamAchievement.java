@@ -10,7 +10,7 @@ import lombok.NoArgsConstructor;
 import java.util.Date;
 
 @Data
-@ApiModel("鲜果师团队中个人业绩统计")
+@ApiModel(description = "鲜果师团队中个人业绩统计")
 @NoArgsConstructor
 public class TeamAchievement {
     @ApiModelProperty(notes = "鲜果师名称", dataType = "String")

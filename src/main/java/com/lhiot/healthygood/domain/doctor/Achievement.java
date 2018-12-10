@@ -6,7 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Data
-@ApiModel("鲜果师业绩统计")
+@ApiModel(description = "鲜果师业绩统计")
 @NoArgsConstructor
 public class Achievement {
 	

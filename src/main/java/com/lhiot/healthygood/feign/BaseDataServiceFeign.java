@@ -124,7 +124,7 @@ public interface BaseDataServiceFeign {
      * @return
      */
     @RequestMapping(value="/articles/{id}",method = RequestMethod.GET)
-    ResponseEntity<Article> singleArticle(@PathVariable("id") Long id);
+    ResponseEntity<Article> singleArticle(@PathVariable("id") Long id,@RequestParam("addReadAmount") boolean addReadAmount);
 
 
     /**

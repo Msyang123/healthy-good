@@ -8,7 +8,7 @@ import lombok.NoArgsConstructor;
 import java.util.List;
 
 @Data
-@ApiModel("新品尝鲜活动")
+@ApiModel(description = "新品尝鲜活动")
 @NoArgsConstructor
 public class NewSpecialResult {
     @ApiModelProperty(notes="新品尝鲜活动ID",dataType="Long")

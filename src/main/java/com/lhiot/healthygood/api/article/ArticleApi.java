@@ -47,7 +47,7 @@ public class ArticleApi {
     @ApiImplicitParam(paramType = ApiParamType.PATH, name = "id", value = "文章编号", dataType = "Long")
     @ApiOperation(value = "根据id查询文章详情",response = Article.class)
     public ResponseEntity<Tips> article(@PathVariable(value = "id") Long id){
-        ResponseEntity<Article> articleResponseEntity = baseDataServiceFeign.singleArticle(id);
+        ResponseEntity<Article> articleResponseEntity = baseDataServiceFeign.singleArticle(id,true);
         Tips<Article> tips = FeginResponseTools.convertResponse(articleResponseEntity);
         return FeginResponseTools.returnTipsResponse(tips);
     }

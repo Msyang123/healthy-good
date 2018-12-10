@@ -2,6 +2,7 @@ package com.lhiot.healthygood.feign.model;
 
 import com.leon.microx.predefine.OnOff;
 import com.lhiot.healthygood.feign.type.AdvertiseType;
+import com.lhiot.healthygood.feign.type.RelationType;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
@@ -19,16 +20,20 @@ public class Advertisement {
     private Long id;
     @ApiModelProperty(notes = "位置Id", dataType = "Long")
     private Long positionId;
-    @ApiModelProperty(notes = "广告图片", dataType = "String")
-    private String image;
+    @ApiModelProperty(notes = "位置对象", dataType = "UiPosition", readOnly = true)
+    private UiPosition uiPosition;
+    @ApiModelProperty(notes = "广告内容 （广告图片或者广告文本）", dataType = "String")
+    private String content;
+    @ApiModelProperty(notes = "广告类别（IMAGE- 图片广告 TEXT -文字广告）", dataType = "AdvertiseType")
+    private AdvertiseType advertiseType;
     @NotNull(message = "广告名不能为空")
     @ApiModelProperty(notes = "广告名", dataType = "String")
     private String advertiseName;
     @ApiModelProperty(notes = "广告关联", dataType = "String")
     private String advertiseRelation;
-    @ApiModelProperty(notes = "广告类别（PRODUCT_DETAILS- 商品详情 STORE_LIVE_TELECAST- 门店直播 MORE_AMUSEMENT- 多娱\n" +
-            "EXTERNAL_LINKS- 外部链接）", dataType = "AdvertiseType")
-    private AdvertiseType advertiseType;
+    @ApiModelProperty(notes = "广告关联类别（PRODUCT_DETAILS- 商品详情 STORE_LIVE_TELECAST- 门店直播 MORE_AMUSEMENT- 多娱\n" +
+            "EXTERNAL_LINKS- 外部链接）", dataType = "RelationType")
+    private RelationType relationType;
     @ApiModelProperty(notes = "广告状态（ON- 开启 OFF-关闭）", dataType = "AdvertiseStatus")
     private OnOff advertiseStatus;
     @ApiModelProperty(notes = "广告序号", dataType = "Integer")
@@ -39,6 +44,4 @@ public class Advertisement {
     private Date endAt;
     @ApiModelProperty(notes = "创建时间", dataType = "Date", readOnly = true)
     private Date createAt;
-
-
 }

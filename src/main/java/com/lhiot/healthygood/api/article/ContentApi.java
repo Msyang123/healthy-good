@@ -43,7 +43,7 @@ public class ContentApi {
 
     @PostMapping("/feedback")
     @ApiImplicitParam(paramType = ApiParamType.BODY, name = "feedback", value = "用户反馈", dataType = "Feedback")
-    @ApiOperation(value = "用户反馈")
+    @ApiOperation(value = "用户反馈" )
     public ResponseEntity feedback(Sessions.User user, @RequestBody Feedback feedback){
         feedback.setUserId(Long.valueOf(user.getUser().get("userId").toString()));
         ResponseEntity feedbackRes = contentServiceFeign.create(feedback);
