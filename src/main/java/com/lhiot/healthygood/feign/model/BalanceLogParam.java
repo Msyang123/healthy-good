@@ -1,8 +1,8 @@
-package com.lhiot.uc.basic.model;
+package com.lhiot.healthygood.feign.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.lhiot.dc.dictionary.HasEntries;
-import com.lhiot.uc.basic.entity.OperationStatus;
+import com.lhiot.healthygood.feign.type.OperationStatus;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;

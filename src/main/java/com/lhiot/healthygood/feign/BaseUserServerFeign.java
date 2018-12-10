@@ -1,6 +1,7 @@
 package com.lhiot.healthygood.feign;
 
 import com.lhiot.healthygood.domain.user.UserBindingPhoneParam;
+import com.lhiot.healthygood.feign.model.BalanceLogParam;
 import com.lhiot.healthygood.feign.model.BalanceOperationParam;
 import com.lhiot.healthygood.feign.model.UserDetailResult;
 import com.lhiot.healthygood.feign.model.WeChatRegisterParam;
@@ -65,4 +66,12 @@ public interface BaseUserServerFeign {
 	 */
 	@RequestMapping(value = "/users/{id}/balance", method = RequestMethod.PUT)
 	ResponseEntity userBalanceOperation(@PathVariable("id") Long userId, @RequestBody BalanceOperationParam param);
+
+	/**
+	 * 获取鲜果币操作记录列表
+	 * @param param
+	 * @return
+	 */
+	@RequestMapping(value = "/balance-logs/pages", method = RequestMethod.POST)
+	ResponseEntity searchBalanceLog(@RequestBody BalanceLogParam param);
 }

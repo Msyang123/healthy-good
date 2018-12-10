@@ -13,6 +13,7 @@ import com.lhiot.healthygood.domain.user.UserBindingPhoneParam;
 import com.lhiot.healthygood.domain.user.ValidateParam;
 import com.lhiot.healthygood.feign.BaseUserServerFeign;
 import com.lhiot.healthygood.feign.ThirdpartyServerFeign;
+import com.lhiot.healthygood.feign.model.BalanceLogParam;
 import com.lhiot.healthygood.feign.model.CaptchaParam;
 import com.lhiot.healthygood.feign.model.UserDetailResult;
 import com.lhiot.healthygood.feign.model.WeChatRegisterParam;
@@ -318,9 +319,9 @@ public class UserApi {
         userBindingPhoneParam.setApplicationType(ApplicationType.HEALTH_GOOD);
         Tips<UserDetailResult> userDetailResultTips = FeginResponseTools.convertResponse(baseUserServerFeign.userBindingPhone(userId, userBindingPhoneParam));
         if (userDetailResultTips.err()) {
-            return ResponseEntity.badRequest().body(userDetailResultTips.getData());
+            return ResponseEntity.badRequest().body(userDetailResultTips.getMessage());
         }
-        return ResponseEntity.ok(userDetailResultTips.getData());
+        return ResponseEntity.ok("绑定成功");
     }
 
     @Sessions.Uncheck
@@ -347,4 +348,9 @@ public class UserApi {
         total.setDescription(userDetailResultTips.getData().getDescription());
         return ResponseEntity.ok(total);
     }
+
+
+    /*public ResponseEntity findUserBalanceLog(@RequestBody BalanceLogParam param){
+        ResponseEntity baseUserServerFeign.searchBalanceLog(param);
+    }*/
 }

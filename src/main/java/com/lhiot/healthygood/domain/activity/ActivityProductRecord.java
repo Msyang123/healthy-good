@@ -9,7 +9,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Data
-@ApiModel("新品尝鲜活动")
+@ApiModel(description = "新品尝鲜活动")
 @NoArgsConstructor
 public class ActivityProductRecord{
     @ApiModelProperty(notes="ID",dataType="Long")

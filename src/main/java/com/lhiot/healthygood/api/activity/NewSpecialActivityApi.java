@@ -55,7 +55,7 @@ public class NewSpecialActivityApi {
 
     @PostMapping("/activities/specials/products")
     @ApiImplicitParam(paramType = ApiParamType.BODY, name = "pagesParam", value = "分页对象", dataType = "PagesParam",required = true)
-    @ApiOperation(value = "新品尝鲜活动商品列表")
+    @ApiOperation(value = "新品尝鲜活动商品列表",response = NewSpecialResult.class)
     public ResponseEntity specialActivity(Sessions.User user, @RequestBody PagesParam pagesParam){
         SpecialProductActivity specialProductActivity = specialProductActivityService.selectActivity();
         if (Objects.isNull(specialProductActivity)){

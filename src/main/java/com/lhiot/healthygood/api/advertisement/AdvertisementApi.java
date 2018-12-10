@@ -8,7 +8,6 @@ import com.lhiot.healthygood.domain.advertisement.AdvertismentParams;
 import com.lhiot.healthygood.feign.BaseDataServiceFeign;
 import com.lhiot.healthygood.feign.model.Advertisement;
 import com.lhiot.healthygood.feign.model.AdvertisementParam;
-import com.lhiot.healthygood.feign.type.AdvertiseType;
 import com.lhiot.healthygood.util.FeginResponseTools;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -18,10 +17,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-
-import javax.validation.Valid;
 
 @Api(description = "广告类接口")
 @Slf4j
@@ -36,7 +32,7 @@ public class AdvertisementApi {
     }
 
     @Sessions.Uncheck
-    @ApiOperation(value = "根据位置编码查询广告列表")
+    @ApiOperation(value = "根据位置编码查询广告列表", response = Advertisement.class )
     @PostMapping("/advertisements/position")
     public ResponseEntity searchAdvertisementPages(@RequestBody AdvertismentParams advertismentParams){
         AdvertisementParam advertisementParam = new AdvertisementParam();
