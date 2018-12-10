@@ -51,7 +51,7 @@ public class CommonsApi {
     //获取配送时间列表 定制订单使用
     @Sessions.Uncheck
     @GetMapping("/custom-plan-delivery/times")
-    @ApiOperation(value = "获取订单配送时间 定制订单使用",response = Tips.class)
+    @ApiOperation(value = "获取订单配送时间 定制订单使用")
     public ResponseEntity<Tips<DeliverTime>> times() {
         List<DeliverTime> times = new ArrayList<>();
 
@@ -82,10 +82,15 @@ public class CommonsApi {
     }
 
     @Sessions.Uncheck
-    @ApiOperation(value = "计算配送距离（收获地址与智能选择最近的门店）")
+    @ApiOperation(value = "计算配送距离（收获地址与智能选择最近的门店）",response = Store.class)
     @GetMapping("/delivery/distance")
-    public ResponseEntity nearStore(@RequestParam("address") String address,@RequestParam("lng") Double lng,@RequestParam("lat") Double lat){
+    public ResponseEntity<Tips> nearStore(@RequestParam("address") String address,@RequestParam("lng") Double lng,@RequestParam("lat") Double lat){
         Pages<Store> storeResult = commonService.nearStore(address,lng,lat);
-        return Objects.isNull(storeResult)?ResponseEntity.badRequest().body("未找到门店"):ResponseEntity.ok(storeResult);
+        if(Objects.isNull(storeResult)){
+            return ResponseEntity.badRequest().body(Tips.warn("未找到门店"));
+        }
+        Tips tips =new Tips();
+        tips.setData(storeResult);
+        return ResponseEntity.ok(tips);
     }
 }

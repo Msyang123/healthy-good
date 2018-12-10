@@ -290,9 +290,9 @@
     </select>
 
 
-    <select id="statusCount" resultType="map" parameterType="Long">
+    <select id="statusCount" resultType="com.lhiot.healthygood.domain.customplan.CustomOrderGroupCount" parameterType="Long">
       select count(1) as waitPaymentCount,
-      (select count(1)from custom_order where user_id= #{0} and status in('CUSTOMING','PAUSE_DELIVERY')) as waitPaymentCount
+      (select count(1)from custom_order where user_id= #{0} and status in('CUSTOMING','PAUSE_DELIVERY')) as customingCount
       from custom_order where status='WAIT_PAYMENT' and user_id= #{0}
     </select>
 </mapper>

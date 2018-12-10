@@ -1,12 +1,11 @@
 package com.lhiot.healthygood.mapper.customplan;
 
 import com.lhiot.healthygood.domain.customplan.CustomOrder;
-import com.lhiot.healthygood.type.CustomOrderStatus;
+import com.lhiot.healthygood.domain.customplan.CustomOrderGroupCount;
 import org.apache.ibatis.annotations.Mapper;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
-import java.util.Map;
 
 /**
  * Description:定制订单Mapper类
@@ -41,6 +40,6 @@ public interface CustomOrderMapper {
      * @param userId
      * @return
      */
-    Map statusCount(Long userId);
+    CustomOrderGroupCount statusCount(Long userId);
 
 }
