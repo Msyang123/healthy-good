@@ -105,7 +105,9 @@ public class CustomOrderService {
         customOrder.setTotalQty(customPlanSpecification.getPlanPeriod());//总配送次数
         int result = customOrderMapper.create(customOrder);
 
-        return result > 0 ? Tips.info("创建成功") : Tips.warn("创建失败");
+        Tips<CustomOrder> customOrderTips =new Tips<>();
+        customOrderTips.setData(customOrder);
+        return result > 0 ? customOrderTips : Tips.warn("创建失败");
     }
 
     /**
