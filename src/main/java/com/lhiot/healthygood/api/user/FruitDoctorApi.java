@@ -80,7 +80,7 @@ public class FruitDoctorApi {
     @PostMapping("/qualifications")
     @ApiOperation(value = "添加鲜果师申请记录",response = RegisterApplication.class)
     @ApiImplicitParam(paramType = "body", name = "registerApplication", value = "要添加的鲜果师申请记录", required = true, dataType = "RegisterApplication")
-    public ResponseEntity<Tips> qualifications(Sessions.User user, @RequestBody RegisterApplication registerApplication) {
+    public ResponseEntity qualifications(Sessions.User user, @RequestBody RegisterApplication registerApplication) {
         log.debug("添加鲜果师申请记录\t param:{}", registerApplication);
         String userId = user.getUser().get("userId").toString();
         registerApplication.setUserId(Long.valueOf(userId));
@@ -89,13 +89,10 @@ public class FruitDoctorApi {
         smsValidateParam.setCode(registerApplication.getVerificationCode());
         smsValidateParam.setPhoneNumber(registerApplication.getPhone());
         ResponseEntity responseEntity = thirdpartyServerFeign.validate(CaptchaTemplate.REGISTER, smsValidateParam);
-        Tips tips = FeginResponseTools.convertResponse(responseEntity);
-        if (tips.err()) {
-            return ResponseEntity.badRequest().body(tips);
+        if (Objects.isNull(responseEntity) || responseEntity.getStatusCode().isError()) {
+            return responseEntity;
         }
-        Tips<RegisterApplication> result = new Tips<>();
-        result.setData(registerApplicationService.create(registerApplication));
-        return ResponseEntity.ok(result);
+        return ResponseEntity.ok(registerApplicationService.create(registerApplication));
     }
 
     @Sessions.Uncheck
@@ -140,7 +137,7 @@ public class FruitDoctorApi {
     @ApiOperation(value = "根据条件分页查询鲜果师申请记录列表(后台)", response = RegisterApplication.class, responseContainer = "Set")
     @ApiImplicitParam(paramType = ApiParamType.BODY, name = "registerApplication", value = "鲜果师申请信息", dataType = "RegisterApplication", required = true)
     @PostMapping("/qualifications/pages")
-    public ResponseEntity search(@RequestBody RegisterApplication registerApplication) {
+    public ResponseEntity<Pages<RegisterApplication>> search(@RequestBody RegisterApplication registerApplication) {
         log.debug("根据条件分页查询鲜果师申请记录列表\t param:{}", registerApplication);
 
         Pages<RegisterApplication> pages = registerApplicationService.pageList(registerApplication);
@@ -152,13 +149,13 @@ public class FruitDoctorApi {
     @ApiImplicitParams({
             @ApiImplicitParam(paramType = "query", name = "amount", value = "申请提现红利", required = true, dataType = "int")
     })
-    public ResponseEntity<Tips> create(Sessions.User user,
+    public ResponseEntity create(Sessions.User user,
                                  @RequestParam int amount) {
         log.debug("申请提现红利\t param:{}", amount);
         String userId = user.getUser().get("userId").toString();
         FruitDoctor fruitDoctor = fruitDoctorService.selectByUserId(Long.valueOf(userId));
         if (Objects.isNull(fruitDoctor)) {
-            return ResponseEntity.badRequest().body(Tips.warn("鲜果师不存在"));
+            return ResponseEntity.badRequest().body("鲜果师不存在");
         }
         SettlementApplication settlementApplication = new SettlementApplication();
 
@@ -167,11 +164,7 @@ public class FruitDoctorApi {
         settlementApplication.setCreateAt(Date.from(Instant.now()));
         settlementApplication.setSettlementStatus(SettlementStatus.UNSETTLED);
         int result = settlementApplicationService.create(settlementApplication);
-        Tips tips = new Tips();
-        if (result > 0) {
-            return ResponseEntity.ok(Tips.info("申请成功！"));
-        }
-        return ResponseEntity.badRequest().body(Tips.warn("申请失败！"));
+        return result > 0?ResponseEntity.ok("申请成功！"):ResponseEntity.badRequest().body("申请失败！");
     }
 
     @Sessions.Uncheck
@@ -189,19 +182,19 @@ public class FruitDoctorApi {
             SettlementApplication findSettlementApplication = settlementApplicationService.selectById(id);
             // 结算用户是否一致
             if (!Objects.equals(findSettlementApplication.getDoctorId(),settlementApplication.getDoctorId())) {
-                return ResponseEntity.badRequest().body(Tips.warn("要结算的用户不一致，结算失败"));
+                return ResponseEntity.badRequest().body("要结算的用户不一致，结算失败");
             }
             // 该条结算记录是否已结算过
             if (Objects.equals(SettlementStatus.SUCCESS,findSettlementApplication.getSettlementStatus())){
-                return ResponseEntity.badRequest().body(Tips.warn("请勿重复结算"));
+                return ResponseEntity.badRequest().body("请勿重复结算");
             }
             FruitDoctor findFruitDoctor = fruitDoctorService.selectById(settlementApplication.getDoctorId());
             if (Objects.isNull(findFruitDoctor)) {
-                return ResponseEntity.badRequest().body(Tips.warn("鲜果师不存在！"));
+                return ResponseEntity.badRequest().body("鲜果师不存在！");
             }
             // 该鲜果师的可结算金额是否大于申请结算金额
             if (settlementApplication.getAmount() > findFruitDoctor.getBalance()){
-                return ResponseEntity.badRequest().body(Tips.warn("申请结算金额大于用户可结算金额，结算失败"));
+                return ResponseEntity.badRequest().body("申请结算金额大于用户可结算金额，结算失败");
             }
 
             // 进行结算和鲜果师可结算金额扣减
@@ -210,7 +203,7 @@ public class FruitDoctorApi {
             Tips tips = settlementApplicationService.updateById(settlementApplication, findFruitDoctor);
             return tips.err() ? ResponseEntity.badRequest().body(Tips.warn(tips.getMessage())) : ResponseEntity.ok().build();
         }
-        return ResponseEntity.badRequest().body(Tips.warn("结算状态不正确！"));
+        return ResponseEntity.badRequest().body("结算状态不正确！");
     }
 
     @Sessions.Uncheck
@@ -247,50 +240,47 @@ public class FruitDoctorApi {
     @PutMapping("/remark")
     @ApiOperation(value = "鲜果师修改用户备注")
     @ApiImplicitParam(paramType = "body", name = "doctorUser", value = "鲜果师修改用户备注实体信息", required = true, dataType = "DoctorUser")
-    public ResponseEntity<Tips> updateRemarkName(Sessions.User user, @RequestBody DoctorUser doctorUser) {
+    public ResponseEntity updateRemarkName(Sessions.User user, @RequestBody DoctorUser doctorUser) {
         String userId = user.getUser().get("userId").toString();
         FruitDoctor fruitDoctor = fruitDoctorService.selectByUserId(Long.valueOf(userId));
         if (Objects.isNull(fruitDoctor)) {
-            return ResponseEntity.badRequest().body(Tips.warn("鲜果师不存在"));
+            return ResponseEntity.badRequest().body("鲜果师不存在");
         }
         log.debug("鲜果师修改用户备注\t param:{}", doctorUser);
         doctorUser.setDoctorId(fruitDoctor.getId());
         int result = doctorUserService.updateRemarkName(doctorUser);
         if (result > 0) {
-            return ResponseEntity.ok(Tips.info("更新成功"));
+            return ResponseEntity.ok("更新成功");
         } else {
-            return ResponseEntity.badRequest().body(Tips.warn("更新失败"));
+            return ResponseEntity.badRequest().body("更新失败");
         }
     }
 
 
     @GetMapping("/subordinate")
     @ApiOperation(value = "团队列表", response = FruitDoctor.class, responseContainer = "Set")
-    public ResponseEntity<Tips> team(Sessions.User user) {
+    public ResponseEntity team(Sessions.User user) {
         String userId = user.getUser().get("userId").toString();
         FruitDoctor fruitDoctor = fruitDoctorService.selectByUserId(Long.valueOf(userId));
         if (Objects.isNull(fruitDoctor)) {
-            return ResponseEntity.badRequest().body(Tips.warn("鲜果师不存在"));
+            return ResponseEntity.badRequest().body("鲜果师不存在");
         }
+        //FIXME 此处干什么的
         FruitDoctor fruitDoctor1 = new FruitDoctor();
         fruitDoctor1.setId(fruitDoctor.getId());
-        Tips tips = new Tips();
-        tips.setData(fruitDoctorService.subordinate(fruitDoctor));
-        return ResponseEntity.ok(tips);
+        return ResponseEntity.ok(fruitDoctorService.subordinate(fruitDoctor));
     }
 
     @GetMapping("/page")
     @ApiOperation(value = "查询鲜果师成员分页列表", response = FruitDoctor.class, responseContainer = "Set")
-    public ResponseEntity<Tips> pageQuery(Sessions.User user) {
+    public ResponseEntity pageQuery(Sessions.User user) {
         String userId = user.getUser().get("userId").toString();
         FruitDoctor fruitDoctor = fruitDoctorService.selectByUserId(Long.valueOf(userId));
         if (Objects.isNull(fruitDoctor)) {
-            return ResponseEntity.badRequest().body(Tips.warn("鲜果师不存在"));
+            return ResponseEntity.badRequest().body("鲜果师不存在");
         }
         log.debug("查询鲜果师成员分页列表\t param:{}", fruitDoctor);
-        Tips tips = new Tips();
-        tips.setData(fruitDoctorService.pageList(fruitDoctor));
-        return ResponseEntity.ok(tips);
+        return ResponseEntity.ok(fruitDoctorService.pageList(fruitDoctor));
     }
 
     @Sessions.Uncheck
@@ -335,40 +325,36 @@ public class FruitDoctorApi {
             @ApiImplicitParam(paramType = "query", name = "incomeType", dataTypeClass = IncomeType.class, required = true, value = "收入支出类型")
     })
     @ApiOperation(value = "收支明细", response = DoctorAchievementLog.class, responseContainer = "Set")
-    public ResponseEntity<Tips> pageQuery(Sessions.User user, @RequestParam IncomeType incomeType, @RequestParam Integer page, @RequestParam Integer rows) {
+    public ResponseEntity pageQuery(Sessions.User user, @RequestParam IncomeType incomeType, @RequestParam Integer page, @RequestParam Integer rows) {
         String userId = user.getUser().get("userId").toString();
         FruitDoctor fruitDoctor = fruitDoctorService.selectByUserId(Long.valueOf(userId));
         if (Objects.isNull(fruitDoctor)) {
-            return ResponseEntity.badRequest().body(Tips.warn("鲜果师不存在"));
+            return ResponseEntity.badRequest().body("鲜果师不存在");
         }
         DoctorAchievementLog doctorAchievementLog = new DoctorAchievementLog();
         doctorAchievementLog.setIncomeType(incomeType);
         doctorAchievementLog.setDoctorId(fruitDoctor.getId());
         doctorAchievementLog.setRows(rows);
         doctorAchievementLog.setPage(page);
-        Tips tips = new Tips();
-        tips.setData(doctorAchievementLogService.pageList(doctorAchievementLog));
-        return ResponseEntity.ok(tips);
+        return ResponseEntity.ok(doctorAchievementLogService.pageList(doctorAchievementLog));
     }
 
     @GetMapping("/incomes")
     @ApiOperation(value = "我的收入", response = IncomeStat.class, responseContainer = "Set")
-    public ResponseEntity<Tips> myIncome(Sessions.User user) {
+    public ResponseEntity myIncome(Sessions.User user) {
         String userId = user.getUser().get("userId").toString();
         FruitDoctor fruitDoctor = fruitDoctorService.selectByUserId(Long.valueOf(userId));
         if (Objects.isNull(fruitDoctor)) {
-            return ResponseEntity.badRequest().body(Tips.warn("鲜果师不存在"));
+            return ResponseEntity.badRequest().body("鲜果师不存在");
         }
-        Tips tips = new Tips();
-        tips.setData(doctorAchievementLogService.myIncome(fruitDoctor.getId()));
-        return ResponseEntity.ok(tips);
+        return ResponseEntity.ok(doctorAchievementLogService.myIncome(fruitDoctor.getId()));
     }
 
     @Sessions.Uncheck
     @GetMapping("/member-achievements/{doctorId}")
     @ApiOperation(value = "我的团队的个人业绩", response = TeamAchievement.class, responseContainer = "Set")
     @ApiImplicitParam(paramType = "path", name = "doctorId", value = "鲜果师id", required = true, dataType = "Long")
-    public ResponseEntity<Tips> teamAchievement(@PathVariable Long doctorId) {
+    public ResponseEntity teamAchievement(@PathVariable Long doctorId) {
         Tips tips = new Tips();
         tips.setData(doctorAchievementLogService.teamAchievement(doctorId));
         return FeginResponseTools.returnTipsResponse(tips);
@@ -377,11 +363,11 @@ public class FruitDoctorApi {
     @ApiOperation(value = "统计本期和上期的日周月季度的业绩", response = Achievement.class, responseContainer = "Set")
     @ApiImplicitParam(paramType = "query", name = "dateType", dataTypeClass = DateTypeEnum.class, required = true, value = "统计的类型")
     @GetMapping("/achievement/period")
-    public ResponseEntity<Tips> findAchievement(Sessions.User user, @RequestParam DateTypeEnum dateType) {
+    public ResponseEntity findAchievement(Sessions.User user, @RequestParam DateTypeEnum dateType) {
         String userId = user.getUser().get("userId").toString();
         FruitDoctor fruitDoctor = fruitDoctorService.selectByUserId(Long.valueOf(userId));
         if (Objects.isNull(fruitDoctor)) {
-            return ResponseEntity.badRequest().body(Tips.warn("鲜果师不存在"));
+            return ResponseEntity.badRequest().body("鲜果师不存在");
         }
         //统计本期
         Achievement current =
@@ -393,18 +379,16 @@ public class FruitDoctorApi {
         Map<String, Object> achievementMap = new HashMap<>();
         achievementMap.put("current", current);
         achievementMap.put("last", last);
-        Tips tips = new Tips();
-        tips.setData(achievementMap);
-        return ResponseEntity.ok(tips);
+        return ResponseEntity.ok(achievementMap);
     }
 
     @ApiOperation(value = "统计今日业绩订单数及总的业绩", response = Achievement.class, responseContainer = "Set")
     @GetMapping("/achievement")
-    public ResponseEntity<Tips> findTodayAchievement(Sessions.User user) {
+    public ResponseEntity findTodayAchievement(Sessions.User user) {
         String userId = user.getUser().get("userId").toString();
         FruitDoctor fruitDoctor = fruitDoctorService.selectByUserId(Long.valueOf(userId));
         if (Objects.isNull(fruitDoctor)) {
-            return ResponseEntity.badRequest().body(Tips.warn("鲜果师不存在"));
+            return ResponseEntity.badRequest().body("鲜果师不存在");
         }
         //统计今天订单数和业绩
         Achievement current =
@@ -416,63 +400,57 @@ public class FruitDoctorApi {
         current.setSummaryAmount(total.getSalesAmount());
         current.setAvatar(fruitDoctor.getAvatar());
         current.setDescription(fruitDoctor.getProfile());
-        Tips tips = new Tips();
-        tips.setData(current);
-        return ResponseEntity.ok(tips);
+        return ResponseEntity.ok(current);
     }
 
     @PostMapping("/bank-card")
     @ApiOperation(value = "银行卡添加")
     @ApiImplicitParam(paramType = "body", name = "cardUpdateLog", value = "要添加的", required = true, dataType = "CardUpdateLog")
-    public ResponseEntity<Tips> create(Sessions.User user, @RequestBody CardUpdateLog cardUpdateLog) {
+    public ResponseEntity create(Sessions.User user, @RequestBody CardUpdateLog cardUpdateLog) {
         log.debug("添加\t param:{}", cardUpdateLog);
         String userId = user.getUser().get("userId").toString();
         FruitDoctor fruitDoctor = fruitDoctorService.selectByUserId(Long.valueOf(userId));
         if (Objects.isNull(fruitDoctor)) {
-            return ResponseEntity.badRequest().body(Tips.warn("鲜果师不存在"));
+            return ResponseEntity.badRequest().body("鲜果师不存在");
         }
         CardUpdateLog cardParam = new CardUpdateLog();
         cardParam.setDoctorId(fruitDoctor.getId());
         CardUpdateLog card = cardUpdateLogService.selectByCard(cardParam);
         if (Objects.nonNull(card)) {
-            return ResponseEntity.badRequest().body(Tips.warn("只能添加一张卡"));
+            return ResponseEntity.badRequest().body("只能添加一张卡");
         }
         cardUpdateLog.setDoctorId(fruitDoctor.getId());
         cardUpdateLog.setUpdateAt(Date.from(Instant.now()));
-        return ResponseEntity.ok(cardUpdateLogService.create(cardUpdateLog)>0 ? Tips.info("添加成功") : Tips.warn("添加失败"));
+        return ResponseEntity.ok(cardUpdateLogService.create(cardUpdateLog)>0 ? "添加成功" : "添加失败");
     }
 
     @ApiOperation(value = "查询鲜果师银行卡信息", notes = "根据session里的doctorId查询", response = CardUpdateLog.class)
     @GetMapping("/bank-card")
-    public ResponseEntity<Tips> findCardUpdateLog(Sessions.User user) {
+    public ResponseEntity findCardUpdateLog(Sessions.User user) {
         String userId = user.getUser().get("userId").toString();
         FruitDoctor fruitDoctor = fruitDoctorService.selectByUserId(Long.valueOf(userId));
         if (Objects.isNull(fruitDoctor)) {
-            return ResponseEntity.badRequest().body(Tips.warn("鲜果师不存在"));
+            return ResponseEntity.badRequest().body("鲜果师不存在");
         }
         CardUpdateLog cardUpdateLog = new CardUpdateLog();
         cardUpdateLog.setDoctorId(fruitDoctor.getId());
-        Tips tips = new Tips();
-        tips.setData(cardUpdateLogService.selectByCard(cardUpdateLog));
-        return ResponseEntity.ok(tips);
+        return ResponseEntity.ok(cardUpdateLogService.selectByCard(cardUpdateLog));
     }
 
     @ApiOperation(value = "查询鲜果师最新申请记录", notes = "查询鲜果师最新申请记录",response = RegisterApplication.class)
     @GetMapping("/new-application")
-    public ResponseEntity<Tips> findLastApplicationById(Sessions.User user) {
+    public ResponseEntity<RegisterApplication> findLastApplicationById(Sessions.User user) {
         Long userId = Long.valueOf(user.getUser().get("userId").toString());
-        Tips tips = new Tips();
-        tips.setData(registerApplicationService.findLastApplicationById(userId));
-        return ResponseEntity.ok(tips);
+        return ResponseEntity.ok(registerApplicationService.findLastApplicationById(userId));
     }
 
     @GetMapping("/customers")
     @ApiOperation(value = "查询鲜果师客户列表",response = DoctorUser.class,responseContainer = "List")
-    public ResponseEntity<Tips> doctorCustomers(Sessions.User user) throws BadHanyuPinyinOutputFormatCombination {
+    public ResponseEntity doctorCustomers(Sessions.User user) throws BadHanyuPinyinOutputFormatCombination {
         String userId = user.getUser().get("userId").toString();
         FruitDoctor fruitDoctor = fruitDoctorService.selectByUserId(Long.valueOf(userId));
         if (Objects.isNull(fruitDoctor)) {
-            return ResponseEntity.badRequest().body(Tips.warn("鲜果师不存在"));
+            return ResponseEntity.badRequest().body("鲜果师不存在");
         }
         List<DoctorUser> doctorUserList = doctorUserService.doctorCustomers(fruitDoctor.getId());
         doctorUserList.stream().forEach(doctorUser -> {
@@ -529,19 +507,17 @@ public class FruitDoctorApi {
                 return super.equals(obj);
             }
         });
-        Tips tips = new Tips();
-        tips.setData(customers);
-        return ResponseEntity.ok(tips);
+        return ResponseEntity.ok(customers);
     }
 
     @PutMapping("/info")
     @ApiOperation(value = "修改鲜果师信息")
     @ApiImplicitParam(paramType = "body", name = "fruitDoctor", value = "要更新的鲜果师成员", required = true, dataType = "FruitDoctor")
-    public ResponseEntity<Tips> update(Sessions.User user, @RequestBody FruitDoctor fruitDoctor) {
+    public ResponseEntity update(Sessions.User user, @RequestBody FruitDoctor fruitDoctor) {
         String userId = user.getUser().get("userId").toString();
         FruitDoctor doctors = fruitDoctorService.selectByUserId(Long.valueOf(userId));
         if (Objects.isNull(doctors)) {
-            return ResponseEntity.badRequest().body(Tips.warn("鲜果师不存在"));
+            return ResponseEntity.badRequest().body("鲜果师不存在");
         }
         fruitDoctor.setId(doctors.getId());
         Tips backMsg = new Tips();

@@ -13,7 +13,6 @@ import com.lhiot.healthygood.domain.user.UserBindingPhoneParam;
 import com.lhiot.healthygood.domain.user.ValidateParam;
 import com.lhiot.healthygood.feign.BaseUserServerFeign;
 import com.lhiot.healthygood.feign.ThirdpartyServerFeign;
-import com.lhiot.healthygood.feign.model.BalanceLogParam;
 import com.lhiot.healthygood.feign.model.CaptchaParam;
 import com.lhiot.healthygood.feign.model.UserDetailResult;
 import com.lhiot.healthygood.feign.model.WeChatRegisterParam;
@@ -26,7 +25,6 @@ import com.lhiot.healthygood.type.CaptchaTemplate;
 import com.lhiot.healthygood.type.DateTypeEnum;
 import com.lhiot.healthygood.type.FreeSignName;
 import com.lhiot.healthygood.type.PeriodType;
-import com.lhiot.healthygood.util.FeginResponseTools;
 import com.lhiot.healthygood.wechat.*;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
@@ -179,25 +177,23 @@ public class UserApi {
     }
 
     @GetMapping("/session")
-    @ApiOperation(value = "根据sessionId重新获取session", response = String.class)
-    public ResponseEntity<Tips> userInfo(Sessions.User user) {
+    @ApiOperation(value = "根据sessionId重新获取session", response = UserDetailResult.class)
+    public ResponseEntity userInfo(Sessions.User user) {
         String openId = user.getUser().get("openId").toString();
         ResponseEntity searchUserEntity = baseUserServerFeign.findByOpenId(openId);
-        Tips tips = FeginResponseTools.convertResponse(searchUserEntity);
-        if (tips.err()) {
-            return ResponseEntity.badRequest().body(tips);
+        if (Objects.isNull(searchUserEntity) || searchUserEntity.getStatusCode().isError()) {
+            return searchUserEntity;
         }
         UserDetailResult searchUser = (UserDetailResult) searchUserEntity.getBody();
         if (Objects.isNull(searchUser)) {
-            return ResponseEntity.badRequest().body(Tips.warn("用户不存在！"));
+            return ResponseEntity.badRequest().body("用户不存在！");
         }
         FruitDoctor fruitDoctor = fruitDoctorService.selectByUserId(Long.valueOf(searchUser.getId()));
         if (Objects.nonNull(fruitDoctor)) {
             searchUser.setFruitDoctor(true);
             searchUser.setFruitDoctorInfo(fruitDoctor);
         }
-        tips.setData(searchUser);
-        return ResponseEntity.ok(tips);
+        return ResponseEntity.ok(searchUser);
     }
 
     @Sessions.Uncheck
@@ -206,8 +202,8 @@ public class UserApi {
     @ApiOperation(value = "根据openId重新获取session", response = String.class)
     public ResponseEntity session(HttpServletRequest request, @PathVariable("openId") String openId) {
         ResponseEntity searchUserEntity = baseUserServerFeign.findByOpenId(openId);
-        if (searchUserEntity.getStatusCode().isError()) {
-            return ResponseEntity.badRequest().body(searchUserEntity.getBody());
+        if (Objects.isNull(searchUserEntity) || searchUserEntity.getStatusCode().isError()) {
+            return searchUserEntity;
         }
         UserDetailResult searchUser = (UserDetailResult) searchUserEntity.getBody();
         Sessions.User sessionUser = session.create(request).user(Maps.of("userId", searchUser.getId(), "openId", searchUser.getOpenId())).timeToLive(3, TimeUnit.HOURS)
@@ -220,7 +216,7 @@ public class UserApi {
     @Sessions.Uncheck
     @GetMapping("/wechat/token")
     @ApiOperation(value = "微信oauth Token 全局缓存的")
-    public ResponseEntity<Tips<Token>> token() throws IOException {
+    public ResponseEntity<Tips<Token>> token() {
         RMapCache<String, Token> cache = redissonClient.getMapCache(PREFIX_REDIS + "token");
         Token token = cache.get("token");
         //先从缓存中获取 如果为空再去微信服务器获取
@@ -300,19 +296,18 @@ public class UserApi {
     @PostMapping("/sms/captcha")
     @ApiOperation(value = "发送申请验证码短信")
     @ApiImplicitParam(paramType = "query", name = "phone", value = "发送用户注册验证码对应手机号", required = true, dataType = "String")
-    public ResponseEntity<Tips> captcha(Sessions.User user, @RequestParam String phone) {
+    public ResponseEntity captcha(Sessions.User user, @RequestParam String phone) {
         Long userId = Long.valueOf(user.getUser().get("userId").toString());
         //TODO 需要申请发送短信模板
         ResponseEntity<UserDetailResult> userDetailResultResponseEntity = baseUserServerFeign.findById(userId);
-        Tips<UserDetailResult> userDetailResultTips = FeginResponseTools.convertResponse(userDetailResultResponseEntity);
-        if (userDetailResultTips.err()) {
-            return ResponseEntity.badRequest().body(userDetailResultTips);
+        if (Objects.isNull(userDetailResultResponseEntity) || userDetailResultResponseEntity.getStatusCode().isError()) {
+            return userDetailResultResponseEntity;
         }
         CaptchaParam captchaParam = new CaptchaParam();
         captchaParam.setApplicationName("和色果膳商城");
         captchaParam.setPhoneNumber(phone);
         captchaParam.setFreeSignName(FreeSignName.FRUIT_DOCTOR);
-        return ResponseEntity.ok(FeginResponseTools.convertResponse(thirdpartyServerFeign.captcha(CaptchaTemplate.REGISTER, captchaParam)));
+        return thirdpartyServerFeign.captcha(CaptchaTemplate.REGISTER, captchaParam);
     }
 
     @PutMapping("/binding")
@@ -323,15 +318,14 @@ public class UserApi {
         UserBindingPhoneParam userBindingPhoneParam = new UserBindingPhoneParam();
         userBindingPhoneParam.setPhone(validateParam.getPhoneNumber());
         userBindingPhoneParam.setApplicationType(ApplicationType.HEALTH_GOOD);
-        Tips<UserDetailResult> userDetailResultTips = FeginResponseTools.convertResponse(baseUserServerFeign.userBindingPhone(userId, userBindingPhoneParam));
-        return FeginResponseTools.returnTipsResponse(userDetailResultTips);
+        return baseUserServerFeign.userBindingPhone(userId, userBindingPhoneParam);
     }
 
     @Sessions.Uncheck
-    @ApiOperation(value = "统计用户总计消费数及本月消费数",response = Achievement.class)
+    @ApiOperation(value = "统计用户总计消费数及本月消费数", response = Achievement.class)
     @ApiImplicitParam(paramType = "path", name = "userId", dataType = "Long", required = true, value = "用户id")
     @GetMapping("/{userId}/consumption")
-    public ResponseEntity<Tips> findUserAchievement(@PathVariable Long userId) {
+    public ResponseEntity findUserAchievement(@PathVariable Long userId) {
         //统计本月订单数和消费额
         Achievement thisMonth =
                 doctorAchievementLogService.achievement(DateTypeEnum.MONTH, PeriodType.current, null, true, false, userId);
@@ -343,15 +337,13 @@ public class UserApi {
         total.setOrderCountOfThisMonth(thisMonth.getOrderCount());
 
         //获取用户信息
-        Tips<UserDetailResult> userDetailResultTips = FeginResponseTools.convertResponse(baseUserServerFeign.findById(userId));
-        if (userDetailResultTips.err()) {
-            return ResponseEntity.badRequest().body(userDetailResultTips);
+        ResponseEntity<UserDetailResult> userDetailResult = baseUserServerFeign.findById(userId);
+        if (Objects.isNull(userDetailResult) || userDetailResult.getStatusCode().isError()) {
+            return userDetailResult;
         }
-        total.setAvatar(userDetailResultTips.getData().getAvatar());
-        total.setDescription(userDetailResultTips.getData().getDescription());
-        Tips tips = new Tips();
-        tips.setData(total);
-        return ResponseEntity.ok(tips);
+        total.setAvatar(userDetailResult.getBody().getAvatar());
+        total.setDescription(userDetailResult.getBody().getDescription());
+        return ResponseEntity.ok(total);
     }
 
 
