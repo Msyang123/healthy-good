@@ -19,6 +19,8 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.Objects;
+
 @Api(description = "广告类接口")
 @Slf4j
 @RestController
@@ -38,12 +40,12 @@ public class AdvertisementApi {
         UiPositionParam uiPositionParam = new UiPositionParam();
         uiPositionParam.setApplicationType("HEALTH_GOOD");
         uiPositionParam.setCodes(code);
-        ResponseEntity uiPositionEntity = baseDataServiceFeign.searchUiPosition(uiPositionParam);
-        Tips<UiPosition> tips = FeginResponseTools.convertResponse(uiPositionEntity);
-        if (tips.err()){
-            return ResponseEntity.badRequest().body(tips);
+        ResponseEntity<Pages<UiPosition>> uiPositionEntity = baseDataServiceFeign.searchUiPosition(uiPositionParam);
+
+        if (Objects.isNull(uiPositionEntity) || uiPositionEntity.getStatusCode().isError()){
+            return uiPositionEntity;
         }
-        UiPosition uiPosition = tips.getData();
+        Pages<UiPosition> uiPosition = uiPositionEntity.getBody();
         AdvertisementParam advertisementParam = new AdvertisementParam();
         advertisementParam.setPositionId(uiPosition.getId());
         advertisementParam.setAdvertiseStatus(OnOff.ON);

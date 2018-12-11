@@ -69,17 +69,7 @@ public class ProductSectionApi {
             @ApiImplicitParam(paramType = ApiParamType.QUERY, name = "code", value = "位置编号", dataType = "String", required = true),
             @ApiImplicitParam(paramType = ApiParamType.QUERY, name = "flag", value = "是否查询商品信息", dataType = "YesOrNo")
     })
-    @ApiOperation(value = "根据位置编码查询所有商品板块列表（商品信息可选）",response = ProductSection.class)
-    public ResponseEntity<Tips> positionProductSection(@RequestParam(value = "code") String code, @RequestParam(value = "flag") YesOrNo flag) {
-        UiPositionParam uiPositionParam = new UiPositionParam();
-        uiPositionParam.setApplicationType("HEALTH_GOOD");
-        uiPositionParam.setCodes(code);
-        ResponseEntity<Pages<UiPosition>> uiPositionEntity = baseDataServiceFeign.searchUiPosition(uiPositionParam);
-        Tips<Pages<UiPosition>> tips = FeginResponseTools.convertResponse(uiPositionEntity);
-        if (tips.err()){
-            return ResponseEntity.badRequest().body(tips);
-        }
-       Long positionId = tips.getData().getArray().get(0).getId();
+    @ApiOperation(value = "根据位置编码查询所有商品板块列表（商品信息可选）")
     public ResponseEntity<Pages<ProductSection>> positionProductSection(@RequestParam(value = "id") Long id, @RequestParam(value = "flag") YesOrNo flag) {
         boolean flags = false;
         if (Objects.equals(flag.toString(),"YES")){
