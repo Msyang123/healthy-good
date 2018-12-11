@@ -19,6 +19,8 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.List;
+
 @Api(description = "广告类接口")
 @Slf4j
 @RestController
@@ -39,13 +41,13 @@ public class AdvertisementApi {
         uiPositionParam.setApplicationType("HEALTH_GOOD");
         uiPositionParam.setCodes(code);
         ResponseEntity uiPositionEntity = baseDataServiceFeign.searchUiPosition(uiPositionParam);
-        Tips<UiPosition> tips = FeginResponseTools.convertResponse(uiPositionEntity);
+        Tips<Pages<UiPosition>> tips = FeginResponseTools.convertResponse(uiPositionEntity);
         if (tips.err()){
             return ResponseEntity.badRequest().body(tips);
         }
-        UiPosition uiPosition = tips.getData();
+         Long positionId = tips.getData().getArray().get(0).getId();//TODO 这里需要改
         AdvertisementParam advertisementParam = new AdvertisementParam();
-        advertisementParam.setPositionId(uiPosition.getId());
+        advertisementParam.setPositionId(positionId);
         advertisementParam.setAdvertiseStatus(OnOff.ON);
         ResponseEntity<Pages<Advertisement>> advertisements = baseDataServiceFeign.searchAdvertisementPages(advertisementParam);
         Tips result = FeginResponseTools.convertResponse(advertisements);
