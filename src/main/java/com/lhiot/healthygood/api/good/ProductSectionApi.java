@@ -51,14 +51,14 @@ public class ProductSectionApi {
         this.activityProductService = activityProductService;
     }
 
-   /* @Sessions.Uncheck
+  /*  @Sessions.Uncheck
     @PostMapping("/product-sections/{id}")
     @ApiImplicitParams({
             @ApiImplicitParam(paramType = ApiParamType.PATH, name = "id", value = "板块编号", dataType = "Long", required = true),
             @ApiImplicitParam(paramType = ApiParamType.BODY, name = "productSectionParam", value = "板块信息", dataType = "ProductSectionParam")
     })
     @ApiOperation(value = "某个商品板块的商品信息列表",response = ProductSection.class)
-    public ResponseEntity<Tips> productSections(@PathVariable("id") Long id, @RequestBody ProductSectionParam productSectionParam) {
+    public ResponseEntity<Tips> productSections(@PathVariable("id") Long id, @RequestBody com.lhiot.healthygood.domain.good.ProductSectionParam productSectionParam) {
         BeanUtils.copyProperties();
         ResponseEntity<ProductSection> productSectionResponseEntity = baseDataServiceFeign.singleProductSection(id, Objects.equals(flag,YesOrNo.YES), null);
         Tips tips = FeginResponseTools.convertResponse(productSectionResponseEntity);
@@ -82,6 +82,7 @@ public class ProductSectionApi {
             return ResponseEntity.badRequest().body(tips);
         }
        Long positionId = tips.getData().getArray().get(0).getId();
+
         boolean flags = false;
         if (Objects.equals(flag.toString(),"YES")){
             flags = true;
