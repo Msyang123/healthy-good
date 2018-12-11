@@ -11,6 +11,7 @@ import lombok.ToString;
 
 import javax.validation.constraints.NotNull;
 import java.util.Date;
+import java.util.List;
 
 /**
 * Description:定制计划板块实体类
@@ -74,8 +75,8 @@ public class CustomPlanSection{
 
 
     @JsonProperty("customPlanList")
-    @ApiModelProperty(value = "定制计划集合", dataType = "Pages")
+    @ApiModelProperty(value = "定制计划集合", dataType = "List")
     @NotNull
-    private Pages<CustomPlan> customPlanList;
+    private List<CustomPlan> customPlanList;
 
 }
