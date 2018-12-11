@@ -74,7 +74,7 @@ public class OrderApi {
     @PostMapping("/orders")
     @ApiOperation(value = "和色果膳--创建订单",response = OrderDetailResult.class)
     @ApiImplicitParam(paramType = "body", name = "orderParam", dataType = "CreateOrderParam", required = true, value = "创建订单传入参数")
-    public ResponseEntity<Tips> createOrder(@Valid @RequestBody CreateOrderParam orderParam, Sessions.User user) {
+    public ResponseEntity createOrder(@Valid @RequestBody CreateOrderParam orderParam, Sessions.User user) {
 
         Map<String, Object> sessionUserMap = user.getUser();
         Long userId = Long.valueOf(sessionUserMap.get("userId").toString());
@@ -85,11 +85,10 @@ public class OrderApi {
         String storeCode = orderParam.getOrderStore().getStoreCode();
         //判断门店是否存在
         ResponseEntity<Store> storeResponseEntity = baseDataServiceFeign.findStoreByCode(storeCode);
-        Tips<Store> storeTips = FeginResponseTools.convertResponse(storeResponseEntity);
-        if (storeTips.err()) {
-            return ResponseEntity.badRequest().body(storeTips);
+        if (Objects.isNull(storeResponseEntity) || storeResponseEntity.getStatusCode().isError()) {
+            return storeResponseEntity;
         }
-        Store store = storeTips.getData();
+        Store store = storeResponseEntity.getBody();
 
         //给订单门店赋值
         OrderStore orderStore = new OrderStore();
@@ -116,12 +115,12 @@ public class OrderApi {
                 .map(ProductSpecification::getBarcode).toArray(String[]::new);
 
         //查询门店h4库存信息
-        Tips<Map<String, Object>> quserSkuTips = FeginResponseTools.convertResponse(thirdpartyServerFeign.querySku(orderParam.getOrderStore().getStoreCode(), barcodes));
+        ResponseEntity<Map<String, Object>> quserSkuTips = thirdpartyServerFeign.querySku(orderParam.getOrderStore().getStoreCode(), barcodes);
 
-        if (quserSkuTips.err()) {
-            return ResponseEntity.badRequest().body(quserSkuTips);
+        if (Objects.isNull(quserSkuTips) || quserSkuTips.getStatusCode().isError()) {
+            return quserSkuTips;
         }
-        List<Map> businvs = (List<Map>) quserSkuTips.getData().get("businvs");
+        List<Map> businvs = (List<Map>) quserSkuTips.getBody().get("businvs");
         //校验库存是否足够
         for (ProductShelf productShelf : productShelfPages.getArray()) {
             for (Map businv : businvs) {
@@ -155,25 +154,23 @@ public class OrderApi {
                 })
         );
         ResponseEntity<OrderDetailResult> orderDetailResultResponse = orderServiceFeign.createOrder(orderParam);
-        Tips<OrderDetailResult> orderDetailResultTips = FeginResponseTools.convertResponse(orderDetailResultResponse);
-        if (orderDetailResultTips.err()) {
-            return ResponseEntity.badRequest().body(orderDetailResultTips);
+        if (Objects.isNull(orderDetailResultResponse) || orderDetailResultResponse.getStatusCode().isError()) {
+            return ResponseEntity.badRequest().body(orderDetailResultResponse);
         }
         //TODO mq设置三十分钟失效
-        return ResponseEntity.ok(orderDetailResultTips);
+        return ResponseEntity.ok(orderDetailResultResponse);
     }
 
     @DeleteMapping("/orders/{orderCode}")
     @ApiOperation("和色果膳--取消订单")
     @ApiImplicitParam(paramType = "path", name = "orderCode", dataType = "String", required = true, value = "订单id")
-    public ResponseEntity<Tips> createOrder(@Valid @NotBlank @PathVariable("orderCode") String orderCode, Sessions.User user) {
+    public ResponseEntity createOrder(@Valid @NotBlank @PathVariable("orderCode") String orderCode, Sessions.User user) {
         Long userId = Long.valueOf(user.getUser().get("userId").toString());
-        ResponseEntity<Tips> validateResult = validateOrderOwner(userId, orderCode);
+        ResponseEntity validateResult = validateOrderOwner(userId, orderCode);
         if (Objects.isNull(validateResult) || validateResult.getStatusCode().isError()) {
             return validateResult;
         }
-        Tips updateOrderTips = FeginResponseTools.convertResponse(orderServiceFeign.updateOrderStatus(orderCode, OrderStatus.FAILURE));
-        return FeginResponseTools.returnTipsResponse(updateOrderTips);
+        return orderServiceFeign.updateOrderStatus(orderCode, OrderStatus.FAILURE);
     }
 
 
@@ -183,55 +180,54 @@ public class OrderApi {
             @ApiImplicitParam(paramType = "path", name = "orderCode", dataType = "String", required = true, value = "订单编码"),
             @ApiImplicitParam(paramType = "body", name = "returnOrderParam", dataType = "ReturnOrderParam", required = true, value = "退货参数")
     })
-    public ResponseEntity<Tips> refundOrder(@Valid @NotBlank @PathVariable("orderCode") String orderCode,
+    public ResponseEntity refundOrder(@Valid @NotBlank @PathVariable("orderCode") String orderCode,
                                             @NotNull @RequestBody ReturnOrderParam returnOrderParam,
                                             Sessions.User user) {
         Long userId = Long.valueOf(user.getUser().get("userId").toString());
-        ResponseEntity<Tips> validateResult = validateOrderOwner(userId, orderCode);
+        ResponseEntity validateResult = validateOrderOwner(userId, orderCode);
         if (Objects.isNull(validateResult) || validateResult.getStatusCode().isError()) {
             return validateResult;
         }
-        OrderDetailResult orderDetailResult = (OrderDetailResult) validateResult.getBody().getData();
-        Tips refundOrderTips = null;
+        OrderDetailResult orderDetailResult = (OrderDetailResult) validateResult.getBody();
+        ResponseEntity refundOrderTips = null;
         switch (orderDetailResult.getStatus()) {
             //订单未发送海鼎，退款
             case WAIT_SEND_OUT:
-                refundOrderTips = FeginResponseTools.convertResponse(orderServiceFeign.notSendHdRefundOrder(orderCode, returnOrderParam));
+                refundOrderTips = orderServiceFeign.notSendHdRefundOrder(orderCode, returnOrderParam);
                 break;
             //海鼎备货后提交退货
             case WAIT_DISPATCHING:
-                refundOrderTips = FeginResponseTools.convertResponse(orderServiceFeign.returnsRefundOrder(orderCode, returnOrderParam));
+                refundOrderTips = orderServiceFeign.returnsRefundOrder(orderCode, returnOrderParam);
                 break;
             //已收货
             case RECEIVED:
-                refundOrderTips = FeginResponseTools.convertResponse(orderServiceFeign.returnsRefundOrder(orderCode, returnOrderParam));
+                refundOrderTips = orderServiceFeign.returnsRefundOrder(orderCode, returnOrderParam);
                 break;
             //订单发送海鼎，未备货退货
             case SEND_OUTING:
-                refundOrderTips = FeginResponseTools.convertResponse(orderServiceFeign.sendHdRefundOrder(orderCode, returnOrderParam));
+                refundOrderTips = orderServiceFeign.sendHdRefundOrder(orderCode, returnOrderParam);
                 break;
 
         }
 
-        return FeginResponseTools.returnTipsResponse(refundOrderTips);
+        return refundOrderTips;
     }
 
     @GetMapping("/orders/pages")
-    @ApiOperation(value = "我的用户订单列表",response = OrderDetailResult.class,responseContainer = "List")
-    public ResponseEntity<Tips> orderPages(@RequestParam(value = "orderStatus", required = false) OrderStatus orderStatus,
+    @ApiOperation(value = "我的用户订单列表")
+    public ResponseEntity<Tuple<OrderDetailResult>> orderPages(@RequestParam(value = "orderStatus", required = false) OrderStatus orderStatus,
                                            Sessions.User user) {
         Long userId = Long.valueOf(user.getUser().get("userId").toString());
-        Tips<Tuple<OrderDetailResult>> ordersByUserIdTips = FeginResponseTools.convertResponse(orderServiceFeign.ordersByUserId(userId, OrderType.NORMAL, orderStatus));
-        return FeginResponseTools.returnTipsResponse(ordersByUserIdTips);
+        return orderServiceFeign.ordersByUserId(userId, OrderType.NORMAL, orderStatus);
     }
 
     @GetMapping("/orders/fruit-doctor/customers")
     @ApiOperation(value = "我的鲜果师客户订单列表",response = OrderDetailResult.class,responseContainer = "List")
-    public ResponseEntity<Tips> customersOrders(@RequestParam(value = "orderStatus", required = false) OrderStatus orderStatus, Sessions.User user) {
+    public ResponseEntity customersOrders(@RequestParam(value = "orderStatus", required = false) OrderStatus orderStatus, Sessions.User user) {
         String userId = user.getUser().get("userId").toString();
         FruitDoctor fruitDoctor = fruitDoctorService.selectByUserId(Long.valueOf(userId));
         if (Objects.isNull(fruitDoctor)) {
-            return ResponseEntity.badRequest().body(Tips.warn("鲜果师不存在"));
+            return ResponseEntity.badRequest().body("鲜果师不存在");
         }
         //鲜果师客户列表
         List<DoctorUser> doctorUserList = doctorUserService.selectByDoctorId(fruitDoctor.getId());
@@ -241,25 +237,23 @@ public class OrderApi {
         baseOrderParam.setUserIds(userIds);
         baseOrderParam.setOrderStatus(orderStatus);
         baseOrderParam.setOrderType(OrderType.NORMAL);
-        Tips<Pages<OrderDetailResult>> orderListTips = FeginResponseTools.convertResponse(orderServiceFeign.ordersPages(baseOrderParam));
-        return FeginResponseTools.returnTipsResponse(orderListTips);
+        return orderServiceFeign.ordersPages(baseOrderParam);
     }
 
     @GetMapping("/orders/{orderCode}/detail")
     @ApiOperation(value = "根据订单code查询订单详情",response = OrderDetailResult.class)
-    public ResponseEntity<Tips> orderDetial(@Valid @NotBlank @PathVariable("orderCode") String orderCode, Sessions.User user) {
+    public ResponseEntity orderDetial(@Valid @NotBlank @PathVariable("orderCode") String orderCode, Sessions.User user) {
         Long userId = Long.valueOf(user.getUser().get("userId").toString());
-        ResponseEntity<Tips> validateResult = validateOrderOwner(userId, orderCode);
+        ResponseEntity validateResult = validateOrderOwner(userId, orderCode);
         if (Objects.isNull(validateResult) || validateResult.getStatusCode().isError()) {
             return validateResult;
         }
-        Tips<OrderDetailResult> orderDetailResultTips = FeginResponseTools.convertResponse(orderServiceFeign.orderDetail(orderCode, true, true));
-        return FeginResponseTools.returnTipsResponse(orderDetailResultTips);
+        return orderServiceFeign.orderDetail(orderCode, true, true);
     }
 
     @GetMapping("/orders/count/status")
     @ApiOperation("统计我的用户订单各状态数量")
-    public ResponseEntity<Tips<OrderGroupCount>> countStatus(Sessions.User user) {
+    public ResponseEntity<OrderGroupCount> countStatus(Sessions.User user) {
         Long userId = Long.valueOf(user.getUser().get("userId").toString());
 
         OrderGroupCount orderGroupCount =new OrderGroupCount();
@@ -284,21 +278,19 @@ public class OrderApi {
         } else {
             orderGroupCount.setReturningCount(0);
         }
-        Tips<OrderGroupCount> tips = new Tips<>();
-        tips.data(orderGroupCount);
-        return ResponseEntity.ok(tips);
+        return ResponseEntity.ok(orderGroupCount);
     }
 
     @PostMapping("/orders/{orderCode}/payment-sign")
     @ApiOperation(value = "订单微信支付签名",response = String.class)
-    public ResponseEntity<Tips> paymentSign(@Valid @NotBlank @PathVariable("orderCode") String orderCode, HttpServletRequest request, Sessions.User user) {
+    public ResponseEntity paymentSign(@Valid @NotBlank @PathVariable("orderCode") String orderCode, HttpServletRequest request, Sessions.User user) {
         Long userId = Long.valueOf(user.getUser().get("userId").toString());
         String openId = user.getUser().get("openId").toString();
-        ResponseEntity<Tips> validateResult = validateOrderOwner(userId, orderCode);
+        ResponseEntity validateResult = validateOrderOwner(userId, orderCode);
         if (Objects.isNull(validateResult) || validateResult.getStatusCode().isError()) {
             return validateResult;
         }
-        OrderDetailResult orderDetailResult = (OrderDetailResult) validateResult.getBody().getData();
+        OrderDetailResult orderDetailResult = (OrderDetailResult) validateResult.getBody();
         PaySign paySign = new PaySign();
         paySign.setApplicationType(ApplicationType.HEALTH_GOOD);
         paySign.setBackUrl(wechatPayConfig.getOrderCallbackUrl());
@@ -310,8 +302,7 @@ public class OrderApi {
         paySign.setSourceType(SourceType.ORDER);
         paySign.setUserId(userId);
         paySign.setAttach(orderCode);
-        Tips<String> wxSignResponse = FeginResponseTools.convertResponse(paymentServiceFeign.wxSign(paySign));
-        return FeginResponseTools.returnTipsResponse(wxSignResponse);
+        return paymentServiceFeign.wxSign(paySign);
     }
 
 
@@ -324,6 +315,7 @@ public class OrderApi {
         Tips hdCallbackDeal = orderService.hdCallbackDeal(parameters);
         if (hdCallbackDeal.err()) {
             log.info("haidingCallback处理错误:{}", hdCallbackDeal);
+            return ResponseEntity.badRequest().body(hdCallbackDeal.getMessage());
         }
         return ResponseEntity.ok(hdCallbackDeal);
     }
@@ -345,14 +337,14 @@ public class OrderApi {
 
 
     //验证是否属于当前用户的订单
-    private ResponseEntity<Tips> validateOrderOwner(Long userId, String orderCode) {
+    private ResponseEntity validateOrderOwner(Long userId, String orderCode) {
 
-        Tips<OrderDetailResult> orderDetailResultTips = FeginResponseTools.convertResponse(orderServiceFeign.orderDetail(orderCode, false, false));
-        if (orderDetailResultTips.err()) {
-            return ResponseEntity.badRequest().body(orderDetailResultTips);
+        ResponseEntity<OrderDetailResult> orderDetailResultTips = orderServiceFeign.orderDetail(orderCode, false, false);
+        if (Objects.isNull(orderDetailResultTips) || orderDetailResultTips.getStatusCode().isError()) {
+            return orderDetailResultTips;
         }
-        if (!Objects.equals(orderDetailResultTips.getData().getUserId(), userId)) {
-            return ResponseEntity.badRequest().body(Tips.warn("当前操作订单不属于登录用户"));
+        if (!Objects.equals(orderDetailResultTips.getBody().getUserId(), userId)) {
+            return ResponseEntity.badRequest().body("当前操作订单不属于登录用户");
         }
         return ResponseEntity.ok(orderDetailResultTips);
     }
