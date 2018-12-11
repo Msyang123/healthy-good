@@ -1,5 +1,6 @@
 package com.lhiot.healthygood.feign.model;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
@@ -18,6 +19,8 @@ public class ProductSection {
     private Long id;
     @ApiModelProperty(notes = "位置ID", dataType = "Long")
     private Long positionId;
+    @ApiModelProperty(notes = "位置对象", dataType = "UiPosition", readOnly = true)
+    private UiPosition uiPosition;
     @NotNull(message = "板块名称不能为空")
     @ApiModelProperty(notes = "板块名称", dataType = "String")
     private String sectionName;

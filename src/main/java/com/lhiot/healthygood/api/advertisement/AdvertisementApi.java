@@ -7,14 +7,16 @@ import com.lhiot.healthygood.domain.advertisement.AdvertismentParams;
 import com.lhiot.healthygood.feign.BaseDataServiceFeign;
 import com.lhiot.healthygood.feign.model.Advertisement;
 import com.lhiot.healthygood.feign.model.AdvertisementParam;
+import com.lhiot.healthygood.feign.model.UiPosition;
+import com.lhiot.healthygood.feign.model.UiPositionParam;
+import com.lhiot.healthygood.util.FeginResponseTools;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @Api(description = "广告类接口")
@@ -30,12 +32,24 @@ public class AdvertisementApi {
     }
 
     @Sessions.Uncheck
-    @ApiOperation(value = "根据位置编码查询广告列表")
-    @PostMapping("/advertisements/position")
-    public ResponseEntity<Pages<Advertisement>> searchAdvertisementPages(@RequestBody AdvertismentParams advertismentParams){
+    @ApiOperation(value = "根据位置编码查询广告列表", response = Advertisement.class )
+    @GetMapping("/advertisements/position")
+    public ResponseEntity searchAdvertisementPages(@RequestParam String code){
+        UiPositionParam uiPositionParam = new UiPositionParam();
+        uiPositionParam.setApplicationType("HEALTH_GOOD");
+        uiPositionParam.setCodes(code);
+        ResponseEntity uiPositionEntity = baseDataServiceFeign.searchUiPosition(uiPositionParam);
+        Tips<UiPosition> tips = FeginResponseTools.convertResponse(uiPositionEntity);
+        if (tips.err()){
+            return ResponseEntity.badRequest().body(tips);
+        }
+        UiPosition uiPosition = tips.getData();
         AdvertisementParam advertisementParam = new AdvertisementParam();
-        BeanUtils.copyProperties(advertismentParams,advertisementParam);
+        advertisementParam.setPositionId(uiPosition.getId());
         advertisementParam.setAdvertiseStatus(OnOff.ON);
+        ResponseEntity<Pages<Advertisement>> advertisements = baseDataServiceFeign.searchAdvertisementPages(advertisementParam);
+        Tips result = FeginResponseTools.convertResponse(advertisements);
+        return FeginResponseTools.returnTipsResponse(result);
        return baseDataServiceFeign.searchAdvertisementPages(advertisementParam);
     }
 }

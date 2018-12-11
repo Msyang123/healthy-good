@@ -49,33 +49,48 @@ public class ProductSectionApi {
         this.activityProductService = activityProductService;
     }
 
-    @Sessions.Uncheck
-    @GetMapping("/product-sections/{id}")
+   /* @Sessions.Uncheck
+    @PostMapping("/product-sections/{id}")
     @ApiImplicitParams({
             @ApiImplicitParam(paramType = ApiParamType.PATH, name = "id", value = "板块编号", dataType = "Long", required = true),
-            @ApiImplicitParam(paramType = ApiParamType.QUERY, name = "flag", value = "是否查询商品信息", dataType = "YesOrNo")
+            @ApiImplicitParam(paramType = ApiParamType.BODY, name = "productSectionParam", value = "板块信息", dataType = "ProductSectionParam")
     })
-    @ApiOperation(value = "某个商品板块的商品信息列表")
-    public ResponseEntity<ProductSection> productSections(@PathVariable("id") Long id, @RequestParam(value = "flag") YesOrNo flag) {
-        return baseDataServiceFeign.singleProductSection(id, Objects.equals(flag,YesOrNo.YES), null);
-    }
+    @ApiOperation(value = "某个商品板块的商品信息列表",response = ProductSection.class)
+    public ResponseEntity<Tips> productSections(@PathVariable("id") Long id, @RequestBody ProductSectionParam productSectionParam) {
+        BeanUtils.copyProperties();
+        ResponseEntity<ProductSection> productSectionResponseEntity = baseDataServiceFeign.singleProductSection(id, Objects.equals(flag,YesOrNo.YES), null);
+        Tips tips = FeginResponseTools.convertResponse(productSectionResponseEntity);
+        return FeginResponseTools.returnTipsResponse(tips);
+    }*/
 
     @Sessions.Uncheck
     @PostMapping("/product-sections/position")
     @ApiImplicitParams({
-            @ApiImplicitParam(paramType = ApiParamType.QUERY, name = "id", value = "位置编号", dataType = "Long", required = true),
+            @ApiImplicitParam(paramType = ApiParamType.QUERY, name = "code", value = "位置编号", dataType = "String", required = true),
             @ApiImplicitParam(paramType = ApiParamType.QUERY, name = "flag", value = "是否查询商品信息", dataType = "YesOrNo")
     })
     @ApiOperation(value = "根据位置编码查询所有商品板块列表（商品信息可选）",response = ProductSection.class)
+    public ResponseEntity<Tips> positionProductSection(@RequestParam(value = "code") String code, @RequestParam(value = "flag") YesOrNo flag) {
+        UiPositionParam uiPositionParam = new UiPositionParam();
+        uiPositionParam.setApplicationType("HEALTH_GOOD");
+        uiPositionParam.setCodes(code);
+        ResponseEntity<Pages<UiPosition>> uiPositionEntity = baseDataServiceFeign.searchUiPosition(uiPositionParam);
+        Tips<Pages<UiPosition>> tips = FeginResponseTools.convertResponse(uiPositionEntity);
+        if (tips.err()){
+            return ResponseEntity.badRequest().body(tips);
+        }
+       Long positionId = tips.getData().getArray().get(0).getId();
     public ResponseEntity<Pages<ProductSection>> positionProductSection(@RequestParam(value = "id") Long id, @RequestParam(value = "flag") YesOrNo flag) {
         boolean flags = false;
         if (Objects.equals(flag.toString(),"YES")){
             flags = true;
 
         }
+
         ProductSectionParam productSectionParam = new ProductSectionParam();
-        productSectionParam.setPositionId(id);
+        productSectionParam.setPositionId(positionId);
         productSectionParam.setIncludeShelves(flags);
+        productSectionParam.setIncludeShelves(true);
         ResponseEntity<Pages<ProductSection>> pagesResponseEntity = baseDataServiceFeign.searchProductSection(productSectionParam);
         List<ProductSection> productSections = pagesResponseEntity.getBody().getArray();
         productSections.stream().filter(Objects::nonNull).forEach(productSection ->

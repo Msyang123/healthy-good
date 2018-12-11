@@ -145,4 +145,12 @@ public interface BaseDataServiceFeign {
     @DeleteMapping("/product-section-relations/batches")
     ResponseEntity deleteBatch(@RequestParam("sectionId") Long sectionId, @RequestParam(value = "shelfIds", required = false) String shelfIds);
 
+    /**
+     * 根据条件分页查询位置信息列表
+     * @param param
+     * @return
+     */
+    @RequestMapping(value = "/ui-positions/pages",method = RequestMethod.POST)
+    ResponseEntity<Pages<UiPosition>> searchUiPosition(@RequestBody UiPositionParam param);
+
 }
