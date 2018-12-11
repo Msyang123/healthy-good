@@ -56,17 +56,17 @@ public class NewSpecialActivityApi {
     @PostMapping("/activities/specials/products")
     @ApiImplicitParam(paramType = ApiParamType.BODY, name = "pagesParam", value = "分页对象", dataType = "PagesParam",required = true)
     @ApiOperation(value = "新品尝鲜活动商品列表",response = NewSpecialResult.class)
-    public ResponseEntity<Tips> specialActivity(Sessions.User user, @RequestBody PagesParam pagesParam){
+    public ResponseEntity specialActivity(Sessions.User user, @RequestBody PagesParam pagesParam){
         SpecialProductActivity specialProductActivity = specialProductActivityService.selectActivity();
         if (Objects.isNull(specialProductActivity)){
-            return ResponseEntity.badRequest().body(Tips.warn("没有开这个活动哦"));
+            return ResponseEntity.badRequest().body("没有开这个活动哦");
         }
         ActivityProduct activityProduct = new ActivityProduct();
         activityProduct.setActivityId(specialProductActivity.getId());
         BeanUtils.copyProperties(pagesParam,activityProduct);
         List<ActivityProduct> activityProductsList = activityProductService.activityProductList(activityProduct);
         if (Objects.isNull(activityProductsList) || activityProductsList.size() <= 0){
-            return ResponseEntity.badRequest().body(Tips.warn("活动商品是空的~"));
+            return ResponseEntity.badRequest().body("活动商品是空的~");
         }
         List<ActivityProducts> activityProducts = new ArrayList<ActivityProducts>();
 
@@ -98,9 +98,7 @@ public class NewSpecialActivityApi {
         NewSpecialResult newSpecialResult = new NewSpecialResult();
         BeanUtils.copyProperties(specialProductActivity,newSpecialResult);
         newSpecialResult.setActivityProductList(activityProducts);
-        Tips tips = new Tips();
-        tips.setData(newSpecialResult);
-        return ResponseEntity.ok(tips);
+        return ResponseEntity.ok(newSpecialResult);
     }
 
 

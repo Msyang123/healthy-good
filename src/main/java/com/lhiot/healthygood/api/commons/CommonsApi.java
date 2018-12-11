@@ -3,13 +3,11 @@ package com.lhiot.healthygood.api.commons;
 import com.leon.microx.util.DateTime;
 import com.leon.microx.util.StringUtils;
 import com.leon.microx.web.result.Pages;
-import com.leon.microx.web.result.Tips;
 import com.leon.microx.web.session.Sessions;
 import com.lhiot.healthygood.domain.common.DeliverTime;
 import com.lhiot.healthygood.feign.DeliverServiceFeign;
 import com.lhiot.healthygood.feign.model.Store;
 import com.lhiot.healthygood.service.common.CommonService;
-import com.lhiot.healthygood.util.FeginResponseTools;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
@@ -52,7 +50,7 @@ public class CommonsApi {
     @Sessions.Uncheck
     @GetMapping("/custom-plan-delivery/times")
     @ApiOperation(value = "获取订单配送时间 定制订单使用")
-    public ResponseEntity<Tips<List<DeliverTime>>> times() {
+    public ResponseEntity<List<DeliverTime>> times() {
         List<DeliverTime> times = new ArrayList<>();
 
         LocalDateTime begin = LocalDate.now().atTime(BEGIN_DELIVER_OF_DAY);
@@ -65,29 +63,25 @@ public class CommonsApi {
             times.add(DeliverTime.of(display, DateTime.convert(current), DateTime.convert(next)));
             current = next;
         }
-        return ResponseEntity.ok(new Tips().data(times));
+        return ResponseEntity.ok(times);
     }
 
     @Sessions.Uncheck
     @GetMapping("/delivery/times")
     @ApiOperation(value = "获取配送时间列表")
-    public ResponseEntity<Tips> getDeliverTime() {
+    public ResponseEntity<Map<String, Object>> getDeliverTime() {
         //查询今天和明天的配送时间列表
-        ResponseEntity<Map<String,Object>> deliverTimesEntity = deliverServiceFeign.deliverTimes(null);
-        Tips<Map<String,Object>> tips = FeginResponseTools.convertResponse(deliverTimesEntity);
-        return FeginResponseTools.returnTipsResponse(tips);
+        return deliverServiceFeign.deliverTimes(null);
     }
 
     @Sessions.Uncheck
-    @ApiOperation(value = "计算配送距离（收获地址与智能选择最近的门店）",response = Store.class)
+    @ApiOperation(value = "计算配送距离（收获地址与智能选择最近的门店）", response = Store.class, responseContainer = "List")
     @GetMapping("/delivery/distance")
-    public ResponseEntity<Tips> nearStore(@RequestParam("address") String address,@RequestParam("lng") Double lng,@RequestParam("lat") Double lat){
-        Pages<Store> storeResult = commonService.nearStore(address,lng,lat);
-        if(Objects.isNull(storeResult)){
-            return ResponseEntity.badRequest().body(Tips.warn("未找到门店"));
+    public ResponseEntity nearStore(@RequestParam("address") String address, @RequestParam("lng") Double lng, @RequestParam("lat") Double lat) {
+        Pages<Store> storeResult = commonService.nearStore(address, lng, lat);
+        if (Objects.isNull(storeResult)) {
+            return ResponseEntity.badRequest().body("未找到门店");
         }
-        Tips tips =new Tips();
-        tips.setData(storeResult);
-        return ResponseEntity.ok(tips);
+        return ResponseEntity.ok(storeResult);
     }
 }

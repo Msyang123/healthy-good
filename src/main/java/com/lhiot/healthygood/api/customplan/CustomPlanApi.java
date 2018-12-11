@@ -46,11 +46,8 @@ public class CustomPlanApi {
     @GetMapping("/custom-plans/{id}")
     @ApiOperation(value = "定制计划详细信息（定制计划详细信息页面）")
     @ApiImplicitParam(paramType = ApiParamType.PATH, name = "id", value = "定制计划id", dataType = "Long", required = true)
-    public ResponseEntity<Tips<CustomPlanDetailResult>> customPlans(@PathVariable Long id) {
-        CustomPlanDetailResult customPlanDetailResult = customPlanService.findDetail(id);
-        Tips<CustomPlanDetailResult> tips = new Tips<>();
-        tips.setData(customPlanDetailResult);
-        return ResponseEntity.ok(tips);
+    public ResponseEntity<CustomPlanDetailResult> customPlans(@PathVariable Long id) {
+        return ResponseEntity.ok(customPlanService.findDetail(id));
     }
 
     /**
@@ -60,11 +57,8 @@ public class CustomPlanApi {
     @GetMapping("/custom-plans-specification/{specificationId}")
     @ApiOperation(value = "定制计划规格信息（创建定制计划订单信息页面）")
     @ApiImplicitParam(paramType = ApiParamType.PATH, name = "specificationId", value = "定制计划规格id", dataType = "Long", required = true)
-    public ResponseEntity<Tips<CustomPlanSpecification>> specificationDetail(@PathVariable Long specificationId) {
-        CustomPlanSpecification customPlanSpecification = customPlanService.findCustomPlanSpecificationDetail(specificationId);
-        Tips tips = new Tips();
-        tips.setData(customPlanSpecification);
-        return ResponseEntity.ok(tips);
+    public ResponseEntity<CustomPlanSpecification> specificationDetail(@PathVariable Long specificationId) {
+        return ResponseEntity.ok(customPlanService.findCustomPlanSpecificationDetail(specificationId));
     }
 
     @Sessions.Uncheck
