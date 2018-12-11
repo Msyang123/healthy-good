@@ -51,7 +51,7 @@ public class ProductSectionApi {
         this.activityProductService = activityProductService;
     }
 
-  /*  @Sessions.Uncheck
+    /*@Sessions.Uncheck
     @PostMapping("/product-sections/{id}")
     @ApiImplicitParams({
             @ApiImplicitParam(paramType = ApiParamType.PATH, name = "id", value = "板块编号", dataType = "Long", required = true),
@@ -59,9 +59,12 @@ public class ProductSectionApi {
     })
     @ApiOperation(value = "某个商品板块的商品信息列表",response = ProductSection.class)
     public ResponseEntity<Tips> productSections(@PathVariable("id") Long id, @RequestBody com.lhiot.healthygood.domain.good.ProductSectionParam productSectionParam) {
-        BeanUtils.copyProperties();
-        ResponseEntity<ProductSection> productSectionResponseEntity = baseDataServiceFeign.singleProductSection(id, Objects.equals(flag,YesOrNo.YES), null);
-        Tips tips = FeginResponseTools.convertResponse(productSectionResponseEntity);
+        ProductShelfParam productShelfParam = new ProductShelfParam();
+        productShelfParam.setSectionId(id);
+        BeanUtils.copyProperties(productSectionParam,productShelfParam);
+        ResponseEntity<Pages<ProductShelf>> pagesResponseEntity = baseDataServiceFeign.searchProductShelves(productShelfParam);
+        //ResponseEntity<ProductSection> productSectionResponseEntity = baseDataServiceFeign.singleProductSection(id, Objects.equals(flag,YesOrNo.YES), null);
+        Tips tips = FeginResponseTools.convertResponse(pagesResponseEntity);
         return FeginResponseTools.returnTipsResponse(tips);
     }*/
 
@@ -72,7 +75,7 @@ public class ProductSectionApi {
             @ApiImplicitParam(paramType = ApiParamType.QUERY, name = "flag", value = "是否查询商品信息", dataType = "YesOrNo")
     })
     @ApiOperation(value = "根据位置编码查询所有商品板块列表（商品信息可选）",response = ProductSection.class)
-    public ResponseEntity<Tips> positionProductSection(@RequestParam(value = "code") String code, @RequestParam(value = "flag") YesOrNo flag) {
+    public ResponseEntity positionProductSection(@RequestParam(value = "code") String code, @RequestParam(value = "flag") YesOrNo flag) {
         UiPositionParam uiPositionParam = new UiPositionParam();
         uiPositionParam.setApplicationType("HEALTH_GOOD");
         uiPositionParam.setCodes(code);
