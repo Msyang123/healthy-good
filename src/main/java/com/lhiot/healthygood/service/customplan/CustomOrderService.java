@@ -265,14 +265,15 @@ public class CustomOrderService {
         orderParam.setCouponAmount(0);
         orderParam.setTotalAmount(price);
         orderParam.setAmountPayable(price);
-        ResponseEntity<OrderDetailResult> orderDetailResultResponse = orderServiceFeign.createOrder(orderParam);
+        orderParam.setPayId(customOrder.getPayId());//第三方支付id
+        //创建已支付订单
+        ResponseEntity<OrderDetailResult> orderDetailResultResponse = orderServiceFeign.createPaidOrder(orderParam);
 
         Tips<OrderDetailResult> orderDetailResultTips = FeginResponseTools.convertResponse(orderDetailResultResponse);
         if (orderDetailResultTips.err()) {
             log.error("提取定制订单失败{}", orderDetailResultTips);
             return orderDetailResultTips;
         }
-        orderServiceFeign.updateOrderToPayed(orderDetailResultTips.getData().getCode(), null);//修改为已支付 实际在购买定制计划时候已经支付了,故没有支付记录
         //TODO 本地mq延迟到配送时间前一小时发送海鼎
         //本地修改提取次数
         CustomOrderDelivery customOrderDelivery = new CustomOrderDelivery();

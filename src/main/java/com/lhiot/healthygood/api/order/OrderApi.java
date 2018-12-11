@@ -291,18 +291,18 @@ public class OrderApi {
             return validateResult;
         }
         OrderDetailResult orderDetailResult = (OrderDetailResult) validateResult.getBody();
-        PaySign paySign = new PaySign();
-        paySign.setApplicationType(ApplicationType.HEALTH_GOOD);
-        paySign.setBackUrl(wechatPayConfig.getOrderCallbackUrl());
-        paySign.setClientIp(RealClientIp.getRealIp(request));//获取客户端真实ip
-        paySign.setConfigName(wechatPayConfig.getConfigName());//微信支付简称
-        paySign.setFee(orderDetailResult.getAmountPayable() + orderDetailResult.getDeliveryAmount());
-        paySign.setMemo("普通订单支付");
-        paySign.setOpenid(openId);
-        paySign.setSourceType(SourceType.ORDER);
-        paySign.setUserId(userId);
-        paySign.setAttach(orderCode);
-        return paymentServiceFeign.wxSign(paySign);
+        WxPayModel wxPayModel = new WxPayModel();
+        wxPayModel.setApplicationType(ApplicationType.HEALTH_GOOD);
+        wxPayModel.setBackUrl(wechatPayConfig.getOrderCallbackUrl());
+        wxPayModel.setClientIp(RealClientIp.getRealIp(request));//获取客户端真实ip
+        wxPayModel.setConfigName(wechatPayConfig.getConfigName());//微信支付简称
+        wxPayModel.setFee(orderDetailResult.getAmountPayable() + orderDetailResult.getDeliveryAmount());
+        wxPayModel.setMemo("普通订单支付");
+        wxPayModel.setOpenid(openId);
+        wxPayModel.setSourceType(SourceType.ORDER);
+        wxPayModel.setUserId(userId);
+        wxPayModel.setAttach(orderCode);
+        return paymentServiceFeign.wxJsSign(wxPayModel);
     }
 
 

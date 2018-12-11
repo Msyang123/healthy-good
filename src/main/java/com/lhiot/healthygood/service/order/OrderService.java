@@ -114,7 +114,7 @@ public class OrderService {
                 }
                 return Tips.info( orderCode);
             } else if ("return.received".equals(map.get("topic"))) {
-                log.info("订单退货回调*********");
+                log.info("订单退货回调*********{}",orderDetailResult);
                 if (Objects.equals(OrderStatus.RETURNING, orderDetailResult.getStatus())) {
                     log.info("给用户退款", orderDetailResult);
                     Tips refundOrderTips = FeginResponseTools.convertResponse(orderServiceFeign.refundOrder(orderDetailResult.getCode(),null));//此处为用户依据申请了退货了，海鼎回调中不需要再告知基础服务退货列表
@@ -122,7 +122,9 @@ public class OrderService {
                         log.error("调用基础服务 refundOrder失败{}",orderDetailResult);
                         return Tips.warn( String.valueOf(orderDetailResultResponseEntity.getBody()));
                     }
-                    //TODO 发起用户退款 等待用户退款回调然后发送orderServiceFeign.refundConfirmation
+                    //发起用户退款 等待用户退款回调然后发送orderServiceFeign.refundConfirmation
+                    ResponseEntity refundConfirmation = orderServiceFeign.refundConfirmation(orderDetailResult.getCode(),RefundStatus.ALREADY_RETURN);
+                    log.info("发起用户退款{}",refundConfirmation);
                 }
             } else {
                 log.info("hd other group message= " + map.get("group"));
