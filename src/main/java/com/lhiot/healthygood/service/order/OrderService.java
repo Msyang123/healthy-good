@@ -5,7 +5,6 @@ import com.leon.microx.util.Position;
 import com.leon.microx.util.StringUtils;
 import com.leon.microx.web.result.Tips;
 import com.lhiot.healthygood.config.HealthyGoodConfig;
-import com.lhiot.healthygood.feign.BaseDataServiceFeign;
 import com.lhiot.healthygood.feign.DeliverServiceFeign;
 import com.lhiot.healthygood.feign.OrderServiceFeign;
 import com.lhiot.healthygood.feign.model.DeliverTime;
@@ -18,7 +17,6 @@ import com.lhiot.healthygood.type.ReceivingWay;
 import com.lhiot.healthygood.util.FeginResponseTools;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -41,19 +39,16 @@ public class OrderService {
 
     private final OrderServiceFeign orderServiceFeign;
     private final DeliverServiceFeign deliverServiceFeign;
-    private final BaseDataServiceFeign baseDataServiceFeign;
     private final HealthyGoodConfig.DeliverConfig deliverConfig;
     private final CommonService commonService;
 
     @Autowired
     public OrderService(OrderServiceFeign orderServiceFeign,
                         DeliverServiceFeign deliverServiceFeign,
-                        BaseDataServiceFeign baseDataServiceFeign,
                         HealthyGoodConfig healthyGoodConfig, CommonService commonService) {
 
         this.orderServiceFeign = orderServiceFeign;
         this.deliverServiceFeign = deliverServiceFeign;
-        this.baseDataServiceFeign = baseDataServiceFeign;
         this.deliverConfig = healthyGoodConfig.getDeliver();
         this.commonService = commonService;
     }
@@ -68,7 +63,7 @@ public class OrderService {
         ResponseEntity<OrderDetailResult> orderDetailResultResponseEntity = orderServiceFeign.orderDetail(orderCode, true, false);
         if (Objects.isNull(orderDetailResultResponseEntity)
                 || orderDetailResultResponseEntity.getStatusCode().isError()) {
-            return Tips.warn( String.valueOf(orderDetailResultResponseEntity.getBody()));
+            return Tips.warn(String.valueOf(orderDetailResultResponseEntity.getBody()));
         }
         OrderDetailResult orderDetailResult = orderDetailResultResponseEntity.getBody();
         // 所有订单推送类消息
@@ -78,7 +73,7 @@ public class OrderService {
                 log.info("订单备货回调********");
                 if (!Objects.equals(orderDetailResult.getStatus(), OrderStatus.WAIT_SEND_OUT)) {
                     //如果已经处理此订单信息，就不重复处理
-                    return Tips.info( orderCode);
+                    return Tips.info(orderCode);
                 }
                 //如果送货上门 发送订单到配送中心
 
@@ -88,49 +83,49 @@ public class OrderService {
                     orderServiceFeign.updateOrderStatus(orderDetailResult.getCode(), OrderStatus.RECEIVED);
                 } else {
                     //发送到配送(达达)
-                    DeliveryParam deliveryParam=new DeliveryParam();
+                    DeliveryParam deliveryParam = new DeliveryParam();
                     deliveryParam.setApplicationType(ApplicationType.HEALTH_GOOD);
                     deliveryParam.setBackUrl(StringUtils.format(deliverConfig.getBackUrl(), deliverConfig.getType()));//配置回调
                     deliveryParam.setCoordinate(CoordinateSystem.AMAP);
 
-                    deliveryParam.setDeliverTime(Jackson.object(orderDetailResult.getDeliverTime(),DeliverTime.class));
+                    deliveryParam.setDeliverTime(Jackson.object(orderDetailResult.getDeliverTime(), DeliverTime.class));
                     deliveryParam.setDeliveryType(DeliverType.valueOf(deliverConfig.getType()));
                     Position.GCJ02 position = commonService.getPositionFromAddres(orderDetailResult.getAddress());//地址转经纬度
-                    if(Objects.isNull(position)){
+                    if (Objects.isNull(position)) {
                         log.error("查询收货地址经纬度信息失败{}", orderDetailResult.getAddress());
                         deliveryParam.setLat(0.0);
                         deliveryParam.setLng(0.0);
-                    }else{
+                    } else {
                         deliveryParam.setLat(position.getLatitude());
                         deliveryParam.setLng(position.getLongitude());
                     }
-                    ResponseEntity updateOrderToDeliveryResponse = orderServiceFeign.updateOrderToDelivery(orderDetailResult.getCode(),deliveryParam);
+                    ResponseEntity updateOrderToDeliveryResponse = orderServiceFeign.updateOrderToDelivery(orderDetailResult.getCode(), deliveryParam);
 
                     if (Objects.nonNull(updateOrderToDeliveryResponse) && updateOrderToDeliveryResponse.getStatusCode().is2xxSuccessful()) {
                         log.info("调用基础服务修改为已发货状态正常{}", orderCode);
-                    }else{
+                    } else {
                         log.error("调用基础服务修改为已发货状态错误{}", orderCode);
                     }
                 }
-                return Tips.info( orderCode);
+                return Tips.info(orderCode);
             } else if ("return.received".equals(map.get("topic"))) {
-                log.info("订单退货回调*********{}",orderDetailResult);
+                log.info("订单退货回调*********{}", orderDetailResult);
                 if (Objects.equals(OrderStatus.RETURNING, orderDetailResult.getStatus())) {
                     log.info("给用户退款", orderDetailResult);
-                    Tips refundOrderTips = FeginResponseTools.convertResponse(orderServiceFeign.refundOrder(orderDetailResult.getCode(),null));//此处为用户依据申请了退货了，海鼎回调中不需要再告知基础服务退货列表
-                    if(refundOrderTips.err()){
-                        log.error("调用基础服务 refundOrder失败{}",orderDetailResult);
-                        return Tips.warn( String.valueOf(orderDetailResultResponseEntity.getBody()));
+                    Tips refundOrderTips = FeginResponseTools.convertResponse(orderServiceFeign.refundOrder(orderDetailResult.getCode(), null));//此处为用户依据申请了退货了，海鼎回调中不需要再告知基础服务退货列表
+                    if (refundOrderTips.err()) {
+                        log.error("调用基础服务 refundOrder失败{}", orderDetailResult);
+                        return Tips.warn(String.valueOf(orderDetailResultResponseEntity.getBody()));
                     }
                     //发起用户退款 等待用户退款回调然后发送orderServiceFeign.refundConfirmation
-                    ResponseEntity refundConfirmation = orderServiceFeign.refundConfirmation(orderDetailResult.getCode(),RefundStatus.ALREADY_RETURN);
-                    log.info("发起用户退款{}",refundConfirmation);
+                    ResponseEntity refundConfirmation = orderServiceFeign.refundConfirmation(orderDetailResult.getCode(), RefundStatus.ALREADY_RETURN);
+                    log.info("发起用户退款{}", refundConfirmation);
                 }
             } else {
                 log.info("hd other group message= " + map.get("group"));
             }
         }
-        return Tips.warn( String.valueOf(orderDetailResultResponseEntity.getBody()));
+        return Tips.warn(String.valueOf(orderDetailResultResponseEntity.getBody()));
     }
 
     public Tips deliverCallbackDeal(Map<String, Object> param) {
@@ -156,28 +151,28 @@ public class OrderService {
             switch ((int) param.get("order_status")) {
                 case 1:
                     deliverServiceFeign.update(orderCode, new DeliverUpdate(orderCode, DeliverStatus.UNRECEIVE, null, null, null));
-                    return Tips.info( "配送待接单");
+                    return Tips.info("配送待接单");
                 case 2:
                     //调用基础服务修改为配送中状态
                     orderServiceFeign.updateOrderStatus(orderCode, OrderStatus.DISPATCHING);
                     deliverServiceFeign.update(orderCode, new DeliverUpdate(orderCode, DeliverStatus.WAIT_GET, stringParams.get("dm_name"), stringParams.get("dm_mobile"), null));
-                    return Tips.info( "配送待取货");
+                    return Tips.info("配送待取货");
                 case 3:
                     deliverServiceFeign.update(orderCode, new DeliverUpdate(orderCode, DeliverStatus.DELIVERING, null, null, null));
-                    return Tips.info( "配送配送中");
+                    return Tips.info("配送配送中");
                 case 4:
                     deliverServiceFeign.update(orderCode, new DeliverUpdate(orderCode, DeliverStatus.DONE, null, null, null));
                     orderServiceFeign.updateOrderStatus(orderCode, OrderStatus.RECEIVED);
-                    return Tips.info( "配送配送完成");
+                    return Tips.info("配送配送完成");
                 case 5:
                     deliverServiceFeign.update(orderCode, new DeliverUpdate(orderCode, DeliverStatus.FAILURE, null, null, "已取消"));
-                    return Tips.info( "配送已取消");
+                    return Tips.info("配送已取消");
                 case 7:
                     deliverServiceFeign.update(orderCode, new DeliverUpdate(orderCode, DeliverStatus.FAILURE, null, null, "已过期"));
-                    return Tips.info( "配送已过期");
+                    return Tips.info("配送已过期");
                 case 1000:
                     deliverServiceFeign.update(orderCode, new DeliverUpdate(orderCode, DeliverStatus.FAILURE, null, null, stringParams.get("cancel_reason")));
-                    return Tips.info( "配送失败");
+                    return Tips.info("配送失败");
                 default:
                     break;
             }
@@ -185,6 +180,6 @@ public class OrderService {
             log.error("配送回调验证签名不通过");
         }
         //直接不作处理
-        return Tips.info( "默认处理");
+        return Tips.info("默认处理");
     }
 }

@@ -15,6 +15,7 @@ import com.lhiot.healthygood.domain.customplan.model.PlanSectionsParam;
 import com.lhiot.healthygood.mapper.customplan.CustomPlanMapper;
 import com.lhiot.healthygood.mapper.customplan.CustomPlanSectionMapper;
 import com.lhiot.healthygood.mapper.customplan.CustomPlanSectionRelationMapper;
+import com.lhiot.healthygood.mapper.customplan.CustomPlanSpecificationMapper;
 import com.lhiot.healthygood.type.YesOrNo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -32,12 +33,14 @@ import java.util.stream.Collectors;
 @Transactional
 public class CustomPlanSectionService {
     private final CustomPlanSectionMapper customPlanSectionMapper;
+    private final CustomPlanSpecificationMapper customPlanSpecificationMapper;
     private final CustomPlanSectionRelationMapper customPlanSectionRelationMapper;
     private final CustomPlanMapper customPlanMapper;
 
     @Autowired
-    public CustomPlanSectionService(CustomPlanSectionMapper customPlanSectionMapper, CustomPlanSectionRelationMapper customPlanSectionRelationMapper, CustomPlanMapper customPlanMapper) {
+    public CustomPlanSectionService(CustomPlanSectionMapper customPlanSectionMapper, CustomPlanSpecificationMapper customPlanSpecificationMapper, CustomPlanSectionRelationMapper customPlanSectionRelationMapper, CustomPlanMapper customPlanMapper) {
         this.customPlanSectionMapper = customPlanSectionMapper;
+        this.customPlanSpecificationMapper = customPlanSpecificationMapper;
         this.customPlanSectionRelationMapper = customPlanSectionRelationMapper;
         this.customPlanMapper = customPlanMapper;
     }
@@ -199,7 +202,10 @@ public class CustomPlanSectionService {
     void setCustomPlanSectionPlanItems(CustomPlanSection customPlanSection, PlanSectionsParam planSectionsParam) {
         if (null != customPlanSection) {
             List<CustomPlan> customPlanList = customPlanMapper.findByCustomPlanSectionId(planSectionsParam);
-            customPlanSection.setCustomPlanList(Pages.of(Objects.isNull(customPlanList) ? 0 : customPlanList.size(), customPlanList));
+            customPlanList.forEach(item->
+                item.setPrice(customPlanSpecificationMapper.findMinPriceByPlanId(item.getId()))
+            );
+            customPlanSection.setCustomPlanList(customPlanList);
         }
     }
 

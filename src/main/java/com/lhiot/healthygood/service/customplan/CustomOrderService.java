@@ -2,6 +2,7 @@ package com.lhiot.healthygood.service.customplan;
 
 import com.leon.microx.id.Generator;
 import com.leon.microx.util.Calculator;
+import com.leon.microx.util.Jackson;
 import com.leon.microx.util.StringUtils;
 import com.leon.microx.web.result.Pages;
 import com.leon.microx.web.result.Tips;
@@ -90,10 +91,10 @@ public class CustomOrderService {
      * @param customOrder 定制计划与版块关系对象
      * @return 定制计划与版块关系Id
      */
-    public Tips createCustomOrder(CustomOrder customOrder) {
+    public CustomOrder createCustomOrder(CustomOrder customOrder) {
         CustomPlanSpecification customPlanSpecification = customPlanSpecificationMapper.selectById(customOrder.getSpecificationId());//查找指定定制规格
         if (Objects.isNull(customPlanSpecification))
-            return Tips.warn("未找到定制规格");
+            return null;
         //和色果膳定制计划订单号
         String orderCode = generator.get(0, "HGCP");
         customOrder.setCustomOrderCode(orderCode);
@@ -105,9 +106,7 @@ public class CustomOrderService {
         customOrder.setTotalQty(customPlanSpecification.getPlanPeriod());//总配送次数
         int result = customOrderMapper.create(customOrder);
 
-        Tips<CustomOrder> customOrderTips =new Tips<>();
-        customOrderTips.setData(customOrder);
-        return result > 0 ? customOrderTips : Tips.warn("创建失败");
+        return result > 0 ? customOrder : null;
     }
 
     /**
@@ -173,6 +172,7 @@ public class CustomOrderService {
         orderParam.setOrderType(OrderType.CUSTOM);//定制订单
         orderParam.setRemark(remark);
         String deliveryTime = customOrder.getDeliveryTime();
+        //TODO 需要自己调整
         LocalDate pauseBegin = LocalDate.now();//当天
         deliveryTime = deliveryTime.replace("{", "{" + pauseBegin.format(dateTimeFormatter) + " ");
         orderParam.setDeliveryAt(deliveryTime);//购买定制计划的配送时间 eg {12:00:00}-{13:00:00}
@@ -279,7 +279,7 @@ public class CustomOrderService {
         CustomOrderDelivery customOrderDelivery = new CustomOrderDelivery();
         customOrderDelivery.setProductShelfId(customPlanProductResult.getProductShelfId());
         customOrderDelivery.setCreateAt(Date.from(Instant.now()));
-        customOrderDelivery.setDeliveryTime(deliveryTime);
+        customOrderDelivery.setDeliveryTime(Jackson.json(deliveryTime));
         customOrderDelivery.setDeliveryAddress(customOrder.getDeliveryAddress());
         customOrderDelivery.setDeliveryStatus(CustomOrderDeliveryStatus.DISPATCHING);//配送中
         customOrderDelivery.setOrderCode(orderDetailResultTips.getData().getCode());

@@ -84,7 +84,5 @@ public class Store {
     @ApiModelProperty(notes = "启用该门店的应用数组")
     private ApplicationType[] applicationTypes;
 
-    @JsonIgnore
-    @ApiModelProperty(hidden = true)
     private Double distance;
 }

@@ -80,7 +80,7 @@ public class CommonService {
             return null;
         }
         String[] locations = ((Map<String, String>) ((List) locationMap.get("geocodes")).get(0)).get("location").split(",");
-        return Position.GCJ02.of(Double.valueOf(locations[1]), Double.valueOf(locations[0]));
+        return Position.GCJ02.of(Double.valueOf(locations[0]), Double.valueOf(locations[1]));
     }
 
 }

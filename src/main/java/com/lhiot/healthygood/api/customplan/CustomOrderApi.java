@@ -58,11 +58,11 @@ public class CustomOrderApi {
     public ResponseEntity create(@Valid @RequestBody CustomOrder customOrder, Sessions.User user) {
         Long userId = Long.valueOf(user.getUser().get("userId").toString());
         customOrder.setUserId(userId);
-        Tips result = customOrderService.createCustomOrder(customOrder);
-        if (result.err()){
-            return ResponseEntity.badRequest().body(result.getMessage());
+        CustomOrder result = customOrderService.createCustomOrder(customOrder);
+        if (Objects.isNull(result)){
+            return ResponseEntity.badRequest().body("创建失败");
         }
-        return ResponseEntity.ok(result.getData());
+        return ResponseEntity.ok(result);
     }
 
     @DeleteMapping("/custom-orders/{orderCode}")

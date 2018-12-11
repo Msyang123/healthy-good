@@ -75,4 +75,10 @@ public class CustomPlan{
     @JsonProperty("createUser")
     @ApiModelProperty(value = "创建人", dataType = "String")
     private String createUser;
+
+    /**
+     * 定制最低价格
+     */
+    @ApiModelProperty(value = "定制最低价格", dataType = "Long")
+    private Long price;
 }
