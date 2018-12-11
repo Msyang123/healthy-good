@@ -1,11 +1,13 @@
 package com.lhiot.healthygood.api.balance;
 
+import com.leon.microx.util.DateTime;
+import com.leon.microx.util.Jackson;
+import com.leon.microx.web.result.Id;
 import com.leon.microx.web.session.Sessions;
 import com.lhiot.healthygood.config.HealthyGoodConfig;
 import com.lhiot.healthygood.feign.OrderServiceFeign;
 import com.lhiot.healthygood.feign.PaymentServiceFeign;
-import com.lhiot.healthygood.feign.model.OrderDetailResult;
-import com.lhiot.healthygood.feign.model.PaySign;
+import com.lhiot.healthygood.feign.model.*;
 import com.lhiot.healthygood.feign.type.ApplicationType;
 import com.lhiot.healthygood.feign.type.SourceType;
 import com.lhiot.healthygood.util.RealClientIp;
@@ -15,10 +17,14 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.servlet.http.HttpServletRequest;
+import java.time.Instant;
+import java.util.Date;
+import java.util.Map;
 import java.util.Objects;
 
 @Api(description = "鲜果币接口")
@@ -42,7 +48,7 @@ public class BalanceApi {
         String openId = user.getUser().get("openId").toString();
         Long userId = Long.valueOf(user.getUser().get("userId").toString());
 
-        PaySign paySign = new PaySign();
+        WxPayModel paySign = new WxPayModel();
         paySign.setApplicationType(ApplicationType.HEALTH_GOOD);
         paySign.setBackUrl(wechatPayConfig.getRechargeCallbackUrl());
         paySign.setClientIp(RealClientIp.getRealIp(request));//获取客户端真实ip
@@ -53,21 +59,48 @@ public class BalanceApi {
         paySign.setSourceType(SourceType.RECHARGE);
         paySign.setUserId(userId);
         paySign.setAttach(user.getUser().get("userId").toString());
-        return paymentServiceFeign.wxSign(paySign);
+        ResponseEntity<Map> responseEntity = paymentServiceFeign.wxJsSign(paySign);
+        if(Objects.isNull(responseEntity) || responseEntity.getStatusCode().isError()){
+            log.error("调用基础服务充值签名错误{}",responseEntity);
+            return ResponseEntity.badRequest().body("调用错误");
+        }
+        return ResponseEntity.ok(Jackson.json(responseEntity.getBody()));
     }
 
 
-    @PostMapping("/balance/payment")
-    @ApiOperation(value = "鲜果币支付接口")
-    public ResponseEntity balancePayment(@RequestParam("orderCode") String orderCode, Sessions.User user) {
+    @PostMapping("/balance/order/payment")
+    @ApiOperation(value = "鲜果币支付普通订单接口")
+    public ResponseEntity balancePayment(@RequestBody BalancePayModel balancePayModel, Sessions.User user) {
         Long userId = Long.valueOf(user.getUser().get("userId").toString());
-        ResponseEntity validateResult = validateOrderOwner(userId, orderCode);
+        ResponseEntity validateResult = validateOrderOwner(userId, balancePayModel.getOrderCode());
         if (Objects.isNull(validateResult) || validateResult.getStatusCode().isError()) {
             return validateResult;
         }
         OrderDetailResult orderDetailResult = (OrderDetailResult) validateResult.getBody();
-        //TODO paymentServiceFeign.  调用鲜果币支付接口
-        return ResponseEntity.ok().build();
+        //调用鲜果币支付接口
+        balancePayModel.setApplicationType(ApplicationType.HEALTH_GOOD);
+        balancePayModel.setFee(orderDetailResult.getAmountPayable()+orderDetailResult.getDeliveryAmount());
+        balancePayModel.setMemo("普通订单支付");
+        balancePayModel.setSourceType(SourceType.ORDER);
+        balancePayModel.setUserId(userId);
+        ResponseEntity<Id> balancePayResult = paymentServiceFeign.balancePay(balancePayModel);
+        if(Objects.isNull(balancePayResult) || balancePayResult.getStatusCode().isError()){
+            log.error("鲜果币支付失败{}",balancePayResult);
+            return ResponseEntity.badRequest().body("鲜果币支付失败");
+        }
+        String outTradeId = String.valueOf(balancePayResult.getBody().getValue());
+        Payed payed = new Payed();
+        //payed.setBankType("");
+        payed.setPayAt(Date.from(Instant.now()));
+        payed.setPayId(outTradeId);
+        //payed.setTradeId("");
+        //修改为已支付
+        ResponseEntity updateOrderToPayed = orderServiceFeign.updateOrderToPayed(balancePayModel.getOrderCode(),payed);
+        if (Objects.isNull(updateOrderToPayed) || updateOrderToPayed.getStatusCode().isError()){
+            log.error("修改为已支付失败{}",updateOrderToPayed);
+            return ResponseEntity.badRequest().body("修改为已支付失败");
+        }
+        return ResponseEntity.ok(orderDetailResult);
     }
 
 

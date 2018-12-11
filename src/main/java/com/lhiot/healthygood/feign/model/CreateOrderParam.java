@@ -43,6 +43,9 @@ public class CreateOrderParam {
     private String deliveryAt;
     @ApiModelProperty(notes = "是否允许退款YES是NO否", dataType = "AllowRefund")
     private AllowRefund allowRefund;
+    @ApiModelProperty(notes = "第三方支付产生的商户单号", dataType = "String")
+    private String payId;
+
     @ApiModelProperty(notes = "商品列表", dataType = "OrderProduct")
     @NotNull
     @Size(min=1,max = 1000)

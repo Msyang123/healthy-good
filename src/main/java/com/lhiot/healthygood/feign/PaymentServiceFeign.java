@@ -1,8 +1,8 @@
 package com.lhiot.healthygood.feign;
 
-import com.lhiot.healthygood.feign.model.PaySign;
-import com.lhiot.healthygood.feign.model.Payed;
-import com.lhiot.healthygood.feign.model.Refund;
+import com.leon.microx.web.result.Id;
+import com.lhiot.healthygood.feign.model.*;
+import io.swagger.annotations.ApiOperation;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
@@ -18,44 +18,57 @@ import java.util.Map;
 @FeignClient("PAYMENT-SERVICE-V1-0")
 public interface PaymentServiceFeign {
     /**********支付宝*******************************/
-    //支付签名
-    @RequestMapping(value = "/ali-pay/sign", method = RequestMethod.POST)
-    ResponseEntity<String> aliPaySign(@Valid @RequestBody PaySign sign);
+    //支付签名 本服务支付宝方面 目前只支持原生APP支付
+    @RequestMapping(value = "/ant-financial/app/sign", method = RequestMethod.POST)
+    ResponseEntity<String> aliPaySign(@Valid @RequestBody AliPayModel aliPay);
 
-    //支付 - 验签
-    @RequestMapping(value = "/ali-pay/{outTradeNo}/verification", method = RequestMethod.POST)
+    //支付 - 验签 第三方回调参数请解析为Map后原样传递到此接口完成签名校验
+    @RequestMapping(value = "/ant-financial/payed/{outTradeNo}/verification", method = RequestMethod.POST)
     ResponseEntity aliPayVerify(@PathVariable("outTradeNo") String outTradeNo, @RequestBody Map<String, String> notifiedParameters);
 
-    //支付 - 撤销
-    @RequestMapping(value = "/ali-pay/{outTradeNo}", method = RequestMethod.DELETE)
+    //支付 - 撤销 【一般用于回调异常】 如果已支付成功，则第三方自动退款，如果未支付，则第三方取消本次支付。
+    @RequestMapping(value = "/ant-financial/payed/{outTradeNo}", method = RequestMethod.DELETE)
     ResponseEntity aliPayCancel(@PathVariable("outTradeNo") String outTradeNo);
-
-    //支付 - 退款（支持部分、多次退款)
-    @RequestMapping(value = "/ali-pay/{outTradeNo}", method = RequestMethod.PUT)
-    ResponseEntity aliPayRefund(@PathVariable("outTradeNo") String outTradeNo, @RequestBody Refund refund);
 
     /**********支付宝*******************************/
 
     /**********微信*******************************/
-    //支付 - 签名
-    @RequestMapping(value = "/wx-pay/sign", method = RequestMethod.POST)
-    ResponseEntity<String> wxSign(@Valid @RequestBody PaySign sign);
+    //支付 - app签名
+    @RequestMapping(value = "/we-chat/app/sign", method = RequestMethod.POST)
+    ResponseEntity<Map> wxAppSign(@Valid @RequestBody WxPayModel wxPay);
+
+    //支付 -jssdk签名
+    @RequestMapping(value = "/we-chat/js-api/sign", method = RequestMethod.POST)
+    ResponseEntity<Map> wxJsSign(@Valid @RequestBody WxPayModel wxPay);
 
     //支付 - 验签
-    @RequestMapping(value = "/wx-pay/{outTradeNo}/verification", method = RequestMethod.POST)
+    @RequestMapping(value = "/we-chat/payed/{outTradeNo}/verification", method = RequestMethod.POST)
     ResponseEntity wxVerify(@PathVariable("outTradeNo") String outTradeNo, @RequestBody Map<String, String> notifiedParameters);
-
-    //支付 - 退款（支持部分、多次退款)
-    @RequestMapping(value = "/wx-pay/{outTradeNo}/refund", method = RequestMethod.PUT)
-    ResponseEntity wxRefund(@PathVariable("outTradeNo") String outTradeNo, @RequestBody Refund refund);
-
     /**********微信*******************************/
+
+    /**********余额支付*******************************/
+
+    //余额支付
+    @RequestMapping(value ="/balance/payments",method = RequestMethod.POST)
+    ResponseEntity<Id> balancePay(@Valid @RequestBody BalancePayModel balancePay);
+    /**********余额支付*******************************/
+
 
 
     /**********修改支付日志信息*************************/
 
-    //修改支付日志状态
-    @RequestMapping(value = "/pay-logs/{outTradeNo}/completed", method = RequestMethod.PUT)
-    ResponseEntity completed(@PathVariable("outTradeNo") String outTradeNo, @RequestBody Payed payed);
+    //修改支付单为完成状态
+    @RequestMapping(value = "/records/{outTradeNo}/completed", method = RequestMethod.PUT)
+    ResponseEntity completed(@PathVariable("outTradeNo") String outTradeNo, @RequestBody PayedModel payed);
     /**********修改支付日志信息************************/
+
+    /***********支付退款***********************************/
+    //支付 - 退款（支持部分、多次退款）
+    @RequestMapping(value = "/payed/{outTradeNo}/refunds", method = RequestMethod.POST)
+    ResponseEntity refund(@PathVariable("outTradeNo") Long outTradeNo, @Valid @RequestBody RefundModel refund);
+
+    @RequestMapping(value = "/refunds/{refundId}/completed", method = RequestMethod.PUT)
+    @ApiOperation("修改退款单为完成状态")
+    ResponseEntity completed(@PathVariable("refundId") Long refundId);
+    /************支付退款*****************************/
 }

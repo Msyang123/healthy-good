@@ -98,6 +98,9 @@ public class CustomOrder {
     @ApiModelProperty(notes = "截止创建时间", dataType = "Date")
     private Date endCreateAt;
 
+    @ApiModelProperty(notes = "第三方支付产生的商户单号", dataType = "String")
+    private String payId;
+
     @ApiModelProperty(notes = "每页查询条数(为空或0不分页查所有)", dataType = "Integer")
     private Integer rows;
     @ApiModelProperty(notes = "当前页", dataType = "Integer")

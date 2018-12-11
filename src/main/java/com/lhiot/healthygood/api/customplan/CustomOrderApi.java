@@ -13,13 +13,12 @@ import com.lhiot.healthygood.domain.customplan.CustomOrderPause;
 import com.lhiot.healthygood.feign.BaseUserServerFeign;
 import com.lhiot.healthygood.feign.PaymentServiceFeign;
 import com.lhiot.healthygood.feign.model.OrderDetailResult;
-import com.lhiot.healthygood.feign.model.PaySign;
 import com.lhiot.healthygood.feign.model.UserDetailResult;
+import com.lhiot.healthygood.feign.model.WxPayModel;
 import com.lhiot.healthygood.feign.type.ApplicationType;
 import com.lhiot.healthygood.feign.type.SourceType;
 import com.lhiot.healthygood.service.customplan.CustomOrderService;
 import com.lhiot.healthygood.type.CustomOrderStatus;
-import com.lhiot.healthygood.util.FeginResponseTools;
 import com.lhiot.healthygood.util.RealClientIp;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
@@ -95,18 +94,18 @@ public class CustomOrderApi {
             return validateOrderOwner;
         }
         CustomOrder customOrder = (CustomOrder) validateOrderOwner.getBody();
-        PaySign paySign = new PaySign();
-        paySign.setApplicationType(ApplicationType.HEALTH_GOOD);
-        paySign.setBackUrl(wechatPayConfig.getActivityCallbackUrl());
-        paySign.setClientIp(RealClientIp.getRealIp(request));//获取客户端真实ip
-        paySign.setConfigName(wechatPayConfig.getConfigName());//微信支付简称
-        paySign.setFee(customOrder.getPrice());
-        paySign.setMemo("定制订单支付");
-        paySign.setOpenid(openId);
-        paySign.setSourceType(SourceType.ACTIVITY);
-        paySign.setUserId(userId);
-        paySign.setAttach(orderCode);//定制订单code
-        return paymentServiceFeign.wxSign(paySign);
+        WxPayModel wxPayModel = new WxPayModel();
+        wxPayModel.setApplicationType(ApplicationType.HEALTH_GOOD);
+        wxPayModel.setBackUrl(wechatPayConfig.getActivityCallbackUrl());
+        wxPayModel.setClientIp(RealClientIp.getRealIp(request));//获取客户端真实ip
+        wxPayModel.setConfigName(wechatPayConfig.getConfigName());//微信支付简称
+        wxPayModel.setFee(customOrder.getPrice());
+        wxPayModel.setMemo("定制订单支付");
+        wxPayModel.setOpenid(openId);
+        wxPayModel.setSourceType(SourceType.ACTIVITY);
+        wxPayModel.setUserId(userId);
+        wxPayModel.setAttach(orderCode);//定制订单code
+        return paymentServiceFeign.wxJsSign(wxPayModel);
     }
 
 
