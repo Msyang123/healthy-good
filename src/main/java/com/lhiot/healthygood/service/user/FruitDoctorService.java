@@ -4,12 +4,12 @@ import com.leon.microx.util.auditing.Random;
 import com.leon.microx.web.result.Pages;
 import com.leon.microx.web.result.Tips;
 import com.lhiot.healthygood.domain.doctor.RegisterApplication;
-import com.lhiot.healthygood.domain.user.DoctorUser;
+import com.lhiot.healthygood.domain.user.DoctorCustomer;
 import com.lhiot.healthygood.domain.user.FruitDoctor;
 import com.lhiot.healthygood.event.SendCaptchaSmsEvent;
 import com.lhiot.healthygood.feign.BaseUserServerFeign;
 import com.lhiot.healthygood.feign.model.UserDetailResult;
-import com.lhiot.healthygood.mapper.user.DoctorUserMapper;
+import com.lhiot.healthygood.mapper.user.DoctorCustomerMapper;
 import com.lhiot.healthygood.mapper.user.FruitDoctorMapper;
 import com.lhiot.healthygood.type.DoctorLevel;
 import com.lhiot.healthygood.type.DoctorStatus;
@@ -39,15 +39,15 @@ import java.util.Objects;
 public class FruitDoctorService {
 
     private final FruitDoctorMapper fruitDoctorMapper;
-    private final DoctorUserMapper doctorUserMapper;
+    private final DoctorCustomerMapper doctorCustomerMapper;
     private final ApplicationEventPublisher publisher;
     private final BaseUserServerFeign baseUserServerFeign;
 
 
     @Autowired
-    public FruitDoctorService(FruitDoctorMapper fruitDoctorMapper, DoctorUserMapper doctorUserMapper, ApplicationEventPublisher publisher, BaseUserServerFeign baseUserServerFeign) {
+    public FruitDoctorService(FruitDoctorMapper fruitDoctorMapper, DoctorCustomerMapper doctorCustomerMapper, ApplicationEventPublisher publisher, BaseUserServerFeign baseUserServerFeign) {
         this.fruitDoctorMapper = fruitDoctorMapper;
-        this.doctorUserMapper = doctorUserMapper;
+        this.doctorCustomerMapper = doctorCustomerMapper;
         this.publisher = publisher;
         this.baseUserServerFeign = baseUserServerFeign;
     }
@@ -75,9 +75,9 @@ public class FruitDoctorService {
         fruitDoctor.setDoctorStatus(DoctorStatus.VALID);
         fruitDoctor.setCreateAt(Date.from(Instant.now()));
         //查找推荐人
-        DoctorUser doctorUser= doctorUserMapper.selectByUserId(registerApplication.getUserId());
-        if(Objects.nonNull(doctorUser)){
-            fruitDoctor.setRefereeId(doctorUser.getDoctorId());
+        DoctorCustomer doctorCustomer = doctorCustomerMapper.selectByUserId(registerApplication.getUserId());
+        if(Objects.nonNull(doctorCustomer)){
+            fruitDoctor.setRefereeId(doctorCustomer.getDoctorId());
         }
         //查找基础服务对应的微信用户信息
         ResponseEntity<UserDetailResult> userEntity = baseUserServerFeign.findById(registerApplication.getUserId());

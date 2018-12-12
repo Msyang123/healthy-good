@@ -6,7 +6,7 @@ import com.leon.microx.web.result.Tips;
 import com.leon.microx.web.session.Sessions;
 import com.leon.microx.web.swagger.ApiParamType;
 import com.lhiot.healthygood.domain.doctor.*;
-import com.lhiot.healthygood.domain.user.DoctorUser;
+import com.lhiot.healthygood.domain.user.DoctorCustomer;
 import com.lhiot.healthygood.domain.user.FruitDoctor;
 import com.lhiot.healthygood.domain.user.KeywordValue;
 import com.lhiot.healthygood.domain.user.ValidateParam;
@@ -17,7 +17,7 @@ import com.lhiot.healthygood.service.doctor.CardUpdateLogService;
 import com.lhiot.healthygood.service.doctor.DoctorAchievementLogService;
 import com.lhiot.healthygood.service.doctor.RegisterApplicationService;
 import com.lhiot.healthygood.service.doctor.SettlementApplicationService;
-import com.lhiot.healthygood.service.user.DoctorUserService;
+import com.lhiot.healthygood.service.user.DoctorCustomerService;
 import com.lhiot.healthygood.service.user.FruitDoctorService;
 import com.lhiot.healthygood.type.*;
 import com.lhiot.healthygood.util.FeginResponseTools;
@@ -52,18 +52,19 @@ public class FruitDoctorApi {
     private final ThirdpartyServerFeign thirdpartyServerFeign;
     private final RegisterApplicationService registerApplicationService;
     private final SettlementApplicationService settlementApplicationService;
-    private final DoctorUserService doctorUserService;
+    private final DoctorCustomerService doctorCustomerService;
     private final FruitDoctorService fruitDoctorService;
     private final DoctorAchievementLogService doctorAchievementLogService;
     private final CardUpdateLogService cardUpdateLogService;
     private final BaseUserServerFeign baseUserServerFeign;
 
     @Autowired
-    public FruitDoctorApi(ThirdpartyServerFeign thirdpartyServerFeign, RegisterApplicationService registerApplicationService, SettlementApplicationService settlementApplicationService, DoctorUserService doctorUserService, FruitDoctorService fruitDoctorService, DoctorAchievementLogService doctorAchievementLogService, CardUpdateLogService cardUpdateLogService, BaseUserServerFeign baseUserServerFeign) {
+    public FruitDoctorApi(ThirdpartyServerFeign thirdpartyServerFeign, RegisterApplicationService registerApplicationService, SettlementApplicationService settlementApplicationService,
+                          DoctorCustomerService doctorCustomerService, DoctorCustomerService doctorCustomerService1, FruitDoctorService fruitDoctorService, DoctorAchievementLogService doctorAchievementLogService, CardUpdateLogService cardUpdateLogService, BaseUserServerFeign baseUserServerFeign) {
         this.thirdpartyServerFeign = thirdpartyServerFeign;
         this.registerApplicationService = registerApplicationService;
         this.settlementApplicationService = settlementApplicationService;
-        this.doctorUserService = doctorUserService;
+        this.doctorCustomerService = doctorCustomerService1;
         this.fruitDoctorService = fruitDoctorService;
         this.doctorAchievementLogService = doctorAchievementLogService;
         this.cardUpdateLogService = cardUpdateLogService;
@@ -157,9 +158,9 @@ public class FruitDoctorApi {
         LocalDate fifteen=LocalDate.of(localDate.getYear(),localDate.getMonth(),15);
         //每月17号
         LocalDate seventeen=LocalDate.of(localDate.getYear(),localDate.getMonth(),17);
-        /*if(localDate.isBefore(fifteen)||localDate.isAfter(seventeen)){
+        if(localDate.isBefore(fifteen)||localDate.isAfter(seventeen)){
             return ResponseEntity.badRequest().body("不在每月15-17日申请时间段内");
-        }*/
+        }
         //查询申请金额是否超过实际金额
         IncomeStat incomeStat = doctorAchievementLogService.myIncome(fruitDoctor.getId());
         if(incomeStat.getBonusCanBeSettled()==null||incomeStat.getBonusCanBeSettled().longValue()<amount){
@@ -264,38 +265,38 @@ public class FruitDoctorApi {
     }
 
 
- /*   @PostMapping("/relation")
+   @PostMapping("/relation")
     @ApiOperation(value = "添加鲜果师客户 关注鲜果师(绑定)")
-    @ApiImplicitParam(paramType = "body", name = "doctorUser", value = "要添加的鲜果师客户", required = true, dataType = "DoctorUser")
-    public ResponseEntity bindingDoctor(Sessions.User user, @RequestBody DoctorUser doctorUser) {
+    @ApiImplicitParam(paramType = "body", name = "DoctorCustomer", value = "要添加的鲜果师客户", required = true, dataType = "DoctorCustomer")
+    public ResponseEntity bindingDoctor(Sessions.User user, @RequestBody DoctorCustomer doctorCustomer) {
         Long userId = Long.valueOf(user.getUser().get("userId").toString());
 
-        FruitDoctor fruitDoctor = fruitDoctorService.selectByUserId(doctorUser.getDoctorId());
+        FruitDoctor fruitDoctor = fruitDoctorService.selectByUserId(doctorCustomer.getDoctorId());
         if (Objects.isNull(fruitDoctor)) {
             return ResponseEntity.badRequest().body(Tips.warn("鲜果师不存在"));
         }
-        DoctorUser dUser = doctorUserService.selectByUserId(userId);
+       DoctorCustomer dUser = doctorCustomerService.selectByUserId(userId);
         if (Objects.nonNull(dUser)) {
             return ResponseEntity.badRequest().body(Tips.warn("您已经绑定该鲜果师了"));
         }
-        doctorUser.setDoctorId(fruitDoctor.getId());
-        doctorUser.setUserId(userId);
-        doctorUserService.create(doctorUser);
+       doctorCustomer.setDoctorId(fruitDoctor.getId());
+       doctorCustomer.setUserId(userId);
+        doctorCustomerService.create(doctorCustomer);
         return ResponseEntity.ok(Tips.info("绑定成功！"));
-    }*/
+    }
 
     @PutMapping("/remark")
     @ApiOperation(value = "鲜果师修改用户备注")
-    @ApiImplicitParam(paramType = "body", name = "doctorUser", value = "鲜果师修改用户备注实体信息", required = true, dataType = "DoctorUser")
-    public ResponseEntity updateRemarkName(Sessions.User user, @RequestBody DoctorUser doctorUser) {
+    @ApiImplicitParam(paramType = "body", name = "DoctorCustomer", value = "鲜果师修改用户备注实体信息", required = true, dataType = "DoctorCustomer")
+    public ResponseEntity updateRemarkName(Sessions.User user, @RequestBody DoctorCustomer DoctorCustomer) {
         String userId = user.getUser().get("userId").toString();
         FruitDoctor fruitDoctor = fruitDoctorService.selectByUserId(Long.valueOf(userId));
         if (Objects.isNull(fruitDoctor)) {
             return ResponseEntity.badRequest().body("鲜果师不存在");
         }
-        log.debug("鲜果师修改用户备注\t param:{}", doctorUser);
-        doctorUser.setDoctorId(fruitDoctor.getId());
-        int result = doctorUserService.updateRemarkName(doctorUser);
+        log.debug("鲜果师修改用户备注\t param:{}", DoctorCustomer);
+        DoctorCustomer.setDoctorId(fruitDoctor.getId());
+        int result = doctorCustomerService.updateRemarkName(DoctorCustomer);
         if (result > 0) {
             return ResponseEntity.ok("更新成功");
         } else {
@@ -312,10 +313,9 @@ public class FruitDoctorApi {
         if (Objects.isNull(fruitDoctor)) {
             return ResponseEntity.badRequest().body("鲜果师不存在");
         }
-        //FIXME 此处干什么的
-        FruitDoctor fruitDoctor1 = new FruitDoctor();
-        fruitDoctor1.setId(fruitDoctor.getId());
-        return ResponseEntity.ok(fruitDoctorService.subordinate(fruitDoctor));
+        FruitDoctor doctor = new FruitDoctor();
+        doctor.setId(fruitDoctor.getId());
+        return ResponseEntity.ok(fruitDoctorService.subordinate(doctor));
     }
 
     @GetMapping("/page")
@@ -494,29 +494,29 @@ public class FruitDoctorApi {
     }
 
     @GetMapping("/customers")
-    @ApiOperation(value = "查询鲜果师客户列表",response = DoctorUser.class,responseContainer = "List")
+    @ApiOperation(value = "查询鲜果师客户列表",response = DoctorCustomer.class,responseContainer = "List")
     public ResponseEntity doctorCustomers(Sessions.User user) throws BadHanyuPinyinOutputFormatCombination {
         String userId = user.getUser().get("userId").toString();
         FruitDoctor fruitDoctor = fruitDoctorService.selectByUserId(Long.valueOf(userId));
         if (Objects.isNull(fruitDoctor)) {
             return ResponseEntity.badRequest().body("鲜果师不存在");
         }
-        List<DoctorUser> doctorUserList = doctorUserService.doctorCustomers(fruitDoctor.getId());
-        doctorUserList.stream().forEach(doctorUser -> {
-            ResponseEntity userInfoEntity = baseUserServerFeign.findById(Long.valueOf(doctorUser.getUserId()));
+        List<DoctorCustomer> DoctorCustomerList = doctorCustomerService.doctorCustomers(fruitDoctor.getId());
+        DoctorCustomerList.stream().forEach(DoctorCustomer -> {
+            ResponseEntity userInfoEntity = baseUserServerFeign.findById(Long.valueOf(DoctorCustomer.getUserId()));
             if (userInfoEntity.getStatusCode().isError()) {
                 return;
             }
             UserDetailResult userDetailResult = (UserDetailResult) userInfoEntity.getBody();
-            doctorUser.setNickname(userDetailResult.getNickname());
-            doctorUser.setAvatar(userDetailResult.getAvatar());
-            doctorUser.setPhone(userDetailResult.getPhone());
+            DoctorCustomer.setNickname(userDetailResult.getNickname());
+            DoctorCustomer.setAvatar(userDetailResult.getAvatar());
+            DoctorCustomer.setPhone(userDetailResult.getPhone());
         });
         PinyinTool tool = new PinyinTool();
         Pattern pattern = Pattern.compile("^[a-zA-Z]");
 
         JSONArray customers = new JSONArray();
-        for (DoctorUser item : doctorUserList) {
+        for (DoctorCustomer item : DoctorCustomerList) {
             String pinyin = tool.toPinYin(item.getNickname());
             Matcher matcher = pattern.matcher(pinyin);
             if (matcher.find()) {
