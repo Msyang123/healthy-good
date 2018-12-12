@@ -75,4 +75,14 @@ public interface SettlementApplicationMapper {
     * @date 2018/07/26 12:08:13
     */
     int pageSettlementApplicationCounts(SettlementApplication settlementApplication);
+
+    /**
+     * Description: 修改结算申请失效状态
+     *
+     * @param list
+     * @return
+     * @author Limiaojun
+     * @date 2018/08/22 09:52:13
+     */
+    long updateExpiredStatus(List<Long> list);
 }

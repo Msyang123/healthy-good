@@ -73,34 +73,6 @@ public class CustomPlanProductService {
         return this.customPlanProductMapper.selectById(id);
     }
 
-    /** 
-    * Description: 查询定制计划关联商品总记录数
-    *  
-    * @param customPlanProduct
-    * @return
-    * @author hufan
-    * @date 2018/11/26 18:56:50
-    */  
-    public long count(CustomPlanProduct customPlanProduct){
-        return this.customPlanProductMapper.pageCustomPlanProductCounts(customPlanProduct);
-    }
-    
-    /** 
-    * Description: 查询定制计划关联商品分页列表
-    *  
-    * @param customPlanProduct
-    * @return
-    * @author hufan
-    * @date 2018/11/26 18:56:50
-    */
-    // FIXME
-   /* public PagerResultObject<CustomPlanProduct> pageList(CustomPlanProduct customPlanProduct) {
-       long total = 0;
-       if (customPlanProduct.getRows() != null && customPlanProduct.getRows() > 0) {
-           total = this.count(customPlanProduct);
-       }
-       return PagerResultObject.of(customPlanProduct, total,
-              this.customPlanProductMapper.pageCustomPlanProducts(customPlanProduct));
-    }*/
+
 }
 

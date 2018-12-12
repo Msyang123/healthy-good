@@ -33,6 +33,7 @@ import org.json.simple.JSONObject;
 import org.springframework.amqp.AmqpException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.util.CollectionUtils;
 import org.springframework.web.bind.annotation.*;
 
 import java.text.SimpleDateFormat;
@@ -40,6 +41,7 @@ import java.time.Instant;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 @Api(description = "鲜果师申请记录接口")
 @Slf4j
@@ -78,7 +80,7 @@ public class FruitDoctorApi {
     }
 
     @PostMapping("/qualifications")
-    @ApiOperation(value = "添加鲜果师申请记录",response = RegisterApplication.class)
+    @ApiOperation(value = "添加鲜果师申请记录", response = RegisterApplication.class)
     @ApiImplicitParam(paramType = "body", name = "registerApplication", value = "要添加的鲜果师申请记录", required = true, dataType = "RegisterApplication")
     public ResponseEntity qualifications(Sessions.User user, @RequestBody RegisterApplication registerApplication) {
         log.debug("添加鲜果师申请记录\t param:{}", registerApplication);
@@ -111,18 +113,9 @@ public class FruitDoctorApi {
         }
 
         registerApplication.setId(id);
-        boolean updated = registerApplicationService.updateById(registerApplication) > 0;
-        if (!updated) {
-            ResponseEntity.badRequest().body("修改鲜果师申请记录失败");
-        }
-        // 发送模板消息
-        registerApplicationService.doctorApplicationSendToQueue(registerApplication.getAuditStatus(), registerApplication.getUserId());
-        // 审核通过 新增鲜果师成员记录
-        if (Objects.equals(AuditStatus.AGREE, registerApplication.getAuditStatus())) {
-            Tips tips = fruitDoctorService.create(registerApplication);
-            if (tips.err()) {
-                return ResponseEntity.badRequest().body(Tips.warn(tips.getMessage()));
-            }
+        Tips tips = registerApplicationService.updateById(registerApplication);
+        if (tips.err()) {
+            ResponseEntity.badRequest().body(tips.getMessage());
         }
         if (Objects.equals(registerApplication.getAuditStatus(), AuditStatus.AGREE.toString())) {
             return ResponseEntity.ok("审核通过");
@@ -137,7 +130,7 @@ public class FruitDoctorApi {
     @ApiOperation(value = "根据条件分页查询鲜果师申请记录列表(后台)", response = RegisterApplication.class, responseContainer = "Set")
     @ApiImplicitParam(paramType = ApiParamType.BODY, name = "registerApplication", value = "鲜果师申请信息", dataType = "RegisterApplication", required = true)
     @PostMapping("/qualifications/pages")
-    public ResponseEntity<Pages<RegisterApplication>> search(@RequestBody RegisterApplication registerApplication) {
+    public ResponseEntity search(@RequestBody RegisterApplication registerApplication) {
         log.debug("根据条件分页查询鲜果师申请记录列表\t param:{}", registerApplication);
 
         Pages<RegisterApplication> pages = registerApplicationService.pageList(registerApplication);
@@ -171,21 +164,21 @@ public class FruitDoctorApi {
     @ApiOperation(value = "结算申请修改-已结算(后台)")
     @ApiImplicitParams({
             @ApiImplicitParam(paramType = ApiParamType.PATH, name = "id", value = "结算申请id", required = true, dataType = "Long"),
-            @ApiImplicitParam(paramType = ApiParamType.BODY, name = "settlementApplication", value = "要修改的结算申请信息",dataType = "SettlementApplication", required = true)
+            @ApiImplicitParam(paramType = ApiParamType.BODY, name = "settlementApplication", value = "要修改的结算申请信息", dataType = "SettlementApplication", required = true)
     })
     @PutMapping("/settlement/{id}")
     public ResponseEntity updateSettlement(@PathVariable("id") Long id, @RequestBody SettlementApplication settlementApplication) {
         log.debug("结算申请修改-已结算\t id:{},param:{}", id, settlementApplication);
 
         // 已结算才进行修改，且只能结算一次，成功后不可修改
-        if (Objects.equals(SettlementStatus.SUCCESS,settlementApplication.getSettlementStatus())){
+        if (Objects.equals(SettlementStatus.SUCCESS, settlementApplication.getSettlementStatus())) {
             SettlementApplication findSettlementApplication = settlementApplicationService.selectById(id);
             // 结算用户是否一致
-            if (!Objects.equals(findSettlementApplication.getDoctorId(),settlementApplication.getDoctorId())) {
+            if (!Objects.equals(findSettlementApplication.getDoctorId(), settlementApplication.getDoctorId())) {
                 return ResponseEntity.badRequest().body("要结算的用户不一致，结算失败");
             }
             // 该条结算记录是否已结算过
-            if (Objects.equals(SettlementStatus.SUCCESS,findSettlementApplication.getSettlementStatus())){
+            if (Objects.equals(SettlementStatus.SUCCESS, findSettlementApplication.getSettlementStatus())) {
                 return ResponseEntity.badRequest().body("请勿重复结算");
             }
             FruitDoctor findFruitDoctor = fruitDoctorService.selectById(settlementApplication.getDoctorId());
@@ -193,29 +186,59 @@ public class FruitDoctorApi {
                 return ResponseEntity.badRequest().body("鲜果师不存在！");
             }
             // 该鲜果师的可结算金额是否大于申请结算金额
-            if (settlementApplication.getAmount() > findFruitDoctor.getBalance()){
-                return ResponseEntity.badRequest().body("申请结算金额大于用户可结算金额，结算失败");
+            if (settlementApplication.getAmount() > findFruitDoctor.getBalance()) {
+                return ResponseEntity.badRequest().body(Tips.warn("申请结算金额大于用户可结算金额，结算失败"));
             }
 
             // 进行结算和鲜果师可结算金额扣减
             settlementApplication.setId(id);
             settlementApplication.setDealAt(Date.from(Instant.now()));
             Tips tips = settlementApplicationService.updateById(settlementApplication, findFruitDoctor);
-            return tips.err() ? ResponseEntity.badRequest().body(Tips.warn(tips.getMessage())) : ResponseEntity.ok().build();
+            return tips.err() ? ResponseEntity.badRequest().body(tips.getMessage()) : ResponseEntity.ok().build();
         }
         return ResponseEntity.badRequest().body("结算状态不正确！");
     }
 
     @Sessions.Uncheck
-    @ApiOperation(value = "结算申请分页查询(后台)",response = SettlementApplication.class, responseContainer = "Set")
+    @ApiOperation(value = "结算申请分页查询(后台)", response = SettlementApplication.class, responseContainer = "Set")
     @ApiImplicitParam(paramType = ApiParamType.BODY, name = "settlementApplication", value = "结算申请分页查询条件", dataType = "SettlementApplication", required = true)
     @PostMapping("/settlement/pages")
-    public ResponseEntity search(@RequestBody SettlementApplication settlementApplication){
+    public ResponseEntity search(@RequestBody SettlementApplication settlementApplication) {
         log.debug("结算申请分页查询\t param:{}", settlementApplication);
 
         Pages<SettlementApplication> settlementApplicationPages = settlementApplicationService.pageList(settlementApplication);
         return ResponseEntity.ok(settlementApplicationPages);
     }
+
+    @Sessions.Uncheck
+    @PutMapping("/settlement/expired")
+    @ApiOperation(value = "薪资结算定时任务处理(后台)", notes = "申请三天内没有处理,状态修改成已失效")
+    public void expiredStatusJob() {
+        log.debug("薪资结算定时任务处理\t");
+
+        //查询所有 未处理数据
+        SettlementApplication param = new SettlementApplication();
+        param.setSettlementStatus(SettlementStatus.UNSETTLED);
+
+        Pages<SettlementApplication> pages = settlementApplicationService.pageList(param);
+        if (CollectionUtils.isEmpty(pages.getArray())) {
+            return;
+        }
+        //批量修改ids
+        List<Long> ids = null;
+        //获取创建时间
+        Date today = new Date();
+        //筛选过期数据集合
+        ids = pages.getArray().stream().filter(settlementApplication ->
+                //当前时间减去创建时间大于3天未处理 ,修改状态为已过期
+                today.getTime() - settlementApplication.getCreateAt().getTime() > (1 * 24 * 60 * 60 * 1000) * 3)
+                .map(settlementApplication -> settlementApplication.getId()).collect(Collectors.toList());
+        //修改状态
+        if (Objects.nonNull(ids) && !ids.isEmpty()) {
+            settlementApplicationService.updateExpiredStatus(ids);
+        }
+    }
+
 
  /*   @PostMapping("/relation")
     @ApiOperation(value = "添加鲜果师客户 关注鲜果师(绑定)")
@@ -290,7 +313,8 @@ public class FruitDoctorApi {
     public ResponseEntity search(@RequestBody FruitDoctor fruitDoctor) {
         log.debug("查询鲜果师成员分页列表\t param:{}", fruitDoctor);
 
-        return ResponseEntity.ok(fruitDoctorService.pageList(fruitDoctor));
+        Pages<FruitDoctor> fruitDoctorPages = fruitDoctorService.pageList(fruitDoctor);
+        return ResponseEntity.ok(fruitDoctorPages);
     }
 
     @Sessions.Uncheck
@@ -304,6 +328,7 @@ public class FruitDoctorApi {
         return ResponseEntity.ok().body(fruitDoctor);
     }
 
+    // FIXME 同info接口，要发模板消息
     @Sessions.Uncheck
     @ApiOperation(value = "修改鲜果师成员信息（后台）")
     @ApiImplicitParams({
