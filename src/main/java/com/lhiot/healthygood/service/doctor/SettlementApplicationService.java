@@ -1,16 +1,26 @@
 package com.lhiot.healthygood.service.doctor;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.leon.microx.util.Jackson;
 import com.leon.microx.web.result.Pages;
 import com.leon.microx.web.result.Tips;
 import com.lhiot.healthygood.domain.doctor.SettlementApplication;
 import com.lhiot.healthygood.domain.user.FruitDoctor;
+import com.lhiot.healthygood.domain.user.KeywordValue;
 import com.lhiot.healthygood.mapper.doctor.SettlementApplicationMapper;
 import com.lhiot.healthygood.mapper.user.FruitDoctorMapper;
+import com.lhiot.healthygood.type.FruitDoctorOrderExchange;
+import com.lhiot.healthygood.type.TemplateMessageEnum;
+import org.springframework.amqp.AmqpException;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
+import java.text.SimpleDateFormat;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -25,11 +35,13 @@ public class SettlementApplicationService {
 
     private final SettlementApplicationMapper settlementApplicationMapper;
     private final FruitDoctorMapper fruitDoctorMapper;
+    private final RabbitTemplate rabbit;
 
     @Autowired
-    public SettlementApplicationService(SettlementApplicationMapper settlementApplicationMapper, FruitDoctorMapper fruitDoctorMapper) {
+    public SettlementApplicationService(SettlementApplicationMapper settlementApplicationMapper, FruitDoctorMapper fruitDoctorMapper, RabbitTemplate rabbit) {
         this.settlementApplicationMapper = settlementApplicationMapper;
         this.fruitDoctorMapper = fruitDoctorMapper;
+        this.rabbit = rabbit;
     }
 
     /**
@@ -50,7 +62,7 @@ public class SettlementApplicationService {
      * @param settlementApplication
      * @param fruitDoctor
      * @return
-     * @author hufan
+     * @author hfuan
      * @date 2018/12/07 12:08:13
      */
     public Tips updateById(SettlementApplication settlementApplication, FruitDoctor fruitDoctor) {
@@ -117,6 +129,33 @@ public class SettlementApplicationService {
             total = this.count(settlementApplication);
         }
         return Pages.of(total, this.settlementApplicationMapper.pageSettlementApplications(settlementApplication));
+    }
+
+    /**
+     * 提现申请发送模板消息
+     * @param settlementApplication
+     * @throws JsonProcessingException
+     * @throws AmqpException
+     */
+    public void settlementApplicationSendToQueue(SettlementApplication settlementApplication) throws AmqpException, JsonProcessingException{
+        String currentTime = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());
+        Integer amount = (null == settlementApplication.getAmount() ? 0 : settlementApplication.getAmount());
+        //获取鲜果师用户信息
+        FruitDoctor fruitDoctor = fruitDoctorMapper.selectById(settlementApplication.getDoctorId());
+        //提现金额
+        String fee = new BigDecimal(amount).divide(new BigDecimal(100), 2, BigDecimal.ROUND_HALF_UP).toString();
+
+        KeywordValue keywordValue = new KeywordValue();
+        keywordValue.setTemplateType(TemplateMessageEnum.NOTICE_OF_PRESENTATION);
+        keywordValue.setKeyword1Value(currentTime);
+        keywordValue.setKeyword2Value(fee);
+
+        keywordValue.setUserId(fruitDoctor.getUserId());
+        keywordValue.setSendToDoctor(false);
+
+        //发送模板消息
+        rabbit.convertAndSend(FruitDoctorOrderExchange.FRUIT_TEMPLATE_MESSAGE.getExchangeName(),
+                FruitDoctorOrderExchange.FRUIT_TEMPLATE_MESSAGE.getQueueName(), Jackson.json(keywordValue));
     }
 
     /**

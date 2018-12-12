@@ -38,6 +38,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.text.SimpleDateFormat;
 import java.time.Instant;
+import java.time.LocalDate;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -150,6 +151,20 @@ public class FruitDoctorApi {
         if (Objects.isNull(fruitDoctor)) {
             return ResponseEntity.badRequest().body("鲜果师不存在");
         }
+        //如果不是系统的每月
+        LocalDate localDate=LocalDate.now();
+        //每月15号
+        LocalDate fifteen=LocalDate.of(localDate.getYear(),localDate.getMonth(),15);
+        //每月17号
+        LocalDate seventeen=LocalDate.of(localDate.getYear(),localDate.getMonth(),17);
+        /*if(localDate.isBefore(fifteen)||localDate.isAfter(seventeen)){
+            return ResponseEntity.badRequest().body("不在每月15-17日申请时间段内");
+        }*/
+        //查询申请金额是否超过实际金额
+        IncomeStat incomeStat = doctorAchievementLogService.myIncome(fruitDoctor.getId());
+        if(incomeStat.getBonusCanBeSettled()==null||incomeStat.getBonusCanBeSettled().longValue()<amount){
+            return ResponseEntity.badRequest().body("申请红利超过可结算红利");
+        }
         SettlementApplication settlementApplication = new SettlementApplication();
 
         settlementApplication.setAmount(amount);
@@ -157,7 +172,16 @@ public class FruitDoctorApi {
         settlementApplication.setCreateAt(Date.from(Instant.now()));
         settlementApplication.setSettlementStatus(SettlementStatus.UNSETTLED);
         int result = settlementApplicationService.create(settlementApplication);
-        return result > 0?ResponseEntity.ok("申请成功！"):ResponseEntity.badRequest().body("申请失败！");
+        if(result>0) {
+            try {
+                settlementApplicationService.settlementApplicationSendToQueue(settlementApplication);
+            } catch (JsonProcessingException e) {
+                e.printStackTrace();
+            }
+            return ResponseEntity.ok("申请成功！");
+        }else{
+            return ResponseEntity.badRequest().body("申请失败！");
+        }
     }
 
     @Sessions.Uncheck
