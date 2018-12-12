@@ -19,23 +19,23 @@ public class PayModel {
 
     @HasEntries(from = "applications")
     @NotBlank(message = "应用类型不能为空")
-    @ApiModelProperty(value = "应用类型", dataType = "ApplicationType", required = true)
+    @ApiModelProperty(value = "应用类型", dataType = "ApplicationType")
     private ApplicationType applicationType;
 
     @DecimalMin(value = "1", message = "用户编号不能为0")
-    @ApiModelProperty(value = "userId", dataType = "Long", required = true)
+    @ApiModelProperty(value = "userId", dataType = "Long")
     private Long userId;
 
     @NotNull(message = "支付类型不能为空")
-    @ApiModelProperty(value = "支付类型", dataType = "SourceType", required = true)
+    @ApiModelProperty(value = "支付类型", dataType = "SourceType")
     private SourceType sourceType;
 
     @DecimalMin(value = "1", message = "支付金额必须大于0")
-    @ApiModelProperty(value = "支付金额(分)", dataType = "Integer", required = true)
+    @ApiModelProperty(value = "支付金额(分)", dataType = "Integer")
     private Integer fee;
 
     @NotBlank(message = "支付项目不能为空")
-    @ApiModelProperty(value = "支付项目（描述信息）", dataType = "String", required = true)
+    @ApiModelProperty(value = "支付项目（描述信息）", dataType = "String")
     private String memo;
 
     @ApiModelProperty(value = "附加参数（可选）", dataType = "String")

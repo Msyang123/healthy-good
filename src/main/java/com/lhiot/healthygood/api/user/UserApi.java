@@ -166,7 +166,7 @@ public class UserApi {
                 }
             }
             Sessions.User sessionUser = session.create(request).user(Maps.of("userId", searchUser.getId(), "openId", searchUser.getOpenId()))
-                    .timeToLive(30, TimeUnit.MINUTES)
+                    .timeToLive(3, TimeUnit.HOURS)
                     .authorities(Authority.of("/**", RequestMethod.values()));// TODO 还没有加权限;
             String sessionId = session.cache(sessionUser);
             clientUri = accessToken.getOpenId() + "?sessionId=" + sessionId + "&clientUri=" + clientUri;
@@ -216,7 +216,7 @@ public class UserApi {
     @Sessions.Uncheck
     @GetMapping("/wechat/token")
     @ApiOperation(value = "微信oauth Token 全局缓存的")
-    public ResponseEntity<Tips<Token>> token() {
+    public ResponseEntity<Token> token() {
         RMapCache<String, Token> cache = redissonClient.getMapCache(PREFIX_REDIS + "token");
         Token token = cache.get("token");
         //先从缓存中获取 如果为空再去微信服务器获取
@@ -224,15 +224,13 @@ public class UserApi {
             token = weChatUtil.getToken();
             cache.put("token", token, 2, TimeUnit.HOURS);//缓存2小时
         }
-        Tips tips = new Tips();
-        tips.setData(token);
-        return ResponseEntity.ok(tips);
+        return ResponseEntity.ok(token);
     }
 
     @Sessions.Uncheck
     @GetMapping("/wechat/ticket")
     @ApiOperation(value = "微信oauth jsapiTicket")
-    public ResponseEntity<Tips<JsapiPaySign>> jsapiTicket(@RequestParam("url") String url) throws IOException {
+    public ResponseEntity<JsapiPaySign> jsapiTicket(@RequestParam("url") String url) throws IOException {
         log.info("============================>获取jsapiTicket");
         RMapCache<String, Object> cache = redissonClient.getMapCache(PREFIX_REDIS + "token");
         Token token = (Token) cache.get("token");
@@ -272,9 +270,7 @@ public class UserApi {
         jsapiPaySign.setTimestamp(timestamp);
         jsapiPaySign.setSignature(signature);
         log.info("===============================>jsapiPaySign:" + jsapiPaySign);
-        Tips tips = new Tips();
-        tips.setData(jsapiPaySign);
-        return ResponseEntity.ok(tips);
+        return ResponseEntity.ok(jsapiPaySign);
     }
 
     private Map<String, String> paramsToMap(HttpServletRequest request) {

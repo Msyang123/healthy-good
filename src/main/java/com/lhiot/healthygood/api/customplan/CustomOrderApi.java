@@ -96,13 +96,13 @@ public class CustomOrderApi {
         CustomOrder customOrder = (CustomOrder) validateOrderOwner.getBody();
         WxPayModel wxPayModel = new WxPayModel();
         wxPayModel.setApplicationType(ApplicationType.HEALTH_GOOD);
-        wxPayModel.setBackUrl(wechatPayConfig.getActivityCallbackUrl());
+        wxPayModel.setBackUrl(wechatPayConfig.getCustomplanCallbackUrl());
         wxPayModel.setClientIp(RealClientIp.getRealIp(request));//获取客户端真实ip
         wxPayModel.setConfigName(wechatPayConfig.getConfigName());//微信支付简称
         wxPayModel.setFee(customOrder.getPrice());
         wxPayModel.setMemo("定制订单支付");
         wxPayModel.setOpenid(openId);
-        wxPayModel.setSourceType(SourceType.ACTIVITY);
+        wxPayModel.setSourceType(SourceType.CUSTOM_PLAN);
         wxPayModel.setUserId(userId);
         wxPayModel.setAttach(orderCode);//定制订单code
         return paymentServiceFeign.wxJsSign(wxPayModel);
