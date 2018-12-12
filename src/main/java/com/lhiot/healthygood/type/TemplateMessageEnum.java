@@ -4,12 +4,12 @@ import lombok.Getter;
 
 public enum TemplateMessageEnum {
 
-	MEMBER_SHIP("会员加入提醒","4Js8sBqdVH6cOg3J--1URQ65xShGuqglRvhLIDfkoi8","",""),
-	PURCHASE_NOTICE("购买成功通知","Kq90zxLVQwgrz2LLA7u9ZL2gYUdYlsUd-dMcpe0GRdY","https://health.food-see.com/weixin/order/detail/",""),
-	APPLY_FRUIT_DOCTOR("申请鲜果师","QVEui2alNQ4idRXX8gyG2eWKI7jD1infNQD4TX0oC0k","",""),
-	NOTICE_OF_PRESENTATION("提现申请通知","g4WEmNYhoez_Xh3Q656nRCC59uTbIA65c_ZcSbxum2M","",""),
-	ORDER_REMINDING("订单状态变更通知","mJdHozupHuFS0yQwSZH3MIkejgjO3qwtyArZ93sVCv0","https://health.food-see.com/weixin/order/detail/",""),
-	UPGRADE_FRUIT_DOCTOR("推荐上明星鲜果师通知","QVEui2alNQ4idRXX8gyG2eWKI7jD1infNQD4TX0oC0k","","");
+	MEMBER_SHIP("会员加入提醒","9ehsO00SfJrMFh8BVEXE7LlTjEuj2S8KEF2MPScfWXw","",""),
+	PURCHASE_NOTICE("购买成功通知","YrOXNEn-TcH3qHNL4-vjdcNe5SzAlGusqMZ87Zz3-d8","https://health.food-see.com/weixin/order/detail/",""),
+	APPLY_FRUIT_DOCTOR("申请鲜果师","r3BxOwDyu3RNeWSOjvonT4ezaBGoXos-A0P3RBpqmUI","",""),
+	NOTICE_OF_PRESENTATION("提现申请通知","P6G0reCkG4igJourVrHBZklrzIQFg1wbdPCfyDo8T08","",""),
+	ORDER_REMINDING("订单状态变更通知","YGIpgCSkS3U5m-Kzk-aRw2QDywwb-Vqr814Z7IsGerQ","https://health.food-see.com/weixin/order/detail/",""),
+	UPGRADE_FRUIT_DOCTOR("推荐上明星鲜果师通知","9ehsO00SfJrMFh8BVEXE7LlTjEuj2S8KEF2MPScfWXw","","");
 	
 	@Getter
 	String templateId;
