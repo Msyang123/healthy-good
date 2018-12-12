@@ -19,7 +19,7 @@ import lombok.ToString;
 @ToString(callSuper = true)
 @ApiModel
 @NoArgsConstructor
-public class DoctorUser{
+public class DoctorCustomer{
 
     /**
     *id

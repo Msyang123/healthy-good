@@ -6,10 +6,10 @@ import com.lhiot.healthygood.domain.doctor.Achievement;
 import com.lhiot.healthygood.domain.doctor.DoctorAchievementLog;
 import com.lhiot.healthygood.domain.doctor.IncomeStat;
 import com.lhiot.healthygood.domain.doctor.TeamAchievement;
-import com.lhiot.healthygood.domain.user.DoctorUser;
+import com.lhiot.healthygood.domain.user.DoctorCustomer;
 import com.lhiot.healthygood.domain.user.FruitDoctor;
 import com.lhiot.healthygood.mapper.doctor.DoctorAchievementLogMapper;
-import com.lhiot.healthygood.mapper.user.DoctorUserMapper;
+import com.lhiot.healthygood.mapper.user.DoctorCustomerMapper;
 import com.lhiot.healthygood.mapper.user.FruitDoctorMapper;
 import com.lhiot.healthygood.type.DateTypeEnum;
 import com.lhiot.healthygood.type.PeriodType;
@@ -34,14 +34,14 @@ import java.util.Objects;
 public class DoctorAchievementLogService {
 
     private final DoctorAchievementLogMapper doctorAchievementLogMapper;
-    private final DoctorUserMapper doctorUserMapper;
+    private final DoctorCustomerMapper doctorCustomerMapper;
     private final FruitDoctorMapper fruitDoctorMapper;
 
     @Autowired
-    public DoctorAchievementLogService(DoctorAchievementLogMapper doctorAchievementLogMapper, DoctorUserMapper doctorUserMapper,
-									   FruitDoctorMapper fruitDoctorMapper) {
+    public DoctorAchievementLogService(DoctorAchievementLogMapper doctorAchievementLogMapper,
+									   DoctorCustomerMapper doctorCustomerMapper, FruitDoctorMapper fruitDoctorMapper) {
 		this.doctorAchievementLogMapper = doctorAchievementLogMapper;
-        this.doctorUserMapper = doctorUserMapper;
+		this.doctorCustomerMapper = doctorCustomerMapper;
         this.fruitDoctorMapper = fruitDoctorMapper;
     }
 
@@ -63,8 +63,8 @@ public class DoctorAchievementLogService {
     	Long userId = doctorAchievementLog.getUserId();
     	Long superiorDoctorId = 0L;
     	//根据用户id查询其隶属的鲜果师，以及其鲜果师的上级鲜果师
-    	DoctorUser doctorUser = doctorUserMapper.selectById(userId);
-    	Long doctorId = doctorUser.getDoctorId();
+    	DoctorCustomer doctorCustomer = doctorCustomerMapper.selectById(userId);
+    	Long doctorId = doctorCustomer.getDoctorId();
     	//获取该鲜果师的上级鲜果师
     	if(Objects.nonNull(doctorId) && Objects.equals(doctorId, 0L)){
     		FruitDoctor fruitDoctor = fruitDoctorMapper.selectById(doctorId);

@@ -5,12 +5,12 @@ import com.leon.microx.util.StringUtils;
 import com.leon.microx.web.result.Tips;
 import com.lhiot.dc.dictionary.DictionaryClient;
 import com.lhiot.dc.dictionary.module.Dictionary;
-import com.lhiot.healthygood.domain.user.DoctorUser;
+import com.lhiot.healthygood.domain.user.DoctorCustomer;
 import com.lhiot.healthygood.event.SendCaptchaSmsEvent;
 import com.lhiot.healthygood.feign.BaseUserServerFeign;
 import com.lhiot.healthygood.feign.model.UserDetailResult;
 import com.lhiot.healthygood.feign.model.WeChatRegisterParam;
-import com.lhiot.healthygood.mapper.user.DoctorUserMapper;
+import com.lhiot.healthygood.mapper.user.DoctorCustomerMapper;
 import com.lhiot.healthygood.mapper.user.FruitDoctorMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,7 +38,7 @@ import java.util.Optional;
 public class FruitDoctorUserService {
 
     private final FruitDoctorMapper fruitDoctorMapper;
-    private final DoctorUserMapper doctorUserMapper;
+    private final DoctorCustomerMapper doctorCustomerMapper;
     private DictionaryClient dictionaryClient;
     private final BaseUserServerFeign baseUserServerFeign;
     private final ApplicationEventPublisher publisher;
@@ -47,14 +47,13 @@ public class FruitDoctorUserService {
 
     @Autowired
     public FruitDoctorUserService(FruitDoctorMapper fruitDoctorMapper,
-                                  DictionaryClient dictionaryClient,
+                                  DoctorCustomerMapper doctorCustomerMapper, DictionaryClient dictionaryClient,
                                   BaseUserServerFeign baseUserServerFeign,
-                                  DoctorUserMapper doctorUserMapper,
                                   ApplicationEventPublisher publisher) {
         this.fruitDoctorMapper = fruitDoctorMapper;
+        this.doctorCustomerMapper = doctorCustomerMapper;
         this.dictionaryClient = dictionaryClient;
         this.baseUserServerFeign = baseUserServerFeign;
-        this.doctorUserMapper = doctorUserMapper;
         this.publisher = publisher;
     }
 
@@ -75,13 +74,13 @@ public class FruitDoctorUserService {
         int i = createdUri.lastIndexOf("/");
         createdUri = createdUri.substring(i + 1, createdUri.length());
         ResponseEntity<UserDetailResult> baseUser = baseUserServerFeign.findById(Long.valueOf(createdUri));
-        DoctorUser doctorUser = new DoctorUser();
+        DoctorCustomer doctorCustomer = new DoctorCustomer();
         if (baseUser.getStatusCode().is2xxSuccessful()) {
-            doctorUser.setUserId(baseUser.getBody().getId());
+            doctorCustomer.setUserId(baseUser.getBody().getId());
         }
-        doctorUser.setRemark(baseUser.getBody().getNickname());
-        doctorUser.setDoctorId(weChatRegisterParam.getDoctorId());
-        if (doctorUserMapper.create(doctorUser) <= 0) {
+        doctorCustomer.setRemark(baseUser.getBody().getNickname());
+        doctorCustomer.setDoctorId(weChatRegisterParam.getDoctorId());
+        if (doctorCustomerMapper.create(doctorCustomer) <= 0) {
             return Tips.warn("鲜果师与客户关联失败！");
         }
         return Tips.info("用户创建成功").data((UserDetailResult) baseUser.getBody());
