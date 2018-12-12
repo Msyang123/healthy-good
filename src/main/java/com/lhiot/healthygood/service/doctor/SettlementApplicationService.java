@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Arrays;
+import java.util.List;
 
 /**
  * Description:结算申请服务类
@@ -49,7 +50,7 @@ public class SettlementApplicationService {
      * @param settlementApplication
      * @param fruitDoctor
      * @return
-     * @author hfuan
+     * @author hufan
      * @date 2018/12/07 12:08:13
      */
     public Tips updateById(SettlementApplication settlementApplication, FruitDoctor fruitDoctor) {
@@ -116,6 +117,19 @@ public class SettlementApplicationService {
             total = this.count(settlementApplication);
         }
         return Pages.of(total, this.settlementApplicationMapper.pageSettlementApplications(settlementApplication));
+    }
+
+    /**
+     * Description: 修改结算申请失效状态
+     *
+     * @param list
+     * @return
+     * @author Limiaojun
+     * @date 2018/08/22 09:52:13
+     */
+    public long updateExpiredStatus(List<Long> list){
+
+        return settlementApplicationMapper.updateExpiredStatus(list);
     }
 }
 

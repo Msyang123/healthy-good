@@ -239,14 +239,14 @@ public class CustomOrderApi {
 
         Tips<CustomOrder> tips = customOrderService.selectByCode(orderCode, true);
         if (tips.err()) {
-            return ResponseEntity.badRequest().body(Tips.warn(tips.getMessage()));
+            return ResponseEntity.badRequest().body(tips.getMessage());
         }
         CustomOrder customOrder = tips.getData();
 
         // 查找用户信息
         ResponseEntity<UserDetailResult> userEntity = baseUserServerFeign.findById(customOrder.getUserId());
         if (userEntity.getStatusCode().isError()) {
-            return ResponseEntity.badRequest().body(Tips.warn("查找用户信息失败"));
+            return ResponseEntity.badRequest().body("查找用户信息失败");
         }
         UserDetailResult userDetailResult = userEntity.getBody();
         customOrder.setNickname(userDetailResult.getNickname());

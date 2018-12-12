@@ -111,12 +111,12 @@ public class NewSpecialActivityApi {
 
         Tips tips = activityProductService.create(activityProduct);
         if (tips.err()) {
-            return ResponseEntity.badRequest().body(Tips.warn(tips.getMessage()));
+            return ResponseEntity.badRequest().body(tips.getMessage());
         }
         Long activityProductId = Long.valueOf(tips.getMessage());
-        return activityProductId > 0 ?
-                ResponseEntity.created(URI.create("/activity-products/" + activityProductId)).body(Maps.of("id", activityProductId)) :
-                ResponseEntity.badRequest().body(Tips.warn("添加新品尝鲜活动商品失败!"));
+        return activityProductId > 0
+                ? ResponseEntity.created(URI.create("/activity-products/" + activityProductId)).body(Maps.of("id", activityProductId))
+                : ResponseEntity.badRequest().body("添加新品尝鲜活动商品失败!");
     }
 
     @Sessions.Uncheck
@@ -130,7 +130,7 @@ public class NewSpecialActivityApi {
         log.debug("修改新品尝鲜活动商品\t param:{}", activityProduct);
 
         Tips tips = activityProductService.updateById(id,activityProduct);
-        return !tips.err() ? ResponseEntity.ok().build() : ResponseEntity.badRequest().body(Tips.warn("修改信息失败!"));
+        return tips.err() ? ResponseEntity.badRequest().body("修改新品尝鲜活动商品失败!") : ResponseEntity.ok().build();
     }
 
     @Sessions.Uncheck
@@ -141,19 +141,17 @@ public class NewSpecialActivityApi {
         log.debug("批量删除新品尝鲜活动商品\t param:{}", ids);
 
         Tips tips = activityProductService.batchDeleteByIds(ids);
-        return !tips.err() ? ResponseEntity.noContent().build() : ResponseEntity.badRequest().body(Tips.warn(tips.getMessage()));
+        return tips.err() ? ResponseEntity.badRequest().body(tips.getMessage()) : ResponseEntity.noContent().build();
     }
 
     @Sessions.Uncheck
     @ApiOperation(value = "根据条件分页查询新品尝鲜活动商品信息列表(后台)", response = ActivityProductResult.class, responseContainer = "Set")
     @ApiImplicitParam(paramType = ApiParamType.BODY, name = "param", value = "查询条件", dataType = "ActivityProductParam")
     @PostMapping("/activity-products/pages")
-    public ResponseEntity<Tips> search(@RequestBody ActivityProductParam param) {
+    public ResponseEntity search(@RequestBody ActivityProductParam param) {
         log.debug("根据条件分页查询新品尝鲜活动商品信息列表\t param:{}", param);
 
         Pages<ActivityProductResult> pages = activityProductService.findList(param);
-        Tips tips = new Tips();
-        tips.setData(pages);
-        return ResponseEntity.ok(tips);
+        return ResponseEntity.ok(pages);
     }
 }
