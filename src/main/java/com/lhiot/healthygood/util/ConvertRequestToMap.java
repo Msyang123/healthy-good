@@ -83,7 +83,7 @@ public class ConvertRequestToMap {
                     for (XNode node : nodes) {
                         parameters.put(node.tegName(), node.body());
                     }
-
+                    return parameters;
                 }
             }
         } catch (IOException ignore) {

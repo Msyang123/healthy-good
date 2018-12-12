@@ -4,8 +4,8 @@ import com.leon.microx.util.DateTime;
 import com.leon.microx.util.StringUtils;
 import com.leon.microx.web.result.Pages;
 import com.leon.microx.web.session.Sessions;
-import com.lhiot.healthygood.domain.common.DeliverTime;
 import com.lhiot.healthygood.feign.DeliverServiceFeign;
+import com.lhiot.healthygood.feign.model.DeliverTime;
 import com.lhiot.healthygood.feign.model.Store;
 import com.lhiot.healthygood.service.common.CommonService;
 import io.swagger.annotations.Api;
@@ -40,6 +40,8 @@ public class CommonsApi {
     private static final LocalTime END_DELIVER_OF_DAY = LocalTime.parse("21:30:01");
     private static final DateTimeFormatter FULL = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
+    private static final DateTimeFormatter HOUR_AND_MIN = DateTimeFormatter.ofPattern("HH:mm");
+
     @Autowired
     public CommonsApi(CommonService commonService, DeliverServiceFeign deliverServiceFeign) {
         this.commonService = commonService;
@@ -59,7 +61,7 @@ public class CommonsApi {
 
         while (latest.compareTo(current) >= 0) {
             LocalDateTime next = current.plusHours(1);
-            String display = StringUtils.format("{}-{}", current.format(FULL), next.format(FULL));
+            String display = StringUtils.format("{}-{}", current.format(HOUR_AND_MIN), next.format(HOUR_AND_MIN));
             times.add(DeliverTime.of(display, DateTime.convert(current), DateTime.convert(next)));
             current = next;
         }
@@ -77,7 +79,7 @@ public class CommonsApi {
     @Sessions.Uncheck
     @ApiOperation(value = "计算配送距离（收获地址与智能选择最近的门店）", response = Store.class, responseContainer = "List")
     @GetMapping("/delivery/distance")
-    public ResponseEntity nearStore(@RequestParam("address") String address, @RequestParam("lng") Double lng, @RequestParam("lat") Double lat) {
+    public ResponseEntity nearStore(@RequestParam(value = "address", required = false) String address, @RequestParam(value = "lng" , required = false) Double lng, @RequestParam(value = "lat", required = false) Double lat) {
         Pages<Store> storeResult = commonService.nearStore(address, lng, lat);
         if (Objects.isNull(storeResult)) {
             return ResponseEntity.badRequest().body("未找到门店");
