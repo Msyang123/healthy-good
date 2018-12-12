@@ -16,8 +16,12 @@ import org.springframework.web.bind.annotation.*;
 public interface OrderServiceFeign {
 
     //创建订单
-    @RequestMapping(value = "/orders/", method = RequestMethod.POST)
+    @RequestMapping(value = "/orders", method = RequestMethod.POST)
     ResponseEntity<OrderDetailResult> createOrder(@RequestBody CreateOrderParam orderParam);
+
+    //创建一个已支付订单
+    @RequestMapping(value = "/orders/paid", method = RequestMethod.POST)
+    ResponseEntity<OrderDetailResult> createPaidOrder(@RequestBody CreateOrderParam orderParam);
 
     //海鼎备货回调，送货上门订单修改订单状态为WAIT_DISPATCHING，且会主动发送配送
     @RequestMapping(value = "/orders/{orderCode}/delivery", method = RequestMethod.PUT)

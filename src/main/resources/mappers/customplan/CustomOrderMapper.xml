@@ -20,6 +20,7 @@
         <result column="specification_id" property="specificationId"/>
         <result column="quantity" property="quantity"/>
         <result column="store_code" property="storeCode"/>
+        <result column="pay_id" property="payId"/>
     </resultMap>
 
     <!-- 数据库连表查询字段对象关系映射 -->
@@ -40,6 +41,7 @@
         <result column="specification_id" property="specificationId"/>
         <result column="quantity" property="quantity"/>
         <result column="store_code" property="storeCode"/>
+        <result column="pay_id" property="payId"/>
         <association property="customPlan" javaType="com.lhiot.healthygood.domain.customplan.CustomPlan">
             <id column="p_id" property="id"/>
             <result column="p_name" property="name"/>
@@ -70,6 +72,7 @@
             specification_id,
             quantity,
             store_code,
+            pay_id,
         </trim>
     </sql>
 
@@ -93,6 +96,7 @@
             o.specification_id,
             o.quantity,
             o.store_code,
+            o.pay_id
 
             p.id p_id,
             p.name p_name,
@@ -221,6 +225,9 @@
             </if>
             <if test="remainingQty != null ">
                 remaining_qty = remaining_qty-1,
+            </if>
+            <if test="payId !=null">
+                pay_id = #{payId},
             </if>
         </set>
         where custom_order_code=#{customOrderCode}

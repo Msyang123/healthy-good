@@ -9,6 +9,7 @@ import com.lhiot.healthygood.feign.OrderServiceFeign;
 import com.lhiot.healthygood.feign.PaymentServiceFeign;
 import com.lhiot.healthygood.feign.model.BalanceOperationParam;
 import com.lhiot.healthygood.feign.model.Payed;
+import com.lhiot.healthygood.feign.model.PayedModel;
 import com.lhiot.healthygood.feign.type.ApplicationType;
 import com.lhiot.healthygood.feign.type.OperationStatus;
 import com.lhiot.healthygood.mapper.customplan.CustomOrderMapper;
@@ -60,7 +61,7 @@ public class WxCallbackApi {
 
         Tips wxVerifyTips = wxVerify(parameters);
         if (wxVerifyTips.err()) {
-            //TODO 基础支付服务如果有取消或者关单接口就调用
+            //基础支付服务如果有取消或者关单接口就调用
             log.error("订单支付微信回调参数验签失败:{},{}", parameters, wxVerifyTips);
             return ResponseEntity.badRequest().body(wxVerifyTips.getMessage());
         }
@@ -92,7 +93,7 @@ public class WxCallbackApi {
         Map<String, String> parameters = ConvertRequestToMap.convertRequestXmlFormatToMap(request);
         Tips wxVerifyTips = wxVerify(parameters);
         if (wxVerifyTips.err()) {
-            //TODO 基础支付服务如果有取消或者关单接口就调用
+            //基础支付服务如果有取消或者关单接口就调用
             log.error("充值微信回调参数验签失败{},{}", parameters, wxVerifyTips);
             return ResponseEntity.badRequest().body(wxVerifyTips.getMessage());
         }
@@ -111,10 +112,10 @@ public class WxCallbackApi {
             return ResponseEntity.badRequest().body("微信回调参数验签失败");
         }
         //修改支付日志
-        Payed payed = new Payed();
+        PayedModel payed = new PayedModel();
         payed.setBankType(parameters.get("bank_type"));
         payed.setPayAt(DateTime.date(parameters.get("time_end"), "yyyyMMddHHmmss"));
-        payed.setPayId(parameters.get("out_trade_no"));
+        //payed.setPayId(parameters.get("out_trade_no"));
         payed.setTradeId(parameters.get("transaction_id"));
         paymentServiceFeign.completed(parameters.get("out_trade_no"), payed);
         return ResponseEntity.ok("<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
@@ -130,15 +131,15 @@ public class WxCallbackApi {
         //调用基础服务验证参数签名是否正确
         Tips wxVerifyTips = wxVerify(parameters);
         if (wxVerifyTips.err()) {
-            //TODO 基础支付服务如果有取消或者关单接口就调用
+            //基础支付服务如果有取消或者关单接口就调用
             log.error("定制计划支付微信回调参数验签失败:{},{}", parameters, wxVerifyTips);
             return ResponseEntity.badRequest().body(wxVerifyTips.getMessage());
         }
 
-        Payed payed = new Payed();
+        PayedModel payed = new PayedModel();
         payed.setBankType(parameters.get("bank_type"));
         payed.setPayAt(DateTime.date(parameters.get("time_end"), "yyyyMMddHHmmss"));
-        payed.setPayId(parameters.get("out_trade_no"));
+        //payed.setPayId(parameters.get("out_trade_no"));
         payed.setTradeId(parameters.get("transaction_id"));
         Tips tips = FeginResponseTools.convertResponse(paymentServiceFeign.completed(parameters.get("out_trade_no"), payed));
         if (tips.err()) {
@@ -150,6 +151,7 @@ public class WxCallbackApi {
         CustomOrder customOrder = new CustomOrder();
         customOrder.setCustomOrderCode(customOrderCode);
         customOrder.setStatus(CustomOrderStatus.CUSTOMING);//定制中
+        customOrder.setPayId(parameters.get("out_trade_no"));//第三方支付id
         log.info("定制计划支付微信回调-后端回调处理{}", customOrder);
         customOrderMapper.updateByCode(customOrder);
         return ResponseEntity.ok("success");

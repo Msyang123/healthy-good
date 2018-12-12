@@ -1,6 +1,5 @@
 package com.lhiot.healthygood.service.customplan;
 
-import com.esotericsoftware.kryo.util.IdentityMap;
 import com.leon.microx.predefine.OnOff;
 import com.leon.microx.util.BeanUtils;
 import com.leon.microx.util.Maps;
@@ -9,10 +8,7 @@ import com.leon.microx.web.result.Pages;
 import com.leon.microx.web.result.Tips;
 import com.lhiot.dc.dictionary.DictionaryClient;
 import com.lhiot.dc.dictionary.module.Dictionary;
-import com.lhiot.healthygood.domain.customplan.CustomPlan;
-import com.lhiot.healthygood.domain.customplan.CustomPlanProduct;
-import com.lhiot.healthygood.domain.customplan.CustomPlanSectionRelation;
-import com.lhiot.healthygood.domain.customplan.CustomPlanSpecification;
+import com.lhiot.healthygood.domain.customplan.*;
 import com.lhiot.healthygood.domain.customplan.model.*;
 import com.lhiot.healthygood.feign.BaseDataServiceFeign;
 import com.lhiot.healthygood.feign.model.Product;
@@ -97,6 +93,7 @@ public class CustomPlanService {
         ProductShelfParam productShelfParam = new ProductShelfParam();
         productShelfParam.setIds(StringUtils.arrayToCommaDelimitedString(shelfIds));
         productShelfParam.setShelfStatus(OnOff.ON);
+        productShelfParam.setIncludeProduct(true);
         //查找基础服务上架商品信息
         Tips<Pages<ProductShelf>> productShelfTips = FeginResponseTools.convertResponse(baseDataServiceFeign.searchProductShelves(productShelfParam));
         //如果查询失败直接不返回基础数据信息
@@ -120,6 +117,7 @@ public class CustomPlanService {
                     CustomPlanProductResult customPlanProductResult = new CustomPlanProductResult();
                     BeanUtils.copyProperties(customPlanProduct, customPlanProductResult);
                     customPlanProductResult.setImage(item.getImage());//设置上架图
+                    customPlanProductResult.setProductName(item.getName());//设置上架名称
 
                     if (Objects.nonNull(item.getProductSpecification())) {
                         Tips<Product> productTips = FeginResponseTools.convertResponse(baseDataServiceFeign.single(item.getProductSpecification().getProductId()));//查询商品益处
@@ -135,8 +133,11 @@ public class CustomPlanService {
         return customPlanPeriodResult;
     }
 
-    public CustomPlanSpecification findCustomPlanSpecificationDetail(Long id) {
-        return customPlanSpecificationMapper.selectById(id);
+    public CustomPlanAndSpecification findCustomPlanSpecificationDetail(Long id) {
+        CustomPlanAndSpecification customPlanAndSpecification = new  CustomPlanAndSpecification();
+        customPlanAndSpecification.setCustomPlanSpecification(customPlanSpecificationMapper.selectById(id));
+        customPlanAndSpecification.setCustomPlan(customPlanMapper.selectById(customPlanAndSpecification.getCustomPlanSpecification().getPlanId()));
+        return customPlanAndSpecification;
     }
 
     public Optional<Dictionary> dictionaryOptional(String code){

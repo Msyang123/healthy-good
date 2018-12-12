@@ -6,6 +6,7 @@ import com.leon.microx.web.result.Tips;
 import com.leon.microx.web.session.Sessions;
 import com.leon.microx.web.swagger.ApiParamType;
 import com.lhiot.dc.dictionary.module.Dictionary;
+import com.lhiot.healthygood.domain.customplan.CustomPlanAndSpecification;
 import com.lhiot.healthygood.domain.customplan.CustomPlanSpecification;
 import com.lhiot.healthygood.domain.customplan.model.CustomPlanDetailResult;
 import com.lhiot.healthygood.domain.customplan.model.CustomPlanParam;
@@ -58,7 +59,7 @@ public class CustomPlanApi {
     @GetMapping("/custom-plans-specification/{specificationId}")
     @ApiOperation(value = "定制计划规格信息（创建定制计划订单信息页面）")
     @ApiImplicitParam(paramType = ApiParamType.PATH, name = "specificationId", value = "定制计划规格id", dataType = "Long", required = true)
-    public ResponseEntity<CustomPlanSpecification> specificationDetail(@PathVariable Long specificationId) {
+    public ResponseEntity<CustomPlanAndSpecification> specificationDetail(@PathVariable Long specificationId) {
         return ResponseEntity.ok(customPlanService.findCustomPlanSpecificationDetail(specificationId));
     }
 

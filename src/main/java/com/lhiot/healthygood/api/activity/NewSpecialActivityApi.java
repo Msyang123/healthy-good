@@ -93,6 +93,7 @@ public class NewSpecialActivityApi {
             Integer alreadyCount = activityProductRecordService.selectRecordCount(activityProductRecord);
             product.setAlreadyBuyCount(alreadyCount);
             product.setShelfId(item.getProductShelfId());
+            product.setActivityPrice(item.getActivityPrice());
             activityProducts.add(product);
         });
         NewSpecialResult newSpecialResult = new NewSpecialResult();
