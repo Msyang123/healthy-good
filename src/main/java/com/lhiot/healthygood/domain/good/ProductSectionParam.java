@@ -7,8 +7,6 @@ import lombok.Data;
 
 @Data
 public class ProductSectionParam {
-    private YesOrNo flag;
-
     @ApiModelProperty(notes = "每页查询条数(为空或0不分页查所有)", dataType = "Integer")
     private Integer rows;
     @ApiModelProperty(notes = "当前页", dataType = "Integer")

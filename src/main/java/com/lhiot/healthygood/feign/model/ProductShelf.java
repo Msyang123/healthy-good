@@ -1,11 +1,13 @@
 package com.lhiot.healthygood.feign.model;
 
+import com.fasterxml.jackson.annotation.JsonAlias;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.leon.microx.predefine.OnOff;
 import com.lhiot.healthygood.type.ShelfType;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
-import jdk.nashorn.internal.ir.annotations.Ignore;
 import lombok.Data;
+import springfox.documentation.annotations.ApiIgnore;
 
 import java.math.BigDecimal;
 import java.util.Date;
@@ -18,8 +20,10 @@ import java.util.Date;
 public class ProductShelf {
     @ApiModelProperty(notes = "规格对象", dataType = "ProductSpecification")
     private ProductSpecification productSpecification;
-    @ApiModelProperty(notes = "主键Id", dataType = "Long", readOnly = true)
+    @ApiModelProperty(/*notes = "主键Id", dataType = "Long",*/ readOnly = true, hidden = true)
     private Long id;
+    @ApiModelProperty(notes="上架商品ID 对于基础服务 规格对象 主键Id",dataType="Long")
+    private Long shelfId;
     @ApiModelProperty(notes = "上架名称", dataType = "String")
     private String name;
     @ApiModelProperty(notes = "规格ID", dataType = "Long")
@@ -53,5 +57,8 @@ public class ProductShelf {
     @ApiModelProperty(notes = "已经购买的份数", dataType = "Integer")
     private Integer alreadyBuyAmount;
 
-
+    public void setId(Long id) {
+        this.id = id;
+        this.shelfId = id;
+    }
 }

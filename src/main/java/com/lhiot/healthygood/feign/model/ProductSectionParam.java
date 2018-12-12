@@ -15,7 +15,7 @@ import java.util.Date;
 public class ProductSectionParam {
     private String ids;
     @ApiModelProperty(notes = "位置ID", dataType = "Long")
-    private Long positionId;
+    private String positionIds;
     @ApiModelProperty(notes = "父级ID", dataType = "Long")
     private Long parentId;
     @ApiModelProperty(notes = "板块名称", dataType = "String")

@@ -49,31 +49,29 @@ public class ProductSectionApi {
         this.activityProductService = activityProductService;
     }
 
-    /*@Sessions.Uncheck
+    @Sessions.Uncheck
     @PostMapping("/product-sections/{id}")
     @ApiImplicitParams({
             @ApiImplicitParam(paramType = ApiParamType.PATH, name = "id", value = "板块编号", dataType = "Long", required = true),
             @ApiImplicitParam(paramType = ApiParamType.BODY, name = "productSectionParam", value = "板块信息", dataType = "ProductSectionParam")
     })
     @ApiOperation(value = "某个商品板块的商品信息列表",response = ProductSection.class)
-    public ResponseEntity<Tips> productSections(@PathVariable("id") Long id, @RequestBody com.lhiot.healthygood.domain.good.ProductSectionParam productSectionParam) {
+    public ResponseEntity<Pages<ProductShelf>> productSections(@PathVariable("id") Long id, @RequestBody com.lhiot.healthygood.domain.good.ProductSectionParam productSectionParam) {
         ProductShelfParam productShelfParam = new ProductShelfParam();
         productShelfParam.setSectionId(id);
         BeanUtils.copyProperties(productSectionParam,productShelfParam);
         ResponseEntity<Pages<ProductShelf>> pagesResponseEntity = baseDataServiceFeign.searchProductShelves(productShelfParam);
-        //ResponseEntity<ProductSection> productSectionResponseEntity = baseDataServiceFeign.singleProductSection(id, Objects.equals(flag,YesOrNo.YES), null);
-        Tips tips = FeginResponseTools.convertResponse(pagesResponseEntity);
-        return FeginResponseTools.returnTipsResponse(tips);
-    }*/
+        return pagesResponseEntity;
+    }
 
     @Sessions.Uncheck
-    @PostMapping("/product-sections/position")
+    @GetMapping("/product-sections/position")
     @ApiImplicitParams({
             @ApiImplicitParam(paramType = ApiParamType.QUERY, name = "code", value = "位置编号", dataType = "String", required = true),
             @ApiImplicitParam(paramType = ApiParamType.QUERY, name = "flag", value = "是否查询商品信息", dataType = "YesOrNo")
     })
-    @ApiOperation(value = "根据位置编码查询所有商品板块列表（商品信息可选）",response = ProductSection.class)
-    public ResponseEntity positionProductSection(@RequestParam(value = "code") String code, @RequestParam(value = "flag") YesOrNo flag) {
+    @ApiOperation(value = "根据位置编码查询所有商品板块列表（商品信息可选）",response = ProductSection.class,responseContainer = "List")
+    public ResponseEntity positionProductSection(@RequestParam(value = "code") String code, @RequestParam(value = "flag",required = false) YesOrNo flag) {
         UiPositionParam uiPositionParam = new UiPositionParam();
         uiPositionParam.setApplicationType("HEALTH_GOOD");
         uiPositionParam.setCodes(code);
@@ -81,24 +79,29 @@ public class ProductSectionApi {
         if (Objects.isNull(uiPositionEntity) || uiPositionEntity.getStatusCode().isError()){
             return uiPositionEntity;
         }
-       Long positionId = uiPositionEntity.getBody().getArray().get(0).getId();
+        List<String> positionIds = new ArrayList<>();
+        uiPositionEntity.getBody().getArray().forEach(uiPosition -> {
+            positionIds.add(uiPosition.getId().toString());
+        });
 
         boolean flags = false;
-        if (Objects.equals(flag.toString(),"YES")){
-            flags = true;
-
+        if (Objects.nonNull(flag)){
+            if (Objects.equals(flag.toString(),"YES")){
+                flags = true;
+            }
         }
-
         ProductSectionParam productSectionParam = new ProductSectionParam();
-        productSectionParam.setPositionId(positionId);
+        productSectionParam.setPositionIds(StringUtils.collectionToDelimitedString(positionIds,","));
         productSectionParam.setIncludeShelves(flags);
-        productSectionParam.setIncludeShelves(true);
         ResponseEntity<Pages<ProductSection>> pagesResponseEntity = baseDataServiceFeign.searchProductSection(productSectionParam);
         List<ProductSection> productSections = pagesResponseEntity.getBody().getArray();
-        productSections.stream().filter(Objects::nonNull).forEach(productSection ->
-            productSection.getProductShelfList().stream().filter(Objects::nonNull).forEach(productShelf ->
-                productShelf.setPrice(Objects.isNull(productShelf.getPrice()) ? productShelf.getOriginalPrice() : productShelf.getPrice())
-            )
+        productSections.stream().filter(Objects::nonNull).forEach(productSection ->{
+                if (Objects.nonNull(productSection.getProductShelfList())){
+                    productSection.getProductShelfList().stream().filter(Objects::nonNull).forEach(productShelf ->{
+                        productShelf.setPrice(Objects.isNull(productShelf.getPrice()) ? productShelf.getOriginalPrice() : productShelf.getPrice());
+                    });
+                }
+            }
         );
         return pagesResponseEntity;
     }
@@ -207,8 +210,8 @@ public class ProductSectionApi {
     @Sessions.Uncheck
     @ApiImplicitParam(paramType = ApiParamType.BODY, name = "productSearchParam", value = "搜索商品条件", dataType = "ProductSearchParam", required = true)
     @PostMapping("/product/search")
-    @ApiOperation(value = "查询/搜索商品",response = ProductShelf.class )
-    public ResponseEntity searchProduct(@RequestBody ProductSearchParam productSearchParam) {
+    @ApiOperation(value = "查询/搜索商品" )
+    public ResponseEntity<Pages<ProductShelf>> searchProduct(@RequestBody ProductSearchParam productSearchParam) {
         ProductShelfParam productShelfParam = new ProductShelfParam();
         productShelfParam.setApplicationType("HEALTH_GOOD");
         productShelfParam.setKeyword(productSearchParam.getKeywords());
@@ -221,7 +224,7 @@ public class ProductSectionApi {
             return pagesResponseEntity;
         }
         this.setPrice(pagesResponseEntity.getBody().getArray());
-        return ResponseEntity.ok(pagesResponseEntity);
+        return pagesResponseEntity;
     }
 
 }
