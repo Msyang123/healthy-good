@@ -1,5 +1,6 @@
 package com.lhiot.healthygood.domain.activity;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.lhiot.healthygood.type.ShelfType;
 import com.lhiot.healthygood.type.ValidOrInvalid;
 import io.swagger.annotations.ApiModel;
@@ -14,7 +15,7 @@ import java.math.BigDecimal;
 @NoArgsConstructor
 public class ActivityProducts {
 
-    @ApiModelProperty(notes="活动ID",dataType="Long")
+    @ApiModelProperty(notes="活动商品ID",dataType="Long")
     private Long id;
 
     @ApiModelProperty(notes="上架商品ID",dataType="Long")
@@ -26,6 +27,7 @@ public class ActivityProducts {
     @ApiModelProperty(notes="已购买数量",dataType="Integer")
     private Integer alreadyBuyCount;
 
+    @JsonProperty("name")
     @ApiModelProperty(notes="商品名称",dataType="String")
     private String productName;
 
