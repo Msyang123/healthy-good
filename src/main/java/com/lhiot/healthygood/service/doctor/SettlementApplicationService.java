@@ -21,6 +21,7 @@ import java.math.BigDecimal;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.List;
 
 /**
  * Description:结算申请服务类
@@ -155,6 +156,19 @@ public class SettlementApplicationService {
         //发送模板消息
         rabbit.convertAndSend(FruitDoctorOrderExchange.FRUIT_TEMPLATE_MESSAGE.getExchangeName(),
                 FruitDoctorOrderExchange.FRUIT_TEMPLATE_MESSAGE.getQueueName(), Jackson.json(keywordValue));
+    }
+
+    /**
+     * Description: 修改结算申请失效状态
+     *
+     * @param list
+     * @return
+     * @author Limiaojun
+     * @date 2018/08/22 09:52:13
+     */
+    public long updateExpiredStatus(List<Long> list){
+
+        return settlementApplicationMapper.updateExpiredStatus(list);
     }
 }
 

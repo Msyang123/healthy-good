@@ -50,9 +50,9 @@ public class CustomPlanSectionApi {
             return ResponseEntity.badRequest().body(tips.getMessage());
         }
         Long customPlanSectionId = Long.valueOf(tips.getMessage());
-        return customPlanSectionId > 0 ?
-                ResponseEntity.created(URI.create("/custom-plan-sections/" + customPlanSectionId)).body(Maps.of("id", customPlanSectionId)) :
-                ResponseEntity.badRequest().body(Tips.warn("添加定制板块失败!"));
+        return customPlanSectionId > 0
+                ? ResponseEntity.created(URI.create("/custom-plan-sections/" + customPlanSectionId)).body(Maps.of("id", customPlanSectionId))
+                : ResponseEntity.badRequest().body("添加定制板块失败!");
     }
 
     @Sessions.Uncheck
@@ -66,7 +66,7 @@ public class CustomPlanSectionApi {
         log.debug("修改定制板块\t param:{}", customPlanSectionResultAdmin);
 
         customPlanSectionResultAdmin.setId(id);
-        return customPlanSectionService.update(customPlanSectionResultAdmin) ? ResponseEntity.ok().build() : ResponseEntity.badRequest().body(Tips.warn("修改信息失败!"));
+        return customPlanSectionService.update(customPlanSectionResultAdmin) ? ResponseEntity.ok().build() : ResponseEntity.badRequest().body("修改定制板块失败!");
     }
 
     @Sessions.Uncheck
@@ -92,20 +92,18 @@ public class CustomPlanSectionApi {
 
         customPlanSectionService.batchDeleteByIds(ids);
         Tips tips = customPlanSectionService.batchDeleteByIds(ids);
-        return tips.err() ? ResponseEntity.badRequest().body(Tips.warn(tips.getMessage())) : ResponseEntity.noContent().build();
+        return tips.err() ? ResponseEntity.badRequest().body(tips.getMessage()) : ResponseEntity.noContent().build();
     }
 
     @Sessions.Uncheck
-    @ApiOperation(value = "根据条件分页查询定制板块信息列表(后台)")
+    @ApiOperation(value = "根据条件分页查询定制板块信息列表(后台)",response = CustomPlanSection.class, responseContainer = "Set")
     @ApiImplicitParam(paramType = ApiParamType.BODY, name = "param", value = "查询条件", dataType = "CustomPlanSectionParam")
     @PostMapping("/custom-plan-sections/pages")
-    public ResponseEntity<Tips<Pages<CustomPlanSection>>> search(@RequestBody CustomPlanSectionParam param) {
+    public ResponseEntity search(@RequestBody CustomPlanSectionParam param) {
         log.debug("根据条件分页查询定制板块信息列表\t param:{}", param);
 
         Pages<CustomPlanSection> pages = customPlanSectionService.findList(param);
-        Tips<Pages<CustomPlanSection>> tips=new Tips<>();
-        tips.setData(pages);
-        return ResponseEntity.ok(tips);
+        return ResponseEntity.ok(pages);
     }
 
 
