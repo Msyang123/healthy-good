@@ -37,10 +37,11 @@ public class CustomPlanSectionRelationApi {
             @ApiImplicitParam(paramType = ApiParamType.QUERY, name = "sorts", value = "多个排序以英文逗号分隔", dataType = "String")
     })
     @PutMapping("/custom-plan-section-relations/batches")
-    public ResponseEntity updateBatch(@RequestParam("sectionId") Long sectionId, @RequestParam(value = "planIds", required = false) String planIds, @RequestParam(value = "sorts", required = false) String sorts) {
+    public ResponseEntity updateBatch(@RequestParam("sectionId") Long sectionId, @RequestParam(value = "planIds", required = false) String planIds,
+                                      @RequestParam(value = "sorts", required = false) String sorts) {
         log.debug("批量修改定制版块与定制计划关系\t sectionId: {}, planIds: {},param:{}", sectionId, planIds, sorts);
 
         Tips tips = customPlanSectionRelationService.updateRelationList(sectionId, planIds, sorts);
-        return !tips.err() ? ResponseEntity.ok().build() : ResponseEntity.badRequest().body(Tips.warn("批量修改定制版块与定制计划关系失败！"));
+        return tips.err() ? ResponseEntity.badRequest().body("批量修改定制版块与定制计划关系失败！") : ResponseEntity.ok().build();
     }
 }

@@ -12,6 +12,7 @@ import com.lhiot.healthygood.domain.customplan.model.CustomPlanDetailResult;
 import com.lhiot.healthygood.domain.customplan.model.CustomPlanParam;
 import com.lhiot.healthygood.domain.customplan.model.CustomPlanResult;
 import com.lhiot.healthygood.service.customplan.CustomPlanService;
+import com.lhiot.healthygood.util.FeginResponseTools;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
@@ -71,12 +72,12 @@ public class CustomPlanApi {
 
         Tips tips = customPlanService.addCustomPlan(customPlanDetailResult);
         if (tips.err()) {
-            return ResponseEntity.badRequest().body(Tips.warn(tips.getMessage()));
+            return ResponseEntity.badRequest().body(tips.getMessage());
         }
         Long customPlanId = Long.valueOf(tips.getMessage());
-        return customPlanId > 0 ?
-                ResponseEntity.created(URI.create("/custom-plans/" + customPlanId)).body(Maps.of("id", customPlanId)) :
-                ResponseEntity.badRequest().body(Tips.warn("添加定制计划失败!"));
+        return customPlanId > 0
+                ? ResponseEntity.created(URI.create("/custom-plans/" + customPlanId)).body(Maps.of("id", customPlanId))
+                : ResponseEntity.badRequest().body("添加定制计划失败!");
     }
 
     @Sessions.Uncheck
@@ -90,7 +91,7 @@ public class CustomPlanApi {
         log.debug("修改定制计划\t id:{} param:{}", id,customPlanDetailResult);
 
         Tips tips = customPlanService.update(id, customPlanDetailResult);
-        return !tips.err() ? ResponseEntity.ok().build() : ResponseEntity.badRequest().body(Tips.warn("修改信息失败!"));
+        return tips.err() ? ResponseEntity.badRequest().body("修改定制计划失败!") : ResponseEntity.ok().build();
     }
 
     @Sessions.Uncheck
@@ -104,7 +105,7 @@ public class CustomPlanApi {
         log.debug("修改定制计划商品\t id:{} param:{}", id,customPlanDetailResult);
 
         Tips tips = customPlanService.updateProduct(id, customPlanDetailResult);
-        return !tips.err() ? ResponseEntity.ok().build() : ResponseEntity.badRequest().body(Tips.warn("修改定制商品失败!"));
+        return tips.err() ? ResponseEntity.badRequest().body("修改定制计划商品失败!") : ResponseEntity.ok().build();
     }
 
     @Sessions.Uncheck
@@ -115,7 +116,7 @@ public class CustomPlanApi {
         log.debug("批量删除定制计划\t param:{}", ids);
 
         Tips tips = customPlanService.batchDeleteByIds(ids);
-        return !tips.err() ? ResponseEntity.noContent().build() : ResponseEntity.badRequest().body(Tips.warn(tips.getMessage()));
+        return tips.err() ? ResponseEntity.badRequest().body(tips.getMessage()) : ResponseEntity.noContent().build();
     }
 
     @Sessions.Uncheck

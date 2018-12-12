@@ -2,24 +2,30 @@ package com.lhiot.healthygood.service.doctor;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.leon.microx.util.Jackson;
+import com.leon.microx.util.auditing.Random;
 import com.leon.microx.web.result.Pages;
+import com.leon.microx.web.result.Tips;
 import com.lhiot.healthygood.domain.doctor.RegisterApplication;
+import com.lhiot.healthygood.domain.user.DoctorUser;
+import com.lhiot.healthygood.domain.user.FruitDoctor;
 import com.lhiot.healthygood.domain.user.KeywordValue;
-import com.lhiot.healthygood.type.AuditStatus;
+import com.lhiot.healthygood.feign.BaseUserServerFeign;
+import com.lhiot.healthygood.feign.model.UserDetailResult;
+import com.lhiot.healthygood.type.*;
 import com.lhiot.healthygood.mapper.doctor.RegisterApplicationMapper;
 import com.lhiot.healthygood.mapper.user.DoctorUserMapper;
 import com.lhiot.healthygood.mapper.user.FruitDoctorMapper;
-import com.lhiot.healthygood.type.BacklogEnum;
-import com.lhiot.healthygood.type.FruitDoctorOrderExchange;
-import com.lhiot.healthygood.type.TemplateMessageEnum;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.AmqpException;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.text.SimpleDateFormat;
+import java.time.Instant;
 import java.util.Date;
 import java.util.List;
 import java.util.Objects;
@@ -38,13 +44,15 @@ public class RegisterApplicationService {
     private final FruitDoctorMapper fruitDoctorMapper;
     private final DoctorUserMapper doctorUserMapper;
     private final RabbitTemplate rabbit;
+    private final BaseUserServerFeign baseUserServerFeign;
 
     @Autowired
-    public RegisterApplicationService(RegisterApplicationMapper registerApplicationMapper, FruitDoctorMapper fruitDoctorMapper, DoctorUserMapper doctorUserMapper, RabbitTemplate rabbit) {
+    public RegisterApplicationService(RegisterApplicationMapper registerApplicationMapper, FruitDoctorMapper fruitDoctorMapper, DoctorUserMapper doctorUserMapper, RabbitTemplate rabbit, BaseUserServerFeign baseUserServerFeign) {
         this.registerApplicationMapper = registerApplicationMapper;
         this.fruitDoctorMapper = fruitDoctorMapper;
         this.doctorUserMapper = doctorUserMapper;
         this.rabbit = rabbit;
+        this.baseUserServerFeign = baseUserServerFeign;
     }
 
     /** 
@@ -80,8 +88,50 @@ public class RegisterApplicationService {
      * @param registerApplication
      * @return
      */
-    public int updateById(RegisterApplication registerApplication) {
-        return this.registerApplicationMapper.updateById(registerApplication);
+    public Tips updateById(RegisterApplication registerApplication) throws JsonProcessingException {
+        boolean updated = this.registerApplicationMapper.updateById(registerApplication) > 0;
+        if (!updated) {
+            return Tips.warn("修改鲜果师申请记录失败");
+        }
+        // 发送模板消息
+        this.doctorApplicationSendToQueue(registerApplication.getAuditStatus(), registerApplication.getUserId());
+
+        // 审核通过 新增鲜果师成员记录
+        if (Objects.equals(AuditStatus.AGREE, registerApplication.getAuditStatus())) {
+            // 幂等添加
+            FruitDoctor doctor = fruitDoctorMapper.findFruitDoctorByUserId(registerApplication.getUserId());
+            if (Objects.nonNull(doctor)) {
+                return Tips.warn("该鲜果师已存在，添加失败");
+            }
+            // 设置要添加的鲜果师信息
+            FruitDoctor fruitDoctor = new FruitDoctor();
+            BeanUtils.copyProperties(registerApplication, fruitDoctor);
+            fruitDoctor.setRealName(registerApplication.getRealName());
+            fruitDoctor.setInviteCode(Random.of(4, Random.Digits._62));
+            fruitDoctor.setDoctorLevel(DoctorLevel.TRAINING.toString());
+            fruitDoctor.setDoctorStatus(DoctorStatus.VALID);
+            fruitDoctor.setCreateAt(Date.from(Instant.now()));
+            //查找推荐人
+            DoctorUser doctorUser= doctorUserMapper.selectByUserId(registerApplication.getUserId());
+            if(Objects.nonNull(doctorUser)){
+                fruitDoctor.setRefereeId(doctorUser.getDoctorId());
+            }
+            //查找基础服务对应的微信用户信息
+            ResponseEntity<UserDetailResult> userEntity = baseUserServerFeign.findById(registerApplication.getUserId());
+            if (userEntity.getStatusCode().isError()) {
+                return Tips.warn(userEntity.getBody().toString());
+            }
+            UserDetailResult userDetailResult = userEntity.getBody();
+            //设置头像默认为微信头像
+            fruitDoctor.setAvatar(userDetailResult.getAvatar());
+            fruitDoctor.setPhoto(userDetailResult.getAvatar());
+            fruitDoctor.setUpperbodyPhoto(userDetailResult.getAvatar());
+            fruitDoctor.setPhone(registerApplication.getPhone());
+            fruitDoctor.setApplicationId(registerApplication.getId());
+            fruitDoctor.setUserId(registerApplication.getUserId());
+            return fruitDoctorMapper.create(fruitDoctor) > 0 ? Tips.info("添加鲜果师成员成功") : Tips.warn("添加鲜果师成员失败");
+        }
+        return Tips.warn("审核不通过");
     }
 
     /**
