@@ -75,4 +75,32 @@ public class CustomPlanSectionRelationApi {
 
         return customPlanSectionRelationService.deleteRelation(relationId.toString()) ? ResponseEntity.noContent().build() : ResponseEntity.badRequest().body("根据关联Id删除定制版块与定制计划架关系失败！");
     }
+
+    @Sessions.Uncheck
+    @ApiOperation("批量添加定制版块与定制计划架关系")
+    @ApiImplicitParams({
+            @ApiImplicitParam(paramType = ApiParamType.QUERY, name = "sectionId", value = "商品版块Id", dataType = "Long", required = true),
+            @ApiImplicitParam(paramType = ApiParamType.QUERY, name = "planIds", value = "多个定制计划Id以英文逗号分隔", dataType = "String", required = true),
+            @ApiImplicitParam(paramType = ApiParamType.QUERY, name = "sorts", value = "多个排序以英文逗号分隔", dataType = "String", required = true)
+    })
+    @PostMapping("/product-section-relations/batches")
+    public ResponseEntity createBatch(@RequestParam("sectionId") Long sectionId, @RequestParam("planIds") String planIds, @RequestParam("sorts") String sorts) {
+        log.debug("根据关联Id删除定制版块与定制计划架关系\t sectionId:{}, planIds{}, sorts:{}", sectionId, planIds, sorts);
+
+        Tips tips = customPlanSectionRelationService.addRelationList(sectionId, planIds, sorts);
+        return tips.err() ? ResponseEntity.badRequest().body(tips.getMessage()) : ResponseEntity.ok().build();
+    }
+
+    @Sessions.Uncheck
+    @ApiOperation("批量删除定制版块与定制计划架关系")
+    @ApiImplicitParams({
+            @ApiImplicitParam(paramType = ApiParamType.QUERY, name = "sectionId", value = "商品版块Id", dataType = "Long", required = true),
+            @ApiImplicitParam(paramType = ApiParamType.QUERY, name = "shelfIds", value = "多个商品上架Id以英文逗号分隔,为空则删除此版块所有上架关系", dataType = "String")
+    })
+    @DeleteMapping("/product-section-relations/batches")
+    public ResponseEntity deleteBatch(@RequestParam("sectionId") Long sectionId, @RequestParam(value = "shelfIds", required = false) String shelfIds) {
+        log.debug("根据关联Id删除定制版块与定制计划架关系\t sectionId:{}, shelfIds:{}", sectionId, shelfIds);
+
+        return customPlanSectionRelationService.deleteRelationList(sectionId, shelfIds) ? ResponseEntity.noContent().build() : ResponseEntity.badRequest().body("删除信息失败！");
+    }
 }

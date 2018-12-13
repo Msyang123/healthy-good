@@ -81,4 +81,11 @@ public class CustomPlan{
      */
     @ApiModelProperty(value = "定制最低价格", dataType = "Long")
     private Long price;
+
+    /**
+     *定制计划排序
+     */
+    @JsonProperty("sort")
+    @ApiModelProperty(value = "定制计划排序", dataType = "Long")
+    private Long sort;
 }
