@@ -21,6 +21,7 @@
         <result column="quantity" property="quantity"/>
         <result column="store_code" property="storeCode"/>
         <result column="pay_id" property="payId"/>
+        <result column="description" property="description"/>
     </resultMap>
 
     <!-- 数据库连表查询字段对象关系映射 -->
@@ -42,6 +43,7 @@
         <result column="quantity" property="quantity"/>
         <result column="store_code" property="storeCode"/>
         <result column="pay_id" property="payId"/>
+        <result column="description" property="description"/>
         <association property="customPlan" javaType="com.lhiot.healthygood.domain.customplan.CustomPlan">
             <id column="p_id" property="id"/>
             <result column="p_name" property="name"/>
@@ -73,6 +75,7 @@
             quantity,
             store_code,
             pay_id,
+            description,
         </trim>
     </sql>
 
@@ -96,7 +99,8 @@
             o.specification_id,
             o.quantity,
             o.store_code,
-            o.pay_id
+            o.pay_id,
+            o.description,
 
             p.id p_id,
             p.name p_name,
@@ -161,6 +165,9 @@
             <if test="storeCode != null ">
                 store_code,
             </if>
+            <if test="description != null ">
+                description,
+            </if>
         </trim>
         <trim prefix="values (" suffix=")" suffixOverrides=",">
             <if test="userId != null ">
@@ -211,6 +218,9 @@
             <if test="storeCode != null ">
                 #{storeCode},
             </if>
+            <if test="description != null ">
+                #{description},
+            </if>
         </trim>
     </insert>
 
@@ -252,8 +262,15 @@
             <if test="userId != null ">
                 and user_id =#{userId}
             </if>
-            <if test="status != null and status!='ALL'">
-                and status = #{status}
+            <if test="status != null">
+                and o.status = #{status}
+            </if>
+            <if test="statusIn != null">
+                and o.status in
+                <foreach collection="statusIn" item="item" open="("
+                         separator="," close=")">
+                    #{item}
+                </foreach>
             </if>
             <if test="contactPhone != null and contactPhone != ''">
                 and contact_phone = #{contactPhone}
@@ -291,7 +308,7 @@
     <select id="pageCustomOrderCounts" resultType="int"
             parameterType="com.lhiot.healthygood.domain.customplan.CustomOrder">
         select count(1)
-        from custom_order
+        from custom_order o
         left join custom_plan p on plan_id = p.id
         <include refid="Base_Where_Condition"/>
     </select>

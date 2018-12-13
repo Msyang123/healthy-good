@@ -124,7 +124,7 @@ public class WxCallbackApi {
     }
 
     @Sessions.Uncheck
-    @PostMapping("/activity")
+    @PostMapping("/customplan")
     @ApiOperation("定制计划支付微信回调-后端回调处理")
     public ResponseEntity<String> wxPayCustomPlanCallback(HttpServletRequest request) {
         Map<String, String> parameters = ConvertRequestToMap.convertRequestXmlFormatToMap(request);
