@@ -2,7 +2,6 @@ package com.lhiot.healthygood.api.customplan;
 
 import com.leon.microx.web.result.Pages;
 import com.leon.microx.web.result.Tips;
-import com.leon.microx.web.result.Tuple;
 import com.leon.microx.web.session.Sessions;
 import com.leon.microx.web.swagger.ApiHideBodyProperty;
 import com.leon.microx.web.swagger.ApiParamType;
@@ -195,11 +194,12 @@ public class CustomOrderApi {
     }
 
 
-    @GetMapping("/custom-orders/status/{status}")
+    @PostMapping("/custom-orders/status")
     @ApiOperation(value = "我的订单状态列表")
-    public ResponseEntity<Tuple<CustomOrder>> customOrderList(@PathVariable("status") CustomOrderStatus status, Sessions.User user) {
+    public ResponseEntity<Pages<CustomOrder>> customOrderList(@RequestBody CustomOrder customOrder, Sessions.User user) {
         Long userId = Long.valueOf(user.getUser().get("userId").toString());
-        return ResponseEntity.ok(customOrderService.customOrderListByStatus(userId, status, true));
+        customOrder.setUserId(userId);
+        return ResponseEntity.ok(customOrderService.customOrderListByStatus(customOrder, true));
     }
 
     @GetMapping("/custom-orders/{orderCode}/detail")

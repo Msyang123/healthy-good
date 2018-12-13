@@ -28,6 +28,9 @@ public class CustomOrder {
     @ApiModelProperty(notes = "WAIT_PAYMENT待付款、INVALID已失效、PAUSE_DELIVERY暂停配送、CUSTOMING定制中、FINISHED已结束", dataType = "CustomOrderStatus")
     private CustomOrderStatus status;
 
+    @ApiModelProperty(notes = "WAIT_PAYMENT待付款、INVALID已失效、PAUSE_DELIVERY暂停配送、CUSTOMING定制中、FINISHED已结束", dataType = "String[]")
+    private String[] statusIn;
+
     @ApiModelProperty(value = "剩余配送次数",dataType = "Integer")
     private Integer remainingQty;
 
@@ -97,6 +100,9 @@ public class CustomOrder {
 
     @ApiModelProperty(notes = "第三方支付产生的商户单号", dataType = "String")
     private String payId;
+
+    @ApiModelProperty(notes = "定制计划规格描述", dataType = "String")
+    private String description;
 
     @ApiModelProperty(notes = "每页查询条数(为空或0不分页查所有)", dataType = "Integer")
     private Integer rows;

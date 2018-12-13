@@ -6,7 +6,6 @@ import com.leon.microx.util.Jackson;
 import com.leon.microx.util.StringUtils;
 import com.leon.microx.web.result.Pages;
 import com.leon.microx.web.result.Tips;
-import com.leon.microx.web.result.Tuple;
 import com.lhiot.healthygood.domain.customplan.*;
 import com.lhiot.healthygood.domain.customplan.model.CustomPlanDetailResult;
 import com.lhiot.healthygood.domain.customplan.model.CustomPlanPeriodResult;
@@ -104,6 +103,7 @@ public class CustomOrderService {
         customOrder.setRemainingQty(customPlanSpecification.getPlanPeriod());//剩余配送次数就是周期数
         customOrder.setQuantity(customPlanSpecification.getQuantity());
         customOrder.setTotalQty(customPlanSpecification.getPlanPeriod());//总配送次数
+        customOrder.setDescription(customPlanSpecification.getDescription());//定制计划规格描述
         int result = customOrderMapper.create(customOrder);
 
         return result > 0 ? customOrder : null;
@@ -318,24 +318,22 @@ public class CustomOrderService {
     /**
      * 查询用户定制订单
      *
-     * @param userId    用户id
-     * @param status    定制订单状态
+     * @param customOrder    定制订单
      * @param needChlid 是否查询子集
      * @return
      */
-    public Tuple<CustomOrder> customOrderListByStatus(Long userId, CustomOrderStatus status, boolean needChlid) {
-        CustomOrder customOrderParam = new CustomOrder();
-        customOrderParam.setUserId(userId);
-        customOrderParam.setStatus(status);
+    public Pages<CustomOrder> customOrderListByStatus(CustomOrder customOrder, boolean needChlid) {
         //查询购买的定制计划列表
-        List<CustomOrder> customOrderList = customOrderMapper.pageCustomOrder(customOrderParam);
+        List<CustomOrder> customOrderList = customOrderMapper.pageCustomOrder(customOrder);
         if (needChlid) {
             customOrderList.forEach(item -> {
                 item.setCustomOrderDeliveryList(customOrderDeliveryMapper.selectByCustomOrderId(item.getPlanId(),item.getId()));//设置定制配送记录
                 item.setCustomPlan(customPlanService.findById(item.getPlanId()));//设置定制计划
             });
         }
-        return Tuple.of(customOrderList);
+        boolean pageFlag = Objects.nonNull(customOrder.getPage()) && Objects.nonNull(customOrder.getRows()) && customOrder.getPage() > 0 && customOrder.getRows() > 0;
+        int total = pageFlag ? customOrderMapper.pageCustomOrderCounts(customOrder) : customOrderList.size();
+        return Pages.of(total,customOrderList);
     }
 
     /**
