@@ -77,13 +77,13 @@ public class CustomPlanSectionRelationApi {
     }
 
     @Sessions.Uncheck
-    @ApiOperation("批量添加定制版块与定制计划架关系")
+    @ApiOperation("批量添加定制版块与定制计划架关系(后台)")
     @ApiImplicitParams({
             @ApiImplicitParam(paramType = ApiParamType.QUERY, name = "sectionId", value = "商品版块Id", dataType = "Long", required = true),
             @ApiImplicitParam(paramType = ApiParamType.QUERY, name = "planIds", value = "多个定制计划Id以英文逗号分隔", dataType = "String", required = true),
             @ApiImplicitParam(paramType = ApiParamType.QUERY, name = "sorts", value = "多个排序以英文逗号分隔", dataType = "String", required = true)
     })
-    @PostMapping("/product-section-relations/batches")
+    @PostMapping("/custom-plan-section-relations/batches")
     public ResponseEntity createBatch(@RequestParam("sectionId") Long sectionId, @RequestParam("planIds") String planIds, @RequestParam("sorts") String sorts) {
         log.debug("根据关联Id删除定制版块与定制计划架关系\t sectionId:{}, planIds{}, sorts:{}", sectionId, planIds, sorts);
 
@@ -92,12 +92,12 @@ public class CustomPlanSectionRelationApi {
     }
 
     @Sessions.Uncheck
-    @ApiOperation("批量删除定制版块与定制计划架关系")
+    @ApiOperation("批量删除定制版块与定制计划架关系(后台)")
     @ApiImplicitParams({
             @ApiImplicitParam(paramType = ApiParamType.QUERY, name = "sectionId", value = "商品版块Id", dataType = "Long", required = true),
             @ApiImplicitParam(paramType = ApiParamType.QUERY, name = "shelfIds", value = "多个商品上架Id以英文逗号分隔,为空则删除此版块所有上架关系", dataType = "String")
     })
-    @DeleteMapping("/product-section-relations/batches")
+    @DeleteMapping("/custom-plan-section-relations/batches")
     public ResponseEntity deleteBatch(@RequestParam("sectionId") Long sectionId, @RequestParam(value = "shelfIds", required = false) String shelfIds) {
         log.debug("根据关联Id删除定制版块与定制计划架关系\t sectionId:{}, shelfIds:{}", sectionId, shelfIds);
 

@@ -279,13 +279,13 @@
             <if test="id != null ">
                 and id = #{id}
             </if>
-            <if test="realName != null ">
+            <if test="realName != null and realName != '' ">
                 and real_name like concat('%',#{realName},'%')
             </if>
             <if test="photo != null ">
                 and photo = #{photo}
             </if>
-            <if test="inviteCode != null ">
+            <if test="inviteCode != null and inviteCode != '' ">
                 and invite_code = #{inviteCode}
             </if>
             <if test="userId != null ">
@@ -304,7 +304,7 @@
             <if test="doctorStatus != null ">
                 and doctor_status = #{doctorStatus}
             </if>
-            <if test="jobTitle != null ">
+            <if test="jobTitle != null and  jobTitle != ''">
                 and job_title = #{jobTitle}
             </if>
             <if test="createAt != null ">
@@ -313,16 +313,16 @@
             <if test="refereeId != null ">
                 and referee_id = #{refereeId}
             </if>
-            <if test="profile != null ">
+            <if test="profile != null and profile != '' ">
                 and profile = #{profile}
             </if>
-            <if test="cardNo != null ">
+            <if test="cardNo != null and cardNo != '' ">
                 and card_no = #{cardNo}
             </if>
-            <if test="bankDeposit != null ">
+            <if test="bankDeposit != null and bankDeposit != '' ">
                 and bank_deposit = #{bankDeposit}
             </if>
-            <if test="cardUsername != null ">
+            <if test="cardUsername != null and cardUsername != ''">
                 and card_username = #{cardUsername}
             </if>
             <if test="hot != null ">
@@ -331,14 +331,14 @@
             <if test="balance != null ">
                 and balance = #{balance}
             </if>
-            <if test="avatar != null ">
+            <if test="avatar != null and avatar != ''">
                 and avatar = #{avatar}
             </if>
-            <if test="upperbodyPhoto != null ">
+            <if test="upperbodyPhoto != null and upperbodyPhoto != '' ">
                 and upperbody_photo = #{upperbodyPhoto}
             </if>
-            <if test="phone != null ">
-                and phone = #{phone}
+            <if test="phone != null and phone != '' ">
+                and phone  like concat('%',#{phone}, '%')
             </if>
             <if test="applicationId != null ">
                 and application_id = #{applicationId}

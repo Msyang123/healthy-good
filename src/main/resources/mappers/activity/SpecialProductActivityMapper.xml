@@ -149,11 +149,11 @@
             <if test="activityId != null ">
                 and activity_id = #{activityId}
             </if>
-            <if test="activityName != null ">
-                and activity_name = #{activityName}
+            <if test="activityName != null and activityName != ''">
+                and activity_name like concat('%',#{activityName}, '%')
             </if>
-            <if test="description != null ">
-                and description = #{description}
+            <if test="description != null and description != '' ">
+                and description like concat('%',#{description}, '%')
             </if>
             <if test="limitCount != null ">
                 and limit_count = #{limitCount}

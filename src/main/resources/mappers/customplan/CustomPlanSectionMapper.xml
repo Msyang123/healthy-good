@@ -46,7 +46,7 @@
             <result column="over_rule" property="overRule"/>
             <result column="status" property="status"/>
             <result column="create_user" property="createUser"/>
-            <result column="r_sort" property="sort"/>
+            <result column="r_sort" property="relationSort"/>
         </collection>
     </resultMap>
 
@@ -193,17 +193,17 @@
             <if test="id != null ">
                 and id = #{id}
             </if>
-            <if test="sectionImage != null ">
+            <if test="sectionImage != null and sectionImage != ''">
                 and section_image = #{sectionImage}
             </if>
-            <if test="url != null ">
+            <if test="url != null and url != ''">
                 and url = #{url}
             </if>
-            <if test="sectionName != null ">
-                and section_name = #{sectionName}
+            <if test="sectionName != null and sectionName != ''">
+                and section_name like concat('%',#{sectionName}, '%')
             </if>
-            <if test="sectionCode != null ">
-                and section_code = #{sectionCode}
+            <if test="sectionCode != null and sectionCode != ''">
+                and section_code like concat('%',#{sectionCode}, '%')
             </if>
             <if test="sort != null ">
                 and sort = #{sort}

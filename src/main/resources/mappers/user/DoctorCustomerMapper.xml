@@ -120,8 +120,8 @@
             <if test="id != null ">
                 and id = #{id}
             </if>
-            <if test="remark != null ">
-                and remark = #{remark}
+            <if test="remark != null and remark != '' ">
+                and remark like concat('%',#{remark}, '%')
             </if>
             <if test="doctorId != null ">
                 and doctor_id = #{doctorId}
