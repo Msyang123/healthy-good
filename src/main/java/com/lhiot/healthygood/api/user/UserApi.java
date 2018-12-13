@@ -7,7 +7,7 @@ import com.leon.microx.web.session.Authority;
 import com.leon.microx.web.session.Sessions;
 import com.lhiot.healthygood.config.HealthyGoodConfig;
 import com.lhiot.healthygood.domain.doctor.Achievement;
-import com.lhiot.healthygood.domain.user.DoctorUser;
+import com.lhiot.healthygood.domain.user.DoctorCustomer;
 import com.lhiot.healthygood.domain.user.FruitDoctor;
 import com.lhiot.healthygood.domain.user.UserBindingPhoneParam;
 import com.lhiot.healthygood.domain.user.ValidateParam;
@@ -18,7 +18,7 @@ import com.lhiot.healthygood.feign.model.UserDetailResult;
 import com.lhiot.healthygood.feign.model.WeChatRegisterParam;
 import com.lhiot.healthygood.feign.type.ApplicationType;
 import com.lhiot.healthygood.service.doctor.DoctorAchievementLogService;
-import com.lhiot.healthygood.service.user.DoctorUserService;
+import com.lhiot.healthygood.service.user.DoctorCustomerService;
 import com.lhiot.healthygood.service.user.FruitDoctorService;
 import com.lhiot.healthygood.service.user.FruitDoctorUserService;
 import com.lhiot.healthygood.type.CaptchaTemplate;
@@ -66,7 +66,7 @@ public class UserApi {
     private final WeChatUtil weChatUtil;
     private final FruitDoctorUserService fruitDoctorUserService;
     private final FruitDoctorService fruitDoctorService;
-    private final DoctorUserService doctorUserService;
+    private final DoctorCustomerService doctorCustomerService;
     private final BaseUserServerFeign baseUserServerFeign;
     private final ThirdpartyServerFeign thirdpartyServerFeign;
     private final DoctorAchievementLogService doctorAchievementLogService;
@@ -77,8 +77,7 @@ public class UserApi {
     @Autowired
     public UserApi(WeChatUtil weChatUtil, FruitDoctorUserService fruitDoctorUserService,
                    FruitDoctorService fruitDoctorService,
-                   DoctorUserService doctorUserService,
-                   BaseUserServerFeign baseUserServerFeign,
+                   DoctorCustomerService doctorCustomerService, BaseUserServerFeign baseUserServerFeign,
                    ThirdpartyServerFeign thirdpartyServerFeign,
                    ObjectProvider<Sessions> sessionsObjectProvider,
                    RedissonClient redissonClient,
@@ -87,7 +86,7 @@ public class UserApi {
         this.weChatUtil = weChatUtil;
         this.fruitDoctorUserService = fruitDoctorUserService;
         this.fruitDoctorService = fruitDoctorService;
-        this.doctorUserService = doctorUserService;
+        this.doctorCustomerService = doctorCustomerService;
         this.baseUserServerFeign = baseUserServerFeign;
         this.thirdpartyServerFeign = thirdpartyServerFeign;
         this.doctorAchievementLogService = doctorAchievementLogService;
@@ -158,11 +157,11 @@ public class UserApi {
             //判断用户是否绑定鲜果师，没有绑定则绑定,并且鲜果师不是自己
             if ((Objects.isNull(searchUser.getDoctorId()) || Objects.equals(0L, searchUser.getId())) && Objects.nonNull(fruitDoctor)) {
                 if (!Objects.equals(fruitDoctor.getUserId(), searchUser.getId())) {
-                    DoctorUser doctorUser = new DoctorUser();
-                    doctorUser.setDoctorId(fruitDoctor.getId());
-                    doctorUser.setUserId(searchUser.getId());
-                    doctorUser.setRemark(searchUser.getNickname());
-                    doctorUserService.create(doctorUser);
+                    DoctorCustomer doctorCustomer = new DoctorCustomer();
+                    doctorCustomer.setDoctorId(fruitDoctor.getId());
+                    doctorCustomer.setUserId(searchUser.getId());
+                    doctorCustomer.setRemark(searchUser.getNickname());
+                    doctorCustomerService.create(doctorCustomer);
                 }
             }
             Sessions.User sessionUser = session.create(request).user(Maps.of("userId", searchUser.getId(), "openId", searchUser.getOpenId()))

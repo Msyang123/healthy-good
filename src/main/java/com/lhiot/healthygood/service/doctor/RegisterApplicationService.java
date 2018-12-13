@@ -6,15 +6,15 @@ import com.leon.microx.util.auditing.Random;
 import com.leon.microx.web.result.Pages;
 import com.leon.microx.web.result.Tips;
 import com.lhiot.healthygood.domain.doctor.RegisterApplication;
-import com.lhiot.healthygood.domain.user.DoctorUser;
+import com.lhiot.healthygood.domain.user.DoctorCustomer;
 import com.lhiot.healthygood.domain.user.FruitDoctor;
 import com.lhiot.healthygood.domain.user.KeywordValue;
 import com.lhiot.healthygood.feign.BaseUserServerFeign;
 import com.lhiot.healthygood.feign.model.UserDetailResult;
-import com.lhiot.healthygood.type.*;
 import com.lhiot.healthygood.mapper.doctor.RegisterApplicationMapper;
-import com.lhiot.healthygood.mapper.user.DoctorUserMapper;
+import com.lhiot.healthygood.mapper.user.DoctorCustomerMapper;
 import com.lhiot.healthygood.mapper.user.FruitDoctorMapper;
+import com.lhiot.healthygood.type.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.AmqpException;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
@@ -42,15 +42,15 @@ public class RegisterApplicationService {
 
     private final RegisterApplicationMapper registerApplicationMapper;
     private final FruitDoctorMapper fruitDoctorMapper;
-    private final DoctorUserMapper doctorUserMapper;
+    private final DoctorCustomerMapper doctorCustomerMapper;
     private final RabbitTemplate rabbit;
     private final BaseUserServerFeign baseUserServerFeign;
 
     @Autowired
-    public RegisterApplicationService(RegisterApplicationMapper registerApplicationMapper, FruitDoctorMapper fruitDoctorMapper, DoctorUserMapper doctorUserMapper, RabbitTemplate rabbit, BaseUserServerFeign baseUserServerFeign) {
+    public RegisterApplicationService(RegisterApplicationMapper registerApplicationMapper, FruitDoctorMapper fruitDoctorMapper, DoctorCustomerMapper doctorCustomerMapper, RabbitTemplate rabbit, BaseUserServerFeign baseUserServerFeign) {
         this.registerApplicationMapper = registerApplicationMapper;
         this.fruitDoctorMapper = fruitDoctorMapper;
-        this.doctorUserMapper = doctorUserMapper;
+        this.doctorCustomerMapper = doctorCustomerMapper;
         this.rabbit = rabbit;
         this.baseUserServerFeign = baseUserServerFeign;
     }
@@ -112,9 +112,9 @@ public class RegisterApplicationService {
             fruitDoctor.setDoctorStatus(DoctorStatus.VALID);
             fruitDoctor.setCreateAt(Date.from(Instant.now()));
             //查找推荐人
-            DoctorUser doctorUser= doctorUserMapper.selectByUserId(registerApplication.getUserId());
-            if(Objects.nonNull(doctorUser)){
-                fruitDoctor.setRefereeId(doctorUser.getDoctorId());
+            DoctorCustomer doctorCustomer = doctorCustomerMapper.selectByUserId(registerApplication.getUserId());
+            if(Objects.nonNull(doctorCustomer)){
+                fruitDoctor.setRefereeId(doctorCustomer.getDoctorId());
             }
             //查找基础服务对应的微信用户信息
             ResponseEntity<UserDetailResult> userEntity = baseUserServerFeign.findById(registerApplication.getUserId());

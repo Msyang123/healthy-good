@@ -10,7 +10,7 @@ import com.leon.microx.web.result.Tuple;
 import com.leon.microx.web.session.Sessions;
 import com.lhiot.healthygood.config.HealthyGoodConfig;
 import com.lhiot.healthygood.domain.order.OrderGroupCount;
-import com.lhiot.healthygood.domain.user.DoctorUser;
+import com.lhiot.healthygood.domain.user.DoctorCustomer;
 import com.lhiot.healthygood.domain.user.FruitDoctor;
 import com.lhiot.healthygood.feign.BaseDataServiceFeign;
 import com.lhiot.healthygood.feign.OrderServiceFeign;
@@ -19,7 +19,7 @@ import com.lhiot.healthygood.feign.ThirdpartyServerFeign;
 import com.lhiot.healthygood.feign.model.*;
 import com.lhiot.healthygood.feign.type.*;
 import com.lhiot.healthygood.service.order.OrderService;
-import com.lhiot.healthygood.service.user.DoctorUserService;
+import com.lhiot.healthygood.service.user.DoctorCustomerService;
 import com.lhiot.healthygood.service.user.FruitDoctorService;
 import com.lhiot.healthygood.util.ConvertRequestToMap;
 import com.lhiot.healthygood.util.FeginResponseTools;
@@ -50,7 +50,7 @@ public class OrderApi {
     private final OrderServiceFeign orderServiceFeign;
     private final PaymentServiceFeign paymentServiceFeign;
     private final OrderService orderService;
-    private final DoctorUserService doctorUserService;
+    private final DoctorCustomerService doctorCustomerService;
     private final FruitDoctorService fruitDoctorService;
     private final HealthyGoodConfig.WechatPayConfig wechatPayConfig;
 
@@ -60,13 +60,13 @@ public class OrderApi {
                     OrderServiceFeign orderServiceFeign,
                     PaymentServiceFeign paymentServiceFeign,
                     OrderService orderService,
-                    DoctorUserService doctorUserService, FruitDoctorService fruitDoctorService, HealthyGoodConfig healthyGoodConfig) {
+                    DoctorCustomerService doctorCustomerService, FruitDoctorService fruitDoctorService, HealthyGoodConfig healthyGoodConfig) {
         this.baseDataServiceFeign = baseDataServiceFeign;
         this.thirdpartyServerFeign = thirdpartyServerFeign;
         this.orderServiceFeign = orderServiceFeign;
         this.paymentServiceFeign = paymentServiceFeign;
         this.orderService = orderService;
-        this.doctorUserService = doctorUserService;
+        this.doctorCustomerService = doctorCustomerService;
         this.fruitDoctorService = fruitDoctorService;
         this.wechatPayConfig = healthyGoodConfig.getWechatPay();
     }
@@ -230,9 +230,9 @@ public class OrderApi {
             return ResponseEntity.badRequest().body("鲜果师不存在");
         }
         //鲜果师客户列表
-        List<DoctorUser> doctorUserList = doctorUserService.selectByDoctorId(fruitDoctor.getId());
+        List<DoctorCustomer> doctorCustomerList = doctorCustomerService.selectByDoctorId(fruitDoctor.getId());
 
-        String userIds = StringUtils.arrayToCommaDelimitedString(doctorUserList.parallelStream().map(DoctorUser::getUserId).toArray(Object[]::new));
+        String userIds = StringUtils.arrayToCommaDelimitedString(doctorCustomerList.parallelStream().map(DoctorCustomer::getUserId).toArray(Object[]::new));
         BaseOrderParam baseOrderParam = new BaseOrderParam();
         baseOrderParam.setUserIds(userIds);
         baseOrderParam.setOrderStatus(orderStatus);
