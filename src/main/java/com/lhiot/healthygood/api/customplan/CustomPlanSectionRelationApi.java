@@ -1,5 +1,6 @@
 package com.lhiot.healthygood.api.customplan;
 
+import com.leon.microx.util.Maps;
 import com.leon.microx.web.result.Tips;
 import com.leon.microx.web.session.Sessions;
 import com.leon.microx.web.swagger.ApiHideBodyProperty;
@@ -14,6 +15,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.net.URI;
 
 /**
  * @author hufan created in 2018/11/27 14:42
@@ -57,7 +60,9 @@ public class CustomPlanSectionRelationApi {
             return ResponseEntity.badRequest().body(tips.getMessage());
         }
         Long relationId = Long.valueOf(tips.getMessage());
-        return relationId > 0 ? ResponseEntity.ok().build() : ResponseEntity.badRequest().body("添加商品与版块关系记录失败！");
+        return relationId > 0
+                ? ResponseEntity.created(URI.create("/custom-plan-section-relations/" + relationId)).body(Maps.of("id", relationId))
+                : ResponseEntity.badRequest().body("添加商品与版块关系记录失败！");
     }
 
 
