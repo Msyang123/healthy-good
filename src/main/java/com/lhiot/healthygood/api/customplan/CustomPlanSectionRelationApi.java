@@ -2,6 +2,7 @@ package com.lhiot.healthygood.api.customplan;
 
 import com.leon.microx.web.result.Tips;
 import com.leon.microx.web.session.Sessions;
+import com.leon.microx.web.swagger.ApiHideBodyProperty;
 import com.leon.microx.web.swagger.ApiParamType;
 import com.lhiot.healthygood.domain.customplan.CustomPlanSectionRelation;
 import com.lhiot.healthygood.service.customplan.CustomPlanSectionRelationService;
@@ -46,8 +47,8 @@ public class CustomPlanSectionRelationApi {
 
     @Sessions.Uncheck
     @ApiOperation("添加定制版块与定制计划关系(后台)")
-    @ApiImplicitParam(paramType = ApiParamType.BODY, name = "customPlanSectionRelation", value = "定制版块与定制计划关系信息", dataType = "CustomPlanSectionRelation", required = true)
     @PostMapping("/custom-plan-section-relations")
+    @ApiHideBodyProperty("id")
     public ResponseEntity create(@RequestBody CustomPlanSectionRelation customPlanSectionRelation) {
         log.debug("批量修改定制版块与定制计划关系\t param:{}", customPlanSectionRelation);
 
