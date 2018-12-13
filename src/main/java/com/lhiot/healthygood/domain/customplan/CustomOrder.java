@@ -19,39 +19,39 @@ import java.util.List;
 @ApiModel(description = "创建定制计划订单对象")
 public class CustomOrder {
 
-    @ApiModelProperty(hidden = true)
     private Long id;
 
-    @ApiModelProperty(hidden = true)
     private String customOrderCode;
 
-    @ApiModelProperty(hidden = true)
     private Long userId;
 
-    @ApiModelProperty(notes = "WAIT_PAYMENT待付款、INVALID已失效、PAUSE_DELIVERY暂停配送、CUSTOMING定制中、FINISHED已结束", dataType = "CustomOrderStatus",hidden = true)
+    @ApiModelProperty(notes = "WAIT_PAYMENT待付款、INVALID已失效、PAUSE_DELIVERY暂停配送、CUSTOMING定制中、FINISHED已结束", dataType = "CustomOrderStatus")
     private CustomOrderStatus status;
 
-    @ApiModelProperty(value = "剩余配送次数",dataType = "Integer",hidden = true)
+    @ApiModelProperty(notes = "WAIT_PAYMENT待付款、INVALID已失效、PAUSE_DELIVERY暂停配送、CUSTOMING定制中、FINISHED已结束", dataType = "String[]")
+    private String[] statusIn;
+
+    @ApiModelProperty(value = "剩余配送次数",dataType = "Integer")
     private Integer remainingQty;
 
     @ApiModelProperty(notes = "MANUAL-手动，AUTO-自动", dataType = "CustomOrderBuyType")
     private CustomOrderBuyType deliveryType;
 
-    @ApiModelProperty(value = "配送总次数-周期数",dataType = "Integer",hidden = true)
+    @ApiModelProperty(value = "配送总次数-周期数",dataType = "Integer")
     private Integer totalQty;
 
     @ApiModelProperty(value = "定制计划id",dataType = "Integer")
     @Min(value = 1L)
     private Long planId;
 
-    @ApiModelProperty(value = "购买价格",dataType = "Integer",hidden = true)
+    @ApiModelProperty(value = "购买价格",dataType = "Integer")
     private Integer price;
 
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss",timezone = "GMT+8")
-    @ApiModelProperty(value = "创建时间",dataType = "Date",hidden = true)
+    @ApiModelProperty(value = "创建时间",dataType = "Date")
     private Date createAt;
 
-    @ApiModelProperty(value = "x人套餐",dataType = "Integer",hidden = true)
+    @ApiModelProperty(value = "x人套餐",dataType = "Integer")
     private Integer quantity;
 
     @ApiModelProperty(notes = "定制计划规格id", dataType = "Long")
@@ -101,12 +101,14 @@ public class CustomOrder {
     @ApiModelProperty(notes = "第三方支付产生的商户单号", dataType = "String")
     private String payId;
 
+    @ApiModelProperty(notes = "定制计划规格描述", dataType = "String")
+    private String description;
+
     @ApiModelProperty(notes = "每页查询条数(为空或0不分页查所有)", dataType = "Integer")
     private Integer rows;
     @ApiModelProperty(notes = "当前页", dataType = "Integer")
     private Integer page;
 
-    @ApiModelProperty(hidden = true)
     private Integer startRow;
 
     @JsonIgnore
