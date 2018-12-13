@@ -58,7 +58,7 @@ public class CustomPlanSectionRelationService {
         //先做幂等验证
         List<CustomPlanSectionRelation> relationList = customPlanSectionRelationMapper.selectRelationListBySectionId(sectionId, planIds);
         if (!relationList.isEmpty()) {
-            Tips.warn("定制计划与版块关联重复，添加失败");
+            return Tips.warn("定制计划与版块关联重复，添加失败");
         }
         List<CustomPlanSectionRelation> customPlanSectionRelationList = new ArrayList<>();
         // 获取计划id集合

@@ -117,7 +117,7 @@ public class FruitDoctorApi {
         registerApplication.setId(id);
         Tips tips = registerApplicationService.updateById(registerApplication);
         if (tips.err()) {
-            ResponseEntity.badRequest().body(tips.getMessage());
+            return ResponseEntity.badRequest().body(tips.getMessage());
         }
         if (Objects.equals(registerApplication.getAuditStatus(), AuditStatus.AGREE.toString())) {
             return ResponseEntity.ok("审核通过");
@@ -212,7 +212,7 @@ public class FruitDoctorApi {
             }
             // 该鲜果师的可结算金额是否大于申请结算金额
             if (settlementApplication.getAmount() > findFruitDoctor.getBalance()) {
-                return ResponseEntity.badRequest().body(Tips.warn("申请结算金额大于用户可结算金额，结算失败"));
+                return ResponseEntity.badRequest().body("申请结算金额大于用户可结算金额，结算失败");
             }
 
             // 进行结算和鲜果师可结算金额扣减
