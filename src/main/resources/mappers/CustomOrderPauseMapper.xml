@@ -6,20 +6,22 @@
     <resultMap id="BaseResultMap"
         type="com.lhiot.healthygood.domain.customplan.CustomOrderPause" >
         <id column="id" property="id"/>
-        <result column="custom_order_id" property="customOrderId" />
+        <result column="custom_order_code" property="customOrderCode" />
         <result column="create_at" property="createAt" />
         <result column="pause_begin_at" property="pauseBeginAt" />
         <result column="pause_end_at" property="pauseEndAt" />
+        <result column="pause_day" property="pauseDay" />
     </resultMap>
 
     <!-- base查询字段  -->
     <sql id="Base_Column_List" >
         <trim suffixOverrides="," >
             id,
-            custom_order_id,
+            custom_order_code,
             create_at,
             pause_begin_at,
             pause_end_at,
+            pause_day,
         </trim>
     </sql>
 
@@ -27,8 +29,8 @@
     <insert id="create" parameterType="com.lhiot.healthygood.domain.customplan.CustomOrderPause" useGeneratedKeys="true" keyColumn="id" keyProperty="id">
         insert into custom_order_pause
         <trim prefix="(" suffix=")" suffixOverrides="," >
-            <if test="customOrderId != null ">
-                custom_order_id,
+            <if test="customOrderCode != null ">
+                custom_order_code,
             </if>
             <if test="createAt != null ">
                 create_at,
@@ -39,10 +41,13 @@
             <if test="pauseEndAt != null ">
                 pause_end_at,
             </if>
+            <if test="pauseDay != null ">
+                pause_day,
+            </if>
         </trim>
         <trim prefix="values (" suffix=")" suffixOverrides="," >
-            <if test="customOrderId != null ">
-                #{customOrderId},
+            <if test="customOrderCode != null ">
+                #{customOrderCode},
             </if>
             <if test="createAt != null ">
                 ${createAt},
@@ -53,16 +58,25 @@
             <if test="pauseEndAt != null ">
                 {pauseEndAt},
             </if>
+            <if test="pauseDay != null ">
+                {pauseDay},
+            </if>
         </trim>
     </insert>
 
-    <delete id="deleteByCustomOrderId" parameterType="Long">
-      delete from custom_order_pause where custom_order_id = #{0}
-    </delete>
-
-    <!-- 根据customOrderId查找 -->
-	<select id="selectByCustomOrderId" resultMap="BaseResultMap" parameterType="Long">
+	<select id="selectCustomOrderPause" resultMap="BaseResultMap" parameterType="com.lhiot.healthygood.domain.customplan.CustomOrderPause">
         select <include refid="Base_Column_List" />
-		from custom_order_pause where custom_order_id = #{0}
+		from custom_order_pause
+        <where>
+            <if test="customOrderCode != null ">
+                and custom_order_code = #{customOrderCode}
+            </if>
+            <if test="pauseBeginAt != null ">
+                and pause_begin_at <![CDATA[ <= ]]> #{pauseBeginAt}
+            </if>
+            <if test="pauseEndAt != null ">
+                and pause_end_at <![CDATA[ >= ]]> #{pauseEndAt}
+            </if>
+        </where>
 	</select>
 </mapper>

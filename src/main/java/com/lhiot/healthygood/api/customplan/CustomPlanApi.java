@@ -7,12 +7,10 @@ import com.leon.microx.web.session.Sessions;
 import com.leon.microx.web.swagger.ApiParamType;
 import com.lhiot.dc.dictionary.module.Dictionary;
 import com.lhiot.healthygood.domain.customplan.CustomPlanAndSpecification;
-import com.lhiot.healthygood.domain.customplan.CustomPlanSpecification;
 import com.lhiot.healthygood.domain.customplan.model.CustomPlanDetailResult;
 import com.lhiot.healthygood.domain.customplan.model.CustomPlanParam;
 import com.lhiot.healthygood.domain.customplan.model.CustomPlanResult;
 import com.lhiot.healthygood.service.customplan.CustomPlanService;
-import com.lhiot.healthygood.util.FeginResponseTools;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
@@ -136,4 +134,12 @@ public class CustomPlanApi {
     public ResponseEntity<List<Dictionary.Entry>> customPlanImage(){
         return ResponseEntity.ok(customPlanService.dictionaryOptional("customPlanImage").get().getEntries());
     }
+
+    @Sessions.Uncheck
+    @GetMapping("/custom-plans/max-pause")
+    @ApiOperation(value = "定制计划最大暂停天数")
+    public ResponseEntity<Dictionary> customPlanMaxPauseDay(){
+        return ResponseEntity.ok(customPlanService.customPlanMaxPauseDay());
+    }
+
 }

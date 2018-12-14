@@ -139,7 +139,7 @@ public class BalanceApi {
         customOrder.setStatus(CustomOrderStatus.CUSTOMING);//定制中
         customOrder.setPayId(outTradeId);//第三方支付id
         log.info("定制计划余额支付-后端修改为支付成功 并保持预支付id{}", customOrder);
-        customOrderService.updateByCode(customOrder, null);
+        customOrderService.updateByCode(customOrder);
         return ResponseEntity.ok().build();
     }
 

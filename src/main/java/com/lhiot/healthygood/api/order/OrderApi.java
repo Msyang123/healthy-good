@@ -21,6 +21,7 @@ import com.lhiot.healthygood.feign.type.*;
 import com.lhiot.healthygood.service.order.OrderService;
 import com.lhiot.healthygood.service.user.DoctorCustomerService;
 import com.lhiot.healthygood.service.user.FruitDoctorService;
+import com.lhiot.healthygood.type.ShelfType;
 import com.lhiot.healthygood.util.ConvertRequestToMap;
 import com.lhiot.healthygood.util.FeginResponseTools;
 import com.lhiot.healthygood.util.RealClientIp;
@@ -84,7 +85,7 @@ public class OrderApi {
 
         String storeCode = orderParam.getOrderStore().getStoreCode();
         //判断门店是否存在
-        ResponseEntity<Store> storeResponseEntity = baseDataServiceFeign.findStoreByCode(storeCode);
+        ResponseEntity<Store> storeResponseEntity = baseDataServiceFeign.findStoreByCode(storeCode,ApplicationType.HEALTH_GOOD);
         if (Objects.isNull(storeResponseEntity) || storeResponseEntity.getStatusCode().isError()) {
             return storeResponseEntity;
         }
@@ -104,6 +105,8 @@ public class OrderApi {
         ProductShelfParam productShelfParam = new ProductShelfParam();
         productShelfParam.setIds(StringUtils.arrayToCommaDelimitedString(shelfIds));
         productShelfParam.setShelfStatus(OnOff.ON);
+        productShelfParam.setIncludeProduct(true);
+        productShelfParam.setShelfType(ShelfType.NORMAL);
         //查找基础服务上架商品信息
         Tips<Pages<ProductShelf>> productShelfTips = FeginResponseTools.convertResponse(baseDataServiceFeign.searchProductShelves(productShelfParam));
         if (productShelfTips.err()) {
