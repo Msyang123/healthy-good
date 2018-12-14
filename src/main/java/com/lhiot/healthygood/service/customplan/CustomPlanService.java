@@ -396,4 +396,12 @@ public class CustomPlanService {
         }
         return customPlanMapper.deleteByIds(Arrays.asList(ids.split(","))) > 0 ? Tips.info("删除成功") : Tips.warn("删除失败");
     }
+
+    /**
+     * 最大暂停天数
+     * @return
+     */
+    public Dictionary customPlanMaxPauseDay(){
+        return dictionaryClient.dictionary("customPlanMaxPauseDay").get();
+    }
 }
