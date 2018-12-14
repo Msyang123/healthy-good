@@ -3,9 +3,9 @@ package com.lhiot.healthygood.feign;
 import com.leon.microx.web.result.Pages;
 import com.leon.microx.web.result.Tuple;
 import com.lhiot.healthygood.feign.model.*;
+import com.lhiot.healthygood.feign.type.OrderRefundStatus;
 import com.lhiot.healthygood.feign.type.OrderStatus;
 import com.lhiot.healthygood.feign.type.OrderType;
-import com.lhiot.healthygood.feign.type.RefundStatus;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
@@ -74,5 +74,5 @@ public interface OrderServiceFeign {
 
     //退款确认，修改订单状态
     @RequestMapping(value = "/orders/{orderCode}/refund/confirmation", method = RequestMethod.PUT)
-    ResponseEntity refundConfirmation(@PathVariable("orderCode") String orderCode, @RequestParam("refundStatus") RefundStatus refundStatus);
+    ResponseEntity refundConfirmation(@PathVariable("orderCode") String orderCode, @RequestParam("refundStatus") OrderRefundStatus refundStatus);
 }

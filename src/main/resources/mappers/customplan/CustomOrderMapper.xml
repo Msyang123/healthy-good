@@ -22,6 +22,7 @@
         <result column="store_code" property="storeCode"/>
         <result column="pay_id" property="payId"/>
         <result column="description" property="description"/>
+        <result column="end_extraction_at" property="endExtractionAt"/>
     </resultMap>
 
     <!-- 数据库连表查询字段对象关系映射 -->
@@ -44,6 +45,7 @@
         <result column="store_code" property="storeCode"/>
         <result column="pay_id" property="payId"/>
         <result column="description" property="description"/>
+        <result column="end_extraction_at" property="endExtractionAt"/>
         <association property="customPlan" javaType="com.lhiot.healthygood.domain.customplan.CustomPlan">
             <id column="p_id" property="id"/>
             <result column="p_name" property="name"/>
@@ -76,6 +78,7 @@
             store_code,
             pay_id,
             description,
+            end_extraction_at,
         </trim>
     </sql>
 
@@ -101,6 +104,7 @@
             o.store_code,
             o.pay_id,
             o.description,
+            o.end_extraction_at,
 
             p.id p_id,
             p.name p_name,
@@ -168,6 +172,9 @@
             <if test="description != null ">
                 description,
             </if>
+            <if test="endExtractionAt != null ">
+                end_extraction_at,
+            </if>
         </trim>
         <trim prefix="values (" suffix=")" suffixOverrides=",">
             <if test="userId != null ">
@@ -221,6 +228,9 @@
             <if test="description != null ">
                 #{description},
             </if>
+            <if test="endExtractionAt != null ">
+                #{endExtractionAt},
+            </if>
         </trim>
     </insert>
 
@@ -272,6 +282,7 @@
                     #{item}
                 </foreach>
             </if>
+            and o.status != 'INVALID'
             <if test="contactPhone != null and contactPhone != ''">
                 and contact_phone = #{contactPhone}
             </if>

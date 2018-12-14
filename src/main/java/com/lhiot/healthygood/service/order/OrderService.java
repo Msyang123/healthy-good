@@ -118,7 +118,7 @@ public class OrderService {
                         return Tips.warn(String.valueOf(orderDetailResultResponseEntity.getBody()));
                     }
                     //发起用户退款 等待用户退款回调然后发送orderServiceFeign.refundConfirmation
-                    ResponseEntity refundConfirmation = orderServiceFeign.refundConfirmation(orderDetailResult.getCode(), RefundStatus.ALREADY_RETURN);
+                    ResponseEntity refundConfirmation = orderServiceFeign.refundConfirmation(orderDetailResult.getCode(), OrderRefundStatus.ALREADY_RETURN);
                     log.info("发起用户退款{}", refundConfirmation);
                 }
             } else {

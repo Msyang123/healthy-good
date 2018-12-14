@@ -6,6 +6,8 @@ import com.leon.microx.util.Jackson;
 import com.leon.microx.util.StringUtils;
 import com.leon.microx.web.result.Pages;
 import com.leon.microx.web.result.Tips;
+import com.lhiot.dc.dictionary.DictionaryClient;
+import com.lhiot.dc.dictionary.module.Dictionary;
 import com.lhiot.healthygood.domain.customplan.*;
 import com.lhiot.healthygood.domain.customplan.model.CustomPlanDetailResult;
 import com.lhiot.healthygood.domain.customplan.model.CustomPlanPeriodResult;
@@ -57,6 +59,7 @@ public class CustomOrderService {
     private final CustomOrderPauseMapper customOrderPauseMapper;
     private final CustomOrderDeliveryMapper customOrderDeliveryMapper;
     private final Generator<Long> generator;
+    private final DictionaryClient dictionaryClient;
     //暂停开始结束时间
     private static final LocalTime BEGIN_PAUSE_OF_DAY = LocalTime.parse("00:00:00");
     private static final LocalTime END_PAUSE_OF_DAY = LocalTime.parse("23:59:59");
@@ -71,8 +74,8 @@ public class CustomOrderService {
                               CustomPlanSpecificationMapper customPlanSpecificationMapper,
                               CustomOrderPauseMapper customOrderPauseMapper,
                               CustomOrderDeliveryMapper customOrderDeliveryMapper,
-                              Generator<Long> generator
-    ) {
+                              Generator<Long> generator,
+                              DictionaryClient dictionaryClient) {
         this.customPlanService = customPlanService;
         this.baseDataServiceFeign = baseDataServiceFeign;
         this.orderServiceFeign = orderServiceFeign;
@@ -82,6 +85,7 @@ public class CustomOrderService {
         this.customOrderPauseMapper = customOrderPauseMapper;
         this.customOrderDeliveryMapper = customOrderDeliveryMapper;
         this.generator = generator;
+        this.dictionaryClient = dictionaryClient;
     }
 
     /**
@@ -95,15 +99,24 @@ public class CustomOrderService {
         if (Objects.isNull(customPlanSpecification))
             return null;
         //和色果膳定制计划订单号
+        Date current = Date.from(Instant.now());
         String orderCode = generator.get(0, "HGCP");
         customOrder.setCustomOrderCode(orderCode);
         customOrder.setStatus(CustomOrderStatus.WAIT_PAYMENT);
-        customOrder.setCreateAt(Date.from(Instant.now()));
+        customOrder.setCreateAt(current);
         customOrder.setPrice(customPlanSpecification.getPrice());
         customOrder.setRemainingQty(customPlanSpecification.getPlanPeriod());//剩余配送次数就是周期数
         customOrder.setQuantity(customPlanSpecification.getQuantity());
         customOrder.setTotalQty(customPlanSpecification.getPlanPeriod());//总配送次数
         customOrder.setDescription(customPlanSpecification.getDescription());//定制计划规格描述
+        Optional<Dictionary> optional = dictionaryClient.dictionary("customPlanMaxExtractionDay");
+        //7 周套餐设置 30 月套餐设定
+        int maxExtractionDay = 0;
+        if (optional.get().hasEntry(customPlanSpecification.getPlanPeriod().toString())) {
+            maxExtractionDay = Integer.valueOf(optional.get().entry(customPlanSpecification.getPlanPeriod().toString()).get().getName());
+        }
+        LocalDateTime endExtractionAt = LocalDateTime.now().plusDays(maxExtractionDay);
+        customOrder.setEndExtractionAt(Date.from(endExtractionAt.atZone(ZoneId.systemDefault()).toInstant()));//定制提取截止时间
         int result = customOrderMapper.create(customOrder);
 
         return result > 0 ? customOrder : null;
@@ -120,23 +133,38 @@ public class CustomOrderService {
     }
 
 
-    public int updateByCode(CustomOrder customOrder, CustomOrderPause customOrderPause) {
+    /**
+     * 修改定制订单记录
+     * @param customOrder
+     * @return
+     */
+    public int updateByCode(CustomOrder customOrder) {
+        CustomOrder searchCustomOrder = this.selectByCode(customOrder.getCustomOrderCode());
+        if (Objects.isNull(searchCustomOrder))
+            return 0;
+        return customOrderMapper.updateByCode(customOrder);
+    }
+
+    /**
+     * 暂停配送
+     * @param customOrder
+     * @param customOrderPause
+     * @return
+     */
+    public int pauseCustomOrder(CustomOrder customOrder, CustomOrderPause customOrderPause) {
         CustomOrder searchCustomOrder = this.selectByCode(customOrder.getCustomOrderCode());
         if (Objects.isNull(searchCustomOrder))
             return 0;
         switch (customOrder.getStatus()) {
             //恢复配送
             case CUSTOMING:
-                customOrderPauseMapper.deleteByCustomOrderId(searchCustomOrder.getId());
+                //customOrderPauseMapper.deleteByCustomOrderId(searchCustomOrder.getId());
                 break;
             //暂停配送 todo 需要检查暂停时间规则
             case PAUSE_DELIVERY:
-                //如果当前还有暂停配送记录，就不允许操作暂停(定时任务自动恢复配送，会删除掉已经过期的暂停记录)
-                if (Objects.nonNull(customOrderPauseMapper.selectByCustomOrderId(searchCustomOrder.getId()))) {
-                    return 0;
-                }
+                //如果当前时间段内还有暂停配送记录，就不允许操作暂停
                 customOrderPause.setCreateAt(Date.from(Instant.now()));//创建时间
-                customOrderPause.setCustomOrderId(searchCustomOrder.getId());//定制计划id
+                customOrderPause.setCustomOrderCode(customOrder.getCustomOrderCode());//定制计划code
                 //暂停开始日期
                 LocalDate pauseBegin = LocalDate.parse(customOrderPause.getPauseBegin(), dateTimeFormatter);
                 //暂停开始时间
@@ -145,6 +173,11 @@ public class CustomOrderService {
                 LocalDateTime last = pauseBegin.plusDays(customOrderPause.getPauseDay()).atTime(END_PAUSE_OF_DAY);
                 customOrderPause.setPauseBeginAt(Date.from(begin.atZone(ZoneId.systemDefault()).toInstant()));//暂停开始时间
                 customOrderPause.setPauseEndAt(Date.from(last.atZone(ZoneId.systemDefault()).toInstant()));//暂停结束时间
+                if (Objects.nonNull(customOrderPauseMapper.selectCustomOrderPause(customOrderPause))) {
+                    return 0;
+                }
+                //保持暂停记录
+                customOrderPauseMapper.create(customOrderPause);
                 break;
             default:
                 break;
@@ -153,13 +186,26 @@ public class CustomOrderService {
     }
 
     /**
+     * 恢复配送
+     * @param customOrder
+     * @return
+     */
+    public int resumeCustomOrder(CustomOrder customOrder) {
+        CustomOrder searchCustomOrder = this.selectByCode(customOrder.getCustomOrderCode());
+        if (Objects.isNull(searchCustomOrder))
+            return 0;
+        //恢复配送
+        //customOrderPauseMapper.deleteByCustomOrderId(searchCustomOrder.getId())
+       return 1;
+    }
+    /**
      * 提取定制计划中的套餐
      *
      * @param customOrder
      * @param remark      订单备注
      * @return
      */
-    public Tips extraction(CustomOrder customOrder, String remark) {
+    public Tips extraction(CustomOrder customOrder,String deliveryTime,String remark) {
         CreateOrderParam orderParam = new CreateOrderParam();
         orderParam.setUserId(customOrder.getUserId());//设置业务用户id
         orderParam.setApplicationType(ApplicationType.HEALTH_GOOD);
@@ -171,15 +217,16 @@ public class CustomOrderService {
         orderParam.setAllowRefund(AllowRefund.YES);//允许退货
         orderParam.setOrderType(OrderType.CUSTOM);//定制订单
         orderParam.setRemark(remark);
-        String deliveryTime = customOrder.getDeliveryTime();
+        //String deliveryTime = customOrder.getDeliveryTime();
         //TODO 需要自己调整
-        LocalDate pauseBegin = LocalDate.now();//当天
+        /*LocalDate pauseBegin = LocalDate.now();//当天
         deliveryTime = deliveryTime.replace("{", "{" + pauseBegin.format(dateTimeFormatter) + " ");
-        orderParam.setDeliveryAt(deliveryTime);//购买定制计划的配送时间 eg {12:00:00}-{13:00:00}
+        orderParam.setDeliveryAt(deliveryTime);//购买定制计划的配送时间 eg {12:00:00}-{13:00:00}*/
+        orderParam.setDeliveryAt(deliveryTime);
 
         String storeCode = customOrder.getStoreCode();//门店编码
         //判断门店是否存在
-        ResponseEntity<Store> storeResponseEntity = baseDataServiceFeign.findStoreByCode(storeCode);
+        ResponseEntity<Store> storeResponseEntity = baseDataServiceFeign.findStoreByCode(storeCode,ApplicationType.HEALTH_GOOD);
         Tips<Store> storeTips = FeginResponseTools.convertResponse(storeResponseEntity);
         if (storeTips.err()) {
             return storeTips;
@@ -400,6 +447,5 @@ public class CustomOrderService {
         }
         return Pages.of(total, this.customOrderMapper.pageCustomOrder(customOrder));
     }
-
 }
 

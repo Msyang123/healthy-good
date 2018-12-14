@@ -27,9 +27,7 @@ public interface CustomOrderPauseMapper {
      */
     int create(CustomOrderPause customOrderPause);
 
-    int deleteByCustomOrderId(Long customOrderId);
-
-    CustomOrderPause selectByCustomOrderId(Long customOrderId);
+    CustomOrderPause selectCustomOrderPause(CustomOrderPause customOrderCode);
 
 
 }
