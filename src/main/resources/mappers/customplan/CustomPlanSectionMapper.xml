@@ -4,19 +4,19 @@
 
     <!-- 数据库字段对象关系映射 -->
     <resultMap id="BaseResultMap"
-        type="com.lhiot.healthygood.domain.customplan.CustomPlanSection" >
+               type="com.lhiot.healthygood.domain.customplan.CustomPlanSection">
         <id column="id" property="id"/>
-        <result column="section_image" property="sectionImage" />
-        <result column="url" property="url" />
-        <result column="section_name" property="sectionName" />
-        <result column="section_code" property="sectionCode" />
-        <result column="sort" property="sort" />
-        <result column="create_at" property="createAt" />
+        <result column="section_image" property="sectionImage"/>
+        <result column="url" property="url"/>
+        <result column="section_name" property="sectionName"/>
+        <result column="section_code" property="sectionCode"/>
+        <result column="sort" property="sort"/>
+        <result column="create_at" property="createAt"/>
     </resultMap>
 
     <!-- base查询字段  -->
-    <sql id="Base_Column_List" >
-        <trim suffixOverrides="," >
+    <sql id="Base_Column_List">
+        <trim suffixOverrides=",">
             id,
             section_image,
             url,
@@ -27,10 +27,58 @@
         </trim>
     </sql>
 
+    <!-- 数据库字段对象关系映射 -->
+    <resultMap id="RelationResultMap"
+               type="com.lhiot.healthygood.domain.customplan.CustomPlanSection">
+        <id column="id" property="id"/>
+        <result column="section_image" property="sectionImage"/>
+        <result column="url" property="url"/>
+        <result column="section_name" property="sectionName"/>
+        <result column="section_code" property="sectionCode"/>
+        <result column="sort" property="sort"/>
+        <result column="create_at" property="createAt"/>
+        <collection property="customPlanList" ofType="com.lhiot.healthygood.domain.customplan.CustomPlan">
+            <id column="p_id" property="id"/>
+            <result column="name" property="name"/>
+            <result column="description" property="description"/>
+            <result column="image" property="image"/>
+            <result column="p_create_at" property="createAt"/>
+            <result column="over_rule" property="overRule"/>
+            <result column="status" property="status"/>
+            <result column="create_user" property="createUser"/>
+            <result column="r_sort" property="relationSort"/>
+        </collection>
+    </resultMap>
+
+    <!-- base查询字段  -->
+    <sql id="Relation_Column_List">
+        <trim suffixOverrides=",">
+            s.id,
+            s.section_image,
+            s.url,
+            s.section_name,
+            s.section_code,
+            s.sort,
+            s.create_at,
+
+            p.id p_id,
+            p.name,
+            p.description,
+            p.image,
+            p.create_at p_create_at,
+            p.over_rule,
+            p.status,
+            p.create_user,
+
+            r.sort r_sort,
+        </trim>
+    </sql>
+
     <!--新增定制计划板块-->
-    <insert id="create" parameterType="com.lhiot.healthygood.domain.customplan.CustomPlanSection" useGeneratedKeys="true" keyProperty="id">
+    <insert id="create" parameterType="com.lhiot.healthygood.domain.customplan.CustomPlanSection"
+            useGeneratedKeys="true" keyProperty="id">
         insert into custom_plan_section
-        <trim prefix="(" suffix=")" suffixOverrides="," >
+        <trim prefix="(" suffix=")" suffixOverrides=",">
             <if test="id != null ">
                 id,
             </if>
@@ -53,7 +101,7 @@
                 create_at,
             </if>
         </trim>
-        <trim prefix="values (" suffix=")" suffixOverrides="," >
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
             <if test="id != null ">
                 #{id},
             </if>
@@ -111,49 +159,51 @@
     <delete id="deleteByIds" parameterType="java.util.List">
         delete from custom_plan_section where id in
         <foreach collection="list" item="item" open="("
-            separator="," close=")">
+                 separator="," close=")">
             #{item}
         </foreach>
     </delete>
 
 
-
     <!-- 根据id查找定制计划板块 -->
-	<select id="selectById" resultMap="BaseResultMap"
-		parameterType="long"> select <include refid="Base_Column_List" />
-		from custom_plan_section where id = #{id}
-	</select>
+    <select id="selectById" resultMap="BaseResultMap"
+            parameterType="long">select
+        <include refid="Base_Column_List"/>
+        from custom_plan_section where id = #{id}
+    </select>
 
     <!-- 首页查找定制计划板块列表 -->
     <select id="customPlanSectionTuple" resultMap="BaseResultMap">
-        select <include refid="Base_Column_List" />
+        select
+        <include refid="Base_Column_List"/>
         from custom_plan_section
     </select>
 
     <!--依据code查询定制计划板块-->
     <select id="selectBySectionCode" resultMap="BaseResultMap"
             parameterType="string">
-        select <include refid="Base_Column_List" />
+        select
+        <include refid="Base_Column_List"/>
         from custom_plan_section where section_code = #{0}
     </select>
 
     <!-- base where条件  -->
-    <sql id="Base_Where_Condition" >
+    <sql id="Base_Where_Condition">
         <where>
             <if test="id != null ">
                 and id = #{id}
             </if>
-            <if test="sectionImage != null ">
+            <if test="sectionImage != null and sectionImage != ''">
                 and section_image = #{sectionImage}
             </if>
-            <if test="url != null ">
+            <if test="url != null and url != ''">
                 and url = #{url}
             </if>
-            <if test="sectionName != null ">
-                and section_name = #{sectionName}
+            <if test="sectionName != null and sectionName != ''">
+                and section_name like concat('%',#{sectionName}, '%')
             </if>
-            <if test="sectionCode != null ">
-                and section_code = #{sectionCode}
+            <if test="sectionCode != null and sectionCode != ''">
+                and section_code like concat('%',#{sectionCode}, '%')
             </if>
             <if test="sort != null ">
                 and sort = #{sort}
@@ -166,23 +216,28 @@
 
 
     <!--查询定制计划板块列表-->
-     <select id="pageCustomPlanSections" resultMap="BaseResultMap"
-        parameterType="com.lhiot.healthygood.domain.customplan.CustomPlanSection">
-	        select <include refid="Base_Column_List" />
-	        from custom_plan_section
-	        <include refid="Base_Where_Condition" />
-         <if test="rows != null and rows > 0 ">
-             order by id desc
-             limit #{startRow} , #{rows}
-         </if>
+    <select id="pageCustomPlanSections" resultMap="RelationResultMap"
+            parameterType="com.lhiot.healthygood.domain.customplan.CustomPlanSection">
+        select
+        <include refid="Relation_Column_List"/>
+        from custom_plan_section s
+        left join custom_plan_section_relation r on s.id = r.section_id
+        left join custom_plan p on r.plan_id = p.id
+        <include refid="Base_Where_Condition"/>
+        <if test="rows != null and rows > 0 ">
+            order by s.id desc
+            limit #{startRow} , #{rows}
+        </if>
     </select>
 
     <!--查询定制计划板块总记录-->
     <select id="pageCustomPlanSectionCounts" resultType="int"
-        parameterType="com.lhiot.healthygood.domain.customplan.CustomPlanSection">
-            select count(1)
-            from custom_plan_section
-            <include refid="Base_Where_Condition" />
+            parameterType="com.lhiot.healthygood.domain.customplan.CustomPlanSection">
+        select count(1)
+        from custom_plan_section s
+        left join custom_plan_section_relation r on s.id = r.section_id
+        left join custom_plan p on r.plan_id = p.id
+        <include refid="Base_Where_Condition"/>
     </select>
 
 </mapper>

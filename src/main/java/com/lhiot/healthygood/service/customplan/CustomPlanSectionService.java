@@ -1,7 +1,6 @@
 package com.lhiot.healthygood.service.customplan;
 
 import com.google.common.base.Joiner;
-import com.leon.microx.util.BeanUtils;
 import com.leon.microx.web.result.Pages;
 import com.leon.microx.web.result.Tips;
 import com.leon.microx.web.result.Tuple;
@@ -10,7 +9,6 @@ import com.lhiot.healthygood.domain.customplan.CustomPlanSection;
 import com.lhiot.healthygood.domain.customplan.CustomPlanSectionRelation;
 import com.lhiot.healthygood.domain.customplan.model.CustomPlanSectionParam;
 import com.lhiot.healthygood.domain.customplan.model.CustomPlanSectionRelationResult;
-import com.lhiot.healthygood.domain.customplan.model.CustomPlanSectionResultAdmin;
 import com.lhiot.healthygood.domain.customplan.model.PlanSectionsParam;
 import com.lhiot.healthygood.mapper.customplan.CustomPlanMapper;
 import com.lhiot.healthygood.mapper.customplan.CustomPlanSectionMapper;
@@ -48,39 +46,34 @@ public class CustomPlanSectionService {
     /**
      * 新增定制板块
      *
-     * @param customPlanSectionResultAdmin
+     * @param customPlanSection
      * @return
      */
     // FIXME TCC事务回滚
-    public Tips addCustomPlanSection(CustomPlanSectionResultAdmin customPlanSectionResultAdmin) {
+    public Tips addCustomPlanSection(CustomPlanSection customPlanSection) {
         // 幂等添加
-        CustomPlanSection findCustomPlanSection = customPlanSectionMapper.selectBySectionCode(customPlanSectionResultAdmin.getSectionCode());
+        CustomPlanSection findCustomPlanSection = customPlanSectionMapper.selectBySectionCode(customPlanSection.getSectionCode());
         if (Objects.nonNull(findCustomPlanSection)) {
             return Tips.warn("定制板块编码重复，添加失败");
         }
-        CustomPlanSection customPlanSection = new CustomPlanSection();
-        BeanUtils.copyProperties(customPlanSectionResultAdmin, customPlanSection);
         customPlanSection.setCreateAt(Date.from(Instant.now()));
         boolean addCustomPlanSection = customPlanSectionMapper.create(customPlanSection) > 0;
-
         if (!addCustomPlanSection) {
-            Tips.warn("添加定制板块失败！");
+            return Tips.warn("添加定制板块失败！");
         }
         // 新增板块id
         Long sectionId = customPlanSection.getId();
-
-        // 添加定制板块和定制计划的关联
-        List<CustomPlan> customPlanList = customPlanSectionResultAdmin.getCustomPlanList();
-        List<Long> sorts = customPlanSectionResultAdmin.getRelationSorts();
-        if (customPlanList.isEmpty() && sorts.isEmpty()) {
+        if (customPlanSection.getCustomPlanList().isEmpty() || customPlanSection.getCustomPlanList().size() == 0) {
             return Tips.info(customPlanSection.getId() + "");
         }
-        List<Long> planIds = customPlanSectionResultAdmin.getCustomPlanList().stream().map(CustomPlan::getId).collect(Collectors.toList());
+        // 添加定制板块和定制计划的关联
+        List<Long> sorts = customPlanSection.getCustomPlanList().stream().map(CustomPlan::getRelationSort).collect(Collectors.toList());
+        List<Long> planIds = customPlanSection.getCustomPlanList().stream().map(CustomPlan::getId).collect(Collectors.toList());
         if (Objects.nonNull(sectionId) && !planIds.isEmpty() && !sorts.isEmpty()) {
             //先做幂等验证
             List<CustomPlanSectionRelation> relationList = customPlanSectionRelationMapper.selectRelationListBySectionId(sectionId, Joiner.on(",").join(planIds));
             if (!relationList.isEmpty()) {
-                Tips.warn("定制计划与版块关联重复，添加失败");
+                return Tips.warn("定制计划与版块关联重复，添加失败");
             }
             List<CustomPlanSectionRelation> customPlanSectionRelationList = new ArrayList<>();
             CustomPlanSectionRelation customPlanSectionRelation;
@@ -99,7 +92,7 @@ public class CustomPlanSectionService {
             // 批量新增关联
             boolean addRelation = customPlanSectionRelationMapper.insertList(customPlanSectionRelationList) > 0;
             if (!addRelation) {
-                Tips.warn("批量新增定制板块和定制计划的关联失败！");
+                return Tips.warn("批量新增定制板块和定制计划的关联失败！");
             }
         }
         return Tips.info(customPlanSection.getId() + "");
@@ -108,12 +101,10 @@ public class CustomPlanSectionService {
     /**
      * 修改定制板块
      *
-     * @param customPlanSectionResultAdmin
+     * @param customPlanSection
      * @return
      */
-    public boolean update(CustomPlanSectionResultAdmin customPlanSectionResultAdmin) {
-        CustomPlanSection customPlanSection = new CustomPlanSection();
-        BeanUtils.copyProperties(customPlanSectionResultAdmin, customPlanSection);
+    public boolean update(CustomPlanSection customPlanSection) {
         return customPlanSectionMapper.updateById(customPlanSection) > 0;
     }
 
@@ -141,22 +132,20 @@ public class CustomPlanSectionService {
      * @param id
      * @return
      */
-    public CustomPlanSectionResultAdmin findById(Long id, boolean flag) {
+    public CustomPlanSection findById(Long id, boolean flag) {
         CustomPlanSection customPlanSection = customPlanSectionMapper.selectById(id);
-        CustomPlanSectionResultAdmin customPlanSectionResultAdmin = new CustomPlanSectionResultAdmin();
-        BeanUtils.copyProperties(customPlanSection, customPlanSectionResultAdmin);
 
         // 如果查询关联的定制计划信息
-        if (flag && Objects.nonNull(customPlanSectionResultAdmin)) {
+        if (flag && Objects.nonNull(customPlanSection)) {
             List<CustomPlanSectionRelationResult> customPlanSectionRelationResults = customPlanSectionRelationMapper.findPlanBySectionId(id);
             if (!customPlanSectionRelationResults.isEmpty()) {
                 List<CustomPlan> customPlans = customPlanSectionRelationResults.stream().map(CustomPlanSectionRelationResult::getCustomPlan).collect(Collectors.toList());
-                List<Long> relationIds = customPlanSectionRelationResults.stream().map(CustomPlanSectionRelationResult::getId).collect(Collectors.toList());
-                customPlanSectionResultAdmin.setCustomPlanList(customPlans);
-                customPlanSectionResultAdmin.setRelationSorts(relationIds);
+                List<Long> relationIds = customPlanSectionRelationResults.stream().map(CustomPlanSectionRelationResult::getSort).collect(Collectors.toList());
+                customPlanSection.setCustomPlanList(customPlans);
+                customPlanSection.getCustomPlanList().stream().peek(customPlan -> customPlan.setRelationSort(relationIds.get(customPlans.indexOf(customPlan)))).collect(Collectors.toList());
             }
         }
-        return customPlanSectionResultAdmin;
+        return customPlanSection;
     }
 
     /**
@@ -202,8 +191,8 @@ public class CustomPlanSectionService {
     void setCustomPlanSectionPlanItems(CustomPlanSection customPlanSection, PlanSectionsParam planSectionsParam) {
         if (null != customPlanSection) {
             List<CustomPlan> customPlanList = customPlanMapper.findByCustomPlanSectionId(planSectionsParam);
-            customPlanList.forEach(item->
-                item.setPrice(customPlanSpecificationMapper.findMinPriceByPlanId(item.getId()))
+            customPlanList.forEach(item ->
+                    item.setPrice(customPlanSpecificationMapper.findMinPriceByPlanId(item.getId()))
             );
             customPlanSection.setCustomPlanList(customPlanList);
         }

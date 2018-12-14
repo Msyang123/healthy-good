@@ -157,13 +157,13 @@
             <if test="quantity != null ">
                 and quantity = #{quantity}
             </if>
-            <if test="description != null ">
-                and description = #{description}
+            <if test="description != null and description != '' ">
+                and description like concat('%',#{description}, '%')
             </if>
             <if test="planPeriod != null ">
                 and plan_period = #{planPeriod}
             </if>
-            <if test="image != null ">
+            <if test="image != null and image != '' ">
                 and image = #{image}
             </if>
             <if test="standardId != null ">

@@ -76,7 +76,6 @@ public class CustomPlanSection{
 
     @JsonProperty("customPlanList")
     @ApiModelProperty(value = "定制计划集合", dataType = "List")
-    @NotNull
     private List<CustomPlan> customPlanList;
 
 }

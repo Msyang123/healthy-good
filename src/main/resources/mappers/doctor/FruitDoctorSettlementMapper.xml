@@ -134,7 +134,7 @@
             <if test="dealAt != null ">
                 and deal_at = #{dealAt}
             </if>
-            <if test="realName != null ">
+            <if test="realName != null and realName != '' ">
                 and realName  like concat('%',#{realName},'%')
             </if>
             <if test="beginCreateAt != null">and create_at <![CDATA[ >= ]]> #{beginCreateAt} </if>
