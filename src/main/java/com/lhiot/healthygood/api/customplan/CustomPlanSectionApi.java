@@ -89,7 +89,6 @@ public class CustomPlanSectionApi {
     public ResponseEntity batchDelete(@PathVariable("ids") String ids) {
         log.debug("批量删除定制板块\t param:{}", ids);
 
-        customPlanSectionService.batchDeleteByIds(ids);
         Tips tips = customPlanSectionService.batchDeleteByIds(ids);
         return tips.err() ? ResponseEntity.badRequest().body(tips.getMessage()) : ResponseEntity.noContent().build();
     }
