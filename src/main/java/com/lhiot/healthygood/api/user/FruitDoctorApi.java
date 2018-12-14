@@ -145,6 +145,7 @@ public class FruitDoctorApi {
             @ApiImplicitParam(paramType = "query", name = "amount", value = "申请提现红利", required = true, dataType = "int")
     })
     public ResponseEntity create(Sessions.User user,
+
                                  @RequestParam int amount) {
         log.debug("申请提现红利\t param:{}", amount);
         String userId = user.getUser().get("userId").toString();
@@ -265,7 +266,7 @@ public class FruitDoctorApi {
     }
 
 
-   @PostMapping("/relation")
+   /*@PostMapping("/relation")
     @ApiOperation(value = "添加鲜果师客户 关注鲜果师(绑定)")
     @ApiImplicitParam(paramType = "body", name = "DoctorCustomer", value = "要添加的鲜果师客户", required = true, dataType = "DoctorCustomer")
     public ResponseEntity bindingDoctor(Sessions.User user, @RequestBody DoctorCustomer doctorCustomer) {
@@ -283,7 +284,7 @@ public class FruitDoctorApi {
        doctorCustomer.setUserId(userId);
         doctorCustomerService.create(doctorCustomer);
         return ResponseEntity.ok(Tips.info("绑定成功！"));
-    }
+    }*/
 
     @PutMapping("/remark")
     @ApiOperation(value = "鲜果师修改用户备注")
@@ -564,39 +565,9 @@ public class FruitDoctorApi {
     @ApiImplicitParam(paramType = "body", name = "fruitDoctor", value = "要更新的鲜果师成员", required = true, dataType = "FruitDoctor")
     public ResponseEntity update(Sessions.User user, @RequestBody FruitDoctor fruitDoctor) {
         String userId = user.getUser().get("userId").toString();
-        FruitDoctor doctors = fruitDoctorService.selectByUserId(Long.valueOf(userId));
-        if (Objects.isNull(doctors)) {
-            return ResponseEntity.badRequest().body("鲜果师不存在");
-        }
-        fruitDoctor.setId(doctors.getId());
-        Tips backMsg = new Tips();
-        if (fruitDoctorService.updateById(fruitDoctor) >= 1) {
-            backMsg.setCode("1");
-            backMsg.setMessage("更新成功");
-        }
-        //升级为明星鲜果师，发送模板消息
-        if ("YES".equals(fruitDoctor.getHot())) {
-            FruitDoctor fd = fruitDoctorService.selectById(doctors.getId());
-            if (Objects.nonNull(fd)) {
-                //不是明星鲜果师的时候才发送模板消息
-                if (!"YES".equals(fd.getHot())) {
-                    String currentTime = new SimpleDateFormat("yyyy-MM-dd").format(new Date());
-                    KeywordValue keywordValue = new KeywordValue();
-                    keywordValue.setTemplateType(TemplateMessageEnum.UPGRADE_FRUIT_DOCTOR);
-                    keywordValue.setKeyword1Value("明星鲜果师");
-                    keywordValue.setKeyword2Value("成功");
-                    keywordValue.setKeyword3Value(currentTime);
-                    keywordValue.setKeyword4Value("如有疑问请致电0731-85240088");
-                    keywordValue.setSendToDoctor(false);
-                    keywordValue.setUserId(fd.getUserId());
-                    //TODO 模板消息由消息总线改成 事件监听
-                   /* rabbit.convertAndSend(FruitDoctorOrderExchange.FRUIT_TEMPLATE_MESSAGE.getExchangeName(),
-                            FruitDoctorOrderExchange.FRUIT_TEMPLATE_MESSAGE.getQueueName(), Jackson.json(keywordValue));*/
-                }
-            }
-        }
-        //如果是升级为明星鲜果师，则发送模板消息
-        return ResponseEntity.ok(backMsg);
+        fruitDoctor.setUserId(Long.valueOf(userId));
+        Tips tips = registerApplicationService.updateFruitDoctorInfo(fruitDoctor);
+        return tips.err() ? ResponseEntity.badRequest().body(tips.getMessage()) : ResponseEntity.ok().body(tips.getMessage());
     }
 
 
