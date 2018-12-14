@@ -124,14 +124,14 @@
             <if test="id != null ">
                 and id = #{id}
             </if>
-            <if test="cardNo != null ">
-                and card_no = #{cardNo}
+            <if test="cardNo != null and cardNo != '' ">
+                and card_no  like concat('%',#{cardNo}, '%')
             </if>
-            <if test="bankDeposit != null ">
-                and bank_deposit = #{bankDeposit}
+            <if test="bankDeposit != null and bankDeposit != ''">
+                and bank_deposit like concat('%',#{bankDeposit}, '%')
             </if>
-            <if test="cardUsername != null ">
-                and card_username = #{cardUsername}
+            <if test="cardUsername != null and cardUsername != '' ">
+                and card_username like concat('%',#{cardUsername}, '%')
             </if>
             <if test="updateAt != null ">
                 and update_at = #{updateAt}

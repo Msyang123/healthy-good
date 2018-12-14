@@ -13,8 +13,6 @@ import lombok.Data;
 public class CustomOrderGroupCount {
     @ApiModelProperty(notes = "待付款", dataType = "int")
     private int waitPaymentCount;
-    @ApiModelProperty(notes = "待收货", dataType = "int")
-    private int waitReceiveCount;
-    @ApiModelProperty(notes = "退货中", dataType = "int")
-    private int returningCount;
+    @ApiModelProperty(notes = "定制中", dataType = "int")
+    private int customingCount;
 }

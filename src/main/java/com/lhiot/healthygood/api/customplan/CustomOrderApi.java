@@ -2,7 +2,6 @@ package com.lhiot.healthygood.api.customplan;
 
 import com.leon.microx.web.result.Pages;
 import com.leon.microx.web.result.Tips;
-import com.leon.microx.web.result.Tuple;
 import com.leon.microx.web.session.Sessions;
 import com.leon.microx.web.swagger.ApiHideBodyProperty;
 import com.leon.microx.web.swagger.ApiParamType;
@@ -96,13 +95,13 @@ public class CustomOrderApi {
         CustomOrder customOrder = (CustomOrder) validateOrderOwner.getBody();
         WxPayModel wxPayModel = new WxPayModel();
         wxPayModel.setApplicationType(ApplicationType.HEALTH_GOOD);
-        wxPayModel.setBackUrl(wechatPayConfig.getActivityCallbackUrl());
+        wxPayModel.setBackUrl(wechatPayConfig.getCustomplanCallbackUrl());
         wxPayModel.setClientIp(RealClientIp.getRealIp(request));//获取客户端真实ip
         wxPayModel.setConfigName(wechatPayConfig.getConfigName());//微信支付简称
         wxPayModel.setFee(customOrder.getPrice());
         wxPayModel.setMemo("定制订单支付");
         wxPayModel.setOpenid(openId);
-        wxPayModel.setSourceType(SourceType.ACTIVITY);
+        wxPayModel.setSourceType(SourceType.CUSTOM_PLAN);
         wxPayModel.setUserId(userId);
         wxPayModel.setAttach(orderCode);//定制订单code
         return paymentServiceFeign.wxJsSign(wxPayModel);
@@ -195,11 +194,12 @@ public class CustomOrderApi {
     }
 
 
-    @GetMapping("/custom-orders/status/{status}")
+    @PostMapping("/custom-orders/status")
     @ApiOperation(value = "我的订单状态列表")
-    public ResponseEntity<Tuple<CustomOrder>> customOrderList(@PathVariable("status") CustomOrderStatus status, Sessions.User user) {
+    public ResponseEntity<Pages<CustomOrder>> customOrderList(@RequestBody CustomOrder customOrder, Sessions.User user) {
         Long userId = Long.valueOf(user.getUser().get("userId").toString());
-        return ResponseEntity.ok(customOrderService.customOrderListByStatus(userId, status, true));
+        customOrder.setUserId(userId);
+        return ResponseEntity.ok(customOrderService.customOrderListByStatus(customOrder, true));
     }
 
     @GetMapping("/custom-orders/{orderCode}/detail")

@@ -146,13 +146,13 @@
             <if test="id != null ">
                 and id = #{id}
             </if>
-            <if test="name != null ">
+            <if test="name != null and name != '' ">
                 and name like concat('%',#{name}, '%')
             </if>
-            <if test="description != null ">
-                and description = #{description}
+            <if test="description != null and description != '' ">
+                and description like concat('%',#{description}, '%')
             </if>
-            <if test="image != null ">
+            <if test="image != null and image != ''">
                 and image = #{image}
             </if>
             <if test="createAt != null ">
@@ -164,8 +164,8 @@
             <if test="status != null ">
                 and status = #{status}
             </if>
-            <if test="createUser != null ">
-                and create_user = #{createUser}
+            <if test="createUser != null and createUser != '' ">
+                and create_user  like concat('%',#{createUser}, '%')
             </if>
         </where>
     </sql>

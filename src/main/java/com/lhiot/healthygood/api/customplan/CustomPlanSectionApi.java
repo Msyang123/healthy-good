@@ -8,7 +8,6 @@ import com.leon.microx.web.session.Sessions;
 import com.leon.microx.web.swagger.ApiParamType;
 import com.lhiot.healthygood.domain.customplan.CustomPlanSection;
 import com.lhiot.healthygood.domain.customplan.model.CustomPlanSectionParam;
-import com.lhiot.healthygood.domain.customplan.model.CustomPlanSectionResultAdmin;
 import com.lhiot.healthygood.domain.customplan.model.PlanSectionsParam;
 import com.lhiot.healthygood.service.customplan.CustomPlanSectionService;
 import io.swagger.annotations.Api;
@@ -39,13 +38,13 @@ public class CustomPlanSectionApi {
 
     @Sessions.Uncheck
     @ApiOperation("添加定制板块(后台)")
-    @ApiImplicitParam(paramType = ApiParamType.BODY, name = "customPlanSectionResultAdmin", value = "定制计划板块", dataType = "CustomPlanSectionResultAdmin", required = true)
+    @ApiImplicitParam(paramType = ApiParamType.BODY, name = "customPlanSection", value = "定制计划板块", dataType = "CustomPlanSection", required = true)
     @PostMapping("/custom-plan-sections")
-    public ResponseEntity create(@Valid @RequestBody CustomPlanSectionResultAdmin customPlanSectionResultAdmin) {
-        log.debug("添加定制板块\t param:{}", customPlanSectionResultAdmin);
+    public ResponseEntity create(@Valid @RequestBody CustomPlanSection customPlanSection) {
+        log.debug("添加定制板块\t param:{}", customPlanSection);
 
         // 添加定制板块
-        Tips tips = customPlanSectionService.addCustomPlanSection(customPlanSectionResultAdmin);
+        Tips tips = customPlanSectionService.addCustomPlanSection(customPlanSection);
         if (tips.err()) {
             return ResponseEntity.badRequest().body(tips.getMessage());
         }
@@ -59,28 +58,28 @@ public class CustomPlanSectionApi {
     @ApiOperation("修改定制板块(后台)")
     @ApiImplicitParams({
             @ApiImplicitParam(paramType = ApiParamType.PATH, name = "id", value = "定制板块id", dataType = "Long", required = true),
-            @ApiImplicitParam(paramType = ApiParamType.BODY, name = "customPlanSectionResultAdmin", value = "定制板块", dataType = "CustomPlanSectionResultAdmin", required = true)
+            @ApiImplicitParam(paramType = ApiParamType.BODY, name = "customPlanSection", value = "定制板块", dataType = "CustomPlanSection", required = true)
     })
     @PutMapping("/custom-plan-sections/{id}")
-    public ResponseEntity update(@PathVariable("id") Long id, @Valid @RequestBody CustomPlanSectionResultAdmin customPlanSectionResultAdmin) {
-        log.debug("修改定制板块\t param:{}", customPlanSectionResultAdmin);
+    public ResponseEntity update(@PathVariable("id") Long id, @Valid @RequestBody CustomPlanSection customPlanSection) {
+        log.debug("修改定制板块\t param:{}", customPlanSection);
 
-        customPlanSectionResultAdmin.setId(id);
-        return customPlanSectionService.update(customPlanSectionResultAdmin) ? ResponseEntity.ok().build() : ResponseEntity.badRequest().body("修改定制板块失败!");
+        customPlanSection.setId(id);
+        return customPlanSectionService.update(customPlanSection) ? ResponseEntity.ok().build() : ResponseEntity.badRequest().body("修改定制板块失败!");
     }
 
     @Sessions.Uncheck
-    @ApiOperation(value = "根据id查找单个定制板块(后台)", response = CustomPlanSectionResultAdmin.class)
+    @ApiOperation(value = "根据id查找单个定制板块(后台)", response = CustomPlanSection.class)
     @ApiImplicitParams({
             @ApiImplicitParam(paramType = ApiParamType.PATH, name = "id", value = "定制板块id", dataType = "Long", required = true),
             @ApiImplicitParam(paramType = ApiParamType.QUERY, name = "flag", value = "是否查询关联定制计划信息", dataType = "Boolean")
     })
     @GetMapping("/custom-plan-sections/{id}")
-    public ResponseEntity findById(@PathVariable("id") Long id, @RequestParam(value = "flag", required = false)  boolean flag) {
+    public ResponseEntity findById(@PathVariable("id") Long id, @RequestParam(value = "flag", required = false) boolean flag) {
         log.debug("根据id查找单个定制板块\t param:{}", id, flag);
 
-        CustomPlanSectionResultAdmin customPlanSectionResult = customPlanSectionService.findById(id, flag);
-        return ResponseEntity.ok().body(customPlanSectionResult);
+        CustomPlanSection customPlanSection = customPlanSectionService.findById(id, flag);
+        return ResponseEntity.ok().body(customPlanSection);
     }
 
     @Sessions.Uncheck
@@ -96,7 +95,7 @@ public class CustomPlanSectionApi {
     }
 
     @Sessions.Uncheck
-    @ApiOperation(value = "根据条件分页查询定制板块信息列表(后台)",response = CustomPlanSection.class, responseContainer = "Set")
+    @ApiOperation(value = "根据条件分页查询定制板块信息列表(后台)", response = CustomPlanSection.class, responseContainer = "Set")
     @ApiImplicitParam(paramType = ApiParamType.BODY, name = "param", value = "查询条件", dataType = "CustomPlanSectionParam")
     @PostMapping("/custom-plan-sections/pages")
     public ResponseEntity search(@RequestBody CustomPlanSectionParam param) {
@@ -117,6 +116,7 @@ public class CustomPlanSectionApi {
         Tuple<CustomPlanSection> productSectionResult = customPlanSectionService.customPlanSectionTuple();
         return ResponseEntity.ok(productSectionResult);
     }
+
     /**
      * 定制计划信息-定制板块页
      */
