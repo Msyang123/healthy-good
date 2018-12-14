@@ -315,7 +315,7 @@ public class FruitDoctorApi {
             return ResponseEntity.badRequest().body("鲜果师不存在");
         }
         FruitDoctor doctor = new FruitDoctor();
-        doctor.setId(fruitDoctor.getId());
+        doctor.setRefereeId(fruitDoctor.getId());
         return ResponseEntity.ok(fruitDoctorService.subordinate(doctor));
     }
 
@@ -370,8 +370,8 @@ public class FruitDoctorApi {
 
     @GetMapping("/incomes/detail")
     @ApiImplicitParams({
-            @ApiImplicitParam(paramType = "query", name = "page", dataType = "Integer", required = true, value = "多少页"),
-            @ApiImplicitParam(paramType = "query", name = "rows", dataType = "Integer", required = true, value = "数据多少条"),
+            @ApiImplicitParam(paramType = "query", name = "page", dataType = "int", required = true, value = "多少页"),
+            @ApiImplicitParam(paramType = "query", name = "rows", dataType = "int", required = true, value = "数据多少条"),
             @ApiImplicitParam(paramType = "query", name = "incomeType", dataTypeClass = IncomeType.class, required = true, value = "收入支出类型")
     })
     @ApiOperation(value = "收支明细", response = DoctorAchievementLog.class, responseContainer = "Set")
@@ -502,8 +502,8 @@ public class FruitDoctorApi {
         if (Objects.isNull(fruitDoctor)) {
             return ResponseEntity.badRequest().body("鲜果师不存在");
         }
-        List<DoctorCustomer> DoctorCustomerList = doctorCustomerService.doctorCustomers(fruitDoctor.getId());
-        DoctorCustomerList.stream().forEach(DoctorCustomer -> {
+        List<DoctorCustomer> doctorCustomerList = doctorCustomerService.doctorCustomers(fruitDoctor.getId());
+        doctorCustomerList.stream().forEach(DoctorCustomer -> {
             ResponseEntity userInfoEntity = baseUserServerFeign.findById(Long.valueOf(DoctorCustomer.getUserId()));
             if (userInfoEntity.getStatusCode().isError()) {
                 return;
@@ -517,14 +517,48 @@ public class FruitDoctorApi {
         Pattern pattern = Pattern.compile("^[a-zA-Z]");
 
         JSONArray customers = new JSONArray();
-        for (DoctorCustomer item : DoctorCustomerList) {
+        doctorCustomerList.stream().filter(Objects::nonNull).forEach(item -> {
+            String pinyin = null;
+            try {
+                pinyin = tool.toPinYin(item.getNickname());
+            } catch (BadHanyuPinyinOutputFormatCombination badHanyuPinyinOutputFormatCombination) {
+                badHanyuPinyinOutputFormatCombination.printStackTrace();
+            }
+            Matcher matcher = pattern.matcher(pinyin);
+
+            item.setNicknameFristChar(matcher.find()?("" + pinyin.charAt(0)).toUpperCase():"#");
+            boolean exist = false;
+            for (int i = 0; i < customers.size(); i++) {
+                JSONObject jsonObject = (JSONObject) customers.get(i);
+                if (Objects.equals(item.getNicknameFristChar(), jsonObject.get("index"))) {
+                    JSONArray array = (JSONArray) jsonObject.get("array");
+                    array.add(item);
+                    exist = true;
+                    break;
+                }
+            }
+            if (!exist) {
+                JSONObject customerGroup = new JSONObject();
+                customerGroup.put("index", item.getNicknameFristChar());
+                JSONArray array = new JSONArray();
+                array.add(item);
+                customerGroup.put("array", array);
+                customers.add(customerGroup);
+            }
+        });
+        customers.sort(new Comparator<JSONObject>() {
+            @Override
+            public int compare(JSONObject o1, JSONObject o2) {
+                String o1Val = o1.get("index").toString();
+                String o2Val = o2.get("index").toString();
+                return o1Val.compareTo(o2Val);
+            }
+        });
+        /*for (DoctorCustomer item : DoctorCustomerList) {
             String pinyin = tool.toPinYin(item.getNickname());
             Matcher matcher = pattern.matcher(pinyin);
-            if (matcher.find()) {
-                item.setNicknameFristChar(("" + pinyin.charAt(0)).toUpperCase());
-            } else {
-                item.setNicknameFristChar("#");
-            }
+
+            item.setNicknameFristChar(matcher.find()?("" + pinyin.charAt(0)).toUpperCase():"#");
             boolean exist = false;
             for (int i = 0; i < customers.size(); i++) {
                 JSONObject jsonObject = (JSONObject) customers.get(i);
@@ -556,7 +590,7 @@ public class FruitDoctorApi {
             public boolean equals(Object obj) {
                 return super.equals(obj);
             }
-        });
+        });*/
         return ResponseEntity.ok(customers);
     }
 

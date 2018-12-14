@@ -8,7 +8,8 @@ import lombok.NoArgsConstructor;
 @Data
 @ApiModel(description = "鲜果师业绩统计")
 @NoArgsConstructor
-public class Achievement {
+public class
+Achievement {
 	
 	@ApiModelProperty(notes="销售总金额",dataType="Long")
 	private Long salesAmount;
