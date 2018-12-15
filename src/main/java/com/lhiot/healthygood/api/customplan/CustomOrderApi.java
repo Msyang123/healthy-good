@@ -117,11 +117,8 @@ public class CustomOrderApi {
             return validateOrderOwner;
         }
         //不需要检测是否暂停中 不依赖定制订单状态
-
-        CustomOrder updateCustomOrder = new CustomOrder();
-        updateCustomOrder.setCustomOrderCode(orderCode);
-        updateCustomOrder.setStatus(CustomOrderStatus.PAUSE_DELIVERY);
-        int result = customOrderService.pauseCustomOrder(updateCustomOrder, customOrderPause);
+        customOrderPause.setCustomOrderCode(orderCode);
+        int result = customOrderService.pauseCustomOrder(customOrderPause);
         return result > 0 ? ResponseEntity.ok("修改成功") : ResponseEntity.badRequest().body("暂停配送失败");
     }
 

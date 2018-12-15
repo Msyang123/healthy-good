@@ -10,6 +10,7 @@ import com.leon.microx.web.result.Tuple;
 import com.leon.microx.web.session.Sessions;
 import com.lhiot.healthygood.config.HealthyGoodConfig;
 import com.lhiot.healthygood.domain.order.OrderGroupCount;
+import com.lhiot.healthygood.domain.order.OrderParam;
 import com.lhiot.healthygood.domain.user.DoctorCustomer;
 import com.lhiot.healthygood.domain.user.FruitDoctor;
 import com.lhiot.healthygood.feign.BaseDataServiceFeign;
@@ -38,6 +39,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -73,7 +75,7 @@ public class OrderApi {
     }
 
     @PostMapping("/orders")
-    @ApiOperation(value = "和色果膳--创建订单",response = OrderDetailResult.class)
+    @ApiOperation(value = "和色果膳--创建订单", response = OrderDetailResult.class)
     @ApiImplicitParam(paramType = "body", name = "orderParam", dataType = "CreateOrderParam", required = true, value = "创建订单传入参数")
     public ResponseEntity createOrder(@Valid @RequestBody CreateOrderParam orderParam, Sessions.User user) {
 
@@ -85,7 +87,7 @@ public class OrderApi {
 
         String storeCode = orderParam.getOrderStore().getStoreCode();
         //判断门店是否存在
-        ResponseEntity<Store> storeResponseEntity = baseDataServiceFeign.findStoreByCode(storeCode,ApplicationType.HEALTH_GOOD);
+        ResponseEntity<Store> storeResponseEntity = baseDataServiceFeign.findStoreByCode(storeCode, ApplicationType.HEALTH_GOOD);
         if (Objects.isNull(storeResponseEntity) || storeResponseEntity.getStatusCode().isError()) {
             return storeResponseEntity;
         }
@@ -157,11 +159,13 @@ public class OrderApi {
                 })
         );
         ResponseEntity<OrderDetailResult> orderDetailResultResponse = orderServiceFeign.createOrder(orderParam);
-        if (Objects.isNull(orderDetailResultResponse) || orderDetailResultResponse.getStatusCode().isError()) {
-            return ResponseEntity.badRequest().body(orderDetailResultResponse);
+        if (Objects.isNull(orderDetailResultResponse)) {
+            return ResponseEntity.badRequest().body("创建订单错误");
+        } else if (orderDetailResultResponse.getStatusCode().isError()) {
+            return orderDetailResultResponse;
         }
         //TODO mq设置三十分钟失效
-        return ResponseEntity.ok(orderDetailResultResponse);
+        return orderDetailResultResponse;
     }
 
     @DeleteMapping("/orders/{orderCode}")
@@ -178,14 +182,14 @@ public class OrderApi {
 
 
     @PutMapping("/orders/{orderCode}/refund")
-    @ApiOperation(value = "订单退货",response = String.class)
+    @ApiOperation(value = "订单退货", response = String.class)
     @ApiImplicitParams({
             @ApiImplicitParam(paramType = "path", name = "orderCode", dataType = "String", required = true, value = "订单编码"),
             @ApiImplicitParam(paramType = "body", name = "returnOrderParam", dataType = "ReturnOrderParam", required = true, value = "退货参数")
     })
     public ResponseEntity refundOrder(@Valid @NotBlank @PathVariable("orderCode") String orderCode,
-                                            @NotNull @RequestBody ReturnOrderParam returnOrderParam,
-                                            Sessions.User user) {
+                                      @NotNull @RequestBody ReturnOrderParam returnOrderParam,
+                                      Sessions.User user) {
         Long userId = Long.valueOf(user.getUser().get("userId").toString());
         ResponseEntity validateResult = validateOrderOwner(userId, orderCode);
         if (Objects.isNull(validateResult) || validateResult.getStatusCode().isError()) {
@@ -216,17 +220,36 @@ public class OrderApi {
         return refundOrderTips;
     }
 
-    @GetMapping("/orders/pages")
+    @PostMapping("/orders/status")
     @ApiOperation(value = "我的用户订单列表")
-    public ResponseEntity<Tuple<OrderDetailResult>> orderPages(@RequestParam(value = "orderStatus", required = false) OrderStatus orderStatus,
-                                           Sessions.User user) {
-        Long userId = Long.valueOf(user.getUser().get("userId").toString());
-        return orderServiceFeign.ordersByUserId(userId, OrderType.NORMAL, orderStatus);
+    public ResponseEntity<Pages<OrderDetailResult>> orderPages(@RequestBody OrderParam orderParam,
+                                                               Sessions.User user) {
+        BaseOrderParam baseOrderParam = new BaseOrderParam();
+        baseOrderParam.setPage(orderParam.getPage());
+        baseOrderParam.setRows(orderParam.getRows());
+        baseOrderParam.setUserIds(user.getUser().get("userId").toString());
+        baseOrderParam.setOrderType(OrderType.NORMAL);
+        if (orderParam.getStatusIn()!=null){
+            List<OrderDetailResult> orderDetailResultList =new ArrayList<>();
+            int total =0;
+            for(OrderStatus status : orderParam.getStatusIn()) {
+                baseOrderParam.setOrderStatus(status);
+                ResponseEntity<Pages<OrderDetailResult>> responseEntity = orderServiceFeign.ordersPages(baseOrderParam);
+                //组装在一个list中
+                if(Objects.nonNull(responseEntity)&& responseEntity.getStatusCode().is2xxSuccessful()){
+                    orderDetailResultList.addAll(responseEntity.getBody().getArray());
+                    total+=responseEntity.getBody().getTotal();
+                }
+            }
+            return ResponseEntity.ok(Pages.of(total,orderDetailResultList));
+        }else{
+            return orderServiceFeign.ordersPages(baseOrderParam);
+        }
     }
 
-    @GetMapping("/orders/fruit-doctor/customers")
-    @ApiOperation(value = "我的鲜果师客户订单列表",response = OrderDetailResult.class,responseContainer = "List")
-    public ResponseEntity customersOrders(@RequestParam(value = "orderStatus", required = false) OrderStatus orderStatus, Sessions.User user) {
+    @PostMapping("/orders/fruit-doctor/customers")
+    @ApiOperation(value = "我的鲜果师客户订单列表", response = OrderDetailResult.class, responseContainer = "List")
+    public ResponseEntity customersOrders(@RequestBody OrderParam orderParam, Sessions.User user) {
         String userId = user.getUser().get("userId").toString();
         FruitDoctor fruitDoctor = fruitDoctorService.selectByUserId(Long.valueOf(userId));
         if (Objects.isNull(fruitDoctor)) {
@@ -234,17 +257,32 @@ public class OrderApi {
         }
         //鲜果师客户列表
         List<DoctorCustomer> doctorCustomerList = doctorCustomerService.selectByDoctorId(fruitDoctor.getId());
-
         String userIds = StringUtils.arrayToCommaDelimitedString(doctorCustomerList.parallelStream().map(DoctorCustomer::getUserId).toArray(Object[]::new));
         BaseOrderParam baseOrderParam = new BaseOrderParam();
+        baseOrderParam.setPage(orderParam.getPage());
+        baseOrderParam.setRows(orderParam.getRows());
         baseOrderParam.setUserIds(userIds);
-        baseOrderParam.setOrderStatus(orderStatus);
         baseOrderParam.setOrderType(OrderType.NORMAL);
-        return orderServiceFeign.ordersPages(baseOrderParam);
+        if (orderParam.getStatusIn()!=null){
+            List<OrderDetailResult> orderDetailResultList =new ArrayList<>();
+            int total =0;
+            for(OrderStatus status : orderParam.getStatusIn()) {
+                baseOrderParam.setOrderStatus(status);
+                ResponseEntity<Pages<OrderDetailResult>> responseEntity = orderServiceFeign.ordersPages(baseOrderParam);
+                //组装在一个list中
+                if(Objects.nonNull(responseEntity)&& responseEntity.getStatusCode().is2xxSuccessful()){
+                    orderDetailResultList.addAll(responseEntity.getBody().getArray());
+                    total+=responseEntity.getBody().getTotal();
+                }
+            }
+            return ResponseEntity.ok(Pages.of(total,orderDetailResultList));
+        }else{
+            return orderServiceFeign.ordersPages(baseOrderParam);
+        }
     }
 
     @GetMapping("/orders/{orderCode}/detail")
-    @ApiOperation(value = "根据订单code查询订单详情",response = OrderDetailResult.class)
+    @ApiOperation(value = "根据订单code查询订单详情", response = OrderDetailResult.class)
     public ResponseEntity orderDetial(@Valid @NotBlank @PathVariable("orderCode") String orderCode, Sessions.User user) {
         Long userId = Long.valueOf(user.getUser().get("userId").toString());
         ResponseEntity validateResult = validateOrderOwner(userId, orderCode);
@@ -259,7 +297,7 @@ public class OrderApi {
     public ResponseEntity<OrderGroupCount> countStatus(Sessions.User user) {
         Long userId = Long.valueOf(user.getUser().get("userId").toString());
 
-        OrderGroupCount orderGroupCount =new OrderGroupCount();
+        OrderGroupCount orderGroupCount = new OrderGroupCount();
         ResponseEntity<Tuple<OrderDetailResult>> waitPayment = orderServiceFeign.ordersByUserId(userId, OrderType.NORMAL, OrderStatus.WAIT_PAYMENT);
         Tips<Tuple<OrderDetailResult>> waitPaymentTips = FeginResponseTools.convertResponse(waitPayment);
         if (waitPaymentTips.err()) {
@@ -285,7 +323,7 @@ public class OrderApi {
     }
 
     @PostMapping("/orders/{orderCode}/payment-sign")
-    @ApiOperation(value = "订单微信支付签名",response = String.class)
+    @ApiOperation(value = "订单微信支付签名", response = String.class)
     public ResponseEntity paymentSign(@Valid @NotBlank @PathVariable("orderCode") String orderCode, HttpServletRequest request, Sessions.User user) {
         Long userId = Long.valueOf(user.getUser().get("userId").toString());
         String openId = user.getUser().get("openId").toString();

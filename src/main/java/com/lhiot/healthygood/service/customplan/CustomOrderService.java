@@ -135,6 +135,7 @@ public class CustomOrderService {
 
     /**
      * 修改定制订单记录
+     *
      * @param customOrder
      * @return
      */
@@ -147,46 +148,35 @@ public class CustomOrderService {
 
     /**
      * 暂停配送
-     * @param customOrder
+     *
      * @param customOrderPause
      * @return
      */
-    public int pauseCustomOrder(CustomOrder customOrder, CustomOrderPause customOrderPause) {
-        CustomOrder searchCustomOrder = this.selectByCode(customOrder.getCustomOrderCode());
-        if (Objects.isNull(searchCustomOrder))
+    public int pauseCustomOrder(CustomOrderPause customOrderPause) {
+
+        //暂停配送 todo 需要检查暂停时间规则
+
+        //如果当前时间段内还有暂停配送记录，就不允许操作暂停
+        customOrderPause.setCreateAt(Date.from(Instant.now()));//创建时间
+        //暂停开始日期
+        LocalDate pauseBegin = LocalDate.parse(customOrderPause.getPauseBegin(), dateTimeFormatter);
+        //暂停开始时间
+        LocalDateTime begin = pauseBegin.atTime(BEGIN_PAUSE_OF_DAY);
+        //计划暂停结束时间
+        LocalDateTime last = pauseBegin.plusDays(customOrderPause.getPauseDay()).atTime(END_PAUSE_OF_DAY);
+        customOrderPause.setPauseBeginAt(Date.from(begin.atZone(ZoneId.systemDefault()).toInstant()));//暂停开始时间
+        customOrderPause.setPlanPauseEndAt(Date.from(last.atZone(ZoneId.systemDefault()).toInstant()));//计划暂停结束时间
+        if (Objects.nonNull(customOrderPauseMapper.selectCustomOrderPause(customOrderPause))) {
             return 0;
-        switch (customOrder.getStatus()) {
-            //恢复配送
-            case CUSTOMING:
-                //customOrderPauseMapper.deleteByCustomOrderId(searchCustomOrder.getId());
-                break;
-            //暂停配送 todo 需要检查暂停时间规则
-            case PAUSE_DELIVERY:
-                //如果当前时间段内还有暂停配送记录，就不允许操作暂停
-                customOrderPause.setCreateAt(Date.from(Instant.now()));//创建时间
-                customOrderPause.setCustomOrderCode(customOrder.getCustomOrderCode());//定制计划code
-                //暂停开始日期
-                LocalDate pauseBegin = LocalDate.parse(customOrderPause.getPauseBegin(), dateTimeFormatter);
-                //暂停开始时间
-                LocalDateTime begin = pauseBegin.atTime(BEGIN_PAUSE_OF_DAY);
-                //暂停结束时间
-                LocalDateTime last = pauseBegin.plusDays(customOrderPause.getPauseDay()).atTime(END_PAUSE_OF_DAY);
-                customOrderPause.setPauseBeginAt(Date.from(begin.atZone(ZoneId.systemDefault()).toInstant()));//暂停开始时间
-                customOrderPause.setPauseEndAt(Date.from(last.atZone(ZoneId.systemDefault()).toInstant()));//暂停结束时间
-                if (Objects.nonNull(customOrderPauseMapper.selectCustomOrderPause(customOrderPause))) {
-                    return 0;
-                }
-                //保持暂停记录
-                customOrderPauseMapper.create(customOrderPause);
-                break;
-            default:
-                break;
         }
-        return customOrderMapper.updateByCode(customOrder);
+        //保持暂停记录
+        return customOrderPauseMapper.create(customOrderPause);
+
     }
 
     /**
      * 恢复配送
+     *
      * @param customOrder
      * @return
      */
@@ -196,8 +186,9 @@ public class CustomOrderService {
             return 0;
         //恢复配送
         //customOrderPauseMapper.deleteByCustomOrderId(searchCustomOrder.getId())
-       return 1;
+        return 1;
     }
+
     /**
      * 提取定制计划中的套餐
      *
@@ -205,7 +196,7 @@ public class CustomOrderService {
      * @param remark      订单备注
      * @return
      */
-    public Tips extraction(CustomOrder customOrder,String deliveryTime,String remark) {
+    public Tips extraction(CustomOrder customOrder, String deliveryTime, String remark) {
         CreateOrderParam orderParam = new CreateOrderParam();
         orderParam.setUserId(customOrder.getUserId());//设置业务用户id
         orderParam.setApplicationType(ApplicationType.HEALTH_GOOD);
@@ -226,7 +217,7 @@ public class CustomOrderService {
 
         String storeCode = customOrder.getStoreCode();//门店编码
         //判断门店是否存在
-        ResponseEntity<Store> storeResponseEntity = baseDataServiceFeign.findStoreByCode(storeCode,ApplicationType.HEALTH_GOOD);
+        ResponseEntity<Store> storeResponseEntity = baseDataServiceFeign.findStoreByCode(storeCode, ApplicationType.HEALTH_GOOD);
         Tips<Store> storeTips = FeginResponseTools.convertResponse(storeResponseEntity);
         if (storeTips.err()) {
             return storeTips;
@@ -270,7 +261,7 @@ public class CustomOrderService {
             return Tips.warn("未找到定制计划中的套餐");
 
         //查找基础服务上架商品信息
-        Tips<ProductShelf> productShelfTips = FeginResponseTools.convertResponse(baseDataServiceFeign.singleShelf(customPlanProductResult.getProductShelfId(),true));
+        Tips<ProductShelf> productShelfTips = FeginResponseTools.convertResponse(baseDataServiceFeign.singleShelf(customPlanProductResult.getProductShelfId(), true));
         if (productShelfTips.err()) {
             return productShelfTips;
         }
@@ -365,8 +356,8 @@ public class CustomOrderService {
     /**
      * 查询用户定制订单
      *
-     * @param customOrder    定制订单
-     * @param needChlid 是否查询子集
+     * @param customOrder 定制订单
+     * @param needChlid   是否查询子集
      * @return
      */
     public Pages<CustomOrder> customOrderListByStatus(CustomOrder customOrder, boolean needChlid) {
@@ -374,13 +365,13 @@ public class CustomOrderService {
         List<CustomOrder> customOrderList = customOrderMapper.pageCustomOrder(customOrder);
         if (needChlid) {
             customOrderList.forEach(item -> {
-                item.setCustomOrderDeliveryList(customOrderDeliveryMapper.selectByCustomOrderId(item.getPlanId(),item.getId()));//设置定制配送记录
+                item.setCustomOrderDeliveryList(customOrderDeliveryMapper.selectByCustomOrderId(item.getPlanId(), item.getId()));//设置定制配送记录
                 item.setCustomPlan(customPlanService.findById(item.getPlanId()));//设置定制计划
             });
         }
         boolean pageFlag = Objects.nonNull(customOrder.getPage()) && Objects.nonNull(customOrder.getRows()) && customOrder.getPage() > 0 && customOrder.getRows() > 0;
         int total = pageFlag ? customOrderMapper.pageCustomOrderCounts(customOrder) : customOrderList.size();
-        return Pages.of(total,customOrderList);
+        return Pages.of(total, customOrderList);
     }
 
     /**
@@ -393,18 +384,18 @@ public class CustomOrderService {
     @Nullable
     public Tips<CustomOrder> selectByCode(String orderCode, boolean needChlid) {
         CustomOrder customOrder = customOrderMapper.selectByCode(orderCode);
-        if (Objects.isNull(customOrder)){
+        if (Objects.isNull(customOrder)) {
             return Tips.warn("未找到定制订单");
         }
         if (needChlid && Objects.nonNull(customOrder)) {
-            List<CustomOrderDelivery> customOrderDeliveryList = customOrderDeliveryMapper.selectByCustomOrderId(customOrder.getPlanId(),customOrder.getId());
+            List<CustomOrderDelivery> customOrderDeliveryList = customOrderDeliveryMapper.selectByCustomOrderId(customOrder.getPlanId(), customOrder.getId());
             // 设置定制配送记录
             customOrder.setCustomOrderDeliveryList(customOrderDeliveryList);
             // 设置定制计划
             customOrder.setCustomPlan(customPlanService.findById(customOrder.getPlanId()));
             // 查找定制计划套餐详情
             List<Long> shelfIdList = customOrderDeliveryList.stream().map(CustomOrderDelivery::getProductShelfId).collect(Collectors.toList());
-            String shelfIds = StringUtils.collectionToDelimitedString(shelfIdList,",");
+            String shelfIds = StringUtils.collectionToDelimitedString(shelfIdList, ",");
             ProductShelfParam productShelfParam = new ProductShelfParam();
             productShelfParam.setIds(shelfIds);
             ResponseEntity<Pages<ProductShelf>> productEntity = baseDataServiceFeign.searchProductShelves(productShelfParam);
@@ -414,7 +405,7 @@ public class CustomOrderService {
             List<ProductShelf> productShelfList = productEntity.getBody().getArray();
             productShelfList.forEach(productShelf -> {
                 customOrderDeliveryList.forEach(customOrderDelivery -> {
-                    if (Objects.equals(productShelf.getId(),customOrderDelivery.getProductShelfId())) {
+                    if (Objects.equals(productShelf.getId(), customOrderDelivery.getProductShelfId())) {
                         customOrderDelivery.setProductName(productShelf.getName());
                         customOrderDelivery.setImage(productShelf.getImage());
                     }
@@ -428,6 +419,7 @@ public class CustomOrderService {
 
     /**
      * 查询定制订单总记录数
+     *
      * @param customOrder
      * @return
      */
@@ -437,12 +429,13 @@ public class CustomOrderService {
 
     /**
      * 查询定制订单总记录
+     *
      * @param customOrder
      * @return
      */
     public Pages<CustomOrder> pageList(CustomOrder customOrder) {
         int total = 0;
-        if (customOrder.getRows() != null && customOrder.getRows() > 0 ){
+        if (customOrder.getRows() != null && customOrder.getRows() > 0) {
             total = this.count(customOrder);
         }
         return Pages.of(total, this.customOrderMapper.pageCustomOrder(customOrder));
