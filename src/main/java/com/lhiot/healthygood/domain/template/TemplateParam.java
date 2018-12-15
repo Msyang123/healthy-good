@@ -9,7 +9,7 @@ import java.util.Map;
 @ApiModel
 public class TemplateParam {
     private String touser;
-    private String template_id;
+    private String templateId;
     private String url;
-    private Map<String,Object> data;
+    private String data;
 }

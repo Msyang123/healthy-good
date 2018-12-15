@@ -34,10 +34,7 @@ import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.math.BigDecimal;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 
 @Service
 @Slf4j
@@ -89,7 +86,7 @@ public class MqConsume {
             //计算提成的基数
             Integer baseAmount = order.getAmountPayable();
             //退货--金额为负数
-            if (Objects.equals(OrderStatus.RETURNING,status) || Objects.equals(OrderStatus.ALREADY_RETURN,status)) {
+            if (Objects.equals(OrderStatus.RETURNING, status) || Objects.equals(OrderStatus.ALREADY_RETURN, status)) {
                 doctorAchievementLog.setSourceType("REFUND");
                 baseAmount = 0 - baseAmount;
             }
@@ -186,29 +183,29 @@ public class MqConsume {
                 //会员加入提醒
                 case MEMBER_SHIP:
                     url = TemplateMessageEnum.MEMBER_SHIP.getUrl();
-                    userTParam.setTemplate_id(TemplateMessageEnum.MEMBER_SHIP.getTemplateId());
+                    userTParam.setTemplateId(TemplateMessageEnum.MEMBER_SHIP.getTemplateId());
                     //给鲜果师发送消息的参数
                     doctorTParam = this.doctorTemplateParam(sendToDoctor, TemplateMessageEnum.MEMBER_SHIP.getTemplateId(),
-                            TemplateMessageEnum.MEMBER_SHIP.getDoctorUrl(), userId);
+                            TemplateMessageEnum.MEMBER_SHIP.getUrl(), userId);
                     break;
                 //购买成功通知
                 case PURCHASE_NOTICE:
                     if (Objects.nonNull(order)) {
                         url = TemplateMessageEnum.PURCHASE_NOTICE.getUrl() + order.getId();
                     }
-                    userTParam.setTemplate_id(TemplateMessageEnum.PURCHASE_NOTICE.getTemplateId());
+                    userTParam.setTemplateId(TemplateMessageEnum.PURCHASE_NOTICE.getTemplateId());
                     keyword3Value = new BigDecimal(keyword3Value).divide(new BigDecimal(100), 2, BigDecimal.ROUND_HALF_UP) + "元";
                     //给鲜果师发送消息的参数
                     doctorTParam = this.doctorTemplateParam(sendToDoctor, TemplateMessageEnum.PURCHASE_NOTICE.getTemplateId(),
-                            TemplateMessageEnum.PURCHASE_NOTICE.getDoctorUrl(), userId);
+                            TemplateMessageEnum.PURCHASE_NOTICE.getUrl(), userId);
                     break;
                 //申请鲜果师
                 case APPLY_FRUIT_DOCTOR:
                     url = TemplateMessageEnum.APPLY_FRUIT_DOCTOR.getUrl();
-                    userTParam.setTemplate_id(TemplateMessageEnum.APPLY_FRUIT_DOCTOR.getTemplateId());
+                    userTParam.setTemplateId(TemplateMessageEnum.APPLY_FRUIT_DOCTOR.getTemplateId());
                     //给鲜果师发送消息的参数
                     doctorTParam = this.doctorTemplateParam(sendToDoctor, TemplateMessageEnum.APPLY_FRUIT_DOCTOR.getTemplateId(),
-                            TemplateMessageEnum.APPLY_FRUIT_DOCTOR.getDoctorUrl(), userId);
+                            TemplateMessageEnum.APPLY_FRUIT_DOCTOR.getUrl(), userId);
                     break;
                 //订单状态变更通知
                 case ORDER_REMINDING:
@@ -217,28 +214,30 @@ public class MqConsume {
                     if (Objects.nonNull(order)) {
                         url = TemplateMessageEnum.ORDER_REMINDING.getUrl() + order.getId();
                     }
-                    userTParam.setTemplate_id(TemplateMessageEnum.ORDER_REMINDING.getTemplateId());
+                    userTParam.setTemplateId(TemplateMessageEnum.ORDER_REMINDING.getTemplateId());
                     //给鲜果师发送消息的参数
                     doctorTParam = this.doctorTemplateParam(sendToDoctor, TemplateMessageEnum.ORDER_REMINDING.getTemplateId(),
-                            TemplateMessageEnum.ORDER_REMINDING.getDoctorUrl(), userId);
+                            TemplateMessageEnum.ORDER_REMINDING.getUrl(), userId);
                     break;
                 //提现申请通知
                 case NOTICE_OF_PRESENTATION:
                     url = TemplateMessageEnum.NOTICE_OF_PRESENTATION.getUrl();
-                    userTParam.setTemplate_id(TemplateMessageEnum.NOTICE_OF_PRESENTATION.getTemplateId());
+                    userTParam.setTemplateId(TemplateMessageEnum.NOTICE_OF_PRESENTATION.getTemplateId());
                     //给鲜果师发送消息的参数
                     doctorTParam = this.doctorTemplateParam(sendToDoctor, TemplateMessageEnum.NOTICE_OF_PRESENTATION.getTemplateId(),
-                            TemplateMessageEnum.NOTICE_OF_PRESENTATION.getDoctorUrl(), userId);
+                            TemplateMessageEnum.NOTICE_OF_PRESENTATION.getUrl(), userId);
+                    this.doctorTemplateParam(sendToDoctor, TemplateMessageEnum.NOTICE_OF_PRESENTATION.getTemplateId(),
+                            TemplateMessageEnum.NOTICE_OF_PRESENTATION.getUrl(), userId);
                     break;
                 //推荐上明星鲜果师通知
                 case UPGRADE_FRUIT_DOCTOR:
                     url = TemplateMessageEnum.UPGRADE_FRUIT_DOCTOR.getUrl();
-                    userTParam.setTemplate_id(TemplateMessageEnum.UPGRADE_FRUIT_DOCTOR.getTemplateId());
+                    userTParam.setTemplateId(TemplateMessageEnum.UPGRADE_FRUIT_DOCTOR.getTemplateId());
                     break;
                 default:
                     break;
             }
-            if (Objects.isNull(userTParam.getTemplate_id())) {
+            if (Objects.isNull(userTParam.getTemplateId())) {
                 log.info("=====================>templateId为");
                 return;
             }
@@ -267,14 +266,14 @@ public class MqConsume {
             doctorData.putAll(data);
             //设置firstData和remarkData
             data.putAll(member);
-            userTParam.setData(data);
+            //userTParam.setData(data);
             log.info("=======================>模板消息推送参数" + Jackson.json(userTParam));
             String result = weChatUtil.sendTemplateMessage(Jackson.json(userTParam));
             log.info("=======================>模板消息推送给会员返回结果" + result);
             //判断是否需要给鲜果师，发送模板消息
             if (Objects.nonNull(doctorTParam)) {
                 doctorData.putAll(doctor);
-                doctorTParam.setData(doctorData);
+                //doctorTParam.setData(doctorData);
                 String doctorResult = weChatUtil.sendTemplateMessage(Jackson.json(doctorTParam));
                 log.info("=======================>模板消息推送给鲜果师返回结果" + doctorResult);
             }
@@ -308,12 +307,14 @@ public class MqConsume {
         }
         //构建发送模板消息的数据
         TemplateParam template = new TemplateParam();
-        template.setTemplate_id(templateId);
+        template.setTemplateId(templateId);
         template.setUrl(url);
         template.setTouser(user.getOpenId());
 
         return template;
     }
+
+
 
     /**
      * 发送模板消息的firstdata和remarkdata
@@ -329,7 +330,7 @@ public class MqConsume {
         boolean sendToDoctor = keywordValue.isSendToDoctor();
 
         switch (keywordValue.getTemplateType()) {
-            case MEMBER_SHIP:
+            case MEMBER_SHIP: //会员加入提醒
                 fistData = FirstAndRemarkData.MEMBER_SHIP_USER.getFirstData();
                 remarkData = FirstAndRemarkData.MEMBER_SHIP_USER.getRemarkData();
                 //是否发送给鲜果师
@@ -338,7 +339,7 @@ public class MqConsume {
                             "remark", ImmutableMap.of("value", FirstAndRemarkData.MEMBER_SHIP_DOCTOR.getRemarkData()));
                 }
                 break;
-            case PURCHASE_NOTICE:
+            case PURCHASE_NOTICE: //购买成功通知
                 fistData = FirstAndRemarkData.PURCHASE_NOTICE_USER.getFirstData();
                 remarkData = FirstAndRemarkData.PURCHASE_NOTICE_USER.getRemarkData();
 
@@ -362,7 +363,7 @@ public class MqConsume {
                             "remark", ImmutableMap.of("value", FirstAndRemarkData.PURCHASE_NOTICE_DOCTOR.getRemarkData()));
                 }
                 break;
-            case APPLY_FRUIT_DOCTOR:
+            case APPLY_FRUIT_DOCTOR: //申请鲜果师
                 RegisterApplication registerApplication = registerApplicationService.findLastApplicationById(userId);
                 AuditStatus status = registerApplication.getAuditStatus();
                 if ("AGREE".equals(status)) {
@@ -376,7 +377,7 @@ public class MqConsume {
                     remarkData = FirstAndRemarkData.APPLY.getRemarkData();
                 }
                 break;
-            case ORDER_REMINDING:
+            case ORDER_REMINDING: //订单状态变更通知
                 if (Objects.isNull(order)) {
                     return null;
                 }
@@ -392,11 +393,11 @@ public class MqConsume {
                     remarkData = FirstAndRemarkData.ORDER_ALREADY_RETURN.getRemarkData();
                 }
                 break;
-            case NOTICE_OF_PRESENTATION:
+            case NOTICE_OF_PRESENTATION: //提现申请通知
                 fistData = FirstAndRemarkData.NOTICE_OF_PRESENTATION.getFirstData();
                 remarkData = FirstAndRemarkData.NOTICE_OF_PRESENTATION.getRemarkData();
                 break;
-            case UPGRADE_FRUIT_DOCTOR:
+            case UPGRADE_FRUIT_DOCTOR: //推荐上明星鲜果师通知
                 fistData = FirstAndRemarkData.UPGRADE_FRUIT_DOCTOR.getFirstData();
                 remarkData = FirstAndRemarkData.UPGRADE_FRUIT_DOCTOR.getRemarkData();
                 break;

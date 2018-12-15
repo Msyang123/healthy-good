@@ -15,6 +15,8 @@ import com.lhiot.healthygood.mapper.doctor.RegisterApplicationMapper;
 import com.lhiot.healthygood.mapper.user.DoctorCustomerMapper;
 import com.lhiot.healthygood.mapper.user.FruitDoctorMapper;
 import com.lhiot.healthygood.type.*;
+import com.lhiot.healthygood.util.DataItem;
+import com.lhiot.healthygood.wechat.WeChatUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.AmqpException;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
@@ -26,6 +28,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.text.SimpleDateFormat;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Objects;
@@ -45,14 +48,16 @@ public class RegisterApplicationService {
     private final DoctorCustomerMapper doctorCustomerMapper;
     private final RabbitTemplate rabbit;
     private final BaseUserServerFeign baseUserServerFeign;
+    private WeChatUtil weChatUtil;
 
     @Autowired
-    public RegisterApplicationService(RegisterApplicationMapper registerApplicationMapper, FruitDoctorMapper fruitDoctorMapper, DoctorCustomerMapper doctorCustomerMapper, RabbitTemplate rabbit, BaseUserServerFeign baseUserServerFeign) {
+    public RegisterApplicationService(RegisterApplicationMapper registerApplicationMapper, FruitDoctorMapper fruitDoctorMapper, DoctorCustomerMapper doctorCustomerMapper, RabbitTemplate rabbit, BaseUserServerFeign baseUserServerFeign, WeChatUtil weChatUtil) {
         this.registerApplicationMapper = registerApplicationMapper;
         this.fruitDoctorMapper = fruitDoctorMapper;
         this.doctorCustomerMapper = doctorCustomerMapper;
         this.rabbit = rabbit;
         this.baseUserServerFeign = baseUserServerFeign;
+        this.weChatUtil = weChatUtil;
     }
 
     /** 
@@ -80,6 +85,52 @@ public class RegisterApplicationService {
      */
     public RegisterApplication findLastApplicationById(Long id){
         return this.registerApplicationMapper.findLastApplicationById(id);
+    }
+
+    /**
+     * 修改鲜果师信息
+     * @param fruitDoctor
+     * @return
+     */
+    public Tips updateFruitDoctorInfo(FruitDoctor fruitDoctor){
+        FruitDoctor doctors = fruitDoctorMapper.selectByUserId(fruitDoctor.getUserId());
+        if (Objects.isNull(doctors)) {
+            return Tips.warn("鲜果师不存在");
+        }
+        int result = fruitDoctorMapper.updateById(fruitDoctor);
+        //升级为明星鲜果师且不是明星鲜果师的时候才发送模板消息
+       // if (Objects.equals("YES",fruitDoctor.getHot()) ) {
+            String currentTime = new SimpleDateFormat("yyyy-MM-dd").format(new Date());
+            /*List<DataItem> dataItems = new ArrayList<>();
+            DataItem dataItem = new DataItem();
+            dataItem.setKey("keyword1");
+            dataItem.setValue("明星鲜果师");
+            DataItem dataItem1 = new DataItem();
+            dataItem1.setKey("keyword2");
+            dataItem1.setValue("成功");
+            DataItem dataItem2 = new DataItem();
+            dataItem2.setKey("keyword3");
+            dataItem2.setValue(currentTime);
+            DataItem dataItem3 = new DataItem();
+            dataItem3.setKey("remark");
+            dataItem3.setValue("如有疑问请致电0731-85240088");
+            dataItems.add(dataItem);
+            dataItems.add(dataItem1);
+            dataItems.add(dataItem2);
+            dataItems.add(dataItem3);*/
+        KeywordValue keywordValue = new KeywordValue();
+        keywordValue.setTemplateType(TemplateMessageEnum.UPGRADE_FRUIT_DOCTOR);
+        keywordValue.setKeyword1Value("明星鲜果师");
+        keywordValue.setKeyword2Value("成功");
+        keywordValue.setKeyword3Value(currentTime);
+        keywordValue.setKeyword4Value("如有疑问请致电0731-85240088");
+        keywordValue.setSendToDoctor(false);
+        keywordValue.setUserId(doctors.getUserId());
+        TemplateMessageEnum.APPLY_FRUIT_DOCTOR.setTouser("oKqRHwWwu21I9vb8NXFVaecsCN3o");
+
+            weChatUtil.sendMessageToWechat(TemplateMessageEnum.UPGRADE_FRUIT_DOCTOR,"oKqRHwWwu21I9vb8NXFVaecsCN3o",keywordValue);
+     //   }
+        return result>0 ? Tips.info("修改成功") : Tips.warn("修改失败");
     }
 
     /**
