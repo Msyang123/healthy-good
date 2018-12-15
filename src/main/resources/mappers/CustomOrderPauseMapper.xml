@@ -11,6 +11,8 @@
         <result column="pause_begin_at" property="pauseBeginAt" />
         <result column="pause_end_at" property="pauseEndAt" />
         <result column="pause_day" property="pauseDay" />
+        <result column="plan_pause_day" property="planPauseDay" />
+        <result column="plan_pause_end_at" property="planPauseEndAt" />
     </resultMap>
 
     <!-- base查询字段  -->
@@ -22,10 +24,12 @@
             pause_begin_at,
             pause_end_at,
             pause_day,
+            plan_pause_day,
+            plan_pause_end_at,
         </trim>
     </sql>
 
-    <!--新增定制计划-->
+    <!--新增定制计划暂停记录-->
     <insert id="create" parameterType="com.lhiot.healthygood.domain.customplan.CustomOrderPause" useGeneratedKeys="true" keyColumn="id" keyProperty="id">
         insert into custom_order_pause
         <trim prefix="(" suffix=")" suffixOverrides="," >
@@ -44,26 +48,39 @@
             <if test="pauseDay != null ">
                 pause_day,
             </if>
+            <if test="planPauseDay != null ">
+                plan_pause_day,
+            </if>
+            <if test="planPauseEndAt != null ">
+                plan_pause_end_at,
+            </if>
         </trim>
         <trim prefix="values (" suffix=")" suffixOverrides="," >
             <if test="customOrderCode != null ">
                 #{customOrderCode},
             </if>
             <if test="createAt != null ">
-                ${createAt},
+                #{createAt},
             </if>
             <if test="pauseBeginAt != null ">
-                {pauseBeginAt},
+                #{pauseBeginAt},
             </if>
             <if test="pauseEndAt != null ">
-                {pauseEndAt},
+                #{pauseEndAt},
             </if>
             <if test="pauseDay != null ">
-                {pauseDay},
+                #{pauseDay},
+            </if>
+            <if test="planPauseDay != null ">
+                #{planPauseDay},
+            </if>
+            <if test="planPauseEndAt != null ">
+                #{planPauseEndAt},
             </if>
         </trim>
     </insert>
 
+    <!--查询是否有实际设置的暂停时间是否在已经设置的内部-->
 	<select id="selectCustomOrderPause" resultMap="BaseResultMap" parameterType="com.lhiot.healthygood.domain.customplan.CustomOrderPause">
         select <include refid="Base_Column_List" />
 		from custom_order_pause
@@ -79,4 +96,21 @@
             </if>
         </where>
 	</select>
+
+    <!--查询暂停的时间是否等于具体的暂停开始时间 且结束时间在-->
+    <select id="selectBeginEqCustomOrderPause" resultMap="BaseResultMap" parameterType="com.lhiot.healthygood.domain.customplan.CustomOrderPause">
+        select <include refid="Base_Column_List" />
+        from custom_order_pause
+        <where>
+            <if test="customOrderCode != null ">
+                and custom_order_code = #{customOrderCode}
+            </if>
+            <if test="pauseBeginAt != null ">
+                and pause_begin_at = #{pauseBeginAt}
+            </if>
+            <if test="pauseEndAt != null ">
+                and pause_end_at <![CDATA[ >= ]]> #{pauseEndAt}
+            </if>
+        </where>
+    </select>
 </mapper>

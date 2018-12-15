@@ -134,7 +134,7 @@
             parameterType="long"> select <include refid="Base_Column_List" />
         from activity_product where id in
         <foreach item="item" index="index" collection="ids.split(',')" open="(" separator="," close=")">
-            ${item}
+            #{item}
         </foreach>
     </select>
 
@@ -169,7 +169,7 @@
             <if test="productShelfIds != null ">
                 and product_shelf_id in
                 <foreach item="item" index="index" collection="productShelfIds.split(',')" open="(" separator="," close=")">
-                    ${item}
+                    #{item}
                 </foreach>
             </if>
         </where>

@@ -166,13 +166,13 @@
             <if test="sectionIds != null and sectionIds != ''">
                 and section_id in
                 <foreach item="item" index="index" collection="sectionIds.split(',')" open="(" separator="," close=")">
-                    ${item}
+                    #{item}
                 </foreach>
             </if>
             <if test="planIds != null and planIds != ''">
                 and plan_id in
                 <foreach item="item" index="index" collection="planIds.split(',')" open="(" separator="," close=")">
-                    ${item}
+                    #{item}
                 </foreach>
             </if>
         </where>
@@ -207,7 +207,7 @@
     <delete id="deleteRelationByShelfIds" parameterType="String">
         delete from custom_plan_section_relation where plan_id in
         <foreach item="item" index="index" collection="planIds.split(',')" open="(" separator="," close=")">
-            ${item}
+            #{item}
         </foreach>
     </delete>
 
@@ -216,7 +216,7 @@
     <delete id="deleteRelationBySectionIds" parameterType="String">
         delete from custom_plan_section_relation where section_id in
         <foreach item="item" index="index" collection="sectionIds.split(',')" open="(" separator="," close=")">
-            ${item}
+            #{item}
         </foreach>
     </delete>
 
@@ -227,7 +227,7 @@
         <if test="planIds != null and planIds != ''">
             and plan_id in
             <foreach item="item" index="index" collection="planIds.split(',')" open="(" separator="," close=")">
-                ${item}
+                #{item}
             </foreach>
         </if>
     </delete>
@@ -258,7 +258,7 @@
         <if test="planIds != null and planIds != ''">
             and plan_id in
             <foreach item="item" index="index" collection="planIds.split(',')" open="(" separator="," close=")">
-                ${item}
+                #{item}
             </foreach>
         </if>
     </select>
@@ -271,7 +271,7 @@
         <if test="sectionIds != null and sectionIds != ''">
             and section_id in
             <foreach item="item" index="index" collection="sectionIds.split(',')" open="(" separator="," close=")">
-                ${item}
+                #{item}
             </foreach>
         </if>
     </select>
