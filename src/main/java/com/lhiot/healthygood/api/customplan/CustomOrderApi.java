@@ -79,7 +79,7 @@ public class CustomOrderApi {
         CustomOrder updateCustomOrder = new CustomOrder();
         updateCustomOrder.setStatus(CustomOrderStatus.INVALID);
         updateCustomOrder.setCustomOrderCode(orderCode);
-        int result = customOrderService.updateByCode(updateCustomOrder, null);
+        int result = customOrderService.updateByCode(updateCustomOrder);
         return result > 0 ? ResponseEntity.ok("取消成功") : ResponseEntity.badRequest().body("取消失败");
     }
 
@@ -116,15 +116,9 @@ public class CustomOrderApi {
         if (validateOrderOwner.getStatusCode().isError()) {
             return validateOrderOwner;
         }
-        CustomOrder customOrder = (CustomOrder) validateOrderOwner.getBody();
-        if (Objects.equals(customOrder.getStatus(), CustomOrderStatus.CUSTOMING)) {
-            return ResponseEntity.badRequest().body(Tips.warn("非定制中订单"));
-        }
-
-        CustomOrder updateCustomOrder = new CustomOrder();
-        updateCustomOrder.setCustomOrderCode(orderCode);
-        updateCustomOrder.setStatus(CustomOrderStatus.PAUSE_DELIVERY);
-        int result = customOrderService.updateByCode(updateCustomOrder, customOrderPause);
+        //不需要检测是否暂停中 不依赖定制订单状态
+        customOrderPause.setCustomOrderCode(orderCode);
+        int result = customOrderService.pauseCustomOrder(customOrderPause);
         return result > 0 ? ResponseEntity.ok("修改成功") : ResponseEntity.badRequest().body("暂停配送失败");
     }
 
@@ -145,7 +139,7 @@ public class CustomOrderApi {
         CustomOrder updateCustomOrder = new CustomOrder();
         updateCustomOrder.setCustomOrderCode(orderCode);
         updateCustomOrder.setStatus(CustomOrderStatus.CUSTOMING);
-        customOrderService.updateByCode(updateCustomOrder, null);
+        customOrderService.resumeCustomOrder(updateCustomOrder);
         return ResponseEntity.ok("修改成功");
     }
 
@@ -162,13 +156,16 @@ public class CustomOrderApi {
         CustomOrder updateCustomOrder = new CustomOrder();
         updateCustomOrder.setCustomOrderCode(orderCode);
         updateCustomOrder.setDeliveryTime(deliveryTime);
-        customOrderService.updateByCode(updateCustomOrder, null);
+        customOrderService.updateByCode(updateCustomOrder);
         return ResponseEntity.ok("修改成功");
     }
 
-    @PostMapping("/custom-orders/{orderCode}/extraction")
+    @PutMapping("/custom-orders/{orderCode}/extraction")
     @ApiOperation(value = "手动提取套餐", response = OrderDetailResult.class)
-    public ResponseEntity extraction(@PathVariable("orderCode") String orderCode, @RequestParam("remark") String remark, Sessions.User user) {
+    public ResponseEntity extraction(@PathVariable("orderCode") String orderCode,
+                                     @RequestParam("remark") String remark,
+                                     @Valid @NotBlank @RequestParam("deliveryTime") String deliveryTime,
+                                     Sessions.User user) {
         Long userId = Long.valueOf(user.getUser().get("userId").toString());
         ResponseEntity validateOrderOwner = validateOrderOwner(userId, orderCode);
         if (validateOrderOwner.getStatusCode().isError()) {
@@ -182,7 +179,7 @@ public class CustomOrderApi {
             return ResponseEntity.badRequest().body("提取次数不足");
         }
         //提取定制计划
-        Tips result = customOrderService.extraction(customOrder, remark);
+        Tips result = customOrderService.extraction(customOrder,deliveryTime, remark);
         return result.err() ? ResponseEntity.badRequest().body(result.getMessage()) : ResponseEntity.ok(result.getData());
     }
 

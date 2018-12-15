@@ -1,5 +1,6 @@
 package com.lhiot.healthygood.api.user;
 
+import com.leon.microx.util.BeanUtils;
 import com.leon.microx.util.Maps;
 import com.leon.microx.util.StringUtils;
 import com.leon.microx.web.result.Tips;
@@ -7,15 +8,14 @@ import com.leon.microx.web.session.Authority;
 import com.leon.microx.web.session.Sessions;
 import com.lhiot.healthygood.config.HealthyGoodConfig;
 import com.lhiot.healthygood.domain.doctor.Achievement;
+import com.lhiot.healthygood.domain.good.PagesParam;
 import com.lhiot.healthygood.domain.user.DoctorCustomer;
 import com.lhiot.healthygood.domain.user.FruitDoctor;
 import com.lhiot.healthygood.domain.user.UserBindingPhoneParam;
 import com.lhiot.healthygood.domain.user.ValidateParam;
 import com.lhiot.healthygood.feign.BaseUserServerFeign;
 import com.lhiot.healthygood.feign.ThirdpartyServerFeign;
-import com.lhiot.healthygood.feign.model.CaptchaParam;
-import com.lhiot.healthygood.feign.model.UserDetailResult;
-import com.lhiot.healthygood.feign.model.WeChatRegisterParam;
+import com.lhiot.healthygood.feign.model.*;
 import com.lhiot.healthygood.feign.type.ApplicationType;
 import com.lhiot.healthygood.service.doctor.DoctorAchievementLogService;
 import com.lhiot.healthygood.service.user.DoctorCustomerService;
@@ -147,7 +147,8 @@ public class UserApi {
             //新增用户
             Tips tips = fruitDoctorUserService.create(weChatRegisterParam);
             UserDetailResult userDetailResult = (UserDetailResult) tips.getData();
-            Sessions.User sessionUser = session.create(request).user(Maps.of("userId", userDetailResult.getId(), "openId", userDetailResult.getOpenId()))
+            Sessions.User sessionUser = session.create(request).user(Maps.of("userId", userDetailResult.getId(), "baseUserId",userDetailResult.getBaseUserId()
+                    , "openId", userDetailResult.getOpenId()))
                     .timeToLive(30, TimeUnit.MINUTES)
                     .authorities(Authority.of("/**", RequestMethod.values()));// TODO 还没有加权限;
             String sessionId = session.cache(sessionUser);
@@ -164,7 +165,8 @@ public class UserApi {
                     doctorCustomerService.create(doctorCustomer);
                 }
             }
-            Sessions.User sessionUser = session.create(request).user(Maps.of("userId", searchUser.getId(), "openId", searchUser.getOpenId()))
+            Sessions.User sessionUser = session.create(request).user(Maps.of("userId", searchUser.getId(), "baseUserId",searchUser.getBaseUserId(),
+                    "openId", searchUser.getOpenId()))
                     .timeToLive(3, TimeUnit.HOURS)
                     .authorities(Authority.of("/**", RequestMethod.values()));// TODO 还没有加权限;
             String sessionId = session.cache(sessionUser);
@@ -205,7 +207,8 @@ public class UserApi {
             return searchUserEntity;
         }
         UserDetailResult searchUser = (UserDetailResult) searchUserEntity.getBody();
-        Sessions.User sessionUser = session.create(request).user(Maps.of("userId", searchUser.getId(), "openId", searchUser.getOpenId())).timeToLive(3, TimeUnit.HOURS)
+        Sessions.User sessionUser = session.create(request).user(Maps.of("userId", searchUser.getId(), "baseUserId",searchUser.getBaseUserId(),
+                "openId", searchUser.getOpenId())).timeToLive(3, TimeUnit.HOURS)
                 .authorities(Authority.of("/**", RequestMethod.values()));
         String sessionId = session.cache(sessionUser);
         return ResponseEntity.ok()
@@ -328,8 +331,8 @@ public class UserApi {
         Achievement total =
                 doctorAchievementLogService.achievement(DateTypeEnum.MONTH, PeriodType.current, null, true, true, userId);
         //构建返回值
-        total.setSalesAmountOfThisMonth(thisMonth.getSalesAmount());
-        total.setOrderCountOfThisMonth(thisMonth.getOrderCount());
+        total.setSalesAmountOfThisMonth(Objects.nonNull(thisMonth.getSalesAmount())?thisMonth.getSalesAmount():0);
+        total.setOrderCountOfThisMonth(Objects.nonNull(thisMonth.getOrderCount())?thisMonth.getOrderCount():0);
 
         //获取用户信息
         ResponseEntity<UserDetailResult> userDetailResult = baseUserServerFeign.findById(userId);
@@ -341,8 +344,15 @@ public class UserApi {
         return ResponseEntity.ok(total);
     }
 
-
-    /*public ResponseEntity findUserBalanceLog(@RequestBody BalanceLogParam param){
-        ResponseEntity baseUserServerFeign.searchBalanceLog(param);
-    }*/
+    @ApiOperation(value = "用户余额明细",response = BalanceLog.class)
+    @PostMapping("/balance-log/page")
+    public ResponseEntity findUserBalanceLog(Sessions.User user,@RequestBody PagesParam pagesParam){
+        Long baseUserId = Long.valueOf(user.getUser().get("baseUserId").toString());
+        BalanceLogParam balanceLogParam = new BalanceLogParam();
+        BeanUtils.copyProperties(pagesParam,balanceLogParam);
+        balanceLogParam.setBaseUserId(baseUserId);
+        balanceLogParam.setApplicationType("HEALTH_GOOD");
+        ResponseEntity responseEntity =  baseUserServerFeign.searchBalanceLog(balanceLogParam);
+        return responseEntity.getStatusCode().is2xxSuccessful() ? ResponseEntity.ok(responseEntity.getBody()) : ResponseEntity.badRequest().body(responseEntity.getBody());
+    }
 }

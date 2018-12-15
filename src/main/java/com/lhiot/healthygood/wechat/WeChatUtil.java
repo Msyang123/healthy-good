@@ -7,11 +7,15 @@
 package com.lhiot.healthygood.wechat;
 
 import com.leon.microx.util.Jackson;
+import com.leon.microx.util.StringUtils;
 import com.lhiot.healthygood.config.HealthyGoodConfig;
+import com.lhiot.healthygood.domain.template.TemplateParam;
+import com.lhiot.healthygood.domain.user.KeywordValue;
+import com.lhiot.healthygood.type.TemplateMessageEnum;
+import com.lhiot.healthygood.util.DataItem;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.ibatis.parsing.XPathParser;
 import org.springframework.stereotype.Service;
-import org.springframework.util.StringUtils;
 
 import javax.net.ssl.*;
 import javax.servlet.http.HttpServletRequest;
@@ -297,6 +301,57 @@ public class WeChatUtil {
 		return result;
 	}
 
+	/**
+	 * "data":{
+	 * "first": {
+	 * "value":"恭喜你购买成功！",
+	 * "color":"#173177"
+	 * },
+	 * "keyword1":{
+	 * "value":"巧克力",
+	 * "color":"#173177"
+	 * },
+	 * "keyword2": {
+	 * "value":"39.8元",
+	 * "color":"#173177"
+	 * },
+	 * "keyword3": {
+	 * "value":"2014年9月22日",
+	 * "color":"#173177"
+	 * },
+	 * "remark":{
+	 * "value":"欢迎再次购买！",
+	 * "color":"#173177"
+	 * }
+	 * }
+	 *
+	 * @param templateMessageEnum
+	 * @param params
+	 * @return
+	 */
+	public  String sendMessageToWechat(TemplateMessageEnum templateMessageEnum,String openId, KeywordValue params) {
+		if (templateMessageEnum==null)
+			return null;
+		//构建发送内容
+		StringBuffer content = new StringBuffer();
+		/*params.forEach(param ->
+				content.append(param.toString())
+		);*/
+		templateMessageEnum.setTouser(openId);
+		templateMessageEnum.setData(params.toString());
+		//构建发送模板消息的数据
+		//return templateMessageEnum.toString();
+		return this.sendTemplateMessage(Jackson.json(templateMessageEnum));
+	}
+
+	/*public static void main(String[] args) {
+		TemplateMessageEnum xxx =TemplateMessageEnum.APPLY_FRUIT_DOCTOR;
+		xxx.setTouser("openuseridxxx");
+		List<DataItem> d=new ArrayList<>();
+		d.add(new DataItem("abc","val1","#456785"));
+		d.add(new DataItem("abcd","val2","#456905"));
+		System.out.println(sendMessageToWechat(xxx,d));
+	}*/
 	/**
 	 * 通过refreshAccessToken获取AccessToken
 	 * @param refreshAccessToken

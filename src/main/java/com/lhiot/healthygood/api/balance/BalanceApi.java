@@ -12,6 +12,7 @@ import com.lhiot.healthygood.feign.model.OrderDetailResult;
 import com.lhiot.healthygood.feign.model.Payed;
 import com.lhiot.healthygood.feign.model.WxPayModel;
 import com.lhiot.healthygood.feign.type.ApplicationType;
+import com.lhiot.healthygood.feign.type.PayType;
 import com.lhiot.healthygood.feign.type.SourceType;
 import com.lhiot.healthygood.service.customplan.CustomOrderService;
 import com.lhiot.healthygood.type.CustomOrderStatus;
@@ -100,6 +101,7 @@ public class BalanceApi {
         //payed.setBankType("");
         payed.setPayAt(Date.from(Instant.now()));
         payed.setPayId(outTradeId);
+        payed.setPayType(PayType.BALANCE);
         //payed.setTradeId("");
         //修改为已支付
         ResponseEntity updateOrderToPayed = orderServiceFeign.updateOrderToPayed(balancePayModel.getOrderCode(), payed);
@@ -139,7 +141,7 @@ public class BalanceApi {
         customOrder.setStatus(CustomOrderStatus.CUSTOMING);//定制中
         customOrder.setPayId(outTradeId);//第三方支付id
         log.info("定制计划余额支付-后端修改为支付成功 并保持预支付id{}", customOrder);
-        customOrderService.updateByCode(customOrder, null);
+        customOrderService.updateByCode(customOrder);
         return ResponseEntity.ok().build();
     }
 

@@ -240,7 +240,7 @@ public class FruitDoctorApi {
     }
 
 
-    @PostMapping("/relation")
+   /*@PostMapping("/relation")
     @ApiOperation(value = "添加鲜果师客户 关注鲜果师(绑定)")
     @ApiImplicitParam(paramType = "body", name = "DoctorCustomer", value = "要添加的鲜果师客户", required = true, dataType = "DoctorCustomer")
     public ResponseEntity bindingDoctor(Sessions.User user, @RequestBody DoctorCustomer doctorCustomer) {
@@ -250,15 +250,15 @@ public class FruitDoctorApi {
         if (Objects.isNull(fruitDoctor)) {
             return ResponseEntity.badRequest().body(Tips.warn("鲜果师不存在"));
         }
-        DoctorCustomer dUser = doctorCustomerService.selectByUserId(userId);
+       DoctorCustomer dUser = doctorCustomerService.selectByUserId(userId);
         if (Objects.nonNull(dUser)) {
             return ResponseEntity.badRequest().body(Tips.warn("您已经绑定该鲜果师了"));
         }
-        doctorCustomer.setDoctorId(fruitDoctor.getId());
-        doctorCustomer.setUserId(userId);
+       doctorCustomer.setDoctorId(fruitDoctor.getId());
+       doctorCustomer.setUserId(userId);
         doctorCustomerService.create(doctorCustomer);
         return ResponseEntity.ok(Tips.info("绑定成功！"));
-    }
+    }*/
 
     @PutMapping("/remark")
     @ApiOperation(value = "鲜果师修改用户备注")
@@ -289,7 +289,7 @@ public class FruitDoctorApi {
             return ResponseEntity.badRequest().body("鲜果师不存在");
         }
         FruitDoctor doctor = new FruitDoctor();
-        doctor.setId(fruitDoctor.getId());
+        doctor.setRefereeId(fruitDoctor.getId());
         return ResponseEntity.ok(fruitDoctorService.subordinate(doctor));
     }
 
@@ -344,8 +344,8 @@ public class FruitDoctorApi {
 
     @GetMapping("/incomes/detail")
     @ApiImplicitParams({
-            @ApiImplicitParam(paramType = "query", name = "page", dataType = "Integer", required = true, value = "多少页"),
-            @ApiImplicitParam(paramType = "query", name = "rows", dataType = "Integer", required = true, value = "数据多少条"),
+            @ApiImplicitParam(paramType = "query", name = "page", dataType = "int", required = true, value = "多少页"),
+            @ApiImplicitParam(paramType = "query", name = "rows", dataType = "int", required = true, value = "数据多少条"),
             @ApiImplicitParam(paramType = "query", name = "incomeType", dataTypeClass = IncomeType.class, required = true, value = "收入支出类型")
     })
     @ApiOperation(value = "收支明细", response = DoctorAchievementLog.class, responseContainer = "Set")
@@ -476,8 +476,8 @@ public class FruitDoctorApi {
         if (Objects.isNull(fruitDoctor)) {
             return ResponseEntity.badRequest().body("鲜果师不存在");
         }
-        List<DoctorCustomer> DoctorCustomerList = doctorCustomerService.doctorCustomers(fruitDoctor.getId());
-        DoctorCustomerList.stream().forEach(DoctorCustomer -> {
+        List<DoctorCustomer> doctorCustomerList = doctorCustomerService.doctorCustomers(fruitDoctor.getId());
+        doctorCustomerList.stream().forEach(DoctorCustomer -> {
             ResponseEntity userInfoEntity = baseUserServerFeign.findById(Long.valueOf(DoctorCustomer.getUserId()));
             if (userInfoEntity.getStatusCode().isError()) {
                 return;
@@ -491,14 +491,48 @@ public class FruitDoctorApi {
         Pattern pattern = Pattern.compile("^[a-zA-Z]");
 
         JSONArray customers = new JSONArray();
-        for (DoctorCustomer item : DoctorCustomerList) {
+        doctorCustomerList.stream().filter(Objects::nonNull).forEach(item -> {
+            String pinyin = null;
+            try {
+                pinyin = tool.toPinYin(item.getNickname());
+            } catch (BadHanyuPinyinOutputFormatCombination badHanyuPinyinOutputFormatCombination) {
+                badHanyuPinyinOutputFormatCombination.printStackTrace();
+            }
+            Matcher matcher = pattern.matcher(pinyin);
+
+            item.setNicknameFristChar(matcher.find()?("" + pinyin.charAt(0)).toUpperCase():"#");
+            boolean exist = false;
+            for (int i = 0; i < customers.size(); i++) {
+                JSONObject jsonObject = (JSONObject) customers.get(i);
+                if (Objects.equals(item.getNicknameFristChar(), jsonObject.get("index"))) {
+                    JSONArray array = (JSONArray) jsonObject.get("array");
+                    array.add(item);
+                    exist = true;
+                    break;
+                }
+            }
+            if (!exist) {
+                JSONObject customerGroup = new JSONObject();
+                customerGroup.put("index", item.getNicknameFristChar());
+                JSONArray array = new JSONArray();
+                array.add(item);
+                customerGroup.put("array", array);
+                customers.add(customerGroup);
+            }
+        });
+        customers.sort(new Comparator<JSONObject>() {
+            @Override
+            public int compare(JSONObject o1, JSONObject o2) {
+                String o1Val = o1.get("index").toString();
+                String o2Val = o2.get("index").toString();
+                return o1Val.compareTo(o2Val);
+            }
+        });
+        /*for (DoctorCustomer item : DoctorCustomerList) {
             String pinyin = tool.toPinYin(item.getNickname());
             Matcher matcher = pattern.matcher(pinyin);
-            if (matcher.find()) {
-                item.setNicknameFristChar(("" + pinyin.charAt(0)).toUpperCase());
-            } else {
-                item.setNicknameFristChar("#");
-            }
+
+            item.setNicknameFristChar(matcher.find()?("" + pinyin.charAt(0)).toUpperCase():"#");
             boolean exist = false;
             for (int i = 0; i < customers.size(); i++) {
                 JSONObject jsonObject = (JSONObject) customers.get(i);
@@ -530,7 +564,7 @@ public class FruitDoctorApi {
             public boolean equals(Object obj) {
                 return super.equals(obj);
             }
-        });
+        });*/
         return ResponseEntity.ok(customers);
     }
 
@@ -539,39 +573,9 @@ public class FruitDoctorApi {
     @ApiImplicitParam(paramType = "body", name = "fruitDoctor", value = "要更新的鲜果师成员", required = true, dataType = "FruitDoctor")
     public ResponseEntity update(Sessions.User user, @RequestBody FruitDoctor fruitDoctor) {
         String userId = user.getUser().get("userId").toString();
-        FruitDoctor doctors = fruitDoctorService.selectByUserId(Long.valueOf(userId));
-        if (Objects.isNull(doctors)) {
-            return ResponseEntity.badRequest().body("鲜果师不存在");
-        }
-        fruitDoctor.setId(doctors.getId());
-        Tips backMsg = new Tips();
-        if (fruitDoctorService.updateById(fruitDoctor) >= 1) {
-            backMsg.setCode("1");
-            backMsg.setMessage("更新成功");
-        }
-        //升级为明星鲜果师，发送模板消息
-        if ("YES".equals(fruitDoctor.getHot())) {
-            FruitDoctor fd = fruitDoctorService.selectById(doctors.getId());
-            if (Objects.nonNull(fd)) {
-                //不是明星鲜果师的时候才发送模板消息
-                if (!"YES".equals(fd.getHot())) {
-                    String currentTime = new SimpleDateFormat("yyyy-MM-dd").format(new Date());
-                    KeywordValue keywordValue = new KeywordValue();
-                    keywordValue.setTemplateType(TemplateMessageEnum.UPGRADE_FRUIT_DOCTOR);
-                    keywordValue.setKeyword1Value("明星鲜果师");
-                    keywordValue.setKeyword2Value("成功");
-                    keywordValue.setKeyword3Value(currentTime);
-                    keywordValue.setKeyword4Value("如有疑问请致电0731-85240088");
-                    keywordValue.setSendToDoctor(false);
-                    keywordValue.setUserId(fd.getUserId());
-                    //TODO 模板消息由消息总线改成 事件监听
-                   /* rabbit.convertAndSend(FruitDoctorOrderExchange.FRUIT_TEMPLATE_MESSAGE.getExchangeName(),
-                            FruitDoctorOrderExchange.FRUIT_TEMPLATE_MESSAGE.getQueueName(), Jackson.json(keywordValue));*/
-                }
-            }
-        }
-        //如果是升级为明星鲜果师，则发送模板消息
-        return ResponseEntity.ok(backMsg);
+        fruitDoctor.setUserId(Long.valueOf(userId));
+        Tips tips = registerApplicationService.updateFruitDoctorInfo(fruitDoctor);
+        return tips.err() ? ResponseEntity.badRequest().body(tips.getMessage()) : ResponseEntity.ok().body(tips.getMessage());
     }
 
 

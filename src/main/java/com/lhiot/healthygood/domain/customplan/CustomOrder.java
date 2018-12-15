@@ -67,7 +67,6 @@ public class CustomOrder {
     private String contactPhone;
 
     @ApiModelProperty(notes = "客户要求配送时间", dataType = "String")
-    @NotBlank(message = "客户要求配送时间不能为空")
     private String deliveryTime;
 
     @ApiModelProperty(notes = "送货地址", dataType = "String")
@@ -103,6 +102,13 @@ public class CustomOrder {
 
     @ApiModelProperty(notes = "定制计划规格描述", dataType = "String")
     private String description;
+
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss",timezone = "GMT+8")
+    @ApiModelProperty(notes = "定制提取截止时间", dataType = "Date")
+    private Date endExtractionAt;
+
+    @ApiModelProperty(notes = "已暂停天数", dataType = "Long")
+    private Long alreadyPauseDay;
 
     @ApiModelProperty(notes = "每页查询条数(为空或0不分页查所有)", dataType = "Integer")
     private Integer rows;

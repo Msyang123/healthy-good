@@ -2,6 +2,7 @@ package com.lhiot.healthygood.feign;
 
 import com.leon.microx.web.result.Pages;
 import com.lhiot.healthygood.feign.model.*;
+import com.lhiot.healthygood.feign.type.ApplicationType;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
@@ -108,7 +109,7 @@ public interface BaseDataServiceFeign {
      * @return
      */
     @RequestMapping(value="/stores/code/{code}",method = RequestMethod.GET)
-    ResponseEntity<Store> findStoreByCode(@PathVariable("code") String code);
+    ResponseEntity<Store> findStoreByCode(@PathVariable("code") String code,@RequestParam("applicationType") ApplicationType applicationType);
 
     /**
      * 根据条件分页查询文章信息列表

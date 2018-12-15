@@ -15,7 +15,7 @@ public class KeywordValue {
     private String keyword4Value;
     private String keyword5Value;
     private String orderCode;
-    
+
     //是否需要给鲜果师发送模板消息
     private boolean sendToDoctor;
 }

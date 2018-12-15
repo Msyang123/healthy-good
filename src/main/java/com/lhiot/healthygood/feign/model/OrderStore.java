@@ -18,5 +18,4 @@ public class OrderStore {
     private String storeCode;
     private String storeName;
     private String operationUser;
-    private Date createAt = Date.from(Instant.now());
 }

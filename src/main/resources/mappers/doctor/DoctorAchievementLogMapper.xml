@@ -171,7 +171,7 @@
     </select>
 
     <!--查询鲜果师业绩记录总记录-->
-    <select id="pageDoctorAchievementLogCounts" resultType="long"
+    <select id="pageDoctorAchievementLogCounts" resultType="int"
         parameterType="com.lhiot.healthygood.domain.doctor.DoctorAchievementLog">
             select count(1)
             from doctor_achievement_log

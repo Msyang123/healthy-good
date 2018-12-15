@@ -1,10 +1,8 @@
 package com.lhiot.healthygood.feign;
 
+import com.leon.microx.web.result.Pages;
 import com.lhiot.healthygood.domain.user.UserBindingPhoneParam;
-import com.lhiot.healthygood.feign.model.BalanceLogParam;
-import com.lhiot.healthygood.feign.model.BalanceOperationParam;
-import com.lhiot.healthygood.feign.model.UserDetailResult;
-import com.lhiot.healthygood.feign.model.WeChatRegisterParam;
+import com.lhiot.healthygood.feign.model.*;
 import com.lhiot.healthygood.feign.type.ApplicationType;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.http.ResponseEntity;
@@ -73,5 +71,5 @@ public interface BaseUserServerFeign {
 	 * @return
 	 */
 	@RequestMapping(value = "/balance-logs/pages", method = RequestMethod.POST)
-	ResponseEntity searchBalanceLog(@RequestBody BalanceLogParam param);
+	ResponseEntity<Pages<BalanceLog>> searchBalanceLog(@RequestBody BalanceLogParam param);
 }
