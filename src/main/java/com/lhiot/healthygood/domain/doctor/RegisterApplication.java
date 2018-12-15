@@ -2,6 +2,8 @@ package com.lhiot.healthygood.domain.doctor;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import com.lhiot.healthygood.type.AuditStatus;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
@@ -118,6 +120,7 @@ public class RegisterApplication{
     *用户id
     */
     @JsonProperty("userId")
+    @JsonSerialize(using = ToStringSerializer.class)
     @ApiModelProperty(value = "用户id", dataType = "Long")
     private Long userId;
 
