@@ -10,7 +10,6 @@ import com.leon.microx.web.result.Tuple;
 import com.leon.microx.web.session.Sessions;
 import com.lhiot.healthygood.config.HealthyGoodConfig;
 import com.lhiot.healthygood.domain.order.OrderGroupCount;
-import com.lhiot.healthygood.domain.order.OrderParam;
 import com.lhiot.healthygood.domain.user.DoctorCustomer;
 import com.lhiot.healthygood.domain.user.FruitDoctor;
 import com.lhiot.healthygood.feign.BaseDataServiceFeign;
@@ -39,7 +38,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -222,34 +220,16 @@ public class OrderApi {
 
     @PostMapping("/orders/status")
     @ApiOperation(value = "我的用户订单列表")
-    public ResponseEntity<Pages<OrderDetailResult>> orderPages(@RequestBody OrderParam orderParam,
+    public ResponseEntity<Pages<OrderDetailResult>> orderPages(@RequestBody BaseOrderParam baseOrderParam,
                                                                Sessions.User user) {
-        BaseOrderParam baseOrderParam = new BaseOrderParam();
-        baseOrderParam.setPage(orderParam.getPage());
-        baseOrderParam.setRows(orderParam.getRows());
         baseOrderParam.setUserIds(user.getUser().get("userId").toString());
         baseOrderParam.setOrderType(OrderType.NORMAL);
-        if (orderParam.getStatusIn()!=null){
-            List<OrderDetailResult> orderDetailResultList =new ArrayList<>();
-            int total =0;
-            for(OrderStatus status : orderParam.getStatusIn()) {
-                baseOrderParam.setOrderStatus(status);
-                ResponseEntity<Pages<OrderDetailResult>> responseEntity = orderServiceFeign.ordersPages(baseOrderParam);
-                //组装在一个list中
-                if(Objects.nonNull(responseEntity)&& responseEntity.getStatusCode().is2xxSuccessful()){
-                    orderDetailResultList.addAll(responseEntity.getBody().getArray());
-                    total+=responseEntity.getBody().getTotal();
-                }
-            }
-            return ResponseEntity.ok(Pages.of(total,orderDetailResultList));
-        }else{
-            return orderServiceFeign.ordersPages(baseOrderParam);
-        }
+        return orderServiceFeign.ordersPages(baseOrderParam);
     }
 
     @PostMapping("/orders/fruit-doctor/customers")
     @ApiOperation(value = "我的鲜果师客户订单列表", response = OrderDetailResult.class, responseContainer = "List")
-    public ResponseEntity customersOrders(@RequestBody OrderParam orderParam, Sessions.User user) {
+    public ResponseEntity customersOrders(@RequestBody BaseOrderParam baseOrderParam, Sessions.User user) {
         String userId = user.getUser().get("userId").toString();
         FruitDoctor fruitDoctor = fruitDoctorService.selectByUserId(Long.valueOf(userId));
         if (Objects.isNull(fruitDoctor)) {
@@ -258,27 +238,9 @@ public class OrderApi {
         //鲜果师客户列表
         List<DoctorCustomer> doctorCustomerList = doctorCustomerService.selectByDoctorId(fruitDoctor.getId());
         String userIds = StringUtils.arrayToCommaDelimitedString(doctorCustomerList.parallelStream().map(DoctorCustomer::getUserId).toArray(Object[]::new));
-        BaseOrderParam baseOrderParam = new BaseOrderParam();
-        baseOrderParam.setPage(orderParam.getPage());
-        baseOrderParam.setRows(orderParam.getRows());
         baseOrderParam.setUserIds(userIds);
         baseOrderParam.setOrderType(OrderType.NORMAL);
-        if (orderParam.getStatusIn()!=null){
-            List<OrderDetailResult> orderDetailResultList =new ArrayList<>();
-            int total =0;
-            for(OrderStatus status : orderParam.getStatusIn()) {
-                baseOrderParam.setOrderStatus(status);
-                ResponseEntity<Pages<OrderDetailResult>> responseEntity = orderServiceFeign.ordersPages(baseOrderParam);
-                //组装在一个list中
-                if(Objects.nonNull(responseEntity)&& responseEntity.getStatusCode().is2xxSuccessful()){
-                    orderDetailResultList.addAll(responseEntity.getBody().getArray());
-                    total+=responseEntity.getBody().getTotal();
-                }
-            }
-            return ResponseEntity.ok(Pages.of(total,orderDetailResultList));
-        }else{
-            return orderServiceFeign.ordersPages(baseOrderParam);
-        }
+        return orderServiceFeign.ordersPages(baseOrderParam);
     }
 
     @GetMapping("/orders/{orderCode}/detail")
