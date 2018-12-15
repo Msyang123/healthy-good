@@ -10,6 +10,7 @@ import com.lhiot.healthygood.domain.user.KeywordValue;
 import com.lhiot.healthygood.mapper.doctor.SettlementApplicationMapper;
 import com.lhiot.healthygood.mapper.user.FruitDoctorMapper;
 import com.lhiot.healthygood.type.FruitDoctorOrderExchange;
+import com.lhiot.healthygood.type.SettlementStatus;
 import com.lhiot.healthygood.type.TemplateMessageEnum;
 import org.springframework.amqp.AmqpException;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
@@ -19,9 +20,11 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.text.SimpleDateFormat;
+import java.time.Instant;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * Description:结算申请服务类
@@ -57,26 +60,48 @@ public class SettlementApplicationService {
     }
 
     /**
-     * Description:根据id修改结算申请
+     * 根据id修改结算申请
      *
+     * @param id
      * @param settlementApplication
-     * @param fruitDoctor
      * @return
-     * @author hfuan
-     * @date 2018/12/07 12:08:13
      */
-    public Tips updateById(SettlementApplication settlementApplication, FruitDoctor fruitDoctor) {
+    public Tips updateById(Long id, SettlementApplication settlementApplication) {
+        settlementApplication.setId(id);
+        settlementApplication.setDealAt(Date.from(Instant.now()));
+        // 已结算只能结算一次，成功后不可修改
+        if (Objects.equals(SettlementStatus.SUCCESS, settlementApplication.getSettlementStatus())) {
+            SettlementApplication findSettlementApplication = settlementApplicationMapper.selectById(id);
+            // 结算用户是否一致
+            if (!Objects.equals(findSettlementApplication.getDoctorId(), settlementApplication.getDoctorId())) {
+                return Tips.warn("要结算的用户不一致，结算失败");
+            }
+            // 该条结算记录是否已结算过
+            if (Objects.equals(SettlementStatus.SUCCESS, findSettlementApplication.getSettlementStatus())) {
+                return Tips.warn("请勿重复结算");
+            }
+            FruitDoctor findFruitDoctor = fruitDoctorMapper.selectById(settlementApplication.getDoctorId());
+            if (Objects.isNull(findFruitDoctor)) {
+                return Tips.warn("鲜果师不存在！");
+            }
+            // 该鲜果师的可结算金额是否大于申请结算金额
+            if (settlementApplication.getAmount() > findFruitDoctor.getBalance()) {
+                return Tips.warn("申请结算金额大于用户可结算金额，结算失败");
+            }
+
+            boolean settlementUpdated = settlementApplicationMapper.updateById(settlementApplication) > 0;
+            if (!settlementUpdated) {
+                return Tips.warn("结算修改失败");
+            }
+            // 结算状态修改成功后扣减用户可结算金额
+            findFruitDoctor.setBalance(findFruitDoctor.getBalance() - settlementApplication.getAmount());
+            boolean balanceUpdated = fruitDoctorMapper.updateById(findFruitDoctor) > 0;
+            if (!balanceUpdated) {
+                return Tips.warn("扣减鲜果师可结算金额失败");
+            }
+        }
         boolean settlementUpdated = settlementApplicationMapper.updateById(settlementApplication) > 0;
-        if (!settlementUpdated) {
-            return Tips.warn("结算失败");
-        }
-        // 结算状态修改成功后扣减用户可结算金额
-        fruitDoctor.setBalance(fruitDoctor.getBalance() - settlementApplication.getAmount());
-        boolean balanceUpdated = fruitDoctorMapper.updateById(fruitDoctor) > 0;
-        if (!balanceUpdated) {
-            return Tips.warn("扣减鲜果师可结算金额失败");
-        }
-        return Tips.info("结算成功");
+        return settlementUpdated ? Tips.info("结算修改成功") : Tips.warn("结算修改失败");
     }
 
     /**
@@ -133,11 +158,12 @@ public class SettlementApplicationService {
 
     /**
      * 提现申请发送模板消息
+     *
      * @param settlementApplication
      * @throws JsonProcessingException
      * @throws AmqpException
      */
-    public void settlementApplicationSendToQueue(SettlementApplication settlementApplication) throws AmqpException, JsonProcessingException{
+    public void settlementApplicationSendToQueue(SettlementApplication settlementApplication) throws AmqpException, JsonProcessingException {
         String currentTime = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());
         Integer amount = (null == settlementApplication.getAmount() ? 0 : settlementApplication.getAmount());
         //获取鲜果师用户信息
@@ -166,7 +192,7 @@ public class SettlementApplicationService {
      * @author Limiaojun
      * @date 2018/08/22 09:52:13
      */
-    public long updateExpiredStatus(List<Long> list){
+    public long updateExpiredStatus(List<Long> list) {
 
         return settlementApplicationMapper.updateExpiredStatus(list);
     }

@@ -1,5 +1,6 @@
 package com.lhiot.healthygood.domain.doctor;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
@@ -91,6 +92,7 @@ public class RegisterApplication{
     *申请时间
     */
     @JsonProperty("createTime")
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss",timezone = "GMT+8")
     @ApiModelProperty(value = "申请时间", dataType = "Date")
     private java.util.Date createAt;
     
@@ -129,6 +131,7 @@ public class RegisterApplication{
      *起始创建时间
      */
     @JsonProperty("beginCreateAt")
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss",timezone = "GMT+8")
     @ApiModelProperty(notes = "起始创建时间", dataType = "Date")
     private Date beginCreateAt;
 
@@ -136,6 +139,7 @@ public class RegisterApplication{
      *截止创建时间
      */
     @JsonProperty("endCreateAt")
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss",timezone = "GMT+8")
     @ApiModelProperty(notes = "截止创建时间", dataType = "Date")
     private Date endCreateAt;
 
