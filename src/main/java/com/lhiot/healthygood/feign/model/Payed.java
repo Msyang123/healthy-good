@@ -1,5 +1,7 @@
 package com.lhiot.healthygood.feign.model;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
+import com.lhiot.healthygood.feign.type.PayType;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
@@ -21,9 +23,12 @@ public class Payed {
     @ApiModelProperty(notes = "银行类型",dataType = "String")
     private String bankType;
 
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
     @ApiModelProperty(notes = "支付时间",dataType = "Date")
     private Date payAt;
 
     @ApiModelProperty(notes = "支付平台交易号(支付平台产生的)",dataType = "String")
     private String tradeId;
+
+    private PayType payType;
 }
