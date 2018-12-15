@@ -182,7 +182,7 @@ public class RegisterApplicationService {
             fruitDoctor.setUserId(registerApplication.getUserId());
             return fruitDoctorMapper.create(fruitDoctor) > 0 ? Tips.info("添加鲜果师成员成功") : Tips.warn("添加鲜果师成员失败");
         }
-        return Tips.warn("审核不通过");
+        return Tips.info("修改成功");
     }
 
     /**

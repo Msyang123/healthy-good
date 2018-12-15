@@ -4,18 +4,18 @@
 
     <!-- 数据库字段对象关系映射 -->
     <resultMap id="BaseResultMap"
-        type="com.lhiot.healthygood.domain.doctor.SettlementApplication" >
+               type="com.lhiot.healthygood.domain.doctor.SettlementApplication">
         <id column="id" property="id"/>
-        <result column="doctor_id" property="doctorId" />
-        <result column="create_at" property="createAt" />
-        <result column="amount" property="amount" />
-        <result column="settlement_status" property="settlementStatus" />
-        <result column="deal_at" property="dealAt" />
+        <result column="doctor_id" property="doctorId"/>
+        <result column="create_at" property="createAt"/>
+        <result column="amount" property="amount"/>
+        <result column="settlement_status" property="settlementStatus"/>
+        <result column="deal_at" property="dealAt"/>
     </resultMap>
 
     <!-- base查询字段  -->
-    <sql id="Base_Column_List" >
-        <trim suffixOverrides="," >
+    <sql id="Base_Column_List">
+        <trim suffixOverrides=",">
             id,
             doctor_id,
             create_at,
@@ -25,10 +25,46 @@
         </trim>
     </sql>
 
+    <!-- 数据库字段对象关系映射 -->
+    <resultMap id="SettlementResultMap"
+               type="com.lhiot.healthygood.domain.doctor.SettlementApplication">
+        <id column="id" property="id"/>
+        <result column="doctor_id" property="doctorId"/>
+        <result column="create_at" property="createAt"/>
+        <result column="amount" property="amount"/>
+        <result column="settlement_status" property="settlementStatus"/>
+        <result column="deal_at" property="dealAt"/>
+
+        <result column="real_name" property="realName"/>
+        <result column="phone" property="phone"/>
+        <result column="card_no" property="cardNo"/>
+        <result column="bank_deposit" property="bankDeposit"/>
+        <result column="card_username" property="cardUsername"/>
+    </resultMap>
+
+    <!-- base查询字段  -->
+    <sql id="Settlement_Column_List">
+        <trim suffixOverrides=",">
+            s.id,
+            s.doctor_id,
+            s.create_at,
+            s.amount,
+            s.settlement_status,
+            s.deal_at,
+
+            f.real_name,
+            f.phone,
+            f.card_no,
+            f.bank_deposit,
+            f.card_username,
+        </trim>
+    </sql>
+
     <!--新增结算申请-->
-    <insert id="create" parameterType="com.lhiot.healthygood.domain.doctor.SettlementApplication" useGeneratedKeys="true" keyProperty="id">
+    <insert id="create" parameterType="com.lhiot.healthygood.domain.doctor.SettlementApplication"
+            useGeneratedKeys="true" keyProperty="id">
         insert into fruit_doctor_settlement
-        <trim prefix="(" suffix=")" suffixOverrides="," >
+        <trim prefix="(" suffix=")" suffixOverrides=",">
             <if test="id != null ">
                 id,
             </if>
@@ -48,7 +84,7 @@
                 deal_at,
             </if>
         </trim>
-        <trim prefix="values (" suffix=")" suffixOverrides="," >
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
             <if test="id != null ">
                 #{id},
             </if>
@@ -100,82 +136,78 @@
     <delete id="deleteByIds" parameterType="java.util.List">
         delete from fruit_doctor_settlement where id in
         <foreach collection="list" item="item" open="("
-            separator="," close=")">
+                 separator="," close=")">
             #{item}
         </foreach>
     </delete>
 
 
     <!-- 根据id查找结算申请 -->
-	<select id="selectById" resultMap="BaseResultMap"
-		parameterType="long"> select <include refid="Base_Column_List" />
-		from fruit_doctor_settlement where id = #{id}
-	</select>
+    <select id="selectById" resultMap="BaseResultMap"
+            parameterType="long">select
+        <include refid="Base_Column_List"/>
+        from fruit_doctor_settlement where id = #{id}
+    </select>
 
 
     <!-- base where条件  -->
-    <sql id="Base_Where_Condition" >
+    <sql id="Base_Where_Condition">
         <where>
             <if test="id != null ">
-                and id = #{id}
+                and s.id = #{id}
             </if>
             <if test="doctorId != null ">
-                and doctor_id = #{doctorId}
+                and s.doctor_id = #{doctorId}
             </if>
             <if test="createAt != null ">
-                and create_at = #{createAt}
+                and s.create_at = #{createAt}
             </if>
             <if test="amount != null ">
-                and amount = #{amount}
+                and s.amount = #{amount}
             </if>
             <if test="settlementStatus != null ">
-                and settlement_status = #{settlementStatus}
+                and s.settlement_status = #{settlementStatus}
             </if>
             <if test="dealAt != null ">
-                and deal_at = #{dealAt}
+                and s.deal_at = #{dealAt}
             </if>
             <if test="realName != null and realName != '' ">
-                and realName  like concat('%',#{realName},'%')
+                and f.real_name like concat('%',#{realName},'%')
             </if>
-            <if test="beginCreateAt != null">and create_at <![CDATA[ >= ]]> #{beginCreateAt} </if>
-            <if test="endCreateAt != null">and create_at <![CDATA[ <= ]]> #{endCreateAt} </if>
+            <if test="phone != null and phone != '' ">
+                and f.phone like concat('%',#{phone},'%')
+            </if>
+            <if test="cardNo != null and cardNo != '' ">
+                and f.card_no like concat('%',#{cardNo},'%')
+            </if>
+            <if test="beginCreateAt != null">and s.create_at <![CDATA[ >= ]]> #{beginCreateAt}</if>
+            <if test="endCreateAt != null">and s.create_at <![CDATA[ <= ]]> #{endCreateAt}</if>
         </where>
     </sql>
 
 
     <!--查询结算申请列表-->
-     <select id="pageSettlementApplications" resultType="com.lhiot.healthygood.domain.doctor.SettlementApplication"
-        parameterType="com.lhiot.healthygood.domain.doctor.SettlementApplication">
-             select * from
-             (
-                 SELECT
-                 b.real_name as realName,
-                 a.*
-                 FROM
-                 fruit_doctor_settlement a
-                 LEFT JOIN fruit_doctor b ON a.doctor_id = b.id
-             ) res
-            <include refid="Base_Where_Condition" />
-             <if test="rows != null and rows > 0 ">
-                 order by case res.settlement_status when 'UNSETTLED' then 0 when 'SUCCESS' then 1 when 'EXPIRED' then 2 else 3 end asc,
-                 res.id desc
-                 limit #{startRow} , #{rows}
-             </if>
+    <select id="pageSettlementApplications" resultMap="SettlementResultMap"
+            parameterType="com.lhiot.healthygood.domain.doctor.SettlementApplication">
+        SELECT <include refid="Settlement_Column_List"/>
+        FROM fruit_doctor_settlement s
+        LEFT JOIN fruit_doctor f ON s.doctor_id = f.id
+        <include refid="Base_Where_Condition"/>
+        <if test="rows != null and rows > 0 ">
+            order by case s.settlement_status when 'UNSETTLED' then 0 when 'SUCCESS' then 1 when 'EXPIRED' then 2 else
+            3 end asc,
+            s.id desc
+            limit #{startRow} , #{rows}
+        </if>
     </select>
 
     <!--查询结算申请总记录-->
     <select id="pageSettlementApplicationCounts" resultType="int"
-        parameterType="com.lhiot.healthygood.domain.doctor.SettlementApplication">
-            select count(1) from
-            (
-                SELECT
-                b.real_name as realName,
-                a.*
-                FROM
-                fruit_doctor_settlement a
-                LEFT JOIN fruit_doctor b ON a.doctor_id = b.id
-            ) res
-            <include refid="Base_Where_Condition" />
+            parameterType="com.lhiot.healthygood.domain.doctor.SettlementApplication">
+        select count(1)
+        FROM fruit_doctor_settlement s
+        LEFT JOIN fruit_doctor f ON s.doctor_id = f.id
+        <include refid="Base_Where_Condition"/>
     </select>
 
 </mapper>

@@ -95,12 +95,12 @@ public class CustomPlanSectionRelationApi {
     @ApiOperation("批量删除定制版块与定制计划架关系(后台)")
     @ApiImplicitParams({
             @ApiImplicitParam(paramType = ApiParamType.QUERY, name = "sectionId", value = "商品版块Id", dataType = "Long", required = true),
-            @ApiImplicitParam(paramType = ApiParamType.QUERY, name = "shelfIds", value = "多个商品上架Id以英文逗号分隔,为空则删除此版块所有上架关系", dataType = "String")
+            @ApiImplicitParam(paramType = ApiParamType.QUERY, name = "planIds", value = "多个商品上架Id以英文逗号分隔,为空则删除此版块所有上架关系", dataType = "String")
     })
     @DeleteMapping("/custom-plan-section-relations/batches")
-    public ResponseEntity deleteBatch(@RequestParam("sectionId") Long sectionId, @RequestParam(value = "shelfIds", required = false) String shelfIds) {
-        log.debug("根据关联Id删除定制版块与定制计划架关系\t sectionId:{}, shelfIds:{}", sectionId, shelfIds);
+    public ResponseEntity deleteBatch(@RequestParam("sectionId") Long sectionId, @RequestParam(value = "planIds", required = false) String planIds) {
+        log.debug("根据关联Id删除定制版块与定制计划架关系\t sectionId:{}, planIds:{}", sectionId, planIds);
 
-        return customPlanSectionRelationService.deleteRelationList(sectionId, shelfIds) ? ResponseEntity.noContent().build() : ResponseEntity.badRequest().body("删除信息失败！");
+        return customPlanSectionRelationService.deleteRelationList(sectionId, planIds) ? ResponseEntity.noContent().build() : ResponseEntity.badRequest().body("删除信息失败！");
     }
 }
