@@ -175,6 +175,7 @@ public class DoctorAchievementLogService {
     	if(Objects.isNull(incomeStat)){
     		incomeStat = new IncomeStat();
     	}
+    	incomeStat.setBonusCanBeSettled(incomeStat.getBonusCanBeSettled()-incomeStat.getBonusSettling());//剩余可结算金额 = 可结算金额 - 正在结算中的金额
         return incomeStat;
     }
 

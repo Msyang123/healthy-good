@@ -163,7 +163,7 @@ public class ProductSectionApi {
                 Integer alreadyCount = activityProductRecordService.selectRecordCount(activityProductRecord);
                 detailResult.setActivityPrice(activityProducts.getActivityPrice());
                 detailResult.setLimitCount(specialProductActivity.getLimitCount());
-                detailResult.setAlreadyBuyAmount(alreadyCount);
+                detailResult.setAlreadyBuyCount(alreadyCount);
             }
         }
         return ResponseEntity.ok(detailResult);
@@ -198,7 +198,7 @@ public class ProductSectionApi {
                         activityProductRecord.setProductShelfId(item.getProductShelfId());
                         Integer alreadyCount = activityProductRecordService.selectRecordCount(activityProductRecord);
                         productShelf.setActivityPrice(item.getActivityPrice());
-                        productShelf.setAlreadyBuyAmount(alreadyCount);
+                        productShelf.setAlreadyBuyCount(alreadyCount);
                         productShelf.setLimitCount(specialProductActivity.getLimitCount());
                         productShelf.setPrice(Objects.isNull(productShelf.getPrice()) ? productShelf.getOriginalPrice() : productShelf.getPrice());
                     }));
@@ -225,6 +225,28 @@ public class ProductSectionApi {
         }
         this.setPrice(pagesResponseEntity.getBody().getArray());
         return pagesResponseEntity;
+    }
+
+    @Sessions.Uncheck
+    @GetMapping("/product/recommend")
+    @ApiOperation(value = "发现推荐商品列表" ,response = ProductSection.class)
+    public ResponseEntity recommendProducts(){
+        UiPositionParam uiPositionParam = new UiPositionParam();
+        uiPositionParam.setApplicationType("HEALTH_GOOD");
+        uiPositionParam.setCodes("SEARCH_PRODUCTS");
+        ResponseEntity<Pages<UiPosition>> uiPositionEntity = baseDataServiceFeign.searchUiPosition(uiPositionParam);
+        if (Objects.isNull(uiPositionEntity) || uiPositionEntity.getStatusCode().isError()){
+            return uiPositionEntity;
+        }
+        List<String> positionIds = new ArrayList<>();
+        uiPositionEntity.getBody().getArray().forEach(uiPosition -> {
+            positionIds.add(uiPosition.getId().toString());
+        });
+        ProductSectionParam productSectionParam = new ProductSectionParam();
+        productSectionParam.setPositionIds(StringUtils.collectionToDelimitedString(positionIds,","));
+        productSectionParam.setIncludeShelves(true);
+        ResponseEntity<Pages<ProductSection>> pagesResponseEntity = baseDataServiceFeign.searchProductSection(productSectionParam);
+        return ResponseEntity.ok(pagesResponseEntity.getBody().getArray().get(0));
     }
 
 }

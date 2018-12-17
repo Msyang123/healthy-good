@@ -48,5 +48,5 @@ public class ProductDetailResult {
     private Integer limitCount;
 
     @ApiModelProperty(notes = "已购数量", dataType = "String")
-    private Integer alreadyBuyAmount;
+    private Integer alreadyBuyCount;
 }

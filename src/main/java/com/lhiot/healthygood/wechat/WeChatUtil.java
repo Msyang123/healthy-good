@@ -298,6 +298,7 @@ public class WeChatUtil {
 	public String sendTemplateMessage(String message){
 		String requestUrl = MessageFormat.format(SEND_TEMPLATE_MESSAGE, this.getToken().getAccessToken());
 		String result = httpsRequest(requestUrl, "POST", message);
+		System.out.println(result);
 		return result;
 	}
 
@@ -326,22 +327,24 @@ public class WeChatUtil {
 	 * }
 	 *
 	 * @param templateMessageEnum
-	 * @param params
+	 * @param dataItem
 	 * @return
 	 */
-	public  String sendMessageToWechat(TemplateMessageEnum templateMessageEnum,String openId, KeywordValue params) {
+	public  String sendMessageToWechat(TemplateMessageEnum templateMessageEnum,String openId, DataItem dataItem) {
 		if (templateMessageEnum==null)
 			return null;
 		//构建发送内容
-		StringBuffer content = new StringBuffer();
-		/*params.forEach(param ->
-				content.append(param.toString())
-		);*/
-		templateMessageEnum.setTouser(openId);
-		templateMessageEnum.setData(params.toString());
+		//templateMessageEnum.setTouser(openId);
+		//templateMessageEnum.setData(dataItem.toString());
+		TemplateParam templateParam = new TemplateParam();
+		templateParam.setTouser(openId);
+
+		templateParam.setTemplate_id(templateMessageEnum.getTemplate_id());
+		templateParam.setUrl(templateMessageEnum.getUrl());
+		templateParam.setData(dataItem);
 		//构建发送模板消息的数据
 		//return templateMessageEnum.toString();
-		return this.sendTemplateMessage(Jackson.json(templateMessageEnum));
+		return this.sendTemplateMessage(Jackson.json(templateParam));
 	}
 
 	/*public static void main(String[] args) {

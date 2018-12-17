@@ -465,12 +465,14 @@ public class FruitDoctorApi {
         }
         CardUpdateLog cardParam = new CardUpdateLog();
         cardParam.setDoctorId(fruitDoctor.getId());
-        CardUpdateLog card = cardUpdateLogService.selectByCard(cardParam);
-        if (Objects.nonNull(card)) {
-            return ResponseEntity.badRequest().body("只能添加一张卡");
-        }
         cardUpdateLog.setDoctorId(fruitDoctor.getId());
         cardUpdateLog.setUpdateAt(Date.from(Instant.now()));
+        CardUpdateLog card = cardUpdateLogService.selectByCard(cardParam);
+        if (Objects.nonNull(card)) {//修改
+            cardUpdateLogService.updateById(cardUpdateLog);
+            return ResponseEntity.ok(cardUpdateLogService.updateById(cardUpdateLog)>0 ? "修改成功" : "修改失败");
+        }
+
         return ResponseEntity.ok(cardUpdateLogService.create(cardUpdateLog)>0 ? "添加成功" : "添加失败");
     }
 
@@ -604,5 +606,28 @@ public class FruitDoctorApi {
         return tips.err() ? ResponseEntity.badRequest().body(tips.getMessage()) : ResponseEntity.ok().body(tips.getMessage());
     }
 
-
+   /* @ApiOperation("鲜果师客户订单列表")
+    @ApiImplicitParams({
+            @ApiImplicitParam(paramType = "query", name = "doctorId", dataType = "String", required = true, value = "鲜果师id"),
+            @ApiImplicitParam(paramType = "query", name = "seachStatus", dataType = "String", required = false, value = "订单状态"),
+            @ApiImplicitParam(paramType = "query", name = "applicationType", dataType = "Long", required = true, value = "应用类型")
+    })
+    @GetMapping("orders/fruit-doctor/{doctorId}")
+    public ResponseEntity<?> findCustomerOrders(OrderSearchParam param){
+        List<BaseOrderInfo> orders = new ArrayList<>();
+        //根据鲜果师id查询其客户,默认创建时间倒序
+        if(Objects.isNull(param.getSidx())){
+            param.setSidx("create_at");
+            param.setSord("desc");
+        }
+        List<FruitDoctorUser> users = fruitDoctorService.findUserByDoctorId(param.getDoctorId());
+        users = users.stream().filter(user -> Objects.nonNull(user)).collect(Collectors.toList());
+        if(Objects.isNull(users) || users.isEmpty()){
+            return ResponseEntity.ok(Multiple.of(orders));
+        }
+        List<Long> userIds = users.stream().map(FruitDoctorUser::getId).collect(Collectors.toList());
+        param.setUserIds(userIds);
+        orders = fruitDoctorService.findUserOrders(param);
+        return ResponseEntity.ok(Multiple.of(orders));
+    }*/
 }

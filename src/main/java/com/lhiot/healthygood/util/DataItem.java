@@ -4,21 +4,20 @@ import com.lhiot.healthygood.type.TemplateMessageEnum;
 import io.swagger.annotations.ApiModel;
 import lombok.Data;
 
+import java.util.Map;
+
 @Data
 @ApiModel
 public class DataItem {
-    private String keyword1Value;
-    private String keyword2Value;
-    private String keyword3Value;
-    private String remark;
+    private DataObject first;
+    private DataObject keyword1;
+    private DataObject keyword2;
+    private DataObject keyword3;
+    private DataObject keyword4;
+    private DataObject remark;
 
     @Override
     public String toString() {
-        return "Data:{" +
-                "keyword1Value='" + keyword1Value + '\'' +
-                ", keyword2Value='" + keyword2Value + '\'' +
-                ", keyword3Value='" + keyword3Value + '\'' +
-                ", remark='" + remark + '\'' +
-                '}';
+        return "{ \"first\":"+first+",\"keyword1\":"+keyword1+",\"keyword2\": "+keyword2+",\"keyword3\": "+keyword3+",\"keyword4\":"+keyword4+",\"remark\":"+remark+"}";
     }
 }

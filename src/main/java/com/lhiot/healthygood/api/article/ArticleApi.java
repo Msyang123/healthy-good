@@ -44,4 +44,5 @@ public class ArticleApi {
     public ResponseEntity<Article> article(@PathVariable(value = "id") Long id){
         return baseDataServiceFeign.singleArticle(id,true);
     }
+
 }
