@@ -1,5 +1,6 @@
 package com.lhiot.healthygood.domain.doctor;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.lhiot.healthygood.type.SettlementStatus;
@@ -41,6 +42,7 @@ public class SettlementApplication {
      * 申请时间
      */
     @JsonProperty("createAt")
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss",timezone = "GMT+8")
     @ApiModelProperty(value = "申请时间", dataType = "Date")
     private java.util.Date createAt;
 
@@ -66,25 +68,56 @@ public class SettlementApplication {
     private java.util.Date dealAt;
 
     /**
-     *起始创建时间
+     * 起始创建时间
      */
     @JsonProperty("beginCreateAt")
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss",timezone = "GMT+8")
     @ApiModelProperty(notes = "起始创建时间(用于搜索)", dataType = "Date")
     private Date beginCreateAt;
 
     /**
-     *截止创建时间
+     * 截止创建时间
      */
     @JsonProperty("endCreateAt")
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss",timezone = "GMT+8")
     @ApiModelProperty(notes = "截止创建时间(用于搜索)", dataType = "Date")
     private Date endCreateAt;
 
     /**
-     * 申请人（鲜果师编号）
+     * 申请人（鲜果师名称）
      */
     @JsonProperty("realName")
     @ApiModelProperty(value = "申请人（鲜果师名称）", dataType = "String")
     private String realName;
+
+    /**
+     * 申请人（鲜果师手机号）
+     */
+    @JsonProperty("phone")
+    @ApiModelProperty(value = "申请人（鲜果师手机号）", dataType = "String")
+    private String phone;
+
+    /**
+     * 银行卡卡号
+     */
+    @JsonProperty("cardNo")
+    @ApiModelProperty(value = "银行卡卡号", dataType = "String")
+    private String cardNo;
+
+    /**
+     * 开户行
+     */
+    @JsonProperty("bankDeposit")
+    @ApiModelProperty(value = "开户行", dataType = "String")
+    private String bankDeposit;
+
+    /**
+     * 持卡人姓名
+     */
+    @JsonProperty("cardUsername")
+    @ApiModelProperty(value = "持卡人姓名", dataType = "String")
+    private String cardUsername;
+
 
     @ApiModelProperty(notes = "每页查询条数(为空或0不分页查所有)", dataType = "Integer")
     private Integer rows;

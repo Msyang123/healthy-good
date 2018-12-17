@@ -145,7 +145,6 @@ public class FruitDoctorApi {
             @ApiImplicitParam(paramType = "query", name = "amount", value = "申请提现红利", required = true, dataType = "int")
     })
     public ResponseEntity create(Sessions.User user,
-
                                  @RequestParam int amount) {
         log.debug("申请提现红利\t param:{}", amount);
         String userId = user.getUser().get("userId").toString();
@@ -154,17 +153,17 @@ public class FruitDoctorApi {
             return ResponseEntity.badRequest().body("鲜果师不存在");
         }
         //如果不是系统的每月
-        LocalDate localDate=LocalDate.now();
+        LocalDate localDate = LocalDate.now();
         //每月15号
-        LocalDate fifteen=LocalDate.of(localDate.getYear(),localDate.getMonth(),15);
+        LocalDate fifteen = LocalDate.of(localDate.getYear(), localDate.getMonth(), 15);
         //每月17号
-        LocalDate seventeen=LocalDate.of(localDate.getYear(),localDate.getMonth(),17);
-        if(localDate.isBefore(fifteen)||localDate.isAfter(seventeen)){
+        LocalDate seventeen = LocalDate.of(localDate.getYear(), localDate.getMonth(), 17);
+        if (localDate.isBefore(fifteen) || localDate.isAfter(seventeen)) {
             return ResponseEntity.badRequest().body("不在每月15-17日申请时间段内");
         }
         //查询申请金额是否超过实际金额
         IncomeStat incomeStat = doctorAchievementLogService.myIncome(fruitDoctor.getId());
-        if(incomeStat.getBonusCanBeSettled()==null||incomeStat.getBonusCanBeSettled().longValue()<amount){
+        if (incomeStat.getBonusCanBeSettled() == null || incomeStat.getBonusCanBeSettled().longValue() < amount) {
             return ResponseEntity.badRequest().body("申请红利超过可结算红利");
         }
         SettlementApplication settlementApplication = new SettlementApplication();
@@ -174,55 +173,30 @@ public class FruitDoctorApi {
         settlementApplication.setCreateAt(Date.from(Instant.now()));
         settlementApplication.setSettlementStatus(SettlementStatus.UNSETTLED);
         int result = settlementApplicationService.create(settlementApplication);
-        if(result>0) {
+        if (result > 0) {
             try {
                 settlementApplicationService.settlementApplicationSendToQueue(settlementApplication);
             } catch (JsonProcessingException e) {
                 e.printStackTrace();
             }
             return ResponseEntity.ok("申请成功！");
-        }else{
+        } else {
             return ResponseEntity.badRequest().body("申请失败！");
         }
     }
 
     @Sessions.Uncheck
-    @ApiOperation(value = "结算申请修改-已结算(后台)")
+    @ApiOperation(value = "结算申请修改(后台)")
     @ApiImplicitParams({
             @ApiImplicitParam(paramType = ApiParamType.PATH, name = "id", value = "结算申请id", required = true, dataType = "Long"),
             @ApiImplicitParam(paramType = ApiParamType.BODY, name = "settlementApplication", value = "要修改的结算申请信息", dataType = "SettlementApplication", required = true)
     })
     @PutMapping("/settlement/{id}")
     public ResponseEntity updateSettlement(@PathVariable("id") Long id, @RequestBody SettlementApplication settlementApplication) {
-        log.debug("结算申请修改-已结算\t id:{},param:{}", id, settlementApplication);
+        log.debug("结算申请修改\t id:{},param:{}", id, settlementApplication);
 
-        // 已结算才进行修改，且只能结算一次，成功后不可修改
-        if (Objects.equals(SettlementStatus.SUCCESS, settlementApplication.getSettlementStatus())) {
-            SettlementApplication findSettlementApplication = settlementApplicationService.selectById(id);
-            // 结算用户是否一致
-            if (!Objects.equals(findSettlementApplication.getDoctorId(), settlementApplication.getDoctorId())) {
-                return ResponseEntity.badRequest().body("要结算的用户不一致，结算失败");
-            }
-            // 该条结算记录是否已结算过
-            if (Objects.equals(SettlementStatus.SUCCESS, findSettlementApplication.getSettlementStatus())) {
-                return ResponseEntity.badRequest().body("请勿重复结算");
-            }
-            FruitDoctor findFruitDoctor = fruitDoctorService.selectById(settlementApplication.getDoctorId());
-            if (Objects.isNull(findFruitDoctor)) {
-                return ResponseEntity.badRequest().body("鲜果师不存在！");
-            }
-            // 该鲜果师的可结算金额是否大于申请结算金额
-            if (settlementApplication.getAmount() > findFruitDoctor.getBalance()) {
-                return ResponseEntity.badRequest().body("申请结算金额大于用户可结算金额，结算失败");
-            }
-
-            // 进行结算和鲜果师可结算金额扣减
-            settlementApplication.setId(id);
-            settlementApplication.setDealAt(Date.from(Instant.now()));
-            Tips tips = settlementApplicationService.updateById(settlementApplication, findFruitDoctor);
-            return tips.err() ? ResponseEntity.badRequest().body(tips.getMessage()) : ResponseEntity.ok().build();
-        }
-        return ResponseEntity.badRequest().body("结算状态不正确！");
+        Tips tips = settlementApplicationService.updateById(id, settlementApplication);
+        return tips.err() ? ResponseEntity.badRequest().body(tips.getMessage()) : ResponseEntity.ok().build();
     }
 
     @Sessions.Uncheck
@@ -467,13 +441,7 @@ public class FruitDoctorApi {
         cardParam.setDoctorId(fruitDoctor.getId());
         cardUpdateLog.setDoctorId(fruitDoctor.getId());
         cardUpdateLog.setUpdateAt(Date.from(Instant.now()));
-        CardUpdateLog card = cardUpdateLogService.selectByCard(cardParam);
-        if (Objects.nonNull(card)) {//修改
-            cardUpdateLogService.updateById(cardUpdateLog);
-            return ResponseEntity.ok(cardUpdateLogService.updateById(cardUpdateLog)>0 ? "修改成功" : "修改失败");
-        }
-
-        return ResponseEntity.ok(cardUpdateLogService.create(cardUpdateLog)>0 ? "添加成功" : "添加失败");
+        return ResponseEntity.ok(cardUpdateLogService.create(cardUpdateLog) > 0 ? "添加成功" : "添加失败");
     }
 
     @ApiOperation(value = "查询鲜果师银行卡信息", notes = "根据session里的doctorId查询", response = CardUpdateLog.class)
@@ -489,7 +457,7 @@ public class FruitDoctorApi {
         return ResponseEntity.ok(cardUpdateLogService.selectByCard(cardUpdateLog));
     }
 
-    @ApiOperation(value = "查询鲜果师最新申请记录", notes = "查询鲜果师最新申请记录",response = RegisterApplication.class)
+    @ApiOperation(value = "查询鲜果师最新申请记录", notes = "查询鲜果师最新申请记录", response = RegisterApplication.class)
     @GetMapping("/new-application")
     public ResponseEntity<RegisterApplication> findLastApplicationById(Sessions.User user) {
         Long userId = Long.valueOf(user.getUser().get("userId").toString());
@@ -497,7 +465,7 @@ public class FruitDoctorApi {
     }
 
     @GetMapping("/customers")
-    @ApiOperation(value = "查询鲜果师客户列表",response = DoctorCustomer.class,responseContainer = "List")
+    @ApiOperation(value = "查询鲜果师客户列表", response = DoctorCustomer.class, responseContainer = "List")
     public ResponseEntity doctorCustomers(Sessions.User user) throws BadHanyuPinyinOutputFormatCombination {
         String userId = user.getUser().get("userId").toString();
         FruitDoctor fruitDoctor = fruitDoctorService.selectByUserId(Long.valueOf(userId));
