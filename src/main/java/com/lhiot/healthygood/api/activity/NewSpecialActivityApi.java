@@ -65,9 +65,6 @@ public class NewSpecialActivityApi {
         activityProduct.setActivityId(specialProductActivity.getId());
         BeanUtils.copyProperties(pagesParam,activityProduct);
         List<ActivityProduct> activityProductsList = activityProductService.activityProductList(activityProduct);
-        if (Objects.isNull(activityProductsList) || activityProductsList.size() <= 0){
-            return ResponseEntity.badRequest().body("活动商品是空的~");
-        }
         List<ActivityProducts> activityProducts = new ArrayList<ActivityProducts>();
 
         activityProductsList.forEach(item -> {

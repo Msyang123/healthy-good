@@ -154,4 +154,12 @@ public interface BaseDataServiceFeign {
     @RequestMapping(value = "/ui-positions/pages",method = RequestMethod.POST)
     ResponseEntity<Pages<UiPosition>> searchUiPosition(@RequestBody UiPositionParam param);
 
+    /**
+     * 查询文章版块信息列表
+     * @param param
+     * @return
+     */
+    @RequestMapping(value = "/article-sections/pages",method = RequestMethod.POST)
+    ResponseEntity<Pages<ArticleSection>> searchArticleSection(@RequestBody ArticleSectionParam param);
+
 }

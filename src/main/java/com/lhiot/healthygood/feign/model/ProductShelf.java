@@ -57,7 +57,7 @@ public class ProductShelf {
     @ApiModelProperty(notes = "限制购买的份数", dataType = "Integer")
     private Integer limitCount;
     @ApiModelProperty(notes = "已经购买的份数", dataType = "Integer")
-    private Integer alreadyBuyAmount;
+    private Integer alreadyBuyCount;
 
     public void setId(Long id) {
         this.id = id;

@@ -13,7 +13,7 @@ public enum TemplateMessageEnum {
 	UPGRADE_FRUIT_DOCTOR("推荐上明星鲜果师通知","P6G0reCkG4igJourVrHBZklrzIQFg1wbdPCfyDo8T08","");
 	
 	@Getter
-	String templateId;
+	String template_id;
 	
 	@Getter
 	String templateName;
@@ -29,8 +29,8 @@ public enum TemplateMessageEnum {
 	@Setter
 	String data;
 
-	TemplateMessageEnum(String templateName,String templateId,String url){
-		this.templateId = templateId;
+	TemplateMessageEnum(String templateName,String template_id,String url){
+		this.template_id = template_id;
 		this.templateName = templateName;
 		this.url = url;
 	}
@@ -44,7 +44,7 @@ public enum TemplateMessageEnum {
 				", 'touser':" + touser + "'" +
 				", 'data':'" + data + "'" +
 				"}";*/
-		return "{\"templateId\": \""+templateId+"\", \"templateName\": \""+templateName+"\", \"url\":\""+url+"\", \"touser\":\""+touser+"\", \"data\":"+data+"}";
+		return "{\"template_id\": \""+template_id+"\",  \"url\":\""+url+"\", \"touser\":\""+touser+"\", \"data\":"+data+"}";
 	}
 
 	public static void main(String[] args) {
