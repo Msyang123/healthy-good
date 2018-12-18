@@ -17,6 +17,7 @@ import com.lhiot.healthygood.feign.model.WxPayModel;
 import com.lhiot.healthygood.feign.type.ApplicationType;
 import com.lhiot.healthygood.feign.type.SourceType;
 import com.lhiot.healthygood.service.customplan.CustomOrderService;
+import com.lhiot.healthygood.type.CustomOrderBuyType;
 import com.lhiot.healthygood.type.CustomOrderStatus;
 import com.lhiot.healthygood.util.RealClientIp;
 import io.swagger.annotations.Api;
@@ -24,6 +25,8 @@ import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.configurationprocessor.json.JSONException;
+import org.springframework.boot.configurationprocessor.json.JSONObject;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -52,13 +55,13 @@ public class CustomOrderApi {
     }
 
     @PostMapping("/custom-orders")
-    @ApiOperation(value = "立即定制-创建定制计划",response = CustomOrder.class)
+    @ApiOperation(value = "立即定制-创建定制计划", response = CustomOrder.class)
     @ApiHideBodyProperty({"id", "beginCreateAt", "endCreateAt", "user", "rows", "page"})
     public ResponseEntity create(@Valid @RequestBody CustomOrder customOrder, Sessions.User user) {
         Long userId = Long.valueOf(user.getUser().get("userId").toString());
         customOrder.setUserId(userId);
         CustomOrder result = customOrderService.createCustomOrder(customOrder);
-        if (Objects.isNull(result)){
+        if (Objects.isNull(result)) {
             return ResponseEntity.badRequest().body("创建失败");
         }
         return ResponseEntity.ok(result);
@@ -146,7 +149,7 @@ public class CustomOrderApi {
     @PutMapping("/custom-orders/{orderCode}/delivery-time")
     @ApiOperation(value = "修改个人购买计划配送时间", response = String.class)
     public ResponseEntity deliveryTime(@PathVariable("orderCode") String orderCode,
-                                             @Valid @NotBlank @RequestParam("deliveryTime") String deliveryTime, Sessions.User user) {
+                                       @Valid @NotBlank @RequestParam("deliveryTime") String deliveryTime, Sessions.User user) {
         Long userId = Long.valueOf(user.getUser().get("userId").toString());
         ResponseEntity validateOrderOwner = validateOrderOwner(userId, orderCode);
         if (validateOrderOwner.getStatusCode().isError()) {
@@ -179,7 +182,7 @@ public class CustomOrderApi {
             return ResponseEntity.badRequest().body("提取次数不足");
         }
         //提取定制计划
-        Tips result = customOrderService.extraction(customOrder,deliveryTime, remark);
+        Tips result = customOrderService.extraction(customOrder, deliveryTime, remark);
         return result.err() ? ResponseEntity.badRequest().body(result.getMessage()) : ResponseEntity.ok(result.getData());
     }
 
@@ -200,7 +203,7 @@ public class CustomOrderApi {
     }
 
     @GetMapping("/custom-orders/{orderCode}/detail")
-    @ApiOperation(value = "个人购买定制计划-定制详情",response = CustomOrder.class)
+    @ApiOperation(value = "个人购买定制计划-定制详情", response = CustomOrder.class)
     public ResponseEntity customOrderDetail(@PathVariable("orderCode") String orderCode, Sessions.User user) {
         Long userId = Long.valueOf(user.getUser().get("userId").toString());
         ResponseEntity validateOrderOwner = validateOrderOwner(userId, orderCode);
@@ -247,6 +250,16 @@ public class CustomOrderApi {
         UserDetailResult userDetailResult = userEntity.getBody();
         customOrder.setNickname(userDetailResult.getNickname());
         customOrder.setPhone(userDetailResult.getPhone());
+        // 自动配送解析配送时间
+        if (Objects.equals(CustomOrderBuyType.AUTO, customOrder.getDeliveryType())) {
+            String deliveryTime = customOrder.getDeliveryTime();
+            try {
+                JSONObject jsonObject = new JSONObject(deliveryTime);
+                customOrder.setDeliveryTime(jsonObject.getString("display"));
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+        }
         return ResponseEntity.ok(customOrder);
     }
 
