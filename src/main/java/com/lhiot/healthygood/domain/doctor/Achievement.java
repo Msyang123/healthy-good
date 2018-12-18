@@ -1,5 +1,6 @@
 package com.lhiot.healthygood.domain.doctor;
 
+import com.lhiot.healthygood.feign.model.UserDetailResult;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
@@ -29,9 +30,6 @@ Achievement {
 	@ApiModelProperty(notes="总销售额",dataType="Long")
 	private Long summaryAmount;
 
-	@ApiModelProperty(notes = "头像", dataType = "String")
-	private String avatar;
-
-	@ApiModelProperty(notes = "备注", dataType = "String")
-	private String description;
+	@ApiModelProperty(notes = "用户信息", dataType = "UserDetailResult")
+	private UserDetailResult userDetailResult;
 }

@@ -127,12 +127,13 @@ public class BalanceApi {
         balancePayModel.setMemo("定制订单支付");
         balancePayModel.setSourceType(SourceType.CUSTOM_PLAN);
         balancePayModel.setUserId(userId);
-        ResponseEntity<Id> balancePayResult = paymentServiceFeign.balancePay(balancePayModel);
+        ResponseEntity balancePayResult = paymentServiceFeign.balancePay(balancePayModel);
         if (Objects.isNull(balancePayResult) || balancePayResult.getStatusCode().isError()) {
             log.error("鲜果币支付定制订单失败{}", balancePayResult);
             return ResponseEntity.badRequest().body("鲜果币支付定制订单失败");
         }
-        String outTradeId = String.valueOf(balancePayResult.getBody().getValue());
+        Id id = (Id) balancePayResult.getBody();
+        String outTradeId = String.valueOf(id.getValue());
 
         //修改定制计划订单状态定制中
         String customOrderCode = balancePayModel.getOrderCode();

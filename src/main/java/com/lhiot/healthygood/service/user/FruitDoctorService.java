@@ -4,16 +4,23 @@ import com.leon.microx.util.BeanUtils;
 import com.leon.microx.util.auditing.Random;
 import com.leon.microx.web.result.Pages;
 import com.leon.microx.web.result.Tips;
+import com.lhiot.dc.dictionary.module.Dictionary;
+import com.lhiot.healthygood.domain.doctor.DoctorAchievementLog;
 import com.lhiot.healthygood.domain.doctor.RegisterApplication;
 import com.lhiot.healthygood.domain.user.DoctorCustomer;
 import com.lhiot.healthygood.domain.user.FruitDoctor;
 import com.lhiot.healthygood.event.SendCaptchaSmsEvent;
 import com.lhiot.healthygood.feign.BaseUserServerFeign;
+import com.lhiot.healthygood.feign.model.OrderDetailResult;
 import com.lhiot.healthygood.feign.model.UserDetailResult;
+import com.lhiot.healthygood.feign.type.OrderStatus;
 import com.lhiot.healthygood.mapper.user.DoctorCustomerMapper;
 import com.lhiot.healthygood.mapper.user.FruitDoctorMapper;
+import com.lhiot.healthygood.service.customplan.CustomPlanService;
+import com.lhiot.healthygood.service.doctor.DoctorAchievementLogService;
 import com.lhiot.healthygood.type.DoctorLevel;
 import com.lhiot.healthygood.type.DoctorStatus;
+import com.lhiot.healthygood.type.SourceType;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
@@ -21,11 +28,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.time.Instant;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 
 /**
  * Description:鲜果师成员服务类
@@ -42,14 +47,18 @@ public class FruitDoctorService {
     private final DoctorCustomerMapper doctorCustomerMapper;
     private final ApplicationEventPublisher publisher;
     private final BaseUserServerFeign baseUserServerFeign;
+    private final CustomPlanService customPlanService;
+    private final DoctorAchievementLogService doctorAchievementLogService;
 
 
     @Autowired
-    public FruitDoctorService(FruitDoctorMapper fruitDoctorMapper, DoctorCustomerMapper doctorCustomerMapper, ApplicationEventPublisher publisher, BaseUserServerFeign baseUserServerFeign) {
+    public FruitDoctorService(FruitDoctorMapper fruitDoctorMapper, DoctorCustomerMapper doctorCustomerMapper, ApplicationEventPublisher publisher, BaseUserServerFeign baseUserServerFeign, CustomPlanService customPlanService, DoctorAchievementLogService doctorAchievementLogService) {
         this.fruitDoctorMapper = fruitDoctorMapper;
         this.doctorCustomerMapper = doctorCustomerMapper;
         this.publisher = publisher;
         this.baseUserServerFeign = baseUserServerFeign;
+        this.customPlanService = customPlanService;
+        this.doctorAchievementLogService = doctorAchievementLogService;
     }
 
     /**
@@ -76,7 +85,7 @@ public class FruitDoctorService {
         fruitDoctor.setCreateAt(Date.from(Instant.now()));
         //查找推荐人
         DoctorCustomer doctorCustomer = doctorCustomerMapper.selectByUserId(registerApplication.getUserId());
-        if(Objects.nonNull(doctorCustomer)){
+        if (Objects.nonNull(doctorCustomer)) {
             fruitDoctor.setRefereeId(doctorCustomer.getDoctorId());
         }
         //查找基础服务对应的微信用户信息
@@ -240,6 +249,52 @@ public class FruitDoctorService {
         publisher.publishEvent(new SendCaptchaSmsEvent(phone));
 
         log.info("鲜果师注册时绑定手机号码，发送模板消息");
+    }
+
+    /**
+     * 计算销售提成
+     *
+     * @param orderDetailResult
+     */
+    public void calculationCommission(OrderDetailResult orderDetailResult) {
+        try {
+            FruitDoctor doctor = this.findSuperiorFruitDoctorByUserId(orderDetailResult.getUserId());//查询用户的上级鲜果师
+            DoctorAchievementLog logParam = new DoctorAchievementLog();
+            logParam.setDoctorId(doctor.getId());
+            logParam.setOrderId(orderDetailResult.getCode());
+            Integer counts = doctorAchievementLogService.doctorAchievementLogCounts(logParam);
+            if (counts > 0) {
+                return;
+            }
+            if (Objects.equals(OrderStatus.WAIT_SEND_OUT, orderDetailResult.getStatus()) || Objects.equals(OrderStatus.DISPATCHING, orderDetailResult.getStatus())) {
+                Optional<Dictionary.Entry> salesCommissions = customPlanService.dictionaryOptional("commissions").get().entry("SALES_COMMISSIONS");//销售提成百分比
+                String commission = Objects.isNull(salesCommissions.get().getName()) ? "0" : salesCommissions.get().getName();
+                Optional<Dictionary.Entry> bonus = customPlanService.dictionaryOptional("commissions").get().entry("BONUS");//红利提成百分比
+                String fruitDoctorCommission = Objects.isNull(bonus.get().getName()) ? "0" : bonus.get().getName();
+                Integer baseAmount = orderDetailResult.getAmountPayable();
+                BigDecimal commissionBD = new BigDecimal(commission);
+                BigDecimal fruitDoctorCommissionBD = new BigDecimal(fruitDoctorCommission);
+                //计算销售提成
+                Integer saleCommission = commissionBD.multiply(new BigDecimal(baseAmount)).intValue();
+                Integer doctorCommission = fruitDoctorCommissionBD.multiply(new BigDecimal(baseAmount)).intValue();
+                DoctorAchievementLog doctorAchievementLog = new DoctorAchievementLog();
+                doctorAchievementLog.setCommission(saleCommission);
+                doctorAchievementLog.setFruitDoctorCommission(doctorCommission);
+                doctorAchievementLog.setOrderId(orderDetailResult.getCode());
+                doctorAchievementLog.setUserId(orderDetailResult.getUserId());
+                doctorAchievementLog.setSourceType(SourceType.ORDER);
+                doctorAchievementLog.setAmount(baseAmount);
+
+                if (Objects.nonNull(doctor)) {
+                    doctorAchievementLog.setDoctorId(doctor.getId());
+                    if (doctorAchievementLogService.create(doctorAchievementLog) < 0) {
+                        log.error("存入失败");
+                    }
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
 }

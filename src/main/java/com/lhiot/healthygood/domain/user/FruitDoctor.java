@@ -183,6 +183,9 @@ public class FruitDoctor{
     @ApiModelProperty(value = "审核通过记录id", dataType = "Long")
     private Long applicationId;
 
+    @ApiModelProperty(value = "openId", dataType = "String")
+    private String openId;
+
     @ApiModelProperty(notes = "每页查询条数(为空或0不分页查所有)", dataType = "Integer")
     private Integer rows;
     @ApiModelProperty(notes = "当前页", dataType = "Integer")

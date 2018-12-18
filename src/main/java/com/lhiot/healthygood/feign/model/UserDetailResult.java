@@ -77,6 +77,9 @@ public class UserDetailResult {
     @ApiModelProperty(value = "鲜果师id", dataType = "Long")
     private Long doctorId;
 
+    @ApiModelProperty(value = "鲜果师能修改的用户备注（争对业务数据表）", dataType = "String")
+    private String remark;
+
 
     private FruitDoctor fruitDoctorInfo;
 

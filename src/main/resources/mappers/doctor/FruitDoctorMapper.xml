@@ -394,7 +394,7 @@
     <select id="findSuperiorFruitDoctorByUserId" resultMap="BaseResultMap"
             parameterType="Long">
         select *
-        from doctor_user t1
+        from doctor_customer t1
         LEFT JOIN fruit_doctor t2 on t1.doctor_id = t2.id
         where t1.user_id = #{id}
     </select>

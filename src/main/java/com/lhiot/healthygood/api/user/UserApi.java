@@ -335,12 +335,19 @@ public class UserApi {
         total.setOrderCountOfThisMonth(Objects.nonNull(thisMonth.getOrderCount())?thisMonth.getOrderCount():0);
 
         //获取用户信息
-        ResponseEntity<UserDetailResult> userDetailResult = baseUserServerFeign.findById(userId);
+        ResponseEntity userDetailResult = baseUserServerFeign.findById(userId);
+        UserDetailResult users = (UserDetailResult) userDetailResult.getBody();
         if (Objects.isNull(userDetailResult) || userDetailResult.getStatusCode().isError()) {
             return userDetailResult;
         }
-        total.setAvatar(userDetailResult.getBody().getAvatar());
-        total.setDescription(userDetailResult.getBody().getDescription());
+        FruitDoctor doctor = fruitDoctorService.selectByUserId(Long.valueOf(users.getId()));
+        if (Objects.nonNull(doctor)) {
+            users.setFruitDoctor(true);
+            users.setFruitDoctorInfo(doctor);
+        }
+        DoctorCustomer doctorCustomer = doctorCustomerService.selectByUserId(userId);
+        users.setRemark(doctorCustomer.getRemark());
+        total.setUserDetailResult(users);
         return ResponseEntity.ok(total);
     }
 

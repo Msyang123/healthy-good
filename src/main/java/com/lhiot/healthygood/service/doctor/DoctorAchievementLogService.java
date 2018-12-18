@@ -14,15 +14,13 @@ import com.lhiot.healthygood.mapper.user.FruitDoctorMapper;
 import com.lhiot.healthygood.type.DateTypeEnum;
 import com.lhiot.healthygood.type.PeriodType;
 import com.lhiot.healthygood.util.DateCalculation;
+import io.swagger.models.auth.In;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.sql.Timestamp;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 
 /**
 * Description:鲜果师业绩记录服务类
@@ -53,7 +51,7 @@ public class DoctorAchievementLogService {
     * @author yijun
     * @date 2018/07/26 12:08:13
     */  
-    public int create(DoctorAchievementLog doctorAchievementLog){
+    /*public int create(DoctorAchievementLog doctorAchievementLog){
     	//红利结算
     	String sourceType = doctorAchievementLog.getSourceType();
     	if("SETTLEMENT".equals(sourceType)){
@@ -94,7 +92,16 @@ public class DoctorAchievementLogService {
     	//写日志
 		doctorAchievementLogMapper.create(sc);
         return this.doctorAchievementLogMapper.create(fc);
-    }
+    }*/
+
+	/**
+	 * 新增业绩记录
+	 * @param doctorAchievementLog
+	 * @return
+	 */
+	public int create(DoctorAchievementLog doctorAchievementLog){
+    	return doctorAchievementLogMapper.create(doctorAchievementLog);
+	}
 
     /** 
     * Description:根据id修改鲜果师业绩记录
@@ -160,6 +167,10 @@ public class DoctorAchievementLogService {
        return Pages.of(total,
               this.doctorAchievementLogMapper.pageDoctorAchievementLogs(doctorBonusLog));
     }
+
+    public Integer doctorAchievementLogCounts(DoctorAchievementLog doctorBonusLog) {
+    	return this.doctorAchievementLogMapper.pageDoctorAchievementLogCounts(doctorBonusLog);
+	}
 
 
     /**
@@ -255,6 +266,15 @@ public class DoctorAchievementLogService {
 	 */
 	public DoctorAchievementLog findByOrderId(Long orderId){
 		return doctorAchievementLogMapper.selectByOrderId(orderId);
+	}
+
+	/**
+	 * 根据鲜果师ids统计一个月的红利
+	 * @param ids
+	 * @return
+	 */
+	public Integer selectFruitDoctorCommission(List<Long> ids){
+		return doctorAchievementLogMapper.selectFruitDoctorCommission(ids);
 	}
 }
 
