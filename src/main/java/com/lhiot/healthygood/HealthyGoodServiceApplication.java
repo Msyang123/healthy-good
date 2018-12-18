@@ -27,14 +27,14 @@ public class HealthyGoodServiceApplication {
 
     @Bean(CustomOrderService.CUSTOM_PLAN_TASK_DLX)
     public Queue dlxQueue(@Qualifier(CustomOrderService.CUSTOM_PLAN_TASK_EXCHANGE) DirectExchange exchange) {
-        return new Queue(CustomOrderService.CUSTOM_PLAN_TASK_DLX, true, true, false,
+        return new Queue(CustomOrderService.CUSTOM_PLAN_TASK_DLX, true, false, false,
                 Maps.of("x-dead-letter-exchange", exchange.getName(), "x-dead-letter-routing-key", CustomOrderService.CUSTOM_PLAN_TASK_RECEIVE)
         );
     }
 
     @Bean(CustomOrderService.CUSTOM_PLAN_TASK_RECEIVE)
     public Queue receiveQueue() {
-        return new Queue(CustomOrderService.CUSTOM_PLAN_TASK_RECEIVE, true, true, false);
+        return new Queue(CustomOrderService.CUSTOM_PLAN_TASK_RECEIVE, true, false, false);
     }
 
     @Bean
@@ -48,21 +48,21 @@ public class HealthyGoodServiceApplication {
     }
 
     /*********************************************************/
-/*    @Bean(CustomOrderService.CUSTOM_PLAN_ORDER_TASK_EXCHANGE)
+    @Bean(CustomOrderService.CUSTOM_PLAN_ORDER_TASK_EXCHANGE)
     public DirectExchange directOrderExchange() {
         return new DirectExchange(CustomOrderService.CUSTOM_PLAN_ORDER_TASK_EXCHANGE, true, false);
     }
 
     @Bean(CustomOrderService.CUSTOM_PLAN_ORDER_TASK_DLX)
     public Queue dlxOrderQueue(@Qualifier(CustomOrderService.CUSTOM_PLAN_ORDER_TASK_EXCHANGE) DirectExchange exchange) {
-        return new Queue(CustomOrderService.CUSTOM_PLAN_ORDER_TASK_DLX, true, true, false,
+        return new Queue(CustomOrderService.CUSTOM_PLAN_ORDER_TASK_DLX, true, false, false,
                 Maps.of("x-dead-letter-exchange", exchange.getName(), "x-dead-letter-routing-key", CustomOrderService.CUSTOM_PLAN_ORDER_TASK_RECEIVE)
         );
     }
 
     @Bean(CustomOrderService.CUSTOM_PLAN_ORDER_TASK_RECEIVE)
     public Queue receiveOrderQueue() {
-        return new Queue(CustomOrderService.CUSTOM_PLAN_ORDER_TASK_RECEIVE, true, true, false);
+        return new Queue(CustomOrderService.CUSTOM_PLAN_ORDER_TASK_RECEIVE, true, false, false);
     }
 
     @Bean
@@ -73,8 +73,7 @@ public class HealthyGoodServiceApplication {
     @Bean
     public Binding receiveOrderBind(@Qualifier(CustomOrderService.CUSTOM_PLAN_ORDER_TASK_EXCHANGE) DirectExchange exchange, @Qualifier(CustomOrderService.CUSTOM_PLAN_ORDER_TASK_RECEIVE) Queue receiveQueue) {
         return BindingBuilder.bind(receiveQueue).to(exchange).with(receiveQueue.getName());
-    }*/
-
+    }
 
     public static void main(String[] args) {
         SpringApplication.run(HealthyGoodServiceApplication.class, args);
