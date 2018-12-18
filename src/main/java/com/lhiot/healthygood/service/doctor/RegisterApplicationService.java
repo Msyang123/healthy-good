@@ -1,7 +1,7 @@
 package com.lhiot.healthygood.service.doctor;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.google.common.collect.ImmutableMap;
+import com.leon.microx.util.BeanUtils;
 import com.leon.microx.util.Jackson;
 import com.leon.microx.util.auditing.Random;
 import com.leon.microx.web.result.Pages;
@@ -22,7 +22,6 @@ import com.lhiot.healthygood.wechat.WeChatUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.AmqpException;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
-import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -30,7 +29,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.text.SimpleDateFormat;
 import java.time.Instant;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Objects;
@@ -177,9 +175,9 @@ public class RegisterApplicationService {
             if (Objects.nonNull(doctor)) {
                 return Tips.warn("该鲜果师已存在，添加失败");
             }
-            // 设置要添加的鲜果师信息
+            // 设置要添加的鲜果师信息 FIXME 代码重复
             FruitDoctor fruitDoctor = new FruitDoctor();
-            BeanUtils.copyProperties(registerApplication, fruitDoctor);
+            BeanUtils.of(registerApplication).populate(fruitDoctor);
             fruitDoctor.setRealName(registerApplication.getRealName());
             fruitDoctor.setInviteCode(Random.of(4, Random.Digits._62));
             fruitDoctor.setDoctorLevel(DoctorLevel.TRAINING.toString());

@@ -41,11 +41,17 @@
         <result column="delivery_address" property="deliveryAddress"/>
         <result column="delivery_time" property="deliveryTime"/>
         <result column="specification_id" property="specificationId"/>
+        <result column="receive_user" property="receiveUser"/>
+        <result column="contact_phone" property="contactPhone"/>
+        <result column="delivery_time" property="deliveryTime"/>
+        <result column="delivery_address" property="deliveryAddress"/>
         <result column="quantity" property="quantity"/>
         <result column="store_code" property="storeCode"/>
         <result column="pay_id" property="payId"/>
         <result column="description" property="description"/>
         <result column="end_extraction_at" property="endExtractionAt"/>
+        <result column="nickname" property="nickname"/>
+        <result column="phone" property="phone"/>
         <association property="customPlan" javaType="com.lhiot.healthygood.domain.customplan.CustomPlan">
             <id column="p_id" property="id"/>
             <result column="p_name" property="name"/>
@@ -264,13 +270,19 @@
     <sql id="Base_Where_Condition">
         <where>
             <if test="id != null ">
-                and id = #{id}
+                and o.id = #{id}
             </if>
             <if test="customOrderCode != null ">
-                and custom_order_code =#{customOrderCode}
+                and o.custom_order_code =#{customOrderCode}
             </if>
             <if test="userId != null ">
-                and user_id =#{userId}
+                and o.user_id =#{userId}
+            </if>
+            <if test="userIds != null and userIds != ''">
+                and o.user_id in
+                <foreach item="item" index="index" collection="userIds.split(',')" open="(" separator="," close=")">
+                    #{item}
+                </foreach>
             </if>
             <if test="status != null">
                 and o.status = #{status}
@@ -284,19 +296,19 @@
             </if>
             and o.status != 'INVALID'
             <if test="contactPhone != null and contactPhone != ''">
-                and contact_phone = #{contactPhone}
+                and o.contact_phone = #{contactPhone}
             </if>
             <if test="quantity != null">
-                and quantity = #{quantity}
+                and o.quantity = #{quantity}
             </if>
             <if test="totalQty != null">
-                and total_qty = #{totalQty}
+                and o.total_qty = #{totalQty}
             </if>
             <if test="beginCreateAt != null">
-                and create_at <![CDATA[ >= ]]> #{beginCreateAt}
+                and o.create_at <![CDATA[ >= ]]> #{beginCreateAt}
             </if>
             <if test="endCreateAt != null">
-                and create_at <![CDATA[ <= ]]> #{endCreateAt}
+                and o.create_at <![CDATA[ <= ]]> #{endCreateAt}
             </if>
         </where>
     </sql>
@@ -327,7 +339,7 @@
 
     <select id="statusCount" resultType="com.lhiot.healthygood.domain.customplan.CustomOrderGroupCount" parameterType="Long">
       select count(1) as waitPaymentCount,
-      (select count(1)from custom_order where user_id= #{0} and status in('CUSTOMING','PAUSE_DELIVERY')) as customingCount
+      (select count(1) from custom_order where user_id= #{0} and status in('CUSTOMING','PAUSE_DELIVERY')) as customingCount
       from custom_order where status='WAIT_PAYMENT' and user_id= #{0}
     </select>
 </mapper>
