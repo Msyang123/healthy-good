@@ -38,11 +38,9 @@
         <result column="plan_id" property="planId"/>
         <result column="price" property="price"/>
         <result column="create_at" property="createAt"/>
-        <result column="delivery_address" property="deliveryAddress"/>
-        <result column="delivery_time" property="deliveryTime"/>
-        <result column="specification_id" property="specificationId"/>
         <result column="receive_user" property="receiveUser"/>
         <result column="contact_phone" property="contactPhone"/>
+        <result column="specification_id" property="specificationId"/>
         <result column="delivery_time" property="deliveryTime"/>
         <result column="delivery_address" property="deliveryAddress"/>
         <result column="quantity" property="quantity"/>
@@ -50,8 +48,6 @@
         <result column="pay_id" property="payId"/>
         <result column="description" property="description"/>
         <result column="end_extraction_at" property="endExtractionAt"/>
-        <result column="nickname" property="nickname"/>
-        <result column="phone" property="phone"/>
         <association property="customPlan" javaType="com.lhiot.healthygood.domain.customplan.CustomPlan">
             <id column="p_id" property="id"/>
             <result column="p_name" property="name"/>
@@ -103,9 +99,9 @@
             o.create_at,
             o.receive_user,
             o.contact_phone,
-            o.delivery_address,
-            o.delivery_time,
             o.specification_id,
+            o.delivery_time,
+            o.delivery_address,
             o.quantity,
             o.store_code,
             o.pay_id,
