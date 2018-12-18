@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.leon.microx.util.BeanUtils;
-import com.lhiot.healthygood.type.IncomeType;
+import com.lhiot.healthygood.type.SourceType;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
@@ -50,7 +50,7 @@ public class DoctorAchievementLog{
     */
     @JsonProperty("orderId")
     @ApiModelProperty(value = "订单编号", dataType = "Long")
-    private Long orderId;
+    private String orderId;
 
     /**
     *业绩金额
@@ -64,7 +64,7 @@ public class DoctorAchievementLog{
     */
     @JsonProperty("sourceType")
     @ApiModelProperty(value = "红利收支类型:订单分成(收入)- ORDER,分销商分成(收入)-SUB_DISTRIBUTOR 红利结算(支出)-SETTLEMENT 客户退款(支出)-REFUND", dataType = "String")
-    private String sourceType;
+    private SourceType sourceType;
 
     /**
     *创建时间
@@ -79,26 +79,24 @@ public class DoctorAchievementLog{
      *销售提成
      */
     @JsonProperty("commission")
-    @ApiModelProperty(value = "销售提成", dataType = "Double")
-    private Double commission;
+    @ApiModelProperty(value = "销售提成", dataType = "Integer")
+    private Integer commission;
 
 
     /**
      *鲜果师提成
      */
     @JsonProperty("fruitDoctorCommission")
-    @ApiModelProperty(value = "鲜果师提成", dataType = "Double")
-    private Double fruitDoctorCommission;
+    @ApiModelProperty(value = "鲜果师提成", dataType = "Integer")
+    private Integer fruitDoctorCommission;
 
-    /**
-     *收入支出类型(INCOME -- 收入，EXPENDITURE – 支出，默认为全部)
-     */
-    @JsonProperty("incomeType")
-    @ApiModelProperty(value = "收入支出类型(INCOME -- 收入，EXPENDITURE – 支出，默认为全部)", dataType = "IncomeType")
-    private IncomeType incomeType;
+
     
     @ApiModelProperty(value = "提成金额，包括鲜果师红利及提成", dataType = "map")
     private Map<String,Object> commissionMap;
+
+    @ApiModelProperty(value = "是否已经结算过红利了", dataType = "Integer")
+    private String settlement;
 
     public DoctorAchievementLog toDoctorBonusLog(){
     	DoctorAchievementLog doctorAchievementLog = new DoctorAchievementLog();

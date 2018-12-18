@@ -23,9 +23,9 @@ public class TeamAchievement {
     private String avatar;
 
     @ApiModelProperty(notes = "加盟时间", dataType = "Date")
-    @JsonProperty("createTime")
+    @JsonProperty("createAt")
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss",timezone = "GMT+8")
-    private Date createTime;
+    private Date createAt;
 
     @ApiModelProperty(notes = "总销售额", dataType = "Long")
     private Long salesAmount;
