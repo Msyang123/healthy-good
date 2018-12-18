@@ -1,5 +1,6 @@
 package com.lhiot.healthygood.service.user;
 
+import com.leon.microx.util.BeanUtils;
 import com.leon.microx.util.auditing.Random;
 import com.leon.microx.web.result.Pages;
 import com.leon.microx.web.result.Tips;
@@ -21,7 +22,6 @@ import com.lhiot.healthygood.type.DoctorLevel;
 import com.lhiot.healthygood.type.DoctorStatus;
 import com.lhiot.healthygood.type.SourceType;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.ResponseEntity;
@@ -76,7 +76,7 @@ public class FruitDoctorService {
             return Tips.warn("该鲜果师已存在，添加失败");
         }
         FruitDoctor fruitDoctor = new FruitDoctor();
-        BeanUtils.copyProperties(registerApplication, fruitDoctor);
+        BeanUtils.of(registerApplication).populate(fruitDoctor);
         this.fruitDoctorMapper.create(fruitDoctor);
         fruitDoctor.setRealName(registerApplication.getRealName());
         fruitDoctor.setInviteCode(Random.of(4, Random.Digits._62));

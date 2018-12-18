@@ -94,6 +94,9 @@
             <if test="pauseEndAt != null ">
                 and pause_end_at <![CDATA[ >= ]]> #{pauseEndAt}
             </if>
+            <if test="operStatus !=null">
+                and oper_status =#{operStatus}
+            </if>
         </where>
 	</select>
 
@@ -106,10 +109,13 @@
                 and custom_order_code = #{customOrderCode}
             </if>
             <if test="pauseBeginAt != null ">
-                and pause_begin_at = #{pauseBeginAt}
+                and pause_begin_at <![CDATA[ <= ]]> #{pauseBeginAt}
             </if>
             <if test="pauseEndAt != null ">
                 and pause_end_at <![CDATA[ >= ]]> #{pauseEndAt}
+            </if>
+            <if test="operStatus !=null">
+                and oper_status =#{operStatus}
             </if>
         </where>
     </select>

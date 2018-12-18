@@ -108,9 +108,9 @@ public class CustomOrderApi {
     }
 
 
-    @PutMapping("/custom-orders/{orderCode}/delivery-suspension")
+    @PutMapping("/custom-orders/{orderCode}/delivery-pause")
     @ApiOperation(value = "修改个人购买计划状态（暂停配送）", response = String.class)
-    public ResponseEntity deliverySuspension(@PathVariable("orderCode") String orderCode, @Valid @RequestBody CustomOrderPause customOrderPause, Sessions.User user) {
+    public ResponseEntity deliveryPause(@PathVariable("orderCode") String orderCode, @Valid @RequestBody CustomOrderPause customOrderPause, Sessions.User user) {
         Long userId = Long.valueOf(user.getUser().get("userId").toString());
         ResponseEntity validateOrderOwner = validateOrderOwner(userId, orderCode);
         if (validateOrderOwner.getStatusCode().isError()) {
