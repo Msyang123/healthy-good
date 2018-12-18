@@ -1,11 +1,10 @@
 package com.lhiot.healthygood.api.commons;
 
-import com.leon.microx.util.DateTime;
 import com.leon.microx.util.StringUtils;
 import com.leon.microx.web.result.Pages;
 import com.leon.microx.web.session.Sessions;
+import com.lhiot.healthygood.domain.customplan.CustomOrderTime;
 import com.lhiot.healthygood.feign.DeliverServiceFeign;
-import com.lhiot.healthygood.feign.model.DeliverTime;
 import com.lhiot.healthygood.feign.model.Store;
 import com.lhiot.healthygood.service.common.CommonService;
 import io.swagger.annotations.Api;
@@ -38,7 +37,6 @@ public class CommonsApi {
 
     private static final LocalTime BEGIN_DELIVER_OF_DAY = LocalTime.parse("08:30:00");
     private static final LocalTime END_DELIVER_OF_DAY = LocalTime.parse("21:30:01");
-    private static final DateTimeFormatter FULL = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
     private static final DateTimeFormatter HOUR_AND_MIN = DateTimeFormatter.ofPattern("HH:mm");
 
@@ -52,8 +50,8 @@ public class CommonsApi {
     @Sessions.Uncheck
     @GetMapping("/custom-plan-delivery/times")
     @ApiOperation(value = "获取订单配送时间 定制订单使用")
-    public ResponseEntity<List<DeliverTime>> times() {
-        List<DeliverTime> times = new ArrayList<>();
+    public ResponseEntity<List<CustomOrderTime>> times() {
+        List<CustomOrderTime> times = new ArrayList<>();
 
         LocalDateTime begin = LocalDate.now().atTime(BEGIN_DELIVER_OF_DAY);
         LocalDateTime latest = LocalDate.now().atTime(END_DELIVER_OF_DAY);
@@ -62,7 +60,7 @@ public class CommonsApi {
         while (latest.compareTo(current) >= 0) {
             LocalDateTime next = current.plusHours(1);
             String display = StringUtils.format("{}-{}", current.format(HOUR_AND_MIN), next.format(HOUR_AND_MIN));
-            times.add(DeliverTime.of(display, DateTime.convert(current), DateTime.convert(next)));
+            times.add(CustomOrderTime.of(display, current.toLocalTime(), next.toLocalTime()));
             current = next;
         }
         return ResponseEntity.ok(times);

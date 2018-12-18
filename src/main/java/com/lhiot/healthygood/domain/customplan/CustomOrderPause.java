@@ -1,6 +1,7 @@
 package com.lhiot.healthygood.domain.customplan;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.lhiot.healthygood.type.OperStatus;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
@@ -29,7 +30,7 @@ public class CustomOrderPause {
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
     private Date pauseBeginAt;
 
-    @ApiModelProperty(notes = "实际暂停结束时间", dataType = "Long", hidden = true)
+    @ApiModelProperty(notes = "实际暂停结束时间,默认与计划暂停结束时间一致，手动恢复修改此值", dataType = "Long", hidden = true)
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
     private Date pauseEndAt;
 
@@ -47,4 +48,7 @@ public class CustomOrderPause {
     @ApiModelProperty(notes = "计划暂停结束时间", dataType = "Long", hidden = true)
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
     private Date planPauseEndAt;
+
+    @ApiModelProperty(notes = "暂停-PAUSE/恢复-RECOVERY操作状态", dataType = "OperStatus")
+    private OperStatus operStatus;
 }
