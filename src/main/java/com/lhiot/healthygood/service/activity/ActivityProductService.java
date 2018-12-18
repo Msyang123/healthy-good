@@ -166,7 +166,7 @@ public class ActivityProductService {
     public Pages<ActivityProductResult> findList(ActivityProductParam param) {
         // 查询活动商品信息
         ActivityProduct activityProduct = new ActivityProduct();
-        BeanUtils.copyProperties(param, activityProduct);
+        BeanUtils.of(param).populate(activityProduct);
         List<ActivityProduct> activityProductList = activityProductMapper.pageActivityProducts(activityProduct);
         boolean pageFlag = Objects.nonNull(param.getPage()) && Objects.nonNull(param.getRows()) && param.getPage() > 0 && param.getRows() > 0;
         int total = pageFlag ? this.count(activityProduct) : activityProductList.size();
@@ -188,9 +188,9 @@ public class ActivityProductService {
         // List<ActivityProduct> 转换为  List<ActivityProductResult>
         activityProductList.forEach(item -> {
             ActivityProductResult activityProductResult = new ActivityProductResult();
-            BeanUtils.copyProperties(item, activityProductResult);
+            BeanUtils.of(item).populate(activityProductResult);
             ProductShelf productShelf = productShelfList.get(activityProductList.indexOf(item));
-            BeanUtils.copyProperties(productShelf, activityProductResult);
+            BeanUtils.of(productShelf).populate(activityProductResult);
             String specification = productShelf.getProductSpecification().getWeight() + productShelf.getProductSpecification().getPackagingUnit() + "*" + productShelf.getProductSpecification().getSpecificationQty() + "份";
             activityProductResult.setSpecification(specification);
             activityProductResult.setBarcode(productShelf.getProductSpecification().getBarcode());

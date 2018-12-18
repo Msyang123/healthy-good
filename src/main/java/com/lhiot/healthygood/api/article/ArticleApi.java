@@ -32,7 +32,7 @@ public class ArticleApi {
     @ApiOperation(value = "查询/搜索文章")
     public ResponseEntity<Pages<Article>> searchArticle(@RequestBody ArticleSearchParam articleSearchParam){
         ArticleParam articleParam = new ArticleParam();
-        BeanUtils.copyProperties(articleSearchParam,articleParam);
+        BeanUtils.of(articleSearchParam).populate(articleParam);
         articleParam.setArticleStatus(ArticleStatus.PUBLISH);
         return baseDataServiceFeign.searchArticle(articleParam);
     }

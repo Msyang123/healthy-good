@@ -27,14 +27,14 @@ public class HealthyGoodServiceApplication {
 
     @Bean(Constants.CUSTOM_PLAN_TASK_DLX)
     public Queue dlxQueue(DirectExchange exchange) {
-        return new Queue(Constants.CUSTOM_PLAN_TASK_DLX, true, true, false,
+        return new Queue(Constants.CUSTOM_PLAN_TASK_DLX, true, false, false,
                 Maps.of("x-dead-letter-exchange", exchange.getName(), "x-dead-letter-routing-key", Constants.CUSTOM_PLAN_TASK_RECEIVE)
         );
     }
 
     @Bean(Constants.CUSTOM_PLAN_TASK_RECEIVE)
     public Queue receiveQueue() {
-        return new Queue(Constants.CUSTOM_PLAN_TASK_RECEIVE, true, true, false);
+        return new Queue(Constants.CUSTOM_PLAN_TASK_RECEIVE, true, false, false);
     }
 
     @Bean
