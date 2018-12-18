@@ -1,7 +1,7 @@
 package com.lhiot.healthygood;
 
 import com.leon.microx.util.Maps;
-import com.lhiot.healthygood.util.Constants;
+import com.lhiot.healthygood.service.customplan.CustomOrderService;
 import org.springframework.amqp.core.Binding;
 import org.springframework.amqp.core.BindingBuilder;
 import org.springframework.amqp.core.DirectExchange;
@@ -20,32 +20,61 @@ import org.springframework.scheduling.annotation.EnableAsync;
 @EnableAsync
 public class HealthyGoodServiceApplication {
 
-    @Bean
+    @Bean(CustomOrderService.CUSTOM_PLAN_TASK_EXCHANGE)
     public DirectExchange directExchange() {
-        return new DirectExchange(Constants.CUSTOM_PLAN_TASK_EXCHANGE, true, false);
+        return new DirectExchange(CustomOrderService.CUSTOM_PLAN_TASK_EXCHANGE, true, false);
     }
 
-    @Bean(Constants.CUSTOM_PLAN_TASK_DLX)
-    public Queue dlxQueue(DirectExchange exchange) {
-        return new Queue(Constants.CUSTOM_PLAN_TASK_DLX, true, true, false,
-                Maps.of("x-dead-letter-exchange", exchange.getName(), "x-dead-letter-routing-key", Constants.CUSTOM_PLAN_TASK_RECEIVE)
+    @Bean(CustomOrderService.CUSTOM_PLAN_TASK_DLX)
+    public Queue dlxQueue(@Qualifier(CustomOrderService.CUSTOM_PLAN_TASK_EXCHANGE) DirectExchange exchange) {
+        return new Queue(CustomOrderService.CUSTOM_PLAN_TASK_DLX, true, true, false,
+                Maps.of("x-dead-letter-exchange", exchange.getName(), "x-dead-letter-routing-key", CustomOrderService.CUSTOM_PLAN_TASK_RECEIVE)
         );
     }
 
-    @Bean(Constants.CUSTOM_PLAN_TASK_RECEIVE)
+    @Bean(CustomOrderService.CUSTOM_PLAN_TASK_RECEIVE)
     public Queue receiveQueue() {
-        return new Queue(Constants.CUSTOM_PLAN_TASK_RECEIVE, true, true, false);
+        return new Queue(CustomOrderService.CUSTOM_PLAN_TASK_RECEIVE, true, true, false);
     }
 
     @Bean
-    public Binding dlxBind(DirectExchange exchange, @Qualifier(Constants.CUSTOM_PLAN_TASK_DLX) Queue dlxQueue) {
+    public Binding dlxBind(@Qualifier(CustomOrderService.CUSTOM_PLAN_TASK_EXCHANGE) DirectExchange exchange, @Qualifier(CustomOrderService.CUSTOM_PLAN_TASK_DLX) Queue dlxQueue) {
         return BindingBuilder.bind(dlxQueue).to(exchange).with(dlxQueue.getName());
     }
 
     @Bean
-    public Binding receiveBind(DirectExchange exchange, @Qualifier(Constants.CUSTOM_PLAN_TASK_RECEIVE) Queue receiveQueue) {
+    public Binding receiveBind(@Qualifier(CustomOrderService.CUSTOM_PLAN_TASK_EXCHANGE) DirectExchange exchange, @Qualifier(CustomOrderService.CUSTOM_PLAN_TASK_RECEIVE) Queue receiveQueue) {
         return BindingBuilder.bind(receiveQueue).to(exchange).with(receiveQueue.getName());
     }
+
+    /*********************************************************/
+/*    @Bean(CustomOrderService.CUSTOM_PLAN_ORDER_TASK_EXCHANGE)
+    public DirectExchange directOrderExchange() {
+        return new DirectExchange(CustomOrderService.CUSTOM_PLAN_ORDER_TASK_EXCHANGE, true, false);
+    }
+
+    @Bean(CustomOrderService.CUSTOM_PLAN_ORDER_TASK_DLX)
+    public Queue dlxOrderQueue(@Qualifier(CustomOrderService.CUSTOM_PLAN_ORDER_TASK_EXCHANGE) DirectExchange exchange) {
+        return new Queue(CustomOrderService.CUSTOM_PLAN_ORDER_TASK_DLX, true, true, false,
+                Maps.of("x-dead-letter-exchange", exchange.getName(), "x-dead-letter-routing-key", CustomOrderService.CUSTOM_PLAN_ORDER_TASK_RECEIVE)
+        );
+    }
+
+    @Bean(CustomOrderService.CUSTOM_PLAN_ORDER_TASK_RECEIVE)
+    public Queue receiveOrderQueue() {
+        return new Queue(CustomOrderService.CUSTOM_PLAN_ORDER_TASK_RECEIVE, true, true, false);
+    }
+
+    @Bean
+    public Binding dlxOrderBind(@Qualifier(CustomOrderService.CUSTOM_PLAN_ORDER_TASK_EXCHANGE) DirectExchange exchange, @Qualifier(CustomOrderService.CUSTOM_PLAN_ORDER_TASK_DLX) Queue dlxQueue) {
+        return BindingBuilder.bind(dlxQueue).to(exchange).with(dlxQueue.getName());
+    }
+
+    @Bean
+    public Binding receiveOrderBind(@Qualifier(CustomOrderService.CUSTOM_PLAN_ORDER_TASK_EXCHANGE) DirectExchange exchange, @Qualifier(CustomOrderService.CUSTOM_PLAN_ORDER_TASK_RECEIVE) Queue receiveQueue) {
+        return BindingBuilder.bind(receiveQueue).to(exchange).with(receiveQueue.getName());
+    }*/
+
 
     public static void main(String[] args) {
         SpringApplication.run(HealthyGoodServiceApplication.class, args);
