@@ -29,5 +29,8 @@ public interface CustomOrderPauseMapper {
 
     CustomOrderPause selectCustomOrderPause(CustomOrderPause customOrderCode);
 
+    CustomOrderPause selectBeginEqCustomOrderPause(CustomOrderPause customOrderCode);
+
+
 
 }
