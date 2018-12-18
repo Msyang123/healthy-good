@@ -1,6 +1,7 @@
 package com.lhiot.healthygood.service.doctor;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.leon.microx.util.BeanUtils;
 import com.leon.microx.util.Jackson;
 import com.leon.microx.util.auditing.Random;
 import com.leon.microx.web.result.Pages;
@@ -16,11 +17,11 @@ import com.lhiot.healthygood.mapper.user.DoctorCustomerMapper;
 import com.lhiot.healthygood.mapper.user.FruitDoctorMapper;
 import com.lhiot.healthygood.type.*;
 import com.lhiot.healthygood.util.DataItem;
+import com.lhiot.healthygood.util.DataObject;
 import com.lhiot.healthygood.wechat.WeChatUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.AmqpException;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
-import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -28,7 +29,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.text.SimpleDateFormat;
 import java.time.Instant;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Objects;
@@ -128,7 +128,28 @@ public class RegisterApplicationService {
         keywordValue.setUserId(doctors.getUserId());
         TemplateMessageEnum.APPLY_FRUIT_DOCTOR.setTouser("oKqRHwWwu21I9vb8NXFVaecsCN3o");
 
-            weChatUtil.sendMessageToWechat(TemplateMessageEnum.UPGRADE_FRUIT_DOCTOR,"oKqRHwWwu21I9vb8NXFVaecsCN3o",keywordValue);
+        DataItem dataItem = new DataItem();
+        DataObject first = new DataObject();
+        DataObject keyword1 = new DataObject();
+        DataObject keyword2 = new DataObject();
+        DataObject keyword3 = new DataObject();
+        DataObject keyword4 = new DataObject();
+        DataObject remark = new DataObject();
+        first.setValue(TemplateMessageEnum.UPGRADE_FRUIT_DOCTOR.getTemplateName());
+        keyword1.setValue("明星鲜果师");
+        keyword2.setValue("成功");
+        keyword3.setValue(currentTime);
+        keyword4.setValue("如有疑问请致电0731-85240088");
+        remark.setValue("如有疑问请致电0731-85240088");
+
+        dataItem.setFirst(first);
+        dataItem.setKeyword1(keyword1);
+        dataItem.setKeyword2(keyword2);
+        dataItem.setKeyword3(keyword3);
+        dataItem.setKeyword4(keyword4);
+        dataItem.setRemark(remark);
+
+            weChatUtil.sendMessageToWechat(TemplateMessageEnum.UPGRADE_FRUIT_DOCTOR,"oKqRHwWwu21I9vb8NXFVaecsCN3o",dataItem);
      //   }
         return result>0 ? Tips.info("修改成功") : Tips.warn("修改失败");
     }
@@ -154,9 +175,9 @@ public class RegisterApplicationService {
             if (Objects.nonNull(doctor)) {
                 return Tips.warn("该鲜果师已存在，添加失败");
             }
-            // 设置要添加的鲜果师信息
+            // 设置要添加的鲜果师信息 FIXME 代码重复
             FruitDoctor fruitDoctor = new FruitDoctor();
-            BeanUtils.copyProperties(registerApplication, fruitDoctor);
+            BeanUtils.of(registerApplication).populate(fruitDoctor);
             fruitDoctor.setRealName(registerApplication.getRealName());
             fruitDoctor.setInviteCode(Random.of(4, Random.Digits._62));
             fruitDoctor.setDoctorLevel(DoctorLevel.TRAINING.toString());

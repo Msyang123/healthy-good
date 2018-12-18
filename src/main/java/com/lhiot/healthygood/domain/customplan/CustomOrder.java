@@ -2,6 +2,8 @@ package com.lhiot.healthygood.domain.customplan;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import com.lhiot.healthygood.type.CustomOrderBuyType;
 import com.lhiot.healthygood.type.CustomOrderStatus;
 import io.swagger.annotations.ApiModel;
@@ -23,12 +25,16 @@ public class CustomOrder {
 
     private String customOrderCode;
 
+    @JsonSerialize(using = ToStringSerializer.class)
     private Long userId;
+
+    @ApiModelProperty(notes = "用户ID(多个以英文逗号分隔)", dataType = "String")
+    private String userIds;
 
     @ApiModelProperty(notes = "WAIT_PAYMENT待付款、INVALID已失效、PAUSE_DELIVERY暂停配送、CUSTOMING定制中、FINISHED已结束", dataType = "CustomOrderStatus")
     private CustomOrderStatus status;
 
-    @ApiModelProperty(notes = "WAIT_PAYMENT待付款、INVALID已失效、PAUSE_DELIVERY暂停配送、CUSTOMING定制中、FINISHED已结束", dataType = "String[]")
+    @ApiModelProperty(notes = "WAIT_PAYMENT待付款、INVALID已失效、PAUSE_DELIVERY暂停配送、CUSTOMING定制中、FINISHED已结束", dataType = "String[]", readOnly = true)
     private String[] statusIn;
 
     @ApiModelProperty(value = "剩余配送次数",dataType = "Integer")

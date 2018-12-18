@@ -42,6 +42,7 @@ public class ContentApi {
     @ApiOperation(value = "用户反馈" )
     public ResponseEntity feedback(Sessions.User user, @RequestBody Feedback feedback){
         feedback.setUserId(Long.valueOf(user.getUser().get("userId").toString()));
+        feedback.setApplicationType("HEALTH_GOOD");
         return contentServiceFeign.create(feedback);
     }
 }

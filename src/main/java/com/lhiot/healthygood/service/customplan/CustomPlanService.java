@@ -57,7 +57,7 @@ public class CustomPlanService {
         if (Objects.isNull(customPlan)) {
             return result;
         }
-        BeanUtils.copyProperties(customPlan, result);
+        BeanUtils.of(customPlan).populate(result);
         List<CustomPlanPeriodResult> customPlanPeriodResultList = getCustomPlanPeriodResultList(id);
         result.setPeriodList(customPlanPeriodResultList);
         result.setPrice(customPlanSpecificationMapper.findMinPriceByPlanId(id));//最低定制规格价格
@@ -100,7 +100,7 @@ public class CustomPlanService {
         if (productShelfTips.err()) {
             customPlanProducts.forEach(customPlanProduct -> {
                 CustomPlanProductResult customPlanProductResult = new CustomPlanProductResult();
-                BeanUtils.copyProperties(customPlanProduct, customPlanProductResult);
+                BeanUtils.of(customPlanProduct).populate(customPlanPeriodResult);
                 customPlanProductResults.add(customPlanProductResult);
             });
             customPlanPeriodResult.setProducts(customPlanProductResults);
@@ -115,10 +115,9 @@ public class CustomPlanService {
                 .filter(productShelf -> Objects.equals(customPlanProduct.getProductShelfId(), productShelf.getId()))
                 .forEach(item -> {
                     CustomPlanProductResult customPlanProductResult = new CustomPlanProductResult();
-                    BeanUtils.copyProperties(customPlanProduct, customPlanProductResult);
+                    BeanUtils.of(customPlanProduct).populate(customPlanPeriodResult);
                     customPlanProductResult.setImage(item.getImage());//设置上架图
                     customPlanProductResult.setProductName(item.getName());//设置上架名称
-
                     if (Objects.nonNull(item.getProductSpecification())) {
                         Tips<Product> productTips = FeginResponseTools.convertResponse(baseDataServiceFeign.single(item.getProductSpecification().getProductId()));//查询商品益处
                         if (!productTips.err()) {
@@ -161,7 +160,7 @@ public class CustomPlanService {
 
         customPlans.forEach(item -> {
             CustomPlanResult customPlanResult = new CustomPlanResult();
-            BeanUtils.copyProperties(item, customPlanResult);
+            BeanUtils.of(item).populate(customPlanResult);
             // 查询定制计划规格信息
             List<CustomPlanSpecification> customPlanSpecification = customPlanSpecificationMapper.findByPlanIdAndPerid(Maps.of("planId", item.getId(), "planPeriod", null));
             customPlanResult.setCustomPlanSpecifications(customPlanSpecification);
@@ -183,7 +182,7 @@ public class CustomPlanService {
             return Tips.warn("定制计划名称重复，添加失败");
         }
         CustomPlan customPlan = new CustomPlan();
-        BeanUtils.copyProperties(customPlanDetailResult, customPlan);
+        BeanUtils.of(customPlanDetailResult).populate(customPlan);
         customPlan.setCreateAt(Date.from(Instant.now()));
         boolean addCustomPlan = customPlanMapper.create(customPlan) > 0;
 
@@ -240,7 +239,7 @@ public class CustomPlanService {
                 List<CustomPlanProduct> customPlanProductList = new ArrayList<>();
                 planProductResultList.forEach(productResult -> {
                     CustomPlanProduct planProduct = new CustomPlanProduct();
-                    BeanUtils.copyProperties(productResult, planProduct);
+                    BeanUtils.of(productResult).populate(planProduct);
                     planProduct.setPlanPeriod(planPeriod);
                     planProduct.setPlanId(customPlanId);
                     // 第几天排序为几
@@ -265,7 +264,7 @@ public class CustomPlanService {
      */
     public Tips update(Long id, CustomPlanDetailResult customPlanDetailResult) {
         CustomPlan customPlan = new CustomPlan();
-        BeanUtils.copyProperties(customPlanDetailResult, customPlan);
+        BeanUtils.of(customPlanDetailResult).populate(customPlan);
         customPlan.setId(id);
         customPlan.setCreateAt(Date.from(Instant.now()));
         boolean updateCustomPlan = customPlanMapper.updateById(customPlan) > 0;
@@ -307,7 +306,7 @@ public class CustomPlanService {
                 List<CustomPlanProduct> customPlanProductList = new ArrayList<>();
                 planProductResultList.forEach(productResult -> {
                     CustomPlanProduct planProduct = new CustomPlanProduct();
-                    BeanUtils.copyProperties(productResult, planProduct);
+                    BeanUtils.of(productResult).populate(planProduct);
                     planProduct.setPlanPeriod(planPeriod);
                     planProduct.setPlanId(id);
                     // 第几天排序为几
@@ -349,7 +348,7 @@ public class CustomPlanService {
                 List<CustomPlanProduct> customPlanProductList = new ArrayList<>();
                 planProductResultList.forEach(productResult -> {
                     CustomPlanProduct planProduct = new CustomPlanProduct();
-                    BeanUtils.copyProperties(productResult, planProduct);
+                    BeanUtils.of(productResult).populate(planProduct);
                     planProduct.setPlanPeriod(planPeriod);
                     planProduct.setPlanId(id);
                     // 第几天排序为几
