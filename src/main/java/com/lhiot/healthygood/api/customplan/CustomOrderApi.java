@@ -241,7 +241,6 @@ public class CustomOrderApi {
             return ResponseEntity.badRequest().body(tips.getMessage());
         }
         CustomOrder customOrder = tips.getData();
-
         // 查找用户信息
         ResponseEntity<UserDetailResult> userEntity = baseUserServerFeign.findById(customOrder.getUserId());
         if (userEntity.getStatusCode().isError()) {
