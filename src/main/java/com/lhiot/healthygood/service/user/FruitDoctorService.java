@@ -76,7 +76,7 @@ public class FruitDoctorService {
             return Tips.warn("该鲜果师已存在，添加失败");
         }
         FruitDoctor fruitDoctor = new FruitDoctor();
-        BeanUtils.of(registerApplication).populate(fruitDoctor);
+        BeanUtils.copyProperties(registerApplication, fruitDoctor);
         this.fruitDoctorMapper.create(fruitDoctor);
         fruitDoctor.setRealName(registerApplication.getRealName());
         fruitDoctor.setInviteCode(Random.of(4, Random.Digits._62));
