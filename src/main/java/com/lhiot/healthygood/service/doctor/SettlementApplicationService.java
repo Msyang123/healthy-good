@@ -4,13 +4,16 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.leon.microx.util.Jackson;
 import com.leon.microx.web.result.Pages;
 import com.leon.microx.web.result.Tips;
+import com.lhiot.healthygood.domain.doctor.DoctorAchievementLog;
 import com.lhiot.healthygood.domain.doctor.SettlementApplication;
 import com.lhiot.healthygood.domain.user.FruitDoctor;
 import com.lhiot.healthygood.domain.user.KeywordValue;
+import com.lhiot.healthygood.mapper.doctor.DoctorAchievementLogMapper;
 import com.lhiot.healthygood.mapper.doctor.SettlementApplicationMapper;
 import com.lhiot.healthygood.mapper.user.FruitDoctorMapper;
 import com.lhiot.healthygood.type.FruitDoctorOrderExchange;
 import com.lhiot.healthygood.type.SettlementStatus;
+import com.lhiot.healthygood.type.SourceType;
 import com.lhiot.healthygood.type.TemplateMessageEnum;
 import org.springframework.amqp.AmqpException;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
@@ -39,12 +42,14 @@ public class SettlementApplicationService {
     private final SettlementApplicationMapper settlementApplicationMapper;
     private final FruitDoctorMapper fruitDoctorMapper;
     private final RabbitTemplate rabbit;
+    private final DoctorAchievementLogMapper doctorAchievementLogMapper;
 
     @Autowired
-    public SettlementApplicationService(SettlementApplicationMapper settlementApplicationMapper, FruitDoctorMapper fruitDoctorMapper, RabbitTemplate rabbit) {
+    public SettlementApplicationService(SettlementApplicationMapper settlementApplicationMapper, FruitDoctorMapper fruitDoctorMapper, RabbitTemplate rabbit, DoctorAchievementLogMapper doctorAchievementLogMapper) {
         this.settlementApplicationMapper = settlementApplicationMapper;
         this.fruitDoctorMapper = fruitDoctorMapper;
         this.rabbit = rabbit;
+        this.doctorAchievementLogMapper = doctorAchievementLogMapper;
     }
 
     /**
@@ -98,6 +103,16 @@ public class SettlementApplicationService {
             boolean balanceUpdated = fruitDoctorMapper.updateById(findFruitDoctor) > 0;
             if (!balanceUpdated) {
                 return Tips.warn("扣减鲜果师可结算金额失败");
+            }
+            DoctorAchievementLog doctorAchievementLog = new DoctorAchievementLog();
+            doctorAchievementLog.setDoctorId(settlementApplication.getDoctorId());
+            doctorAchievementLog.setUserId(findFruitDoctor.getUserId());
+            doctorAchievementLog.setAmount(-settlementApplication.getAmount());
+            doctorAchievementLog.setSourceType(SourceType.SETTLEMENT);
+            doctorAchievementLog.setCreateAt(Date.from(Instant.now()));
+            boolean addDoctorAchievementLog = doctorAchievementLogMapper.create(doctorAchievementLog) > 0;
+            if (!addDoctorAchievementLog) {
+                return Tips.warn("写鲜果师业绩记录失败");
             }
         }
         boolean settlementUpdated = settlementApplicationMapper.updateById(settlementApplication) > 0;

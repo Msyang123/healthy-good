@@ -1,6 +1,5 @@
 package com.lhiot.healthygood.service.activity;
 
-import com.google.common.base.Joiner;
 import com.leon.microx.util.BeanUtils;
 import com.leon.microx.util.Maps;
 import com.leon.microx.util.StringUtils;
@@ -38,7 +37,7 @@ import java.util.stream.Collectors;
 * @date 2018/11/24
 */
 @Service
-@Transactional
+@Transactional(rollbackFor = Exception.class)
 public class ActivityProductService {
 
     private final ActivityProductMapper activityProductMapper;
@@ -72,7 +71,7 @@ public class ActivityProductService {
         // 添加活动商品
         boolean addActivityProduct = activityProductMapper.create(activityProduct) > 0;
         if (!addActivityProduct) {
-            Tips.warn("添加活动商品失败！");
+            return Tips.warn("添加活动商品失败！");
         }
         // 添加上架商品与新品尝鲜板块的关联
         if (Objects.equals(YesOrNo.YES, activityProduct.getRelationSection())){
@@ -81,13 +80,9 @@ public class ActivityProductService {
             // 一个定制板块活动只会关联一个商品板块,如果有多个活动则要修改
             ActivitySectionRelation relation = activitySectionRelationMapper.selectRelation(Maps.of("activityId", activityId));
             // 根据板块id和上架id在基础服务中添加关联关系
-            Long sectionId = relation.getSectionId();
-            ProductSectionRelation productSectionRelation = new ProductSectionRelation();
-            productSectionRelation.setSectionId(sectionId);
-            productSectionRelation.setShelfId(productShelfId);
-            ResponseEntity entity = baseDataServiceFeign.create(productSectionRelation);
+            ResponseEntity entity = baseDataServiceFeign.create(new ProductSectionRelation(null, relation.getSectionId(), productShelfId));
             if (entity.getStatusCode().isError()) {
-                return Tips.warn(entity.getBody().toString());
+                return Tips.warn((String) entity.getBody());
             }
         }
         return Tips.info(activityProduct.getId() + "");
@@ -113,25 +108,20 @@ public class ActivityProductService {
 
         boolean updateActivityProduct = activityProductMapper.updateById(activityProduct) > 0;
         if (!updateActivityProduct) {
-            Tips.warn("修改活动商品失败");
+            return Tips.warn("修改活动商品失败");
         }
         // 修改上架商品与新品尝鲜板块的关联
         // 先删除 再新增
         @NotNull(message = "活动id不为空") Long activityId = activityProduct.getActivityId();
         // 一个定制板块活动只会关联一个商品板块,如果有多个活动则要修改
         ActivitySectionRelation relation = activitySectionRelationMapper.selectRelation(Maps.of("activityId", activityId));
-        Long sectionId = relation.getSectionId();
-        Long shelfId = activityProduct.getProductShelfId();
-        ResponseEntity deleteEntity = baseDataServiceFeign.deleteBatch(sectionId, beforeShelfId.toString());
+        ResponseEntity deleteEntity = baseDataServiceFeign.deleteBatch(relation.getSectionId(), beforeShelfId.toString());
         if (deleteEntity.getStatusCode().isError()) {
-            return Tips.warn(deleteEntity.getBody().toString());
+            return Tips.warn((String) deleteEntity.getBody());
         }
-        ProductSectionRelation productSectionRelation = new ProductSectionRelation();
-        productSectionRelation.setSectionId(sectionId);
-        productSectionRelation.setShelfId(shelfId);
-        ResponseEntity addEntity = baseDataServiceFeign.create(productSectionRelation);
+        ResponseEntity addEntity = baseDataServiceFeign.create(new ProductSectionRelation(null, relation.getSectionId(), activityProduct.getProductShelfId()));
         if (addEntity.getStatusCode().isError()) {
-            return Tips.warn(addEntity.getBody().toString());
+            return Tips.warn((String) addEntity.getBody());
         }
         return Tips.info("修改活动商品成功");
     }
@@ -148,21 +138,23 @@ public class ActivityProductService {
         // 删除上架商品与新品尝鲜板块的关联
         // 根据商品id查找活动ids
         List<ActivityProduct> activityProducts = activityProductMapper.selectByIds(ids);
+        if (CollectionUtils.isEmpty(activityProducts)) {
+            return Tips.empty();
+        }
         List<Long> productShelfIdList = activityProducts.stream().map(ActivityProduct::getProductShelfId).collect(Collectors.toList());
         // 新品尝鲜活动商品现在只关联一个活动id（现在只有一期新品尝鲜活动id）
         List<Long> activityIdList = activityProducts.stream().map(ActivityProduct::getActivityId).collect(Collectors.toList());
         Long activityId = activityIdList.get(0);
         ActivitySectionRelation relation = activitySectionRelationMapper.selectRelation(Maps.of("activityId", activityId));
-        String shelfIds = Joiner.on(",").join(productShelfIdList);
+        String shelfIds = StringUtils.collectionToDelimitedString(productShelfIdList, ",");
         ResponseEntity deleteEntity = baseDataServiceFeign.deleteBatch(relation.getSectionId(), shelfIds);
         if (deleteEntity.getStatusCode().isError()) {
-            Tips.warn(deleteEntity.getBody().toString());
+            return Tips.warn((String) deleteEntity.getBody());
         }
-
         // 删除活动商品
         boolean batchDelete = activityProductMapper.deleteByIds(Arrays.asList(ids.split(","))) > 0;
         if (!batchDelete) {
-            Tips.warn("批量删除活动商品失败");
+            return Tips.warn("批量删除活动商品失败");
         }
         return Tips.info("删除成功");
     }
