@@ -151,7 +151,7 @@ public class RegisterApplicationService {
             }
             // 设置要添加的鲜果师信息 FIXME 代码重复
             FruitDoctor fruitDoctor = new FruitDoctor();
-            BeanUtils.of(registerApplication).populate(fruitDoctor);
+            BeanUtils.copyProperties(registerApplication, fruitDoctor);
             fruitDoctor.setRealName(registerApplication.getRealName());
             fruitDoctor.setInviteCode(Random.of(4, Random.Digits._62));
             fruitDoctor.setDoctorLevel(DoctorLevel.TRAINING.toString());

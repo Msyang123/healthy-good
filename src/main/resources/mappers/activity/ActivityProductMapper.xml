@@ -142,7 +142,7 @@
     <!-- 根据新品尝鲜活动id和商品上架id查找活动商品 -->
     <select id="selectBySpecialIdAndShelfId" resultMap="BaseResultMap"
             parameterType="long"> select <include refid="Base_Column_List" />
-        from activity_product where special_product_activity_id = #{specialProductActivityId} and product_shelf_id = #{productShelfId}
+        from activity_product where special_product_activity_id = #{specialProductActivityId} and product_shelf_id = #{shelfId}
     </select>
 
     <!-- base where条件  -->
