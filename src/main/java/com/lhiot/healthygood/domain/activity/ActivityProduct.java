@@ -79,7 +79,7 @@ public class ActivityProduct {
     private Integer sort;
 
     @JsonProperty("productShelfIds")
-    @ApiModelProperty(value = "", dataType = "String")
+    @ApiModelProperty(value = "上架ids，用英文逗号分隔", dataType = "String")
     private String productShelfIds;
 
 
