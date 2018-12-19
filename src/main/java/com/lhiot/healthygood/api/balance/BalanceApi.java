@@ -15,6 +15,7 @@ import com.lhiot.healthygood.feign.type.ApplicationType;
 import com.lhiot.healthygood.feign.type.PayType;
 import com.lhiot.healthygood.feign.type.SourceType;
 import com.lhiot.healthygood.service.customplan.CustomOrderService;
+import com.lhiot.healthygood.service.user.FruitDoctorService;
 import com.lhiot.healthygood.type.CustomOrderStatus;
 import com.lhiot.healthygood.util.RealClientIp;
 import io.swagger.annotations.Api;
@@ -41,13 +42,15 @@ public class BalanceApi {
     private final OrderServiceFeign orderServiceFeign;
     private final HealthyGoodConfig.WechatPayConfig wechatPayConfig;
     private final CustomOrderService customOrderService;
+    private final FruitDoctorService fruitDoctorService;
 
     @Autowired
-    public BalanceApi(PaymentServiceFeign paymentServiceFeign, OrderServiceFeign orderServiceFeign, HealthyGoodConfig healthyGoodConfig, CustomOrderService customOrderService) {
+    public BalanceApi(PaymentServiceFeign paymentServiceFeign, OrderServiceFeign orderServiceFeign, HealthyGoodConfig healthyGoodConfig, CustomOrderService customOrderService, FruitDoctorService fruitDoctorService) {
         this.paymentServiceFeign = paymentServiceFeign;
         this.orderServiceFeign = orderServiceFeign;
         this.wechatPayConfig = healthyGoodConfig.getWechatPay();
         this.customOrderService = customOrderService;
+        this.fruitDoctorService = fruitDoctorService;
     }
 
     @PostMapping("/recharge/payment-sign")
@@ -109,6 +112,12 @@ public class BalanceApi {
             log.error("修改为已支付失败{}", updateOrderToPayed);
             return ResponseEntity.badRequest().body("修改为已支付失败");
         }
+        ResponseEntity orderDetailResultResponseEntity = orderServiceFeign.orderDetail(balancePayModel.getOrderCode(), false, false);
+        if (orderDetailResultResponseEntity.getStatusCode().isError()){
+            return ResponseEntity.badRequest().body(orderDetailResultResponseEntity.getBody());
+        }
+        OrderDetailResult order = (OrderDetailResult) orderDetailResultResponseEntity.getBody();
+        fruitDoctorService.calculationCommission(order);//鲜果师业绩提成
         return ResponseEntity.ok(orderDetailResult);
     }
 
