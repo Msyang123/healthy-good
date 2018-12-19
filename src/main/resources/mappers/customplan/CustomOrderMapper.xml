@@ -8,6 +8,8 @@
         <id column="id" property="id"/>
         <result column="custom_order_code" property="customOrderCode"/>
         <result column="user_id" property="userId"/>
+        <result column="nickname" property="nickname"/>
+        <result column="phone" property="phone"/>
         <result column="status" property="status"/>
         <result column="remaining_qty" property="remainingQty"/>
         <result column="delivery_type" property="deliveryType"/>
@@ -31,6 +33,8 @@
         <id column="id" property="id"/>
         <result column="custom_order_code" property="customOrderCode"/>
         <result column="user_id" property="userId"/>
+        <result column="nickname" property="nickname"/>
+        <result column="phone" property="phone"/>
         <result column="status" property="status"/>
         <result column="remaining_qty" property="remainingQty"/>
         <result column="delivery_type" property="deliveryType"/>
@@ -64,6 +68,8 @@
             id,
             custom_order_code,
             user_id,
+            nickname,
+            phone,
             status,
             remaining_qty,
             delivery_type,
@@ -90,6 +96,8 @@
             o.id,
             o.custom_order_code,
             o.user_id,
+            o.nickname,
+            o.phone,
             o.status,
             o.remaining_qty,
             o.delivery_type,
@@ -268,10 +276,10 @@
             <if test="id != null ">
                 and o.id = #{id}
             </if>
-            <if test="customOrderCode != null ">
-                and o.custom_order_code =#{customOrderCode}
+            <if test="customOrderCode != null and customOrderCode != ''">
+                and o.custom_order_code like concat('%',#{customOrderCode}, '%')
             </if>
-            <if test="userId != null ">
+            <if test="userId != null and userId != ''">
                 and o.user_id =#{userId}
             </if>
             <if test="userIds != null and userIds != ''">
@@ -279,6 +287,9 @@
                 <foreach item="item" index="index" collection="userIds.split(',')" open="(" separator="," close=")">
                     #{item}
                 </foreach>
+            </if>
+            <if test="phone != null and phone != ''">
+                and o.phone like concat('%',#{phone}, '%')
             </if>
             <if test="status != null">
                 and o.status = #{status}
@@ -294,10 +305,10 @@
             <if test="contactPhone != null and contactPhone != ''">
                 and o.contact_phone = #{contactPhone}
             </if>
-            <if test="quantity != null">
+            <if test="quantity != null and quantity != 0">
                 and o.quantity = #{quantity}
             </if>
-            <if test="totalQty != null">
+            <if test="totalQty != null and totalQty != 0">
                 and o.total_qty = #{totalQty}
             </if>
             <if test="beginCreateAt != null">
