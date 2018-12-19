@@ -43,4 +43,7 @@ public class ActivityProductResult {
     private Integer price;
     @ApiModelProperty(notes = "原价", dataType = "Integer")
     private Integer originalPrice;
+
+    @ApiModelProperty(notes = "上架商品信息（排毒养颜套餐  1盒*1份  [00815]）", dataType = "String", readOnly = true)
+    private String specificationInfo;
 }
