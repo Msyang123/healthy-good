@@ -43,9 +43,7 @@
             <if test="orderCode != null ">
                 order_code,
             </if>
-            <if test="createAt != null ">
                 create_at,
-            </if>
             <if test="activityId != null ">
                 activity_id,
             </if>
@@ -66,9 +64,7 @@
             <if test="orderCode != null ">
                 #{orderCode},
             </if>
-            <if test="createAt != null ">
-                #{createAt},
-            </if>
+                now(),
             <if test="activityId != null ">
                 #{activityId},
             </if>
