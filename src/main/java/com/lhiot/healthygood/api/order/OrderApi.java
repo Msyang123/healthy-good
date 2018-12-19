@@ -282,7 +282,7 @@ public class OrderApi {
                 break;
 
         }
-
+            fruitDoctorService.calculationCommission(orderDetailResult);
         return refundOrderTips;
     }
 

@@ -259,38 +259,43 @@ public class FruitDoctorService {
     public void calculationCommission(OrderDetailResult orderDetailResult) {
         try {
             FruitDoctor doctor = this.findSuperiorFruitDoctorByUserId(orderDetailResult.getUserId());//查询用户的上级鲜果师
+            if (Objects.isNull(doctor)){
+                return;
+            }
+            Optional<Dictionary.Entry> salesCommissions = customPlanService.dictionaryOptional("commissions").get().entry("SALES_COMMISSIONS");//销售提成百分比
+            String commission = Objects.isNull(salesCommissions.get().getName()) ? "0" : salesCommissions.get().getName();
+            Optional<Dictionary.Entry> bonus = customPlanService.dictionaryOptional("commissions").get().entry("BONUS");//红利提成百分比
+            String fruitDoctorCommission = Objects.isNull(bonus.get().getName()) ? "0" : bonus.get().getName();
+            Integer baseAmount = orderDetailResult.getAmountPayable();
+            BigDecimal commissionBD = new BigDecimal(commission);
+            BigDecimal fruitDoctorCommissionBD = new BigDecimal(fruitDoctorCommission);
+            //计算销售提成
+            Integer saleCommission = commissionBD.multiply(new BigDecimal(baseAmount)).intValue();
+            Integer doctorCommission = fruitDoctorCommissionBD.multiply(new BigDecimal(baseAmount)).intValue();
+            DoctorAchievementLog doctorAchievementLog = new DoctorAchievementLog();
+            doctorAchievementLog.setCommission(saleCommission);
+            doctorAchievementLog.setFruitDoctorCommission(doctorCommission);
+            doctorAchievementLog.setOrderId(orderDetailResult.getCode());
+            doctorAchievementLog.setUserId(orderDetailResult.getUserId());
+            doctorAchievementLog.setAmount(baseAmount);
+            doctorAchievementLog.setDoctorId(doctor.getId());
+
             DoctorAchievementLog logParam = new DoctorAchievementLog();
             logParam.setDoctorId(doctor.getId());
             logParam.setOrderId(orderDetailResult.getCode());
-            Integer counts = doctorAchievementLogService.doctorAchievementLogCounts(logParam);
+            if (Objects.equals(OrderStatus.WAIT_SEND_OUT, orderDetailResult.getStatus()) || Objects.equals(OrderStatus.DISPATCHING, orderDetailResult.getStatus())) {
+                logParam.setSourceType(SourceType.ORDER);
+                doctorAchievementLog.setSourceType(SourceType.ORDER);
+            }else if (Objects.equals(OrderStatus.ALREADY_RETURN,orderDetailResult.getStatus())){
+                doctorAchievementLog.setSourceType(SourceType.REFUND);
+                logParam.setSourceType(SourceType.REFUND);
+            }
+            Integer counts = doctorAchievementLogService.doctorAchievementLogCounts(logParam);//等幂操作，是否存在记录
             if (counts > 0) {
                 return;
             }
-            if (Objects.equals(OrderStatus.WAIT_SEND_OUT, orderDetailResult.getStatus()) || Objects.equals(OrderStatus.DISPATCHING, orderDetailResult.getStatus())) {
-                Optional<Dictionary.Entry> salesCommissions = customPlanService.dictionaryOptional("commissions").get().entry("SALES_COMMISSIONS");//销售提成百分比
-                String commission = Objects.isNull(salesCommissions.get().getName()) ? "0" : salesCommissions.get().getName();
-                Optional<Dictionary.Entry> bonus = customPlanService.dictionaryOptional("commissions").get().entry("BONUS");//红利提成百分比
-                String fruitDoctorCommission = Objects.isNull(bonus.get().getName()) ? "0" : bonus.get().getName();
-                Integer baseAmount = orderDetailResult.getAmountPayable();
-                BigDecimal commissionBD = new BigDecimal(commission);
-                BigDecimal fruitDoctorCommissionBD = new BigDecimal(fruitDoctorCommission);
-                //计算销售提成
-                Integer saleCommission = commissionBD.multiply(new BigDecimal(baseAmount)).intValue();
-                Integer doctorCommission = fruitDoctorCommissionBD.multiply(new BigDecimal(baseAmount)).intValue();
-                DoctorAchievementLog doctorAchievementLog = new DoctorAchievementLog();
-                doctorAchievementLog.setCommission(saleCommission);
-                doctorAchievementLog.setFruitDoctorCommission(doctorCommission);
-                doctorAchievementLog.setOrderId(orderDetailResult.getCode());
-                doctorAchievementLog.setUserId(orderDetailResult.getUserId());
-                doctorAchievementLog.setSourceType(SourceType.ORDER);
-                doctorAchievementLog.setAmount(baseAmount);
-
-                if (Objects.nonNull(doctor)) {
-                    doctorAchievementLog.setDoctorId(doctor.getId());
-                    if (doctorAchievementLogService.create(doctorAchievementLog) < 0) {
-                        log.error("存入失败");
-                    }
-                }
+            if (doctorAchievementLogService.create(doctorAchievementLog) < 0) {
+                log.error("存入失败");
             }
         } catch (Exception e) {
             e.printStackTrace();
