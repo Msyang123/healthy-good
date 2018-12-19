@@ -149,7 +149,7 @@ public class NewSpecialActivityApi {
     public ResponseEntity search(@RequestBody ActivityProductParam param) {
         log.debug("根据条件分页查询新品尝鲜活动商品信息列表\t param:{}", param);
 
-        Pages<ActivityProductResult> pages = activityProductService.findList(param);
-        return ResponseEntity.ok(pages);
+        Tips tips = activityProductService.findList(param);
+        return tips.err() ? ResponseEntity.badRequest().body(tips.getMessage()) : ResponseEntity.ok(tips.getData());
     }
 }
