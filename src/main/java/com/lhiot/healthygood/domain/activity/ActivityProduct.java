@@ -37,6 +37,12 @@ public class ActivityProduct {
     @NotNull(message = "活动id不为空")
     private Long activityId;
 
+    @ApiModelProperty(notes = "限购数量", dataType = "String")
+    private Integer limitCount;
+
+    @ApiModelProperty(notes = "已购数量", dataType = "String")
+    private Integer alreadyBuyCount;
+
 
     @JsonProperty("specialProductActivityId")
     @ApiModelProperty(value = "新品尝鲜活动id", dataType = "Long")

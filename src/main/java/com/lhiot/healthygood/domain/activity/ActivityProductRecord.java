@@ -3,6 +3,7 @@ package com.lhiot.healthygood.domain.activity;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.lhiot.healthygood.type.ActivityType;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
@@ -29,7 +30,7 @@ public class ActivityProductRecord{
     private Long activityId;
 
     @ApiModelProperty(notes="活动类型",dataType="Long")
-    private String activityType;
+    private ActivityType activityType;
 
     @ApiModelProperty(notes = "每页查询条数(为空或0不分页查所有)", dataType = "Integer")
     private Integer rows;

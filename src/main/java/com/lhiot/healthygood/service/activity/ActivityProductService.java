@@ -93,6 +93,10 @@ public class ActivityProductService {
         return Tips.info(activityProduct.getId() + "");
     }
 
+    public List<ActivityProduct> list (ActivityProduct product){
+        return activityProductMapper.selectActivityProducts(product);
+    }
+
     /**
      * Description:根据id修改活动商品
      *
