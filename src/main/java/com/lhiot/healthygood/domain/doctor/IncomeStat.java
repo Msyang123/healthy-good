@@ -24,7 +24,7 @@ public class IncomeStat {
      */
     @JsonProperty("bonus")
     @ApiModelProperty(value = "已获得红利", dataType = "Long")
-    private Long bonus;
+    private Integer bonus;
 
 
     /**
@@ -32,14 +32,14 @@ public class IncomeStat {
      */
     @JsonProperty("bonusCanBeSettled")
     @ApiModelProperty(value = "可结算红利", dataType = "Long")
-    private Long bonusCanBeSettled;
+    private Integer bonusCanBeSettled; //bonusCanBeSettled
 
     /**
      * 历史总收入
      */
     @JsonProperty("bonusOfHistory")
     @ApiModelProperty(value = "历史总收入", dataType = "Long")
-    private Long bonusOfHistory;
+    private Integer bonusOfHistory;
 
 
     /**
@@ -47,13 +47,13 @@ public class IncomeStat {
      */
     @JsonProperty("bonusSettled")
     @ApiModelProperty(value = "已结算总额", dataType = "Long")
-    private Long bonusSettled;
+    private Integer bonusSettled;
 
     /**
      * 正在结算
      */
     @JsonProperty("bonusSettling")
     @ApiModelProperty(value = "正在结算", dataType = "Long")
-    private Long bonusSettling;
+    private Integer bonusSettling;
 
 }

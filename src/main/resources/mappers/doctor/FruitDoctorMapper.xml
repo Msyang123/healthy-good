@@ -20,7 +20,8 @@
         <result column="bank_deposit" property="bankDeposit" />
         <result column="card_username" property="cardUsername" />
         <result column="hot" property="hot" />
-        <result column="balance" property="balance" />
+        <result column="bonus" property="bonus" />
+        <result column="settlement" property="settlement" />
         <result column="avatar" property="avatar" />
         <result column="upperbody_photo" property="upperbodyPhoto" />
         <result column="phone" property="phone" />
@@ -46,7 +47,8 @@
             bank_deposit,
             card_username,
             hot,
-            balance,
+            bonus,
+            settlement,
             avatar,
             upperbody_photo,
             phone,
@@ -103,8 +105,11 @@
             <if test="hot != null ">
                 hot,
             </if>
-            <if test="balance != null ">
-                balance,
+            <if test="bonus != null ">
+                bonus,
+            </if>
+            <if test="settlement != null ">
+                settlement,
             </if>
             <if test="avatar != null ">
                 avatar,
@@ -165,8 +170,11 @@
             <if test="hot != null ">
                 #{hot},
             </if>
-            <if test="balance != null ">
-                #{balance},
+            <if test="bonus != null ">
+                #{bonus},
+            </if>
+            <if test="settlement != null ">
+                #{settlement},
             </if>
             <if test="avatar != null ">
                 #{avatar},
@@ -232,8 +240,11 @@
             <if test="hot != null ">
                 hot = #{hot},
             </if>
-            <if test="balance != null ">
-                balance = #{balance},
+            <if test="bonus != null ">
+                bonus = #{bonus},
+            </if>
+            <if test="settlement != null ">
+                bonus = #{settlement},
             </if>
             <if test="avatar != null ">
                 avatar = #{avatar},
@@ -328,8 +339,11 @@
             <if test="hot != null ">
                 and hot = #{hot}
             </if>
-            <if test="balance != null ">
-                and balance = #{balance}
+            <if test="bonus != null ">
+                and bonus = #{bonus}
+            </if>
+            <if test="settlement != null ">
+                and settlement = #{settlement}
             </if>
             <if test="avatar != null and avatar != ''">
                 and avatar = #{avatar}

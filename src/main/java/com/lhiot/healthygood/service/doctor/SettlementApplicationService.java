@@ -66,7 +66,7 @@ public class SettlementApplicationService {
      * @param settlementApplication
      * @return
      */
-    public Tips updateById(Long id, SettlementApplication settlementApplication) {
+   /* public Tips updateById(Long id, SettlementApplication settlementApplication) {
         settlementApplication.setId(id);
         settlementApplication.setDealAt(Date.from(Instant.now()));
         // 已结算只能结算一次，成功后不可修改
@@ -102,7 +102,7 @@ public class SettlementApplicationService {
         }
         boolean settlementUpdated = settlementApplicationMapper.updateById(settlementApplication) > 0;
         return settlementUpdated ? Tips.info("结算修改成功") : Tips.warn("结算修改失败");
-    }
+    }*/
 
     /**
      * Description:根据ids删除结算申请
