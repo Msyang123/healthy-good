@@ -167,7 +167,7 @@ public class WeixinClientApi {
 
     @PostMapping("/rebulidWexinMenu")
     @ApiOperation(value = "微信生成自定义菜单")
-    public ResponseEntity rebulidWexinMenu(@RequestBody String menuContent) throws IOException {
+    public ResponseEntity rebulidWexinMenu(@RequestBody String menuContent) {
         return ResponseEntity.ok(
                 weChatUtil.httpsRequest("https://api.weixin.qq.com/cgi-bin/menu/create?access_token="+
                                 weChatUtil.getToken().getAccessToken(),
@@ -176,7 +176,7 @@ public class WeixinClientApi {
     }
     @GetMapping("/getWexinMenu")
     @ApiOperation(value = "微信生成自定义菜单")
-    public ResponseEntity getWexinMenu() throws IOException {
+    public ResponseEntity getWexinMenu() {
         return ResponseEntity.ok(
                 weChatUtil.httpsRequest("https://api.weixin.qq.com/cgi-bin/menu/get?access_token="+
                                 weChatUtil.getToken().getAccessToken(),

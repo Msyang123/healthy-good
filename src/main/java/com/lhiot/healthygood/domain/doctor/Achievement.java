@@ -27,6 +27,9 @@ Achievement {
 	@ApiModelProperty(notes="业绩收入",dataType="Long")
 	private Long incomeAmount;
 	
+	@ApiModelProperty(notes="总消费额",dataType="Long")
+	private Long summaryAmount;
+
 	@ApiModelProperty(notes = "用户信息", dataType = "UserDetailResult")
 	private UserDetailResult userDetailResult;
 }

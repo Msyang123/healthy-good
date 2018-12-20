@@ -25,7 +25,7 @@ public class Msg4ImageText extends Msg {
         int size = Integer.parseInt(this.articleCount);
 
         for(int i = 0; i < size; ++i) {
-            Data4Item currentItem = (Data4Item)this.items.get(i);
+            Data4Item currentItem = this.items.get(i);
             Element itemElement = document.createElement("item");
             Element titleElement = document.createElement("Title");
             titleElement.setTextContent(currentItem.getTitle());

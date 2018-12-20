@@ -209,10 +209,9 @@ public class RegisterApplicationService {
      *
      * @param auditStatus
      * @param userId
-     * @throws JsonProcessingException
      * @throws AmqpException
      */
-    public void doctorApplicationSendToQueue(AuditStatus auditStatus, Long userId) throws AmqpException, JsonProcessingException {
+    public void doctorApplicationSendToQueue(AuditStatus auditStatus, Long userId) throws AmqpException {
         log.info("===============发送模板消息auditStatus:" + auditStatus + ",userId:" + userId);
         String theme = "";
         String remark = "";
