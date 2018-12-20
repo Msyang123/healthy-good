@@ -235,7 +235,7 @@ public class FruitDoctorApi {
                 today.getTime() - settlementApplication.getCreateAt().getTime() > (1 * 24 * 60 * 60 * 1000) * 3)
                 .map(settlementApplication -> settlementApplication.getId()).collect(Collectors.toList());
         //修改状态
-        if (Objects.nonNull(ids) && !ids.isEmpty()) {
+        if (!CollectionUtils.isEmpty(ids)) {
             settlementApplicationService.updateExpiredStatus(ids);
         }
     }
@@ -328,7 +328,6 @@ public class FruitDoctorApi {
         return ResponseEntity.ok().body(fruitDoctor);
     }
 
-    // FIXME 同info接口，要发模板消息
     @Sessions.Uncheck
     @ApiOperation(value = "修改鲜果师成员信息（后台）")
     @ApiImplicitParams({
@@ -340,7 +339,15 @@ public class FruitDoctorApi {
         log.debug("修改鲜果师成员信息\t id:{},param:{}", id, fruitDoctor);
 
         fruitDoctor.setId(id);
-        return fruitDoctorService.updateById(fruitDoctor) > 0 ? ResponseEntity.ok().build() : ResponseEntity.badRequest().body("修改鲜果师成员信息失败");
+        fruitDoctor.getUserId();
+        ResponseEntity findBaseUser = baseUserServerFeign.findById(fruitDoctor.getUserId());
+        if (findBaseUser.getStatusCode().isError() || Objects.isNull(findBaseUser.getBody())) {
+            return ResponseEntity.badRequest().body("基础服务查询失败");
+        }
+        UserDetailResult userDetailResult = (UserDetailResult) findBaseUser.getBody();
+        fruitDoctor.setOpenId(userDetailResult.getOpenId());
+        Tips tips = registerApplicationService.updateFruitDoctorInfo(fruitDoctor);
+        return tips.err() ? ResponseEntity.badRequest().body(tips.getMessage()) : ResponseEntity.ok().body(tips.getMessage());
     }
 
     @GetMapping("/incomes/detail")

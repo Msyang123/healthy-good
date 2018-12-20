@@ -149,7 +149,7 @@ public class FruitDoctor{
     private Integer bonus;
 
     /**
-     *红利余额
+     *可结算余额
      */
     @JsonProperty("settlement")
     @ApiModelProperty(value = "可结算余额", dataType = "Integer")

@@ -230,17 +230,17 @@ public class CustomOrderApi {
     public ResponseEntity selectByCode(@PathVariable("orderCode") String orderCode) {
         log.debug("根据条件分页查询定制订单信息列表\t param:{}", orderCode);
 
-        Tips<CustomOrder> tips = customOrderService.selectByCode(orderCode, true);
+        Tips tips = customOrderService.selectByCode(orderCode, true);
         if (tips.err()) {
             return ResponseEntity.badRequest().body(tips.getMessage());
         }
-        CustomOrder customOrder = tips.getData();
+        CustomOrder customOrder = (CustomOrder) tips.getData();
         // 查找用户信息
-        ResponseEntity<UserDetailResult> userEntity = baseUserServerFeign.findById(customOrder.getUserId());
-        if (userEntity.getStatusCode().isError()) {
+        ResponseEntity userEntity = baseUserServerFeign.findById(customOrder.getUserId());
+        if (userEntity.getStatusCode().isError() || Objects.isNull(userEntity.getBody())) {
             return ResponseEntity.badRequest().body("查找用户信息失败");
         }
-        UserDetailResult userDetailResult = userEntity.getBody();
+        UserDetailResult userDetailResult = (UserDetailResult) userEntity.getBody();
         customOrder.setNickname(userDetailResult.getNickname());
         customOrder.setPhone(userDetailResult.getPhone());
         // 自动配送解析配送时间

@@ -2,6 +2,7 @@ package com.lhiot.healthygood.feign.model;
 
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
+import lombok.AllArgsConstructor;
 import lombok.Data;
 
 import javax.validation.constraints.NotNull;
@@ -11,6 +12,7 @@ import javax.validation.constraints.NotNull;
  */
 @Data
 @ApiModel
+@AllArgsConstructor
 public class ProductSectionRelation {
     @ApiModelProperty(notes = "主键Id", dataType = "Long", readOnly = true)
     private Long id;

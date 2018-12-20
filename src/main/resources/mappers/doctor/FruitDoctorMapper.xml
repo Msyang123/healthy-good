@@ -244,7 +244,7 @@
                 bonus = #{bonus},
             </if>
             <if test="settlement != null ">
-                bonus = #{settlement},
+                settlement = #{settlement},
             </if>
             <if test="avatar != null ">
                 avatar = #{avatar},

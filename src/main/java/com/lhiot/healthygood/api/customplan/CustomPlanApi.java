@@ -9,7 +9,6 @@ import com.lhiot.dc.dictionary.module.Dictionary;
 import com.lhiot.healthygood.domain.customplan.CustomPlanAndSpecification;
 import com.lhiot.healthygood.domain.customplan.model.CustomPlanDetailResult;
 import com.lhiot.healthygood.domain.customplan.model.CustomPlanParam;
-import com.lhiot.healthygood.domain.customplan.model.CustomPlanResult;
 import com.lhiot.healthygood.service.customplan.CustomPlanService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
@@ -118,13 +117,13 @@ public class CustomPlanApi {
     }
 
     @Sessions.Uncheck
-    @ApiOperation(value = "根据条件分页查询定制计划信息列表(后台)", response = CustomPlanResult.class, responseContainer = "Set")
+    @ApiOperation(value = "根据条件分页查询定制计划信息列表(后台)", response = CustomPlanDetailResult.class, responseContainer = "Set")
     @ApiImplicitParam(paramType = ApiParamType.BODY, name = "param", value = "查询条件", dataType = "CustomPlanParam")
     @PostMapping("/custom-plans/pages")
     public ResponseEntity search(@RequestBody CustomPlanParam param) {
         log.debug("根据条件分页查询定制计划信息列表\t param:{}", param);
 
-        Pages<CustomPlanResult> pages = customPlanService.findList(param);
+        Pages<CustomPlanDetailResult> pages = customPlanService.findList(param);
         return ResponseEntity.ok(pages);
     }
 
