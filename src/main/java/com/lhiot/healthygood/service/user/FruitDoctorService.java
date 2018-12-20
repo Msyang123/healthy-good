@@ -260,6 +260,7 @@ public class FruitDoctorService {
         try {
             FruitDoctor doctor = this.findSuperiorFruitDoctorByUserId(orderDetailResult.getUserId());//查询用户的上级鲜果师
             if (Objects.isNull(doctor)){
+                log.info(orderDetailResult.getUserId()+" , "+"该用户没有上级鲜果师");
                 return;
             }
             Optional<Dictionary.Entry> salesCommissions = customPlanService.dictionaryOptional("commissions").get().entry("SALES_COMMISSIONS");//销售提成百分比
@@ -283,19 +284,23 @@ public class FruitDoctorService {
             DoctorAchievementLog logParam = new DoctorAchievementLog();
             logParam.setDoctorId(doctor.getId());
             logParam.setOrderId(orderDetailResult.getCode());
+            String str = "";
             if (Objects.equals(OrderStatus.WAIT_SEND_OUT, orderDetailResult.getStatus()) || Objects.equals(OrderStatus.DISPATCHING, orderDetailResult.getStatus())) {
                 logParam.setSourceType(SourceType.ORDER);
                 doctorAchievementLog.setSourceType(SourceType.ORDER);
+                str = "订单分成";
             }else if (Objects.equals(OrderStatus.ALREADY_RETURN,orderDetailResult.getStatus())){
                 doctorAchievementLog.setSourceType(SourceType.REFUND);
                 logParam.setSourceType(SourceType.REFUND);
+                str = "订单退款";
             }
             Integer counts = doctorAchievementLogService.doctorAchievementLogCounts(logParam);//等幂操作，是否存在记录
             if (counts > 0) {
+                log.info(orderDetailResult.getUserId()+","+str+","+"已执行过");
                 return;
             }
             if (doctorAchievementLogService.create(doctorAchievementLog) < 0) {
-                log.error("存入失败");
+                log.error(str+"存入失败");
             }
         } catch (Exception e) {
             e.printStackTrace();
