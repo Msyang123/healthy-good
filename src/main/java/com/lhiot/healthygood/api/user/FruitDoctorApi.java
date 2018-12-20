@@ -419,7 +419,7 @@ public class FruitDoctorApi {
         Achievement total =
                 doctorAchievementLogService.achievement(DateTypeEnum.DAY, PeriodType.current, fruitDoctor.getId(), true, true, null);
         //构建返回值
-        current.setSummaryAmount(total.getSalesAmount());
+        current.setSalesAmount(total.getSalesAmount());
         ResponseEntity userInfo = baseUserServerFeign.findById(Long.valueOf(userId));
         if (userInfo.getStatusCode().isError()) {
             return ResponseEntity.badRequest().body(userInfo.getBody());
@@ -584,6 +584,7 @@ public class FruitDoctorApi {
             logParam.setSettlement("true");
             logParam.setSourceType(SourceType.SUB_DISTRIBUTOR);
             if (doctorAchievementLogService.doctorAchievementLogCounts(logParam) > 0) {
+                log.info(fruitDoctor.getRealName()+fruitDoctor.getId()+"已执行过");
                 return;
             }
             FruitDoctor subordinateParam = new FruitDoctor();
