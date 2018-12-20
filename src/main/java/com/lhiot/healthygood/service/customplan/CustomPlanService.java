@@ -22,6 +22,7 @@ import com.lhiot.healthygood.util.FeginResponseTools;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.CollectionUtils;
 
 import java.time.Instant;
 import java.util.*;
@@ -151,22 +152,50 @@ public class CustomPlanService {
      * @param param 参数
      * @return 定制计划信息列表
      */
-    public Pages<CustomPlanResult> findList(CustomPlanParam param) {
-        List<CustomPlanResult> customPlanResultList = new ArrayList<>();
+    public Pages<CustomPlanDetailResult> findList(CustomPlanParam param) {
+        List<CustomPlanDetailResult> customPlanDetailResultList = new ArrayList<>();
         // 查询定制计划信息
-        List<CustomPlan> customPlans = customPlanMapper.pageCustomPlans(param);
+        List<CustomPlan> customPlanList = customPlanMapper.pageCustomPlans(param);
         boolean pageFlag = Objects.nonNull(param.getPage()) && Objects.nonNull(param.getRows()) && param.getPage() > 0 && param.getRows() > 0;
-        int total = pageFlag ? customPlanMapper.pageCustomPlanCounts(param) : customPlans.size();
+        int total = pageFlag ? customPlanMapper.pageCustomPlanCounts(param) : customPlanList.size();
+        if (CollectionUtils.isEmpty(customPlanList)) {
+            return Pages.of(total, customPlanDetailResultList);
+        }
 
-        customPlans.forEach(item -> {
-            CustomPlanResult customPlanResult = new CustomPlanResult();
-            BeanUtils.copyProperties(item, customPlanResult);
-            // 查询定制计划规格信息
-            List<CustomPlanSpecification> customPlanSpecification = customPlanSpecificationMapper.findByPlanIdAndPerid(Maps.of("planId", item.getId(), "planPeriod", null));
-            customPlanResult.setCustomPlanSpecifications(customPlanSpecification);
-            customPlanResultList.add(customPlanResult);
+        // 查询周期类型集合
+        List<CustomPlanPeriodResult> customPlanPeriodResultList = new ArrayList<>();
+        // 根据定制计划ids查询定制规格信息
+        List<Long> planIdList = customPlanList.stream().map(CustomPlan::getId).collect(Collectors.toList());
+        List<CustomPlanSpecification> customPlanSpecificationList = customPlanSpecificationMapper.findByPlanIds(planIdList);
+
+        // 定制计划信息列表设值
+        customPlanList.forEach(customPlan -> {
+            CustomPlanDetailResult customPlanDetailResult = new CustomPlanDetailResult();
+            BeanUtils.of(customPlanDetailResult).populate(customPlan);
+            if (!CollectionUtils.isEmpty(customPlanSpecificationList)) {
+                List<CustomPlanSpecification> customPlanSpecifications = customPlanSpecificationList.stream().filter(customPlanSpecification -> Objects.equals(customPlanDetailResult.getId(), customPlanSpecification.getPlanId())).collect(Collectors.toList());
+                // 周期集合
+                List<Integer> planPeriodList = customPlanSpecifications.stream().map(CustomPlanSpecification::getPlanPeriod).distinct().collect(Collectors.toList());
+                if (!CollectionUtils.isEmpty(planPeriodList)) {
+                    planPeriodList.forEach(planPeriod -> {
+                        // 周期类型对象
+                        CustomPlanPeriodResult customPlanPeriodResult = new CustomPlanPeriodResult();
+                        // 设置周期类型-周期
+                        customPlanPeriodResult.setPlanPeriod(planPeriod);
+                        List<CustomPlanSpecification> filterCustomPlanSpecificationList = customPlanSpecifications.stream().filter(customPlanSpecification -> Objects.equals(planPeriod, customPlanSpecification.getPlanPeriod())).collect(Collectors.toList());
+                        // 设置周期类型-对应周期的定制规格集合
+                        customPlanPeriodResult.setSpecificationList(filterCustomPlanSpecificationList);
+                        // 将周期类型添加至周期集合
+                        customPlanPeriodResultList.add(customPlanPeriodResult);
+                        customPlanDetailResult.setPeriodList(customPlanPeriodResultList);
+                    });
+
+                }
+            }
+            customPlanDetailResultList.add(customPlanDetailResult);
         });
-        return Pages.of(total, customPlanResultList);
+
+        return Pages.of(total, customPlanDetailResultList);
     }
 
     /**
