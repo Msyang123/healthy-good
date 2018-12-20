@@ -90,7 +90,7 @@ public class SettlementApplicationService {
                 return Tips.warn("鲜果师不存在！");
             }
             // 该鲜果师的可结算金额是否大于申请结算金额
-            if (settlementApplication.getAmount() > findFruitDoctor.getBalance()) {
+            if (settlementApplication.getAmount() > findFruitDoctor.getSettlement()) {
                 return Tips.warn("申请结算金额大于用户可结算金额，结算失败");
             }
 
@@ -99,7 +99,7 @@ public class SettlementApplicationService {
                 return Tips.warn("结算修改失败");
             }
             // 结算状态修改成功后扣减用户可结算金额
-            findFruitDoctor.setBalance(findFruitDoctor.getBalance() - settlementApplication.getAmount());
+            findFruitDoctor.setSettlement(findFruitDoctor.getSettlement() - settlementApplication.getAmount());
             boolean balanceUpdated = fruitDoctorMapper.updateById(findFruitDoctor) > 0;
             if (!balanceUpdated) {
                 return Tips.warn("扣减鲜果师可结算金额失败");

@@ -28,7 +28,7 @@ import java.util.stream.Collectors;
  * @author hufan created in 2018/11/27 10:44
  **/
 @Service
-@Transactional
+@Transactional(rollbackFor = Exception.class)
 public class CustomPlanSectionService {
     private final CustomPlanSectionMapper customPlanSectionMapper;
     private final CustomPlanSpecificationMapper customPlanSpecificationMapper;
@@ -49,7 +49,6 @@ public class CustomPlanSectionService {
      * @param customPlanSection
      * @return
      */
-    // FIXME TCC事务回滚
     public Tips addCustomPlanSection(CustomPlanSection customPlanSection) {
         // 幂等添加
         CustomPlanSection findCustomPlanSection = customPlanSectionMapper.selectBySectionCode(customPlanSection.getSectionCode());

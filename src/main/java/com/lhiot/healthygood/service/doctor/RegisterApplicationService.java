@@ -1,15 +1,12 @@
 package com.lhiot.healthygood.service.doctor;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.leon.microx.util.BeanUtils;
-import com.leon.microx.util.Jackson;
 import com.leon.microx.util.auditing.Random;
 import com.leon.microx.web.result.Pages;
 import com.leon.microx.web.result.Tips;
 import com.lhiot.healthygood.domain.doctor.RegisterApplication;
 import com.lhiot.healthygood.domain.user.DoctorCustomer;
 import com.lhiot.healthygood.domain.user.FruitDoctor;
-import com.lhiot.healthygood.domain.user.KeywordValue;
 import com.lhiot.healthygood.feign.BaseUserServerFeign;
 import com.lhiot.healthygood.feign.model.UserDetailResult;
 import com.lhiot.healthygood.mapper.doctor.RegisterApplicationMapper;
@@ -20,7 +17,6 @@ import com.lhiot.healthygood.util.DataItem;
 import com.lhiot.healthygood.util.DataObject;
 import com.lhiot.healthygood.wechat.WeChatUtil;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.amqp.AmqpException;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -134,13 +130,13 @@ public class RegisterApplicationService {
      * @param registerApplication
      * @return
      */
-    public Tips updateById(RegisterApplication registerApplication) throws JsonProcessingException {
+    public Tips updateById(RegisterApplication registerApplication) {
         boolean updated = this.registerApplicationMapper.updateById(registerApplication) > 0;
         if (!updated) {
             return Tips.warn("修改鲜果师申请记录失败");
         }
         // 发送模板消息
-        this.doctorApplicationSendToQueue(registerApplication.getAuditStatus(), registerApplication.getUserId());
+        this.doctorApplicationSendTemplate(registerApplication.getAuditStatus(), registerApplication.getUserId());
 
         // 审核通过 新增鲜果师成员记录
         if (Objects.equals(AuditStatus.AGREE, registerApplication.getAuditStatus())) {
@@ -149,7 +145,7 @@ public class RegisterApplicationService {
             if (Objects.nonNull(doctor)) {
                 return Tips.warn("该鲜果师已存在，添加失败");
             }
-            // 设置要添加的鲜果师信息 FIXME 代码重复
+            // 设置要添加的鲜果师信息
             FruitDoctor fruitDoctor = new FruitDoctor();
             BeanUtils.copyProperties(registerApplication, fruitDoctor);
             fruitDoctor.setRealName(registerApplication.getRealName());
@@ -203,49 +199,52 @@ public class RegisterApplicationService {
         return Pages.of(total, list);
     }
 
-
     /**
-     * 发送模板消息
+     * 鲜果师审核发送模板消息
      *
      * @param auditStatus
      * @param userId
-     * @throws JsonProcessingException
-     * @throws AmqpException
      */
-    public void doctorApplicationSendToQueue(AuditStatus auditStatus, Long userId) throws AmqpException, JsonProcessingException {
-        log.info("===============发送模板消息auditStatus:" + auditStatus + ",userId:" + userId);
-        String theme = "";
-        String remark = "";
-        String status = "";
-        if (AuditStatus.UNAUDITED.equals(auditStatus)) {
-            theme = BacklogEnum.APPLICATION.getBacklog();
-            remark = BacklogEnum.APPLICATION.getRemark();
-            status = BacklogEnum.APPLICATION.getStatus();
-        } else if (AuditStatus.AGREE.equals(auditStatus)) {
-            theme = BacklogEnum.APPLICATION_SUCCESS.getBacklog();
-            remark = BacklogEnum.APPLICATION_SUCCESS.getRemark();
-            status = BacklogEnum.APPLICATION_SUCCESS.getStatus();
-        } else if (AuditStatus.REJECT.equals(auditStatus)) {
-            theme = BacklogEnum.APPLICATION_FAILURE.getBacklog();
-            remark = BacklogEnum.APPLICATION_FAILURE.getRemark();
-            status = BacklogEnum.APPLICATION_FAILURE.getStatus();
+    public Tips doctorApplicationSendTemplate(AuditStatus auditStatus, Long userId) {
+        log.info("===============鲜果师审核发送模板消息:" + auditStatus + ",userId:" + userId);
+
+        FruitDoctor fruitDoctor = fruitDoctorMapper.selectByUserId(userId);
+        if (Objects.isNull(fruitDoctor)) {
+            return Tips.warn("鲜果师不存在");
         }
-        //获取时间
-        String currentTime = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());
+        String currentTime = new SimpleDateFormat("yyyy-MM-dd").format(new Date());
+        DataItem dataItem = new DataItem();
+        DataObject first = new DataObject();
+        DataObject keyword1 = new DataObject();
+        DataObject keyword2 = new DataObject();
+        DataObject keyword3 = new DataObject();
+        DataObject keyword4 = new DataObject();
+        DataObject remark = new DataObject();
 
-        KeywordValue keywordValue = new KeywordValue();
-        keywordValue.setTemplateType(TemplateMessageEnum.APPLY_FRUIT_DOCTOR);
-        keywordValue.setKeyword1Value(theme);
-        keywordValue.setKeyword2Value(status);
-        keywordValue.setKeyword3Value(currentTime);
-        keywordValue.setKeyword4Value(remark);
+        if (AuditStatus.UNAUDITED.equals(auditStatus)) {
+            keyword1.setValue(BacklogEnum.APPLICATION.getBacklog());
+            keyword2.setValue(BacklogEnum.APPLICATION.getStatus());
+            keyword4.setValue(BacklogEnum.APPLICATION.getRemark());
+        } else if (AuditStatus.AGREE.equals(auditStatus)) {
+            keyword1.setValue(BacklogEnum.APPLICATION_SUCCESS.getBacklog());
+            keyword2.setValue(BacklogEnum.APPLICATION_SUCCESS.getRemark());
+            keyword4.setValue(BacklogEnum.APPLICATION_SUCCESS.getStatus());
+        } else if (AuditStatus.REJECT.equals(auditStatus)) {
+            keyword1.setValue(BacklogEnum.APPLICATION_FAILURE.getBacklog());
+            keyword2.setValue(BacklogEnum.APPLICATION_FAILURE.getRemark());
+            keyword4.setValue(BacklogEnum.APPLICATION_FAILURE.getStatus());
+        }
+        keyword3.setValue(currentTime);
+        remark.setValue("如有疑问请致电0731-85240088");
 
-        keywordValue.setSendToDoctor(false);
-        keywordValue.setUserId(userId);
-        //发送模板消息
-        log.info("=====================>keywordValue：" + keywordValue);
-        rabbit.convertAndSend(FruitDoctorOrderExchange.FRUIT_TEMPLATE_MESSAGE.getExchangeName(),
-                FruitDoctorOrderExchange.FRUIT_TEMPLATE_MESSAGE.getQueueName(), Jackson.json(keywordValue));
+        dataItem.setFirst(first);
+        dataItem.setKeyword1(keyword1);
+        dataItem.setKeyword2(keyword2);
+        dataItem.setKeyword3(keyword3);
+        dataItem.setKeyword4(keyword4);
+        dataItem.setRemark(remark);
+        weChatUtil.sendMessageToWechat(TemplateMessageEnum.APPLY_FRUIT_DOCTOR, fruitDoctor.getOpenId(), dataItem);
+        return Tips.info("修改成功");
     }
 }
 

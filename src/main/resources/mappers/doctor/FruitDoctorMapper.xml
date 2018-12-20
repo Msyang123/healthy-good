@@ -20,11 +20,12 @@
         <result column="bank_deposit" property="bankDeposit" />
         <result column="card_username" property="cardUsername" />
         <result column="hot" property="hot" />
-        <result column="balance" property="balance" />
+        <result column="bonus" property="bonus" />
         <result column="avatar" property="avatar" />
         <result column="upperbody_photo" property="upperbodyPhoto" />
         <result column="phone" property="phone" />
         <result column="application_id" property="applicationId" />
+        <result column="settlement" property="settlement" />
         <result column="amount_of_month" property="amountOfMonth" />
     </resultMap>
 
@@ -46,11 +47,12 @@
             bank_deposit,
             card_username,
             hot,
-            balance,
+            bonus,
             avatar,
             upperbody_photo,
             phone,
             application_id,
+            settlement,
         </trim>
     </sql>
 
@@ -103,8 +105,8 @@
             <if test="hot != null ">
                 hot,
             </if>
-            <if test="balance != null ">
-                balance,
+            <if test="bonus != null ">
+                bonus,
             </if>
             <if test="avatar != null ">
                 avatar,
@@ -117,6 +119,9 @@
             </if>
             <if test="applicationId != null ">
                 application_id,
+            </if>
+            <if test="settlement != null ">
+                settlement,
             </if>
         </trim>
         <trim prefix="values (" suffix=")" suffixOverrides="," >
@@ -165,8 +170,8 @@
             <if test="hot != null ">
                 #{hot},
             </if>
-            <if test="balance != null ">
-                #{balance},
+            <if test="bonus != null ">
+                #{bonus},
             </if>
             <if test="avatar != null ">
                 #{avatar},
@@ -179,6 +184,9 @@
             </if>
             <if test="applicationId != null ">
                 #{applicationId},
+            </if>
+            <if test="settlement != null ">
+                #{settlement},
             </if>
         </trim>
     </insert>
@@ -232,8 +240,8 @@
             <if test="hot != null ">
                 hot = #{hot},
             </if>
-            <if test="balance != null ">
-                balance = #{balance},
+            <if test="bonus != null ">
+                bonus = #{bonus},
             </if>
             <if test="avatar != null ">
                 avatar = #{avatar},
@@ -246,6 +254,9 @@
             </if>
             <if test="applicationId != null ">
                 application_id = #{applicationId},
+            </if>
+            <if test="settlement != null ">
+                settlement = #{settlement},
             </if>
         </set>
         where id=#{id}
@@ -328,8 +339,8 @@
             <if test="hot != null ">
                 and hot = #{hot}
             </if>
-            <if test="balance != null ">
-                and balance = #{balance}
+            <if test="bonus != null ">
+                and bonus = #{bonus}
             </if>
             <if test="avatar != null and avatar != ''">
                 and avatar = #{avatar}
@@ -342,6 +353,9 @@
             </if>
             <if test="applicationId != null ">
                 and application_id = #{applicationId}
+            </if>
+            <if test="settlement != null ">
+                and settlement = #{settlement}
             </if>
         </where>
     </sql>
