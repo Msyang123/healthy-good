@@ -130,7 +130,7 @@ public class OrderApi {
         //查找基础服务上架商品信息
         Tips<Pages<ProductShelf>> productShelfTips = FeginResponseTools.convertResponse(baseDataServiceFeign.searchProductShelves(productShelfParam));
         if (productShelfTips.err()) {
-            return ResponseEntity.badRequest().body(productShelfTips);
+            return ResponseEntity.badRequest().body(productShelfTips.getMessage());
         }
         Pages<ProductShelf> productShelfPages = productShelfTips.getData();
         String[] barcodes = productShelfPages.getArray().parallelStream()
@@ -150,7 +150,7 @@ public class OrderApi {
                 if (Objects.equals(productShelf.getProductSpecification().getBarcode(), businv.get("barCode"))
                         && productShelf.getProductSpecification().getLimitInventory() > Double.valueOf(businv.get("qty").toString())) {
                     return ResponseEntity.badRequest().body(
-                            Tips.warn(String.format("%s实际库存%s低于安全库存%d，不允许销售", productShelf.getProductSpecification().getBarcode(), businv.get("qty").toString(), productShelf.getProductSpecification().getLimitInventory()))
+                            String.format("%s实际库存%s低于安全库存%d，不允许销售", productShelf.getProductSpecification().getBarcode(), businv.get("qty").toString(), productShelf.getProductSpecification().getLimitInventory())
                     );
                 }
             }
@@ -319,12 +319,7 @@ public class OrderApi {
 
     @GetMapping("/orders/{orderCode}/detail")
     @ApiOperation(value = "根据订单code查询订单详情", response = OrderDetailResult.class)
-    public ResponseEntity orderDetial(@Valid @NotBlank @PathVariable("orderCode") String orderCode, Sessions.User user) {
-        Long userId = Long.valueOf(user.getUser().get("userId").toString());
-        ResponseEntity validateResult = validateOrderOwner(userId, orderCode);
-        if (Objects.isNull(validateResult) || validateResult.getStatusCode().isError()) {
-            return validateResult;
-        }
+    public ResponseEntity orderDetial(@Valid @NotBlank @PathVariable("orderCode") String orderCode) {
         return orderServiceFeign.orderDetail(orderCode, true, true);
     }
 

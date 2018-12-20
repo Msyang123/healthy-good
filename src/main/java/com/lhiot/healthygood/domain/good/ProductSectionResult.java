@@ -30,7 +30,7 @@ public class ProductSectionResult {
     @ApiModelProperty(notes = "父ID", dataType = "Long")
     private Long parentId;
 
-    @ApiModelProperty(notes = "商品上架信息", dataType = "ProductShelf", readOnly = true)
+    @ApiModelProperty(notes = "商品上架信息", dataType = "Products", readOnly = true)
     protected List<Products> products;
 
 }

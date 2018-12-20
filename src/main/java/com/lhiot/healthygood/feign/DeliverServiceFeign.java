@@ -2,6 +2,7 @@ package com.lhiot.healthygood.feign;
 
 import com.leon.microx.predefine.Day;
 import com.leon.microx.web.result.Tips;
+import com.lhiot.healthygood.feign.model.DeliverFeeQuery;
 import com.lhiot.healthygood.feign.model.DeliverOrder;
 import com.lhiot.healthygood.feign.model.DeliverUpdate;
 import com.lhiot.healthygood.feign.type.CoordinateSystem;
@@ -19,6 +20,7 @@ public interface DeliverServiceFeign {
 
     /**
      * 发送配送单 已废弃
+     *
      * @see OrderServiceFeign updateOrderToDelivery()
      */
     @Deprecated
@@ -38,6 +40,10 @@ public interface DeliverServiceFeign {
     ResponseEntity<Tips> backSignature(@PathVariable("deliverType") DeliverType type, @RequestBody Map<String, String> params);
 
     //获取订单配送时间列表
-    @RequestMapping(value = "/delivery/times",method = RequestMethod.GET)
-    ResponseEntity<Map<String,Object>> deliverTimes(@RequestParam(value = "date", required = false) Day day);
+    @RequestMapping(value = "/delivery/times", method = RequestMethod.GET)
+    ResponseEntity<Map<String, Object>> deliverTimes(@RequestParam(value = "date", required = false) Day day);
+
+    //计算配送费
+    @RequestMapping(value = "/delivery/fee/search", method = RequestMethod.POST)
+    ResponseEntity search(@RequestBody DeliverFeeQuery feeQuery);
 }
