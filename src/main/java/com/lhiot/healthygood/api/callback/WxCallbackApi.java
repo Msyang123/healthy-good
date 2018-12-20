@@ -10,10 +10,6 @@ import com.lhiot.healthygood.feign.BaseUserServerFeign;
 import com.lhiot.healthygood.feign.OrderServiceFeign;
 import com.lhiot.healthygood.feign.PaymentServiceFeign;
 import com.lhiot.healthygood.feign.model.*;
-import com.lhiot.healthygood.feign.model.BalanceOperationParam;
-import com.lhiot.healthygood.feign.model.OrderDetailResult;
-import com.lhiot.healthygood.feign.model.Payed;
-import com.lhiot.healthygood.feign.model.PayedModel;
 import com.lhiot.healthygood.feign.type.ApplicationType;
 import com.lhiot.healthygood.feign.type.OperationStatus;
 import com.lhiot.healthygood.mapper.customplan.CustomOrderMapper;
@@ -99,14 +95,10 @@ public class WxCallbackApi {
             return ResponseEntity.badRequest().body("调用基础订单查询服务失败");
         }
         OrderDetailResult orderDetailResult = orderDetailResultResponseEntity.getBody();
+        //延迟发货到海鼎
         orderService.delaySendToHd(orderCode,Jackson.object(orderDetailResult.getDeliverTime(), DeliverTime.class));
 
-        ResponseEntity orderDetailResultResponseEntity = orderServiceFeign.orderDetail(parameters.get("out_trade_no"), false, false);
-        if (orderDetailResultResponseEntity.getStatusCode().isError()){
-            return ResponseEntity.badRequest().body("服务内部错误");
-        }
-        OrderDetailResult order = (OrderDetailResult) orderDetailResultResponseEntity.getBody();
-        fruitDoctorService.calculationCommission(order);//鲜果师业绩提成
+        fruitDoctorService.calculationCommission(orderDetailResult);//鲜果师业绩提成
         //返回成功处理给微信
         return ResponseEntity.ok("<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
                 + "<xml><return_code><![CDATA[SUCCESS]]></return_code>"

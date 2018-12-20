@@ -142,7 +142,8 @@ public class CustomOrderApi {
     @PutMapping("/custom-orders/{orderCode}/delivery-time")
     @ApiOperation(value = "修改个人购买计划配送时间", response = String.class)
     public ResponseEntity deliveryTime(@PathVariable("orderCode") String orderCode,
-                                       @Valid @NotBlank @RequestParam("deliveryTime") String deliveryTime, Sessions.User user) {
+                                       @Valid @NotBlank @RequestParam("deliveryTime") String deliveryTime,
+                                       Sessions.User user) {
         Long userId = Long.valueOf(user.getUser().get("userId").toString());
         ResponseEntity validateOrderOwner = validateOrderOwner(userId, orderCode);
         if (validateOrderOwner.getStatusCode().isError()) {
