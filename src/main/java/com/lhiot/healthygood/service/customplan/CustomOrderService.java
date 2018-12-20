@@ -1,10 +1,8 @@
 package com.lhiot.healthygood.service.customplan;
 
 import com.leon.microx.id.Generator;
-import com.leon.microx.probe.collector.ProbeEventPublisher;
 import com.leon.microx.util.Calculator;
 import com.leon.microx.util.Jackson;
-import com.leon.microx.util.Maps;
 import com.leon.microx.util.StringUtils;
 import com.leon.microx.web.result.Pages;
 import com.leon.microx.web.result.Tips;
@@ -25,11 +23,14 @@ import com.lhiot.healthygood.mapper.customplan.CustomOrderDeliveryMapper;
 import com.lhiot.healthygood.mapper.customplan.CustomOrderMapper;
 import com.lhiot.healthygood.mapper.customplan.CustomOrderPauseMapper;
 import com.lhiot.healthygood.mapper.customplan.CustomPlanSpecificationMapper;
-import com.lhiot.healthygood.type.*;
+import com.lhiot.healthygood.mq.HealthyGoodQueue;
+import com.lhiot.healthygood.service.order.OrderService;
+import com.lhiot.healthygood.type.CustomOrderDeliveryStatus;
+import com.lhiot.healthygood.type.CustomOrderStatus;
+import com.lhiot.healthygood.type.OperStatus;
+import com.lhiot.healthygood.type.ReceivingWay;
 import com.lhiot.healthygood.util.FeginResponseTools;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.amqp.rabbit.annotation.RabbitHandler;
-import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -37,7 +38,6 @@ import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.rmi.ServerException;
 import java.time.*;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
@@ -55,6 +55,7 @@ import java.util.stream.Collectors;
 public class CustomOrderService {
 
     private final CustomPlanService customPlanService;
+    private final OrderService orderService;
     private final BaseDataServiceFeign baseDataServiceFeign;
     private final OrderServiceFeign orderServiceFeign;
     private final ThirdpartyServerFeign thirdpartyServerFeign;
@@ -64,22 +65,16 @@ public class CustomOrderService {
     private final CustomOrderDeliveryMapper customOrderDeliveryMapper;
     private final Generator<Long> generator;
     private final DictionaryClient dictionaryClient;
-    private final ProbeEventPublisher publisher;
+
     private final RabbitTemplate rabbitTemplate;
     //暂停开始结束时间
     private static final LocalTime BEGIN_PAUSE_OF_DAY = LocalTime.parse("00:00:00");
     private static final LocalTime END_PAUSE_OF_DAY = LocalTime.parse("23:59:59");
     private static final DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-    //申明队列
-    public static final String CUSTOM_PLAN_TASK_EXCHANGE = "healthy-good-custom-plan-task-exchange";
-    public static final String CUSTOM_PLAN_TASK_DLX = "healthy-good-custom-plan-task-dlx";
-    public static final String CUSTOM_PLAN_TASK_RECEIVE = "healthy-good-custom-plan-task-receive";
-    public static final String CUSTOM_PLAN_ORDER_TASK_EXCHANGE = "healthy-good-custom-plan-order-task-exchange";
-    public static final String CUSTOM_PLAN_ORDER_TASK_DLX = "healthy-good-custom-plan-order-task-dlx";
-    public static final String CUSTOM_PLAN_ORDER_TASK_RECEIVE = "healthy-good-custom-plan-order-task-receive";
 
     @Autowired
     public CustomOrderService(CustomPlanService customPlanService,
+                              OrderService orderService,
                               BaseDataServiceFeign baseDataServiceFeign,
                               OrderServiceFeign orderServiceFeign,
                               ThirdpartyServerFeign thirdpartyServerFeign,
@@ -88,8 +83,10 @@ public class CustomOrderService {
                               CustomOrderPauseMapper customOrderPauseMapper,
                               CustomOrderDeliveryMapper customOrderDeliveryMapper,
                               Generator<Long> generator,
-                              DictionaryClient dictionaryClient, ProbeEventPublisher publisher, RabbitTemplate rabbitTemplate) {
+                              DictionaryClient dictionaryClient,
+                              RabbitTemplate rabbitTemplate) {
         this.customPlanService = customPlanService;
+        this.orderService = orderService;
         this.baseDataServiceFeign = baseDataServiceFeign;
         this.orderServiceFeign = orderServiceFeign;
         this.thirdpartyServerFeign = thirdpartyServerFeign;
@@ -99,8 +96,9 @@ public class CustomOrderService {
         this.customOrderDeliveryMapper = customOrderDeliveryMapper;
         this.generator = generator;
         this.dictionaryClient = dictionaryClient;
-        this.publisher = publisher;
         this.rabbitTemplate = rabbitTemplate;
+        //初始化调用修改暂停恢复定制计划每五分钟调用一次
+        HealthyGoodQueue.DelayQueue.UPDATE_CUSTOM_ORDER_STATUS.send(rabbitTemplate,"nothing",5*60*1000);
     }
 
     /**
@@ -133,8 +131,15 @@ public class CustomOrderService {
         LocalDateTime endExtractionAt = LocalDateTime.now().plusDays(maxExtractionDay);
         customOrder.setEndExtractionAt(Date.from(endExtractionAt.atZone(ZoneId.systemDefault()).toInstant()));//定制提取截止时间
         int result = customOrderMapper.create(customOrder);
-
-        return result > 0 ? customOrder : null;
+        if(result > 0){
+            //mq设置三十分钟未支付失效
+            HealthyGoodQueue.DelayQueue.CANCEL_CUSTOM_ORDER.send(rabbitTemplate, orderCode, 30 * 60 * 1000);
+            //mq超过最后提取期限，给用户原路按照定制均价退款
+            long delay =customOrder.getEndExtractionAt().getTime()-current.getTime();//最后提取时间毫秒数-当前时间毫秒数
+            HealthyGoodQueue.DelayQueue.LAST_EXTRACTION.send(rabbitTemplate, orderCode, delay);
+            return customOrder;
+        }
+         return null;
     }
 
     /**
@@ -164,9 +169,14 @@ public class CustomOrderService {
      * @param customOrderPause
      * @return
      */
-    public int pauseCustomOrder(CustomOrderPause customOrderPause) {
+    public Tips pauseCustomOrder(CustomOrderPause customOrderPause) {
 
-        //暂停配送 todo 需要检查暂停时间规则
+        //暂停定制订单
+        String customOrderCode = customOrderPause.getCustomOrderCode();
+        CustomOrder customOrder = customOrderMapper.selectByCode(customOrderCode);
+        if (Objects.isNull(customOrder)) {
+            return Tips.warn("未找到定制订单");
+        }
 
         //如果当前时间段内还有暂停配送记录，就不允许操作暂停
         customOrderPause.setCreateAt(Date.from(Instant.now()));//创建时间
@@ -176,29 +186,87 @@ public class CustomOrderService {
         LocalDateTime begin = pauseBegin.atTime(BEGIN_PAUSE_OF_DAY);
         //计划暂停结束时间
         LocalDateTime last = pauseBegin.plusDays(customOrderPause.getPauseDay()).atTime(END_PAUSE_OF_DAY);
-        customOrderPause.setPauseBeginAt(Date.from(begin.atZone(ZoneId.systemDefault()).toInstant()));//暂停开始时间
-        customOrderPause.setPlanPauseEndAt(Date.from(last.atZone(ZoneId.systemDefault()).toInstant()));//计划暂停结束时间
-        if (Objects.nonNull(customOrderPauseMapper.selectCustomOrderPause(customOrderPause))) {
-            return 0;
-        }
-        //保持暂停记录
-        return customOrderPauseMapper.create(customOrderPause);
 
+        //查询当前设置暂停时间是否已经存在了 如果存在不允许设置
+        CustomOrderPause customOrderPauseParam = new CustomOrderPause();
+        customOrderPauseParam.setPauseBeginAt(Date.from(begin.atZone(ZoneId.systemDefault()).toInstant()));//暂停开始时间
+        customOrderPauseParam.setPlanPauseEndAt(Date.from(last.atZone(ZoneId.systemDefault()).toInstant()));//计划暂停结束时间
+        customOrderPauseParam.setOperStatus(OperStatus.PAUSE);//暂停状态
+        customOrderPauseParam.setCustomOrderCode(customOrderCode);
+        if (Objects.nonNull(customOrderPauseMapper.selectCustomOrderPause(customOrderPauseParam))) {
+            return Tips.warn("设定时间段已经存在暂停状态");
+        }
+        //查询已经使用暂停天数
+        Integer hadPauseDays = customOrderPauseMapper.selectHadPauseDays(customOrderCode);
+        //未找到记录说明未有暂停设置，已使用暂停天数为0
+        if (Objects.isNull(hadPauseDays)) {
+            hadPauseDays = 0;
+        }
+        //数据字典配置的最大暂停天数
+        Dictionary dictionary = customPlanService.customPlanMaxPauseDay();
+        List<Dictionary.Entry> items = dictionary.getEntries();
+        Dictionary.Entry needPlanMaxPauseDay = null;
+        for (Dictionary.Entry item : items) {
+            //周期=定制总天数
+            if (Objects.equals(Integer.valueOf(item.getCode()), customOrder.getTotalQty())) {
+                needPlanMaxPauseDay = item;
+                break;
+            }
+        }
+        if (Objects.isNull(needPlanMaxPauseDay)) {
+            return Tips.warn("未配置最大暂停天数");
+        }
+        //字典设置的最大允许暂停天数
+        Integer allowMaxPause = Integer.valueOf(needPlanMaxPauseDay.getName());
+        //最大暂停天数<已经暂停天数+计划设置暂停天数
+        if (allowMaxPause < (hadPauseDays + customOrderPause.getPlanPauseDay())) {
+            return Tips.warn("已经超过最大暂停天数");
+        }
+        //默认所有暂停结束设置都为计划的设置，如果恢复，那么再修改实际结束时间
+        customOrderPause.setPauseEndAt(customOrderPause.getPlanPauseEndAt());
+        customOrderPause.setPauseDay(customOrderPause.getPlanPauseDay());
+        int saveResult = customOrderPauseMapper.create(customOrderPause);
+        //保持暂停记录
+        return saveResult > 0 ? Tips.info("设置成功") : Tips.warn("设置失败");
     }
 
     /**
      * 恢复配送
      *
-     * @param customOrder
+     * @param customOrderCode
      * @return
      */
-    public int resumeCustomOrder(CustomOrder customOrder) {
-        CustomOrder searchCustomOrder = this.selectByCode(customOrder.getCustomOrderCode());
+    public int resumeCustomOrder(String customOrderCode) {
+        CustomOrder searchCustomOrder = this.selectByCode(customOrderCode);
         if (Objects.isNull(searchCustomOrder))
             return 0;
-        //恢复配送
-        //customOrderPauseMapper.deleteByCustomOrderId(searchCustomOrder.getId())
-        return 1;
+        LocalDateTime currentDateTime = LocalDateTime.now();
+        LocalDate currentDate = LocalDate.now();
+        Date current = Date.from(currentDateTime.atZone(ZoneId.systemDefault()).toInstant());
+        CustomOrderPause customOrderPauseParam = new CustomOrderPause();
+        customOrderPauseParam.setPauseBeginAt(current);//暂停开始时间条件
+        customOrderPauseParam.setPlanPauseEndAt(current);//计划暂停结束时间条件
+        customOrderPauseParam.setOperStatus(OperStatus.PAUSE);//暂停状态
+        customOrderPauseParam.setCustomOrderCode(customOrderCode);
+        //查找到当前是否设置了暂停 如果有就恢复并修改实际结束时间
+        CustomOrderPause customOrderPause = customOrderPauseMapper.selectCustomOrderPause(customOrderPauseParam);
+        if (Objects.nonNull(customOrderPause)) {
+            //恢复
+            customOrderPause.setOperStatus(OperStatus.RECOVERY);
+            //实际暂停天数
+            LocalDate pauseBeginAt = LocalDateTime.ofInstant(customOrderPause.getPauseBeginAt().toInstant(), ZoneId.systemDefault()).toLocalDate();
+            customOrderPause.setPauseEndAt(current);
+            //计算实际暂停天数(当前日期-开始暂停日期)
+            long pauseDay = currentDate.toEpochDay() - pauseBeginAt.toEpochDay();
+            //存在恢复时间还未到达计划开始暂停时间，那么暂停天数为0
+            if (pauseDay < 0) {
+                pauseDay = 0;
+            }
+            customOrderPause.setPauseDay(pauseDay);
+            //恢复
+            return customOrderPauseMapper.update(customOrderPause);
+        }
+        return 0;
     }
 
     /**
@@ -345,21 +413,11 @@ public class CustomOrderService {
             }
             //剩余次数-1 实际为只要这个值不为空，那么就会更新为剩余次数-1
             updateCustomOrder.setRemainingQty(customOrder.getRemainingQty() - 1);
-            int updateCustomOrderResult = customOrderMapper.updateByCode(updateCustomOrder);
+            int updateCustomOrderResult = this.updateByCode(updateCustomOrder);
             log.info("创建定制订单提取记录修改定制订单次数返回结果{}", updateCustomOrderResult);
 
-            //送货上门订单 本地mq延迟到配送时间发送海鼎
-            LocalDateTime current = LocalDateTime.now();
-            //计算配送的时间与当前时间的毫秒数，做为消费端处理配送时候的时间
-            DeliverTime deliverTime = Jackson.object(deliveryTime, DeliverTime.class);
-            final Long interval = deliverTime.getStartTime().getTime() - current.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli();
-            //如果计算结果为负数，那么就只延迟1秒钟
-            //延迟发送到海鼎
-            rabbitTemplate.convertAndSend(CUSTOM_PLAN_ORDER_TASK_EXCHANGE, CUSTOM_PLAN_ORDER_TASK_DLX, orderCode, message -> {
-                message.getMessageProperties().setExpiration(String.valueOf(interval<=0?1000L:interval));
-                return message;
-            });
-            log.info("创建定制订单提取延迟发送到海鼎:{},{}", orderCode,interval);
+            //延迟发送海鼎
+            orderService.delaySendToHd(orderCode, Jackson.object(deliveryTime, DeliverTime.class));
         }
         return orderDetailResultTips;
     }
@@ -464,17 +522,16 @@ public class CustomOrderService {
         return Pages.of(total, this.customOrderMapper.pageCustomOrder(customOrder));
     }
 
-
     /**
-     * 每天自动配送定制订单
-     * 被调用者 (手动提取操作,自动提取类型的已支付(余额，微信回调)操作，修改配送时间操作)
+     * 每天自动提取定制订单
+     * 被调用者 (自动提取类型的已支付(余额，微信回调)操作，修改配送时间操作)
      * 注：当天下单当天不会配送，第二天才能配送
      * 注：自动配送会允许修改配送时间
      *
      * @param deliveryDateTime 下一次配送具体时间
      * @param customOrderCode  定制订单编码
      */
-    private void scheduleDeliveryCustomOrder(LocalDateTime deliveryDateTime, String customOrderCode) {
+    public void scheduleDeliveryCustomOrder(LocalDateTime deliveryDateTime, String customOrderCode) {
         CustomOrder customOrder = customOrderMapper.selectByCode(customOrderCode);
         if (Objects.isNull(customOrder) || customOrder.getRemainingQty() <= 0 || !Objects.equals(customOrder.getStatus(), CustomOrderStatus.CUSTOMING)) {
             log.info("每天发订单配送,定制订单不存在或者定制订单剩余次数为0或者定制订单暂停中{}", customOrderCode);
@@ -484,92 +541,10 @@ public class CustomOrderService {
         //计算下一次配送的时间与当前时间的毫秒数，做为消费端处理配送时候的时间
         long interval = deliveryDateTime.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli() - current.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli();
 
-        rabbitTemplate.convertAndSend(CUSTOM_PLAN_TASK_EXCHANGE, CUSTOM_PLAN_TASK_DLX, customOrderCode, message -> {
-            message.getMessageProperties().setExpiration(String.valueOf(interval));
-            return message;
-        });
+        //等待到下一次配送的时间处理提取
+        //发送自动提取定制订单延迟队列
+        HealthyGoodQueue.DelayQueue.AUTO_EXTRACTION.send(rabbitTemplate, customOrderCode, interval);
     }
 
-    /**
-     * 配送时间内发送到基础订单修改为配送状态
-     *
-     * @param orderCode
-     */
-    @RabbitHandler
-    @RabbitListener(queues = CUSTOM_PLAN_ORDER_TASK_RECEIVE)
-    public void sendToHd(String orderCode) {
-        try {
-            ResponseEntity responseEntity = orderServiceFeign.sendOrderToHd(orderCode);
-            if (Objects.isNull(responseEntity)){
-                publisher.mqConsumerException(new NullPointerException(), Maps.of("message", "发送海鼎失败,基础服务未响应"));
-            }else if(responseEntity.getStatusCode().isError()){
-                publisher.mqConsumerException(new ServerException("调用远程订单发送海鼎失败"), Maps.of("message", "发送海鼎失败,基础服务错误"+responseEntity.getBody()));
-            }
-        } catch (Exception e) {
-            // 异常、队列消息
-            publisher.mqConsumerException(e, Maps.of("message", "发送海鼎失败"));
-        }
-    }
-    /**
-     * 每天自动提取定制订单
-     * 注：自动配送还需要自动创建提取订单
-     *
-     * @param customOrderCode
-     */
-    @RabbitHandler
-    @RabbitListener(queues = CUSTOM_PLAN_TASK_RECEIVE)
-    public void autoExtraction(String customOrderCode) {
-        CustomOrder customOrder = customOrderMapper.selectByCode(customOrderCode);
-        if (Objects.isNull(customOrder) || customOrder.getRemainingQty() <= 0
-                || Objects.equals(customOrder.getStatus(), CustomOrderStatus.WAIT_PAYMENT)
-                || Objects.equals(customOrder.getStatus(), CustomOrderStatus.INVALID)
-                || Objects.equals(customOrder.getStatus(), CustomOrderStatus.FINISHED)) {
-            log.info("每天发订单配送,定制订单不存在或者定制订单剩余次数为0或者定制订单非暂停和恢复状态{},{}", customOrderCode, customOrder);
-            return;
-        }
-        Date current = Date.from(Instant.now());
-        //获取设置的配送时间段 customOrder.getDeliveryTime() eg:{"display":"08:30-09:30","startTime":"08:30:00","endTime":"09:30:00"}
-        CustomOrderTime customOrderTime = Jackson.object(customOrder.getDeliveryTime(), CustomOrderTime.class);
-        //设置具体配送时间
-        LocalDateTime nextDeliverTime = LocalDate.now().plusDays(1).atTime(customOrderTime.getStartTime());
-        try {
-            //检查是否用户设置了暂停配送并且当前时间在暂停配送时间内
-            CustomOrderPause customOrderPause = new CustomOrderPause();
-            customOrderPause.setOperStatus(OperStatus.PAUSE);
-            customOrderPause.setCustomOrderCode(customOrderCode);
-            customOrderPause.setPauseBeginAt(current);
-            customOrderPause.setPauseEndAt(current);
-            CustomOrderPause searchCustomOrderPause = customOrderPauseMapper.selectBeginEqCustomOrderPause(customOrderPause);
-            //检测到在暂停时间内或者定制在暂停中
-            if (Objects.nonNull(searchCustomOrderPause) || Objects.equals(customOrder.getStatus(), CustomOrderStatus.PAUSE_DELIVERY)) {
-                log.warn("每天发订单配送,当前时间有暂停定制订单设置:{}", searchCustomOrderPause);
-                // 下一次配送【明天配送】
-                //继续下一次配送
-                this.scheduleDeliveryCustomOrder(nextDeliverTime, customOrderCode);
-                return;
-            }
-            //自动配送需要提取定制订单
-            if (Objects.equals(customOrder.getDeliveryType(), CustomOrderBuyType.AUTO)) {
-                //将定制设定时间转换成今天的配送时间
-                DeliverTime deliverTime = new DeliverTime();
-                deliverTime.setDisplay(customOrderTime.getDisplay());
-                deliverTime.setStartTime(Date.from(LocalDate.now().atTime(customOrderTime.getStartTime()).atZone(ZoneId.systemDefault()).toInstant()));
-                deliverTime.setEndTime(Date.from(LocalDate.now().atTime(customOrderTime.getEndTime()).atZone(ZoneId.systemDefault()).toInstant()));
-
-                Tips result = this.extraction(customOrder, Jackson.json(deliverTime), "自动提取");//会提取并且发送海鼎与配送
-                if (result.err()) {
-                    log.error("每天发订单配送,提取定制订单失败:{}", result);
-                    return;
-                } else {
-                    // 下一次配送
-                    this.scheduleDeliveryCustomOrder(nextDeliverTime, customOrderCode);
-                    log.error("每天发订单配送,提取定制订单成功,并且已发送明天配送队列信息:{},{},{}", result, nextDeliverTime, customOrderCode);
-                }
-            }
-        } catch (Exception e) {
-            // 异常、队列消息
-            publisher.mqConsumerException(e, Maps.of("message", "自动提取失败"));
-        }
-    }
 }
 
