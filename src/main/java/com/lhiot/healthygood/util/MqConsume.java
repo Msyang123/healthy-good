@@ -23,6 +23,7 @@ import com.lhiot.healthygood.service.doctor.RegisterApplicationService;
 import com.lhiot.healthygood.service.user.FruitDoctorUserService;
 import com.lhiot.healthygood.type.AuditStatus;
 import com.lhiot.healthygood.type.FirstAndRemarkData;
+import com.lhiot.healthygood.type.SourceType;
 import com.lhiot.healthygood.type.TemplateMessageEnum;
 import com.lhiot.healthygood.wechat.WeChatUtil;
 import lombok.extern.slf4j.Slf4j;
@@ -87,7 +88,7 @@ public class MqConsume {
             Integer baseAmount = order.getAmountPayable();
             //退货--金额为负数
             if (Objects.equals(OrderStatus.RETURNING, status) || Objects.equals(OrderStatus.ALREADY_RETURN, status)) {
-                doctorAchievementLog.setSourceType("REFUND");
+                doctorAchievementLog.setSourceType(SourceType.REFUND);
                 baseAmount = 0 - baseAmount;
             }
             String commission = "0";
@@ -126,9 +127,9 @@ public class MqConsume {
 
             Map<String, Object> map = ImmutableMap.of("saleCommission", saleCommission, "fruitCommission", fruitCommission);
 
-            doctorAchievementLog.setCommission(commissionBD.doubleValue());
-            doctorAchievementLog.setFruitDoctorCommission(fruitDoctorCommissionBD.doubleValue());
-            doctorAchievementLog.setOrderId(order.getId());
+            /*doctorAchievementLog.setCommission(commissionBD.doubleValue());
+            doctorAchievementLog.setFruitDoctorCommission(fruitDoctorCommissionBD.doubleValue());*/
+            doctorAchievementLog.setOrderId(order.getCode());
             doctorAchievementLog.setUserId(order.getUserId());
             doctorAchievementLog.setCommissionMap(map);
             //写入提成

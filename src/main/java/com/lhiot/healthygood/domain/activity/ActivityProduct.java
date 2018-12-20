@@ -2,6 +2,7 @@ package com.lhiot.healthygood.domain.activity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.lhiot.healthygood.type.YesOrNo;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
@@ -35,6 +36,12 @@ public class ActivityProduct {
     @ApiModelProperty(value = "活动id", dataType = "Long")
     @NotNull(message = "活动id不为空")
     private Long activityId;
+
+    @ApiModelProperty(notes = "限购数量", dataType = "String")
+    private Integer limitCount;
+
+    @ApiModelProperty(notes = "已购数量", dataType = "String")
+    private Integer alreadyBuyCount;
 
 
     @JsonProperty("specialProductActivityId")
@@ -72,8 +79,12 @@ public class ActivityProduct {
     private Integer sort;
 
     @JsonProperty("productShelfIds")
-    @ApiModelProperty(value = "", dataType = "String")
+    @ApiModelProperty(value = "上架ids，用英文逗号分隔", dataType = "String")
     private String productShelfIds;
+
+
+    @ApiModelProperty(value = "是否关联新品尝鲜板块", dataType = "YesOrNo")
+    private YesOrNo relationSection;
 
     @ApiModelProperty(notes = "每页查询条数(为空或0不分页查所有)", dataType = "Integer")
     private Integer rows;

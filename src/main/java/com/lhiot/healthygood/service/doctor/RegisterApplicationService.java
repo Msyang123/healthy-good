@@ -34,10 +34,11 @@ import java.util.List;
 import java.util.Objects;
 
 /**
-* Description:鲜果师申请记录服务类
-* @author yijun
-* @date 2018/07/26
-*/
+ * Description:鲜果师申请记录服务类
+ *
+ * @author yijun
+ * @date 2018/07/26
+ */
 @Slf4j
 @Service
 @Transactional
@@ -60,15 +61,15 @@ public class RegisterApplicationService {
         this.weChatUtil = weChatUtil;
     }
 
-    /** 
-    * Description:新增鲜果师申请记录
-    *  
-    * @param registerApplication
-    * @return RegisterApplication
-    * @author yijun
-    * @date 2018/07/26 12:08:13
-    */  
-    public RegisterApplication create(RegisterApplication registerApplication){
+    /**
+     * Description:新增鲜果师申请记录
+     *
+     * @param registerApplication
+     * @return RegisterApplication
+     * @author yijun
+     * @date 2018/07/26 12:08:13
+     */
+    public RegisterApplication create(RegisterApplication registerApplication) {
         registerApplication.setAuditStatus(AuditStatus.UNAUDITED);
         registerApplication.setCreateAt(new Date());
         this.registerApplicationMapper.create(registerApplication);
@@ -83,75 +84,48 @@ public class RegisterApplicationService {
      * @author yijun
      * @date 2018/07/26 12:08:13
      */
-    public RegisterApplication findLastApplicationById(Long id){
+    public RegisterApplication findLastApplicationById(Long id) {
         return this.registerApplicationMapper.findLastApplicationById(id);
     }
 
     /**
      * 修改鲜果师信息
+     *
      * @param fruitDoctor
      * @return
      */
-    public Tips updateFruitDoctorInfo(FruitDoctor fruitDoctor){
+    public Tips updateFruitDoctorInfo(FruitDoctor fruitDoctor) {
         FruitDoctor doctors = fruitDoctorMapper.selectByUserId(fruitDoctor.getUserId());
         if (Objects.isNull(doctors)) {
             return Tips.warn("鲜果师不存在");
         }
         int result = fruitDoctorMapper.updateById(fruitDoctor);
         //升级为明星鲜果师且不是明星鲜果师的时候才发送模板消息
-       // if (Objects.equals("YES",fruitDoctor.getHot()) ) {
+        if (result >= 0 && Objects.equals("YES", fruitDoctor.getHot()) && Objects.equals("NO",doctors.getHot())) {
             String currentTime = new SimpleDateFormat("yyyy-MM-dd").format(new Date());
-            /*List<DataItem> dataItems = new ArrayList<>();
             DataItem dataItem = new DataItem();
-            dataItem.setKey("keyword1");
-            dataItem.setValue("明星鲜果师");
-            DataItem dataItem1 = new DataItem();
-            dataItem1.setKey("keyword2");
-            dataItem1.setValue("成功");
-            DataItem dataItem2 = new DataItem();
-            dataItem2.setKey("keyword3");
-            dataItem2.setValue(currentTime);
-            DataItem dataItem3 = new DataItem();
-            dataItem3.setKey("remark");
-            dataItem3.setValue("如有疑问请致电0731-85240088");
-            dataItems.add(dataItem);
-            dataItems.add(dataItem1);
-            dataItems.add(dataItem2);
-            dataItems.add(dataItem3);*/
-        KeywordValue keywordValue = new KeywordValue();
-        keywordValue.setTemplateType(TemplateMessageEnum.UPGRADE_FRUIT_DOCTOR);
-        keywordValue.setKeyword1Value("明星鲜果师");
-        keywordValue.setKeyword2Value("成功");
-        keywordValue.setKeyword3Value(currentTime);
-        keywordValue.setKeyword4Value("如有疑问请致电0731-85240088");
-        keywordValue.setSendToDoctor(false);
-        keywordValue.setUserId(doctors.getUserId());
-        TemplateMessageEnum.APPLY_FRUIT_DOCTOR.setTouser("oKqRHwWwu21I9vb8NXFVaecsCN3o");
+            DataObject first = new DataObject();
+            DataObject keyword1 = new DataObject();
+            DataObject keyword2 = new DataObject();
+            DataObject keyword3 = new DataObject();
+            DataObject keyword4 = new DataObject();
+            DataObject remark = new DataObject();
+            first.setValue(TemplateMessageEnum.UPGRADE_FRUIT_DOCTOR.getTemplateName());
+            keyword1.setValue("明星鲜果师");
+            keyword2.setValue("成功");
+            keyword3.setValue(currentTime);
+            keyword4.setValue("如有疑问请致电0731-85240088");
+            remark.setValue("如有疑问请致电0731-85240088");
 
-        DataItem dataItem = new DataItem();
-        DataObject first = new DataObject();
-        DataObject keyword1 = new DataObject();
-        DataObject keyword2 = new DataObject();
-        DataObject keyword3 = new DataObject();
-        DataObject keyword4 = new DataObject();
-        DataObject remark = new DataObject();
-        first.setValue(TemplateMessageEnum.UPGRADE_FRUIT_DOCTOR.getTemplateName());
-        keyword1.setValue("明星鲜果师");
-        keyword2.setValue("成功");
-        keyword3.setValue(currentTime);
-        keyword4.setValue("如有疑问请致电0731-85240088");
-        remark.setValue("如有疑问请致电0731-85240088");
-
-        dataItem.setFirst(first);
-        dataItem.setKeyword1(keyword1);
-        dataItem.setKeyword2(keyword2);
-        dataItem.setKeyword3(keyword3);
-        dataItem.setKeyword4(keyword4);
-        dataItem.setRemark(remark);
-
-            weChatUtil.sendMessageToWechat(TemplateMessageEnum.UPGRADE_FRUIT_DOCTOR,"oKqRHwWwu21I9vb8NXFVaecsCN3o",dataItem);
-     //   }
-        return result>0 ? Tips.info("修改成功") : Tips.warn("修改失败");
+            dataItem.setFirst(first);
+            dataItem.setKeyword1(keyword1);
+            dataItem.setKeyword2(keyword2);
+            dataItem.setKeyword3(keyword3);
+            dataItem.setKeyword4(keyword4);
+            dataItem.setRemark(remark);
+            weChatUtil.sendMessageToWechat(TemplateMessageEnum.UPGRADE_FRUIT_DOCTOR, fruitDoctor.getOpenId(), dataItem);
+        }
+        return result > 0 ? Tips.info("修改成功") : Tips.warn("修改失败");
     }
 
     /**
@@ -177,7 +151,7 @@ public class RegisterApplicationService {
             }
             // 设置要添加的鲜果师信息 FIXME 代码重复
             FruitDoctor fruitDoctor = new FruitDoctor();
-            BeanUtils.of(registerApplication).populate(fruitDoctor);
+            BeanUtils.copyProperties(registerApplication, fruitDoctor);
             fruitDoctor.setRealName(registerApplication.getRealName());
             fruitDoctor.setInviteCode(Random.of(4, Random.Digits._62));
             fruitDoctor.setDoctorLevel(DoctorLevel.TRAINING.toString());
@@ -185,7 +159,7 @@ public class RegisterApplicationService {
             fruitDoctor.setCreateAt(Date.from(Instant.now()));
             //查找推荐人
             DoctorCustomer doctorCustomer = doctorCustomerMapper.selectByUserId(registerApplication.getUserId());
-            if(Objects.nonNull(doctorCustomer)){
+            if (Objects.nonNull(doctorCustomer)) {
                 fruitDoctor.setRefereeId(doctorCustomer.getDoctorId());
             }
             //查找基础服务对应的微信用户信息
@@ -232,25 +206,26 @@ public class RegisterApplicationService {
 
     /**
      * 发送模板消息
+     *
      * @param auditStatus
      * @param userId
      * @throws JsonProcessingException
      * @throws AmqpException
      */
-    public void doctorApplicationSendToQueue(AuditStatus auditStatus,Long userId) throws AmqpException, JsonProcessingException{
-        log.info("===============发送模板消息auditStatus:"+auditStatus+",userId:"+userId);
+    public void doctorApplicationSendToQueue(AuditStatus auditStatus, Long userId) throws AmqpException, JsonProcessingException {
+        log.info("===============发送模板消息auditStatus:" + auditStatus + ",userId:" + userId);
         String theme = "";
         String remark = "";
         String status = "";
-        if(AuditStatus.UNAUDITED.equals(auditStatus)){
+        if (AuditStatus.UNAUDITED.equals(auditStatus)) {
             theme = BacklogEnum.APPLICATION.getBacklog();
             remark = BacklogEnum.APPLICATION.getRemark();
             status = BacklogEnum.APPLICATION.getStatus();
-        }else if(AuditStatus.AGREE.equals(auditStatus)){
+        } else if (AuditStatus.AGREE.equals(auditStatus)) {
             theme = BacklogEnum.APPLICATION_SUCCESS.getBacklog();
             remark = BacklogEnum.APPLICATION_SUCCESS.getRemark();
             status = BacklogEnum.APPLICATION_SUCCESS.getStatus();
-        }else if(AuditStatus.REJECT.equals(auditStatus)){
+        } else if (AuditStatus.REJECT.equals(auditStatus)) {
             theme = BacklogEnum.APPLICATION_FAILURE.getBacklog();
             remark = BacklogEnum.APPLICATION_FAILURE.getRemark();
             status = BacklogEnum.APPLICATION_FAILURE.getStatus();
@@ -268,7 +243,7 @@ public class RegisterApplicationService {
         keywordValue.setSendToDoctor(false);
         keywordValue.setUserId(userId);
         //发送模板消息
-        log.info("=====================>keywordValue："+keywordValue);
+        log.info("=====================>keywordValue：" + keywordValue);
         rabbit.convertAndSend(FruitDoctorOrderExchange.FRUIT_TEMPLATE_MESSAGE.getExchangeName(),
                 FruitDoctorOrderExchange.FRUIT_TEMPLATE_MESSAGE.getQueueName(), Jackson.json(keywordValue));
     }

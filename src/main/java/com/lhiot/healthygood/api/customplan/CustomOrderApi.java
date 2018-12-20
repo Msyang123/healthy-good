@@ -17,6 +17,7 @@ import com.lhiot.healthygood.feign.model.WxPayModel;
 import com.lhiot.healthygood.feign.type.ApplicationType;
 import com.lhiot.healthygood.feign.type.SourceType;
 import com.lhiot.healthygood.service.customplan.CustomOrderService;
+import com.lhiot.healthygood.type.CustomOrderBuyType;
 import com.lhiot.healthygood.type.CustomOrderStatus;
 import com.lhiot.healthygood.util.RealClientIp;
 import io.swagger.annotations.Api;
@@ -24,6 +25,8 @@ import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.configurationprocessor.json.JSONException;
+import org.springframework.boot.configurationprocessor.json.JSONObject;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -231,7 +234,6 @@ public class CustomOrderApi {
             return ResponseEntity.badRequest().body(tips.getMessage());
         }
         CustomOrder customOrder = tips.getData();
-
         // 查找用户信息
         ResponseEntity<UserDetailResult> userEntity = baseUserServerFeign.findById(customOrder.getUserId());
         if (userEntity.getStatusCode().isError()) {
@@ -240,6 +242,16 @@ public class CustomOrderApi {
         UserDetailResult userDetailResult = userEntity.getBody();
         customOrder.setNickname(userDetailResult.getNickname());
         customOrder.setPhone(userDetailResult.getPhone());
+        // 自动配送解析配送时间
+        if (Objects.equals(CustomOrderBuyType.AUTO, customOrder.getDeliveryType())) {
+            String deliveryTime = customOrder.getDeliveryTime();
+            try {
+                JSONObject jsonObject = new JSONObject(deliveryTime);
+                customOrder.setDeliveryTime(jsonObject.getString("display"));
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+        }
         return ResponseEntity.ok(customOrder);
     }
 

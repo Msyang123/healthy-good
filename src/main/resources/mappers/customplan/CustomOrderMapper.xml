@@ -8,6 +8,8 @@
         <id column="id" property="id"/>
         <result column="custom_order_code" property="customOrderCode"/>
         <result column="user_id" property="userId"/>
+        <result column="nickname" property="nickname"/>
+        <result column="phone" property="phone"/>
         <result column="status" property="status"/>
         <result column="remaining_qty" property="remainingQty"/>
         <result column="delivery_type" property="deliveryType"/>
@@ -31,6 +33,8 @@
         <id column="id" property="id"/>
         <result column="custom_order_code" property="customOrderCode"/>
         <result column="user_id" property="userId"/>
+        <result column="nickname" property="nickname"/>
+        <result column="phone" property="phone"/>
         <result column="status" property="status"/>
         <result column="remaining_qty" property="remainingQty"/>
         <result column="delivery_type" property="deliveryType"/>
@@ -38,11 +42,9 @@
         <result column="plan_id" property="planId"/>
         <result column="price" property="price"/>
         <result column="create_at" property="createAt"/>
-        <result column="delivery_address" property="deliveryAddress"/>
-        <result column="delivery_time" property="deliveryTime"/>
-        <result column="specification_id" property="specificationId"/>
         <result column="receive_user" property="receiveUser"/>
         <result column="contact_phone" property="contactPhone"/>
+        <result column="specification_id" property="specificationId"/>
         <result column="delivery_time" property="deliveryTime"/>
         <result column="delivery_address" property="deliveryAddress"/>
         <result column="quantity" property="quantity"/>
@@ -50,8 +52,6 @@
         <result column="pay_id" property="payId"/>
         <result column="description" property="description"/>
         <result column="end_extraction_at" property="endExtractionAt"/>
-        <result column="nickname" property="nickname"/>
-        <result column="phone" property="phone"/>
         <association property="customPlan" javaType="com.lhiot.healthygood.domain.customplan.CustomPlan">
             <id column="p_id" property="id"/>
             <result column="p_name" property="name"/>
@@ -68,6 +68,8 @@
             id,
             custom_order_code,
             user_id,
+            nickname,
+            phone,
             status,
             remaining_qty,
             delivery_type,
@@ -94,6 +96,8 @@
             o.id,
             o.custom_order_code,
             o.user_id,
+            o.nickname,
+            o.phone,
             o.status,
             o.remaining_qty,
             o.delivery_type,
@@ -103,9 +107,9 @@
             o.create_at,
             o.receive_user,
             o.contact_phone,
-            o.delivery_address,
-            o.delivery_time,
             o.specification_id,
+            o.delivery_time,
+            o.delivery_address,
             o.quantity,
             o.store_code,
             o.pay_id,
@@ -272,10 +276,10 @@
             <if test="id != null ">
                 and o.id = #{id}
             </if>
-            <if test="customOrderCode != null ">
-                and o.custom_order_code =#{customOrderCode}
+            <if test="customOrderCode != null and customOrderCode != ''">
+                and o.custom_order_code like concat('%',#{customOrderCode}, '%')
             </if>
-            <if test="userId != null ">
+            <if test="userId != null and userId != ''">
                 and o.user_id =#{userId}
             </if>
             <if test="userIds != null and userIds != ''">
@@ -283,6 +287,9 @@
                 <foreach item="item" index="index" collection="userIds.split(',')" open="(" separator="," close=")">
                     #{item}
                 </foreach>
+            </if>
+            <if test="phone != null and phone != ''">
+                and o.phone like concat('%',#{phone}, '%')
             </if>
             <if test="status != null">
                 and o.status = #{status}
@@ -298,10 +305,10 @@
             <if test="contactPhone != null and contactPhone != ''">
                 and o.contact_phone = #{contactPhone}
             </if>
-            <if test="quantity != null">
+            <if test="quantity != null and quantity != 0">
                 and o.quantity = #{quantity}
             </if>
-            <if test="totalQty != null">
+            <if test="totalQty != null and totalQty != 0">
                 and o.total_qty = #{totalQty}
             </if>
             <if test="beginCreateAt != null">

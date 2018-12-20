@@ -12,6 +12,8 @@
         <result column="amount" property="amount" />
         <result column="source_type" property="sourceType" />
         <result column="create_at" property="createAt" />
+        <result column="fruit_doctor_commission" property="fruitDoctorCommission" />
+        <result column="commission" property="commission" />
     </resultMap>
 
     <!-- base查询字段  -->
@@ -24,6 +26,8 @@
             amount,
             source_type,
             create_at,
+            fruit_doctor_commission,
+            commission,
         </trim>
     </sql>
 
@@ -49,8 +53,12 @@
             <if test="sourceType != null ">
                 source_type,
             </if>
-            <if test="createAt != null ">
                 create_at,
+            <if test="fruitDoctorCommission != null ">
+                fruit_doctor_commission,
+            </if>
+            <if test="commission != null ">
+                commission,
             </if>
         </trim>
         <trim prefix="values (" suffix=")" suffixOverrides="," >
@@ -72,8 +80,12 @@
             <if test="sourceType != null ">
                 #{sourceType},
             </if>
-            <if test="createAt != null ">
-                #{createAt},
+               now(),
+            <if test="fruitDoctorCommission != null ">
+                #{fruitDoctorCommission},
+            </if>
+            <if test="commission != null ">
+                #{commission},
             </if>
         </trim>
     </insert>
@@ -116,6 +128,16 @@
         </foreach>
     </delete>
 
+    <!-- 统计鲜果师上个月的红利-->
+    <select id="selectFruitDoctorCommission" resultType="Integer" parameterType="java.util.List">
+        select IFNULL(sum(fruit_doctor_commission),0) fruitDoctorCommission from doctor_achievement_log where doctor_id in
+        <foreach item="item" index="index" collection="list" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+         and source_type = "ORDER" and PERIOD_DIFF(date_format(now( ) ,'%Y%m'),date_format(create_at,'%Y%m')) =1
+    </select>
+
+
 
     <!-- 根据id查找鲜果师业绩记录 -->
 	<select id="selectById" resultMap="BaseResultMap"
@@ -148,12 +170,19 @@
             <if test="createAt != null ">
                 and create_at = #{createAt}
             </if>
-            <if test="incomeType != null and incomeType.name=='INCOME'">
+            <if test="sourceType != null ">
+                and source_type = #{sourceType}
+            </if>
+            <!--<if test="incomeType != null and incomeType.name=='INCOME'"> Fixme 可能没用
                 and source_type in('ORDER','SUB_DISTRIBUTOR')
             </if>
             <if test="incomeType != null and incomeType.name=='EXPENDITURE'">
                 and source_type in('SETTLEMENT','REFUND')
+            </if>-->
+            <if test="settlement != null">
+                and date_format(create_at,'%y-%m-%d')=date_format(now(),'%y-%m-%d')
             </if>
+
         </where>
     </sql>
 
@@ -201,7 +230,7 @@
     </select>
 
 
-    <!--查询我的团队销售业绩-->
+    <!--查询我的团队销售业绩 Fixme 有问题-->
     <select id="teamAchievement" parameterType="long" resultType="com.lhiot.healthygood.domain.doctor.TeamAchievement">
       select real_name,f.phone,f.avatar,f.create_at,
         (select IFNULL(sum(amount/commission),0)
@@ -223,8 +252,8 @@
          from fruit_doctor f where id=#{0}
     </select>
 
-	<!-- lynn 统计业绩 -->
-	<select id="achievement" parameterType="map" 
+	<!-- lynn 统计业绩 Fixme 有问题-->
+    <select id="achievement" parameterType="map"
 		resultType="com.lhiot.healthygood.domain.doctor.Achievement">
 		SELECT IFNULL(SUM(amount/commission),0) as salesAmount ,IFNULL(SUM(amount),0) AS incomeAmount,COUNT(DISTINCT order_id) AS orderCount
 		FROM doctor_achievement_log 

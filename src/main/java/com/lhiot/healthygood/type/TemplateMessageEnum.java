@@ -1,5 +1,6 @@
 package com.lhiot.healthygood.type;
 
+import com.lhiot.healthygood.util.DataItem;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -27,7 +28,7 @@ public enum TemplateMessageEnum {
 
 	@Getter
 	@Setter
-	String data;
+	DataItem data;
 
 	TemplateMessageEnum(String templateName,String template_id,String url){
 		this.template_id = template_id;

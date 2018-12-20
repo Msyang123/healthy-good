@@ -3,6 +3,7 @@ package com.lhiot.healthygood.service.activity;
 import com.google.common.base.Joiner;
 import com.leon.microx.util.BeanUtils;
 import com.leon.microx.util.Maps;
+import com.leon.microx.util.StringUtils;
 import com.leon.microx.web.result.Pages;
 import com.leon.microx.web.result.Tips;
 import com.lhiot.healthygood.domain.activity.ActivityProduct;
@@ -13,13 +14,16 @@ import com.lhiot.healthygood.feign.BaseDataServiceFeign;
 import com.lhiot.healthygood.feign.model.ProductSectionRelation;
 import com.lhiot.healthygood.feign.model.ProductShelf;
 import com.lhiot.healthygood.feign.model.ProductShelfParam;
+import com.lhiot.healthygood.feign.model.ProductSpecification;
 import com.lhiot.healthygood.mapper.activity.ActivityProductMapper;
 import com.lhiot.healthygood.mapper.activity.ActivitySectionRelationMapper;
 import com.lhiot.healthygood.type.ActivityType;
+import com.lhiot.healthygood.type.YesOrNo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.CollectionUtils;
 
 import javax.validation.constraints.NotNull;
 import java.util.ArrayList;
@@ -71,20 +75,26 @@ public class ActivityProductService {
             Tips.warn("添加活动商品失败！");
         }
         // 添加上架商品与新品尝鲜板块的关联
-        // 根据活动id查询关联的板块id
-        @NotNull(message = "活动id不为空") Long activityId = activityProduct.getActivityId();
-        // 一个定制板块活动只会关联一个商品板块,如果有多个活动则要修改
-        ActivitySectionRelation relation = activitySectionRelationMapper.selectRelation(Maps.of("activityId", activityId));
-        // 根据板块id和上架id在基础服务中添加关联关系
-        Long sectionId = relation.getSectionId();
-        ProductSectionRelation productSectionRelation = new ProductSectionRelation();
-        productSectionRelation.setSectionId(sectionId);
-        productSectionRelation.setShelfId(productShelfId);
-        ResponseEntity entity = baseDataServiceFeign.create(productSectionRelation);
-        if (entity.getStatusCode().isError()) {
-            return Tips.warn(entity.getBody().toString());
+        if (Objects.equals(YesOrNo.YES, activityProduct.getRelationSection())){
+            // 根据活动id查询关联的板块id
+            @NotNull(message = "活动id不为空") Long activityId = activityProduct.getActivityId();
+            // 一个定制板块活动只会关联一个商品板块,如果有多个活动则要修改
+            ActivitySectionRelation relation = activitySectionRelationMapper.selectRelation(Maps.of("activityId", activityId));
+            // 根据板块id和上架id在基础服务中添加关联关系
+            Long sectionId = relation.getSectionId();
+            ProductSectionRelation productSectionRelation = new ProductSectionRelation();
+            productSectionRelation.setSectionId(sectionId);
+            productSectionRelation.setShelfId(productShelfId);
+            ResponseEntity entity = baseDataServiceFeign.create(productSectionRelation);
+            if (entity.getStatusCode().isError()) {
+                return Tips.warn(entity.getBody().toString());
+            }
         }
         return Tips.info(activityProduct.getId() + "");
+    }
+
+    public List<ActivityProduct> list (ActivityProduct product){
+        return activityProductMapper.selectActivityProducts(product);
     }
 
     /**
@@ -163,22 +173,44 @@ public class ActivityProductService {
      * @param param
      * @return 活动商品信息列表
      */
-    public Pages<ActivityProductResult> findList(ActivityProductParam param) {
+    public Tips<Pages<ActivityProductResult>> findList(ActivityProductParam param) {
         // 查询活动商品信息
         ActivityProduct activityProduct = new ActivityProduct();
-        BeanUtils.of(param).populate(activityProduct);
+        BeanUtils.of(activityProduct).populate(param);
+        // 根据查询条件获取上架ids
+        if (Objects.nonNull(param.getBarcode()) || Objects.nonNull(param.getName())) {
+            ProductShelfParam productShelfParam = new ProductShelfParam();
+            productShelfParam.setName(param.getName());
+            productShelfParam.setKeyword(param.getBarcode());
+            ResponseEntity productShelfEntity = baseDataServiceFeign.searchProductShelves(productShelfParam);
+            if (productShelfEntity.getStatusCode().isError()) {
+                return Tips.warn((String) productShelfEntity.getBody());
+            }
+            if (Objects.isNull(productShelfEntity.getBody())) {
+                return Tips.empty();
+            }
+            Pages<ProductShelf> productShelfPages = (Pages<ProductShelf>) productShelfEntity.getBody();
+            List<ProductShelf> productShelfList = productShelfPages.getArray();
+            if (!CollectionUtils.isEmpty(productShelfList)) {
+                List<Long> shelfIdList = productShelfList.stream().map(ProductShelf::getId).collect(Collectors.toList());
+                String shelfIds = StringUtils.collectionToDelimitedString(shelfIdList, ",");
+                activityProduct.setProductShelfIds(shelfIds);
+            }
+        }
+        // 查询活动商品信息
         List<ActivityProduct> activityProductList = activityProductMapper.pageActivityProducts(activityProduct);
         boolean pageFlag = Objects.nonNull(param.getPage()) && Objects.nonNull(param.getRows()) && param.getPage() > 0 && param.getRows() > 0;
         int total = pageFlag ? this.count(activityProduct) : activityProductList.size();
 
         // 查询商品上架信息
         List<Long> shelfIdList = activityProductList.stream().map(ActivityProduct::getProductShelfId).collect(Collectors.toList());
-        String shelfIds = Joiner.on(",").join(shelfIdList);
+        String shelfIds = StringUtils.collectionToDelimitedString(shelfIdList, ",");
         ProductShelfParam productShelfParam = new ProductShelfParam();
         productShelfParam.setIds(shelfIds);
+        productShelfParam.setIncludeProduct(true);
         ResponseEntity productShelfEntity = baseDataServiceFeign.searchProductShelves(productShelfParam);
         if (productShelfEntity.getStatusCode().isError()) {
-            Tips.warn(productShelfEntity.getBody().toString());
+            return Tips.warn((String) productShelfEntity.getBody());
         }
         Pages<ProductShelf> productShelfPages = (Pages<ProductShelf>) productShelfEntity.getBody();
         List<ProductShelf> productShelfList = productShelfPages.getArray();
@@ -188,15 +220,23 @@ public class ActivityProductService {
         // List<ActivityProduct> 转换为  List<ActivityProductResult>
         activityProductList.forEach(item -> {
             ActivityProductResult activityProductResult = new ActivityProductResult();
-            BeanUtils.of(item).populate(activityProductResult);
+            BeanUtils.copyProperties(item, activityProductResult);
             ProductShelf productShelf = productShelfList.get(activityProductList.indexOf(item));
-            BeanUtils.of(productShelf).populate(activityProductResult);
-            String specification = productShelf.getProductSpecification().getWeight() + productShelf.getProductSpecification().getPackagingUnit() + "*" + productShelf.getProductSpecification().getSpecificationQty() + "份";
-            activityProductResult.setSpecification(specification);
-            activityProductResult.setBarcode(productShelf.getProductSpecification().getBarcode());
-            results.add(activityProductResult);
+            BeanUtils.copyProperties(productShelf,activityProductResult);
+            ProductSpecification productSpecification = productShelf.getProductSpecification();
+            if (Objects.nonNull(productSpecification)) {
+                String specification = productSpecification.getWeight() + productSpecification.getPackagingUnit() + "*" + productSpecification.getSpecificationQty() + "份";
+                activityProductResult.setSpecification(specification);
+                activityProductResult.setProductShelfId(productShelf.getShelfId());
+                activityProductResult.setBarcode(productSpecification.getBarcode());
+                activityProductResult.setId(item.getId());
+                activityProductResult.setActivityPrice(item.getActivityPrice());
+                String specificationInfo = productShelf.getName() + " " + specification + " [" + productSpecification.getBarcode() + "]";
+                activityProductResult.setSpecificationInfo(specificationInfo);
+                results.add(activityProductResult);
+            }
         });
-        return Pages.of(total, results);
+        return Tips.<Pages<ActivityProductResult>>empty().data(Pages.of(total, results));
     }
 
     public ActivityProduct selectActivityProduct(ActivityProduct activityProduct){

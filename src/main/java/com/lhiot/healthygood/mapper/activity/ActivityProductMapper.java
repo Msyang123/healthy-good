@@ -58,6 +58,8 @@ public interface ActivityProductMapper {
 
     ActivityProduct selectActivityProduct(ActivityProduct activityProduct);
 
+    List<ActivityProduct> selectActivityProducts(ActivityProduct activityProduct);
+
     /**
      * Description:根据id查找活动商品
      *
@@ -72,12 +74,12 @@ public interface ActivityProductMapper {
      * Description:根据id查找活动商品
      *
      * @param specialProductActivityId
-     * @param shelfId
+     * @param productShelfId
      * @return
      * @author hufan
      * @date 2018/12/03 18:42:15
      */
-    ActivityProduct selectBySpecialIdAndShelfId(@Param("specialProductActivityId") Long specialProductActivityId,@Param("shelfId") Long shelfId);
+    ActivityProduct selectBySpecialIdAndShelfId(@Param("specialProductActivityId") Long specialProductActivityId,@Param("productShelfId") Long productShelfId);
 
     /**
     * Description:查询活动商品列表

@@ -13,6 +13,8 @@ import com.lhiot.healthygood.feign.type.ApplicationType;
 import com.lhiot.healthygood.feign.type.PayType;
 import com.lhiot.healthygood.feign.type.SourceType;
 import com.lhiot.healthygood.service.customplan.CustomOrderService;
+import com.lhiot.healthygood.service.user.FruitDoctorService;
+import com.lhiot.healthygood.service.order.OrderService;
 import com.lhiot.healthygood.service.order.OrderService;
 import com.lhiot.healthygood.type.CustomOrderStatus;
 import com.lhiot.healthygood.util.RealClientIp;
@@ -42,13 +44,15 @@ public class BalanceApi {
     private final HealthyGoodConfig.WechatPayConfig wechatPayConfig;
     private final CustomOrderService customOrderService;
     private final OrderService orderService;
+    private final FruitDoctorService fruitDoctorService;
 
     @Autowired
-    public BalanceApi(PaymentServiceFeign paymentServiceFeign, OrderServiceFeign orderServiceFeign, HealthyGoodConfig healthyGoodConfig, CustomOrderService customOrderService, OrderService orderService) {
+    public BalanceApi(PaymentServiceFeign paymentServiceFeign, OrderServiceFeign orderServiceFeign, HealthyGoodConfig healthyGoodConfig, CustomOrderService customOrderService, FruitDoctorService fruitDoctorService, OrderService orderService) {
         this.paymentServiceFeign = paymentServiceFeign;
         this.orderServiceFeign = orderServiceFeign;
         this.wechatPayConfig = healthyGoodConfig.getWechatPay();
         this.customOrderService = customOrderService;
+        this.fruitDoctorService = fruitDoctorService;
         this.orderService = orderService;
     }
 
@@ -111,6 +115,12 @@ public class BalanceApi {
             log.error("修改为已支付失败{}", updateOrderToPayed);
             return ResponseEntity.badRequest().body("修改为已支付失败");
         }
+        ResponseEntity orderDetailResultResponseEntity = orderServiceFeign.orderDetail(balancePayModel.getOrderCode(), false, false);
+        if (orderDetailResultResponseEntity.getStatusCode().isError()){
+            return ResponseEntity.badRequest().body(orderDetailResultResponseEntity.getBody());
+        }
+        OrderDetailResult order = (OrderDetailResult) orderDetailResultResponseEntity.getBody();
+        fruitDoctorService.calculationCommission(order);//鲜果师业绩提成
         //延迟发送海鼎
         orderService.delaySendToHd(orderCode,Jackson.object(orderDetailResult.getDeliverTime(), DeliverTime.class));
         return ResponseEntity.ok(orderDetailResult);
@@ -131,12 +141,13 @@ public class BalanceApi {
         balancePayModel.setMemo("定制订单支付");
         balancePayModel.setSourceType(SourceType.CUSTOM_PLAN);
         balancePayModel.setUserId(userId);
-        ResponseEntity<Id> balancePayResult = paymentServiceFeign.balancePay(balancePayModel);
+        ResponseEntity balancePayResult = paymentServiceFeign.balancePay(balancePayModel);
         if (Objects.isNull(balancePayResult) || balancePayResult.getStatusCode().isError()) {
             log.error("鲜果币支付定制订单失败{}", balancePayResult);
             return ResponseEntity.badRequest().body("鲜果币支付定制订单失败");
         }
-        String outTradeId = String.valueOf(balancePayResult.getBody().getValue());
+        Id id = (Id) balancePayResult.getBody();
+        String outTradeId = String.valueOf(id.getValue());
 
         //修改定制计划订单状态定制中
         String customOrderCode = balancePayModel.getOrderCode();

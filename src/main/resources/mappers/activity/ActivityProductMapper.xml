@@ -129,6 +129,12 @@
         from activity_product <include refid="Base_Where_Condition" />
     </select>
 
+    <select id="selectActivityProducts" resultMap="BaseResultMap"
+            parameterType="com.lhiot.healthygood.domain.activity.ActivityProduct">
+        select <include refid="Base_Column_List" />
+        from activity_product <include refid="Base_Where_Condition" />
+    </select>
+
     <!-- 根据ids查找活动商品 -->
     <select id="selectByIds" resultMap="BaseResultMap"
             parameterType="long"> select <include refid="Base_Column_List" />

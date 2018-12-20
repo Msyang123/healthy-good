@@ -8,10 +8,11 @@ import com.leon.microx.web.swagger.ApiParamType;
 import com.lhiot.healthygood.domain.doctor.*;
 import com.lhiot.healthygood.domain.user.DoctorCustomer;
 import com.lhiot.healthygood.domain.user.FruitDoctor;
-import com.lhiot.healthygood.domain.user.KeywordValue;
 import com.lhiot.healthygood.domain.user.ValidateParam;
 import com.lhiot.healthygood.feign.BaseUserServerFeign;
+import com.lhiot.healthygood.feign.OrderServiceFeign;
 import com.lhiot.healthygood.feign.ThirdpartyServerFeign;
+import com.lhiot.healthygood.feign.model.OrderDetailResult;
 import com.lhiot.healthygood.feign.model.UserDetailResult;
 import com.lhiot.healthygood.service.doctor.CardUpdateLogService;
 import com.lhiot.healthygood.service.doctor.DoctorAchievementLogService;
@@ -20,7 +21,6 @@ import com.lhiot.healthygood.service.doctor.SettlementApplicationService;
 import com.lhiot.healthygood.service.user.DoctorCustomerService;
 import com.lhiot.healthygood.service.user.FruitDoctorService;
 import com.lhiot.healthygood.type.*;
-import com.lhiot.healthygood.util.FeginResponseTools;
 import com.lhiot.healthygood.util.PinyinTool;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
@@ -36,7 +36,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.util.CollectionUtils;
 import org.springframework.web.bind.annotation.*;
 
-import java.text.SimpleDateFormat;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.*;
@@ -57,10 +56,11 @@ public class FruitDoctorApi {
     private final DoctorAchievementLogService doctorAchievementLogService;
     private final CardUpdateLogService cardUpdateLogService;
     private final BaseUserServerFeign baseUserServerFeign;
+    private final OrderServiceFeign orderServiceFeign;
 
     @Autowired
     public FruitDoctorApi(ThirdpartyServerFeign thirdpartyServerFeign, RegisterApplicationService registerApplicationService, SettlementApplicationService settlementApplicationService,
-                          DoctorCustomerService doctorCustomerService, DoctorCustomerService doctorCustomerService1, FruitDoctorService fruitDoctorService, DoctorAchievementLogService doctorAchievementLogService, CardUpdateLogService cardUpdateLogService, BaseUserServerFeign baseUserServerFeign) {
+                          DoctorCustomerService doctorCustomerService, DoctorCustomerService doctorCustomerService1, FruitDoctorService fruitDoctorService, DoctorAchievementLogService doctorAchievementLogService, CardUpdateLogService cardUpdateLogService, BaseUserServerFeign baseUserServerFeign, OrderServiceFeign orderServiceFeign) {
         this.thirdpartyServerFeign = thirdpartyServerFeign;
         this.registerApplicationService = registerApplicationService;
         this.settlementApplicationService = settlementApplicationService;
@@ -69,6 +69,7 @@ public class FruitDoctorApi {
         this.doctorAchievementLogService = doctorAchievementLogService;
         this.cardUpdateLogService = cardUpdateLogService;
         this.baseUserServerFeign = baseUserServerFeign;
+        this.orderServiceFeign = orderServiceFeign;
     }
 
     @Sessions.Uncheck
@@ -346,17 +347,16 @@ public class FruitDoctorApi {
     @ApiImplicitParams({
             @ApiImplicitParam(paramType = "query", name = "page", dataType = "int", required = true, value = "多少页"),
             @ApiImplicitParam(paramType = "query", name = "rows", dataType = "int", required = true, value = "数据多少条"),
-            @ApiImplicitParam(paramType = "query", name = "incomeType", dataTypeClass = IncomeType.class, required = true, value = "收入支出类型")
+            @ApiImplicitParam(paramType = "query", name = "incomeType", dataTypeClass = SourceType.class, required = true, value = "收入支出类型")
     })
     @ApiOperation(value = "收支明细", response = DoctorAchievementLog.class, responseContainer = "Set")
-    public ResponseEntity pageQuery(Sessions.User user, @RequestParam IncomeType incomeType, @RequestParam Integer page, @RequestParam Integer rows) {
+    public ResponseEntity pageQuery(Sessions.User user, @RequestParam Integer page, @RequestParam Integer rows) {
         String userId = user.getUser().get("userId").toString();
         FruitDoctor fruitDoctor = fruitDoctorService.selectByUserId(Long.valueOf(userId));
         if (Objects.isNull(fruitDoctor)) {
             return ResponseEntity.badRequest().body("鲜果师不存在");
         }
         DoctorAchievementLog doctorAchievementLog = new DoctorAchievementLog();
-        doctorAchievementLog.setIncomeType(incomeType);
         doctorAchievementLog.setDoctorId(fruitDoctor.getId());
         doctorAchievementLog.setRows(rows);
         doctorAchievementLog.setPage(page);
@@ -379,9 +379,7 @@ public class FruitDoctorApi {
     @ApiOperation(value = "我的团队的个人业绩", response = TeamAchievement.class, responseContainer = "Set")
     @ApiImplicitParam(paramType = "path", name = "doctorId", value = "鲜果师id", required = true, dataType = "Long")
     public ResponseEntity teamAchievement(@PathVariable Long doctorId) {
-        Tips tips = new Tips();
-        tips.setData(doctorAchievementLogService.teamAchievement(doctorId));
-        return FeginResponseTools.returnTipsResponse(tips);
+        return ResponseEntity.ok(doctorAchievementLogService.teamAchievement(doctorId));
     }
 
     @ApiOperation(value = "统计本期和上期的日周月季度的业绩", response = Achievement.class, responseContainer = "Set")
@@ -422,8 +420,17 @@ public class FruitDoctorApi {
                 doctorAchievementLogService.achievement(DateTypeEnum.DAY, PeriodType.current, fruitDoctor.getId(), true, true, null);
         //构建返回值
         current.setSummaryAmount(total.getSalesAmount());
-        current.setAvatar(fruitDoctor.getAvatar());
-        current.setDescription(fruitDoctor.getProfile());
+        ResponseEntity userInfo = baseUserServerFeign.findById(Long.valueOf(userId));
+        if (userInfo.getStatusCode().isError()) {
+            return ResponseEntity.badRequest().body(userInfo.getBody());
+        }
+        UserDetailResult users = (UserDetailResult) userInfo.getBody();
+        FruitDoctor doctor = fruitDoctorService.selectByUserId(Long.valueOf(users.getId()));
+        if (Objects.nonNull(doctor)) {
+            users.setFruitDoctor(true);
+            users.setFruitDoctorInfo(doctor);
+        }
+        current.setUserDetailResult(users);
         return ResponseEntity.ok(current);
     }
 
@@ -496,7 +503,7 @@ public class FruitDoctorApi {
             }
             Matcher matcher = pattern.matcher(pinyin);
 
-            item.setNicknameFristChar(matcher.find()?("" + pinyin.charAt(0)).toUpperCase():"#");
+            item.setNicknameFristChar(matcher.find() ? ("" + pinyin.charAt(0)).toUpperCase() : "#");
             boolean exist = false;
             for (int i = 0; i < customers.size(); i++) {
                 JSONObject jsonObject = (JSONObject) customers.get(i);
@@ -564,6 +571,51 @@ public class FruitDoctorApi {
         return ResponseEntity.ok(customers);
     }
 
+    @Sessions.Uncheck
+    @PostMapping("/bonus")
+    @ApiOperation(value = "每月10号定时结算鲜果师红利")
+    public ResponseEntity calculationFruitDoctorBonus() {
+        FruitDoctor param = new FruitDoctor();
+        param.setDoctorStatus(DoctorStatus.VALID);
+        List<FruitDoctor> fruitDoctors = fruitDoctorService.list(param);
+        fruitDoctors.forEach(fruitDoctor -> {
+            DoctorAchievementLog logParam = new DoctorAchievementLog();
+            logParam.setDoctorId(fruitDoctor.getId());
+            logParam.setSettlement("true");
+            logParam.setSourceType(SourceType.SUB_DISTRIBUTOR);
+            if (doctorAchievementLogService.doctorAchievementLogCounts(logParam) > 0) {
+                return;
+            }
+            FruitDoctor subordinateParam = new FruitDoctor();
+            subordinateParam.setDoctorStatus(DoctorStatus.VALID);
+            subordinateParam.setRefereeId(fruitDoctor.getId());
+            List<Long> ids = new ArrayList<>();
+            List<FruitDoctor> subordinates = fruitDoctorService.list(subordinateParam);
+            if (subordinates.size() > 0) {
+                subordinates.forEach(subordinate -> {
+                    ids.add(subordinate.getId());
+                });
+                Integer fruitDoctorBonus = doctorAchievementLogService.selectFruitDoctorCommission(ids);//轮询统计每个鲜果师上个月的红利
+                DoctorAchievementLog doctorAchievementLog = new DoctorAchievementLog();
+                doctorAchievementLog.setDoctorId(fruitDoctor.getId());
+                doctorAchievementLog.setSourceType(SourceType.SUB_DISTRIBUTOR);
+                doctorAchievementLog.setFruitDoctorCommission(fruitDoctorBonus);
+                doctorAchievementLogService.create(doctorAchievementLog);
+            }
+        });
+        return ResponseEntity.ok().build();
+    }
+
+    @Sessions.Uncheck
+    @PostMapping("/ceshi/commission")
+    @ApiOperation(value = "测试鲜果师订单分成接口")
+    public ResponseEntity ceshi() {
+        ResponseEntity orderDetailResult = orderServiceFeign.orderDetail("HG6634032908177408", false, false);
+        OrderDetailResult order = (OrderDetailResult) orderDetailResult.getBody();
+        fruitDoctorService.calculationCommission(order);
+        return ResponseEntity.ok().build();
+    }
+
     @PutMapping("/info")
     @ApiOperation(value = "修改鲜果师信息")
     @ApiImplicitParam(paramType = "body", name = "fruitDoctor", value = "要更新的鲜果师成员", required = true, dataType = "FruitDoctor")
@@ -574,28 +626,5 @@ public class FruitDoctorApi {
         return tips.err() ? ResponseEntity.badRequest().body(tips.getMessage()) : ResponseEntity.ok().body(tips.getMessage());
     }
 
-   /* @ApiOperation("鲜果师客户订单列表")
-    @ApiImplicitParams({
-            @ApiImplicitParam(paramType = "query", name = "doctorId", dataType = "String", required = true, value = "鲜果师id"),
-            @ApiImplicitParam(paramType = "query", name = "seachStatus", dataType = "String", required = false, value = "订单状态"),
-            @ApiImplicitParam(paramType = "query", name = "applicationType", dataType = "Long", required = true, value = "应用类型")
-    })
-    @GetMapping("orders/fruit-doctor/{doctorId}")
-    public ResponseEntity<?> findCustomerOrders(OrderSearchParam param){
-        List<BaseOrderInfo> orders = new ArrayList<>();
-        //根据鲜果师id查询其客户,默认创建时间倒序
-        if(Objects.isNull(param.getSidx())){
-            param.setSidx("create_at");
-            param.setSord("desc");
-        }
-        List<FruitDoctorUser> users = fruitDoctorService.findUserByDoctorId(param.getDoctorId());
-        users = users.stream().filter(user -> Objects.nonNull(user)).collect(Collectors.toList());
-        if(Objects.isNull(users) || users.isEmpty()){
-            return ResponseEntity.ok(Multiple.of(orders));
-        }
-        List<Long> userIds = users.stream().map(FruitDoctorUser::getId).collect(Collectors.toList());
-        param.setUserIds(userIds);
-        orders = fruitDoctorService.findUserOrders(param);
-        return ResponseEntity.ok(Multiple.of(orders));
-    }*/
+
 }

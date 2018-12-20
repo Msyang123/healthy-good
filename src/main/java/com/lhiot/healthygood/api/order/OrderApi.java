@@ -9,6 +9,9 @@ import com.leon.microx.web.result.Tips;
 import com.leon.microx.web.result.Tuple;
 import com.leon.microx.web.session.Sessions;
 import com.lhiot.healthygood.config.HealthyGoodConfig;
+import com.lhiot.healthygood.domain.activity.ActivityProduct;
+import com.lhiot.healthygood.domain.activity.ActivityProductRecord;
+import com.lhiot.healthygood.domain.activity.SpecialProductActivity;
 import com.lhiot.healthygood.domain.order.OrderGroupCount;
 import com.lhiot.healthygood.domain.user.DoctorCustomer;
 import com.lhiot.healthygood.domain.user.FruitDoctor;
@@ -18,10 +21,14 @@ import com.lhiot.healthygood.feign.PaymentServiceFeign;
 import com.lhiot.healthygood.feign.ThirdpartyServerFeign;
 import com.lhiot.healthygood.feign.model.*;
 import com.lhiot.healthygood.feign.type.*;
+import com.lhiot.healthygood.service.activity.ActivityProductRecordService;
+import com.lhiot.healthygood.service.activity.ActivityProductService;
+import com.lhiot.healthygood.service.activity.SpecialProductActivityService;
 import com.lhiot.healthygood.mq.HealthyGoodQueue;
 import com.lhiot.healthygood.service.order.OrderService;
 import com.lhiot.healthygood.service.user.DoctorCustomerService;
 import com.lhiot.healthygood.service.user.FruitDoctorService;
+import com.lhiot.healthygood.type.ActivityType;
 import com.lhiot.healthygood.type.ShelfType;
 import com.lhiot.healthygood.util.ConvertRequestToMap;
 import com.lhiot.healthygood.util.FeginResponseTools;
@@ -40,9 +47,12 @@ import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.stream.Collectors;
 
 @Api(description = "普通订单接口")
 @Slf4j
@@ -56,6 +66,9 @@ public class OrderApi {
     private final DoctorCustomerService doctorCustomerService;
     private final FruitDoctorService fruitDoctorService;
     private final HealthyGoodConfig.WechatPayConfig wechatPayConfig;
+    private final ActivityProductService activityProductService;
+    private final ActivityProductRecordService activityProductRecordService;
+    private final SpecialProductActivityService specialProductActivityService;
     private final RabbitTemplate rabbitTemplate;
 
     @Autowired
@@ -64,7 +77,7 @@ public class OrderApi {
                     OrderServiceFeign orderServiceFeign,
                     PaymentServiceFeign paymentServiceFeign,
                     OrderService orderService,
-                    DoctorCustomerService doctorCustomerService, FruitDoctorService fruitDoctorService, HealthyGoodConfig healthyGoodConfig, RabbitTemplate rabbitTemplate) {
+                    DoctorCustomerService doctorCustomerService, FruitDoctorService fruitDoctorService, HealthyGoodConfig healthyGoodConfig, RabbitTemplate rabbitTemplate, ActivityProductService activityProductService, ActivityProductRecordService activityProductRecordService, SpecialProductActivityService specialProductActivityService) {
         this.baseDataServiceFeign = baseDataServiceFeign;
         this.thirdpartyServerFeign = thirdpartyServerFeign;
         this.orderServiceFeign = orderServiceFeign;
@@ -74,6 +87,9 @@ public class OrderApi {
         this.fruitDoctorService = fruitDoctorService;
         this.wechatPayConfig = healthyGoodConfig.getWechatPay();
         this.rabbitTemplate = rabbitTemplate;
+        this.activityProductService = activityProductService;
+        this.activityProductRecordService = activityProductRecordService;
+        this.specialProductActivityService = specialProductActivityService;
     }
 
     @PostMapping("/orders")
@@ -140,31 +156,83 @@ public class OrderApi {
             }
         }
 
+        ActivityProduct productParam = new ActivityProduct();
+        productParam.setProductShelfIds(StringUtils.arrayToCommaDelimitedString(shelfIds));
+        List<ActivityProduct> activityProducts = activityProductService.list(productParam);
+        Map<Long, ActivityProduct> activitPriceMap = activityProducts.stream().map(item -> {
+            ActivityProductRecord recordParam = new ActivityProductRecord();
+            recordParam.setUserId(userId);
+            recordParam.setProductShelfId(item.getProductShelfId());
+            Integer counts = activityProductRecordService.selectRecordCount(recordParam);
+            item.setAlreadyBuyCount(counts);
+            SpecialProductActivity specialProductActivity = specialProductActivityService.selectActivity();
+            item.setLimitCount(specialProductActivity.getLimitCount());
+            return item;
+        }).collect(Collectors.toMap(ActivityProduct::getProductShelfId, obj -> obj));//把活动商品id和活动价格封装成Map
+        AtomicReference<Integer> productAmount = new AtomicReference<>(0);
+        AtomicReference<Integer> disCountPrice = new AtomicReference<>(0);
+
         //给商品赋值规格数量
         orderParam.getOrderProducts().forEach(orderProduct -> productShelfPages.getArray().stream()
                 //上架id相同的订单商品信息，通过基础服务获取的赋值给订单商品信息
                 .filter(productShelf -> Objects.equals(orderProduct.getShelfId(), productShelf.getId()))
                 .forEach(item -> {
-                    BeanUtils.copyProperties(item, orderProduct);
+                    BeanUtils.of(orderProduct).ignoreField("id").populate(item);//忽略掉id 对象赋值
                     //设置规格信息
                     ProductSpecification productSpecification = item.getProductSpecification();
                     orderProduct.setBarcode(productSpecification.getBarcode());
-                    orderProduct.setTotalWeight(productSpecification.getWeight());
+                    BigDecimal weight = new BigDecimal(productSpecification.getWeight().toString());
+                    BigDecimal quty = new BigDecimal(orderProduct.getProductQty());
+                    orderProduct.setTotalWeight(weight.multiply(quty));
                     orderProduct.setSpecificationId(productSpecification.getId());
-                    //设置上架信息
                     //如果存在特价就用特价
                     Integer price = Objects.isNull(item.getPrice()) ? item.getOriginalPrice() : item.getPrice();
-                    orderProduct.setDiscountPrice((int) Calculator.mul(price, orderProduct.getProductQty()));//去除优惠有单品总价
-                    orderProduct.setTotalPrice((int) Calculator.mul(item.getOriginalPrice(), orderProduct.getProductQty()));//单品总价
-                    orderProduct.setId(null);
+                    //新品尝鲜的超限价格计算
+                    if (activitPriceMap.containsKey(item.getId())) {
+                        ActivityProduct ac = activitPriceMap.get(item.getId());
+                        Integer canBuyActivityCounts = ac.getLimitCount() - ac.getAlreadyBuyCount();//计算出剩余可购买次数
+                        Integer originalCounts = orderProduct.getProductQty() - canBuyActivityCounts;//超过活动限购后，按原价购买数量
+                        Integer discountPrice = (int) Calculator.add(Calculator.mul(price, originalCounts), Calculator.mul(ac.getActivityPrice(), canBuyActivityCounts));
+                        orderProduct.setDiscountPrice(discountPrice);
+                    } else {
+                        orderProduct.setDiscountPrice((int) Calculator.mul(price, orderProduct.getProductQty()));//去除优惠有单品总价
+                    }
+                    orderProduct.setTotalPrice((int) Calculator.mul(item.getPrice(), orderProduct.getProductQty()));//单品总价
                     orderProduct.setProductName(item.getName());
+                    productAmount.updateAndGet(v -> v + orderProduct.getTotalPrice());
+                    disCountPrice.updateAndGet(v -> v + orderProduct.getDiscountPrice());
                 })
         );
+        orderParam.setTotalAmount(productAmount.get());//订单总价
+        orderParam.setAmountPayable(disCountPrice.get());//应付金额
+        orderParam.setCouponAmount(productAmount.get() - disCountPrice.get());//订单优惠金额
+
         ResponseEntity<OrderDetailResult> orderDetailResultResponse = orderServiceFeign.createOrder(orderParam);
         if (Objects.isNull(orderDetailResultResponse)) {
             return ResponseEntity.badRequest().body("创建订单错误");
         } else if (orderDetailResultResponse.getStatusCode().isError()) {
             return orderDetailResultResponse;
+        }
+        if (activityProducts.size() > 0) {
+            activityProducts.forEach(activityProduct -> {
+                ActivityProductRecord recordParam = new ActivityProductRecord();
+                recordParam.setUserId(userId);
+                recordParam.setProductShelfId(activityProduct.getProductShelfId());
+                Integer counts = activityProductRecordService.selectRecordCount(recordParam);
+                if (counts<=activityProduct.getLimitCount()){
+                    int canBuyCount = activityProduct.getLimitCount()-counts;
+                    for (int i=0;i<canBuyCount;i++){
+                        ActivityProductRecord record = new ActivityProductRecord();
+                        record.setProductShelfId(activityProduct.getProductShelfId());
+                        record.setUserId(userId);
+                        record.setActivityId(activityProduct.getActivityId());
+                        record.setOrderCode(orderDetailResultResponse.getBody().getCode());
+                        record.setActivityType(ActivityType.NEW_SPECIAL);
+                        activityProductRecordService.create(record);
+                    }
+                }
+
+            });
         }
         //mq设置三十分钟未支付失效
         HealthyGoodQueue.DelayQueue.CANCEL_ORDER.send(rabbitTemplate, orderDetailResultResponse.getBody().getCode(), 30 * 60 * 1000);
@@ -219,9 +287,10 @@ public class OrderApi {
                 break;
 
         }
-
+            fruitDoctorService.calculationCommission(orderDetailResult);
         return refundOrderTips;
     }
+
 
     @PostMapping("/orders/status")
     @ApiOperation(value = "我的用户订单列表")

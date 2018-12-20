@@ -303,29 +303,7 @@ public class WeChatUtil {
 	}
 
 	/**
-	 * "data":{
-	 * "first": {
-	 * "value":"恭喜你购买成功！",
-	 * "color":"#173177"
-	 * },
-	 * "keyword1":{
-	 * "value":"巧克力",
-	 * "color":"#173177"
-	 * },
-	 * "keyword2": {
-	 * "value":"39.8元",
-	 * "color":"#173177"
-	 * },
-	 * "keyword3": {
-	 * "value":"2014年9月22日",
-	 * "color":"#173177"
-	 * },
-	 * "remark":{
-	 * "value":"欢迎再次购买！",
-	 * "color":"#173177"
-	 * }
-	 * }
-	 *
+	 * 构建模板消息参数
 	 * @param templateMessageEnum
 	 * @param dataItem
 	 * @return
@@ -334,16 +312,11 @@ public class WeChatUtil {
 		if (templateMessageEnum==null)
 			return null;
 		//构建发送内容
-		//templateMessageEnum.setTouser(openId);
-		//templateMessageEnum.setData(dataItem.toString());
 		TemplateParam templateParam = new TemplateParam();
 		templateParam.setTouser(openId);
-
 		templateParam.setTemplate_id(templateMessageEnum.getTemplate_id());
 		templateParam.setUrl(templateMessageEnum.getUrl());
 		templateParam.setData(dataItem);
-		//构建发送模板消息的数据
-		//return templateMessageEnum.toString();
 		return this.sendTemplateMessage(Jackson.json(templateParam));
 	}
 
