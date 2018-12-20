@@ -24,6 +24,7 @@ import com.lhiot.healthygood.feign.type.*;
 import com.lhiot.healthygood.service.activity.ActivityProductRecordService;
 import com.lhiot.healthygood.service.activity.ActivityProductService;
 import com.lhiot.healthygood.service.activity.SpecialProductActivityService;
+import com.lhiot.healthygood.mq.HealthyGoodQueue;
 import com.lhiot.healthygood.service.order.OrderService;
 import com.lhiot.healthygood.service.user.DoctorCustomerService;
 import com.lhiot.healthygood.service.user.FruitDoctorService;
@@ -37,6 +38,7 @@ import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -67,6 +69,7 @@ public class OrderApi {
     private final ActivityProductService activityProductService;
     private final ActivityProductRecordService activityProductRecordService;
     private final SpecialProductActivityService specialProductActivityService;
+    private final RabbitTemplate rabbitTemplate;
 
     @Autowired
     public OrderApi(BaseDataServiceFeign baseDataServiceFeign,
@@ -74,7 +77,7 @@ public class OrderApi {
                     OrderServiceFeign orderServiceFeign,
                     PaymentServiceFeign paymentServiceFeign,
                     OrderService orderService,
-                    DoctorCustomerService doctorCustomerService, FruitDoctorService fruitDoctorService, HealthyGoodConfig healthyGoodConfig, ActivityProductService activityProductService, ActivityProductRecordService activityProductRecordService, SpecialProductActivityService specialProductActivityService) {
+                    DoctorCustomerService doctorCustomerService, FruitDoctorService fruitDoctorService, HealthyGoodConfig healthyGoodConfig, RabbitTemplate rabbitTemplate, ActivityProductService activityProductService, ActivityProductRecordService activityProductRecordService, SpecialProductActivityService specialProductActivityService) {
         this.baseDataServiceFeign = baseDataServiceFeign;
         this.thirdpartyServerFeign = thirdpartyServerFeign;
         this.orderServiceFeign = orderServiceFeign;
@@ -83,6 +86,7 @@ public class OrderApi {
         this.doctorCustomerService = doctorCustomerService;
         this.fruitDoctorService = fruitDoctorService;
         this.wechatPayConfig = healthyGoodConfig.getWechatPay();
+        this.rabbitTemplate = rabbitTemplate;
         this.activityProductService = activityProductService;
         this.activityProductRecordService = activityProductRecordService;
         this.specialProductActivityService = specialProductActivityService;
@@ -230,7 +234,8 @@ public class OrderApi {
 
             });
         }
-        //TODO mq设置三十分钟失效
+        //mq设置三十分钟未支付失效
+        HealthyGoodQueue.DelayQueue.CANCEL_ORDER.send(rabbitTemplate, orderDetailResultResponse.getBody().getCode(), 30 * 60 * 1000);
         return orderDetailResultResponse;
     }
 

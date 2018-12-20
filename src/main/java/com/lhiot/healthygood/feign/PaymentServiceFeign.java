@@ -60,15 +60,20 @@ public interface PaymentServiceFeign {
     //修改支付单为完成状态
     @RequestMapping(value = "/records/{outTradeNo}/completed", method = RequestMethod.PUT)
     ResponseEntity completed(@PathVariable("outTradeNo") String outTradeNo, @RequestBody PayedModel payed);
+
+
+    //按支付单号查询一个支付记录
+    @RequestMapping(value = "/records/{outTradeNo}", method = RequestMethod.PUT)
+    ResponseEntity<Record> one(@Valid @PathVariable("outTradeNo") String outTradeNo);
     /**********修改支付日志信息************************/
 
     /***********支付退款***********************************/
     //支付 - 退款（支持部分、多次退款）
     @RequestMapping(value = "/payed/{outTradeNo}/refunds", method = RequestMethod.POST)
-    ResponseEntity refund(@PathVariable("outTradeNo") Long outTradeNo, @Valid @RequestBody RefundModel refund);
+    ResponseEntity refund(@PathVariable("outTradeNo") String outTradeNo, @Valid @RequestBody RefundModel refund);
 
-    @RequestMapping(value = "/refunds/{refundId}/completed", method = RequestMethod.PUT)
-    @ApiOperation("修改退款单为完成状态")
-    ResponseEntity completed(@PathVariable("refundId") Long refundId);
+    @RequestMapping(value = "/refunds/{outRefundNo}/completed", method = RequestMethod.PUT)
+    @ApiOperation("修改退款单为完成状态 退款回调中调用此接口 参数为微信回调中的out_refund_no")
+    ResponseEntity completed(@PathVariable("outRefundNo") String outRefundNo);
     /************支付退款*****************************/
 }

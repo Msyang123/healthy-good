@@ -31,5 +31,12 @@ public interface CustomOrderDeliveryMapper {
 
     List<CustomOrderDelivery> selectByCustomOrderId(@Param("planId") Long planId,@Param("customOrderId") Long customOrderId);
 
+    /**
+     * 查询当前定制订单的所有配送记录
+     * @param customOrderId
+     * @return
+     */
+    List<CustomOrderDelivery> selectDeliveryByCustomOrderId(Long customOrderId);
+
 
 }

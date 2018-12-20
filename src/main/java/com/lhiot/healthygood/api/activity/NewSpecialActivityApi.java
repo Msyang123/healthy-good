@@ -2,7 +2,6 @@ package com.lhiot.healthygood.api.activity;
 
 import com.leon.microx.util.BeanUtils;
 import com.leon.microx.util.Maps;
-import com.leon.microx.web.result.Pages;
 import com.leon.microx.web.result.Tips;
 import com.leon.microx.web.session.Sessions;
 import com.leon.microx.web.swagger.ApiParamType;

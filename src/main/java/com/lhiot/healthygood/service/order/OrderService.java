@@ -12,16 +12,20 @@ import com.lhiot.healthygood.feign.model.DeliverUpdate;
 import com.lhiot.healthygood.feign.model.DeliveryParam;
 import com.lhiot.healthygood.feign.model.OrderDetailResult;
 import com.lhiot.healthygood.feign.type.*;
+import com.lhiot.healthygood.mq.HealthyGoodQueue;
 import com.lhiot.healthygood.service.common.CommonService;
 import com.lhiot.healthygood.type.ReceivingWay;
 import com.lhiot.healthygood.util.FeginResponseTools;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.RequestBody;
 
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -41,16 +45,20 @@ public class OrderService {
     private final DeliverServiceFeign deliverServiceFeign;
     private final HealthyGoodConfig.DeliverConfig deliverConfig;
     private final CommonService commonService;
+    private final RabbitTemplate rabbitTemplate;
+
 
     @Autowired
     public OrderService(OrderServiceFeign orderServiceFeign,
                         DeliverServiceFeign deliverServiceFeign,
-                        HealthyGoodConfig healthyGoodConfig, CommonService commonService) {
+                        HealthyGoodConfig healthyGoodConfig, CommonService commonService,
+                        RabbitTemplate rabbitTemplate) {
 
         this.orderServiceFeign = orderServiceFeign;
         this.deliverServiceFeign = deliverServiceFeign;
         this.deliverConfig = healthyGoodConfig.getDeliver();
         this.commonService = commonService;
+        this.rabbitTemplate = rabbitTemplate;
     }
 
     //处理海鼎回调
@@ -182,4 +190,23 @@ public class OrderService {
         //直接不作处理
         return Tips.info("默认处理");
     }
+
+    /**
+     * 延迟发送海鼎
+     *
+     * @param orderCode   普通订单号
+     * @param deliverTime 延迟发送时间
+     */
+    public void delaySendToHd(String orderCode, DeliverTime deliverTime) {
+        //送货上门订单 本地mq延迟到配送时间发送海鼎
+        LocalDateTime current = LocalDateTime.now();
+        //计算配送的时间与当前时间的毫秒数，做为消费端处理配送时候的时间
+        final Long interval = deliverTime.getStartTime().getTime() - current.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli();
+        //如果计算结果为负数，那么就只延迟1秒钟
+        //延迟发送到海鼎
+        HealthyGoodQueue.DelayQueue.SEND_TO_HD.send(rabbitTemplate,orderCode,(interval <= 0 ? 1000L : interval));
+        log.info("创建定制订单提取延迟发送到海鼎:{},{}", orderCode, interval);
+    }
+
+
 }
