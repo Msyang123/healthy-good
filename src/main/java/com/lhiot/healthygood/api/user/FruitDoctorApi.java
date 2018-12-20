@@ -478,7 +478,7 @@ public class FruitDoctorApi {
 
     @GetMapping("/customers")
     @ApiOperation(value = "查询鲜果师客户列表", response = DoctorCustomer.class, responseContainer = "List")
-    public ResponseEntity doctorCustomers(Sessions.User user) throws BadHanyuPinyinOutputFormatCombination {
+    public ResponseEntity doctorCustomers(Sessions.User user) {
         String userId = user.getUser().get("userId").toString();
         FruitDoctor fruitDoctor = fruitDoctorService.selectByUserId(Long.valueOf(userId));
         if (Objects.isNull(fruitDoctor)) {

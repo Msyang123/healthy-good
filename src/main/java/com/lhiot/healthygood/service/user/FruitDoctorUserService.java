@@ -72,7 +72,7 @@ public class FruitDoctorUserService {
         //绑定鲜果师
         String createdUri = responseBaseUser.getHeaders().getFirst(HttpHeaders.LOCATION);
         int i = createdUri.lastIndexOf("/");
-        createdUri = createdUri.substring(i + 1, createdUri.length());
+        createdUri = createdUri.substring(i + 1);
         ResponseEntity<UserDetailResult> baseUser = baseUserServerFeign.findById(Long.valueOf(createdUri));
         DoctorCustomer doctorCustomer = new DoctorCustomer();
         if (baseUser.getStatusCode().is2xxSuccessful()) {
@@ -83,7 +83,7 @@ public class FruitDoctorUserService {
         if (doctorCustomerMapper.create(doctorCustomer) <= 0) {
             return Tips.warn("鲜果师与客户关联失败！");
         }
-        return Tips.info("用户创建成功").data((UserDetailResult) baseUser.getBody());
+        return Tips.info("用户创建成功").data(baseUser.getBody());
     }
 
 
@@ -138,10 +138,7 @@ public class FruitDoctorUserService {
             return true;
         }
 
-        if (Objects.equals(sex, "1") && Objects.equals(entry.getCode(), "MAN")) {
-            return true;
-        }
-        return false;
+        return Objects.equals(sex, "1") && Objects.equals(entry.getCode(), "MAN");
     }
 
     /**
