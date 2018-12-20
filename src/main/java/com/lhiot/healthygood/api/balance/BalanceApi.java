@@ -5,16 +5,15 @@ import com.leon.microx.web.result.Id;
 import com.leon.microx.web.session.Sessions;
 import com.lhiot.healthygood.config.HealthyGoodConfig;
 import com.lhiot.healthygood.domain.customplan.CustomOrder;
+import com.lhiot.healthygood.domain.customplan.CustomOrderTime;
 import com.lhiot.healthygood.feign.OrderServiceFeign;
 import com.lhiot.healthygood.feign.PaymentServiceFeign;
-import com.lhiot.healthygood.feign.model.BalancePayModel;
-import com.lhiot.healthygood.feign.model.OrderDetailResult;
-import com.lhiot.healthygood.feign.model.Payed;
-import com.lhiot.healthygood.feign.model.WxPayModel;
+import com.lhiot.healthygood.feign.model.*;
 import com.lhiot.healthygood.feign.type.ApplicationType;
 import com.lhiot.healthygood.feign.type.PayType;
 import com.lhiot.healthygood.feign.type.SourceType;
 import com.lhiot.healthygood.service.customplan.CustomOrderService;
+import com.lhiot.healthygood.service.order.OrderService;
 import com.lhiot.healthygood.type.CustomOrderStatus;
 import com.lhiot.healthygood.util.RealClientIp;
 import io.swagger.annotations.Api;
@@ -24,11 +23,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.servlet.http.HttpServletRequest;
 import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.Map;
 import java.util.Objects;
@@ -41,27 +41,28 @@ public class BalanceApi {
     private final OrderServiceFeign orderServiceFeign;
     private final HealthyGoodConfig.WechatPayConfig wechatPayConfig;
     private final CustomOrderService customOrderService;
+    private final OrderService orderService;
 
     @Autowired
-    public BalanceApi(PaymentServiceFeign paymentServiceFeign, OrderServiceFeign orderServiceFeign, HealthyGoodConfig healthyGoodConfig, CustomOrderService customOrderService) {
+    public BalanceApi(PaymentServiceFeign paymentServiceFeign, OrderServiceFeign orderServiceFeign, HealthyGoodConfig healthyGoodConfig, CustomOrderService customOrderService, OrderService orderService) {
         this.paymentServiceFeign = paymentServiceFeign;
         this.orderServiceFeign = orderServiceFeign;
         this.wechatPayConfig = healthyGoodConfig.getWechatPay();
         this.customOrderService = customOrderService;
+        this.orderService = orderService;
     }
 
     @PostMapping("/recharge/payment-sign")
     @ApiOperation("充值签名")
-    public ResponseEntity<String> paymentSign(@RequestParam("fee") Integer fee, HttpServletRequest request, Sessions.User user) {
+    public ResponseEntity<String> paymentSign(@RequestBody WxPayModel paySign, HttpServletRequest request, Sessions.User user) {
         String openId = user.getUser().get("openId").toString();
         Long userId = Long.valueOf(user.getUser().get("userId").toString());
 
-        WxPayModel paySign = new WxPayModel();
         paySign.setApplicationType(ApplicationType.HEALTH_GOOD);
         paySign.setBackUrl(wechatPayConfig.getRechargeCallbackUrl());
         paySign.setClientIp(RealClientIp.getRealIp(request));//获取客户端真实ip
         paySign.setConfigName(wechatPayConfig.getConfigName());//微信支付简称
-        paySign.setFee(fee);
+        //paySign.setFee(fee);
         paySign.setMemo("充值支付");
         paySign.setOpenid(openId);
         paySign.setSourceType(SourceType.RECHARGE);
@@ -80,7 +81,8 @@ public class BalanceApi {
     @ApiOperation(value = "鲜果币支付普通订单接口")
     public ResponseEntity balanceOrderPayment(@RequestBody BalancePayModel balancePayModel, Sessions.User user) {
         Long userId = Long.valueOf(user.getUser().get("userId").toString());
-        ResponseEntity validateResult = validateOrderOwner(userId, balancePayModel.getOrderCode());
+        String orderCode = balancePayModel.getOrderCode();
+        ResponseEntity validateResult = validateOrderOwner(userId, orderCode);
         if (Objects.isNull(validateResult) || validateResult.getStatusCode().isError()) {
             return validateResult;
         }
@@ -104,11 +106,13 @@ public class BalanceApi {
         payed.setPayType(PayType.BALANCE);
         //payed.setTradeId("");
         //修改为已支付
-        ResponseEntity updateOrderToPayed = orderServiceFeign.updateOrderToPayed(balancePayModel.getOrderCode(), payed);
+        ResponseEntity updateOrderToPayed = orderServiceFeign.updateOrderToPayed(orderCode, payed);
         if (Objects.isNull(updateOrderToPayed) || updateOrderToPayed.getStatusCode().isError()) {
             log.error("修改为已支付失败{}", updateOrderToPayed);
             return ResponseEntity.badRequest().body("修改为已支付失败");
         }
+        //延迟发送海鼎
+        orderService.delaySendToHd(orderCode,Jackson.object(orderDetailResult.getDeliverTime(), DeliverTime.class));
         return ResponseEntity.ok(orderDetailResult);
     }
 
@@ -142,6 +146,12 @@ public class BalanceApi {
         customOrder.setPayId(outTradeId);//第三方支付id
         log.info("定制计划余额支付-后端修改为支付成功 并保持预支付id{}", customOrder);
         customOrderService.updateByCode(customOrder);
+
+        //自动提取订单自动提取
+        CustomOrderTime customOrderTime = Jackson.object(customOrderDetial.getDeliveryTime(),CustomOrderTime.class);
+        LocalDateTime deliveryDateTime =LocalDate.now().atTime(customOrderTime.getStartTime());
+        deliveryDateTime = deliveryDateTime.plusDays(1);
+        customOrderService.scheduleDeliveryCustomOrder(deliveryDateTime,customOrderCode);
         return ResponseEntity.ok().build();
     }
 

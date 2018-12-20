@@ -18,6 +18,7 @@ import com.lhiot.healthygood.feign.PaymentServiceFeign;
 import com.lhiot.healthygood.feign.ThirdpartyServerFeign;
 import com.lhiot.healthygood.feign.model.*;
 import com.lhiot.healthygood.feign.type.*;
+import com.lhiot.healthygood.mq.HealthyGoodQueue;
 import com.lhiot.healthygood.service.order.OrderService;
 import com.lhiot.healthygood.service.user.DoctorCustomerService;
 import com.lhiot.healthygood.service.user.FruitDoctorService;
@@ -30,6 +31,7 @@ import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -54,6 +56,7 @@ public class OrderApi {
     private final DoctorCustomerService doctorCustomerService;
     private final FruitDoctorService fruitDoctorService;
     private final HealthyGoodConfig.WechatPayConfig wechatPayConfig;
+    private final RabbitTemplate rabbitTemplate;
 
     @Autowired
     public OrderApi(BaseDataServiceFeign baseDataServiceFeign,
@@ -61,7 +64,7 @@ public class OrderApi {
                     OrderServiceFeign orderServiceFeign,
                     PaymentServiceFeign paymentServiceFeign,
                     OrderService orderService,
-                    DoctorCustomerService doctorCustomerService, FruitDoctorService fruitDoctorService, HealthyGoodConfig healthyGoodConfig) {
+                    DoctorCustomerService doctorCustomerService, FruitDoctorService fruitDoctorService, HealthyGoodConfig healthyGoodConfig, RabbitTemplate rabbitTemplate) {
         this.baseDataServiceFeign = baseDataServiceFeign;
         this.thirdpartyServerFeign = thirdpartyServerFeign;
         this.orderServiceFeign = orderServiceFeign;
@@ -70,6 +73,7 @@ public class OrderApi {
         this.doctorCustomerService = doctorCustomerService;
         this.fruitDoctorService = fruitDoctorService;
         this.wechatPayConfig = healthyGoodConfig.getWechatPay();
+        this.rabbitTemplate = rabbitTemplate;
     }
 
     @PostMapping("/orders")
@@ -162,7 +166,8 @@ public class OrderApi {
         } else if (orderDetailResultResponse.getStatusCode().isError()) {
             return orderDetailResultResponse;
         }
-        //TODO mq设置三十分钟失效
+        //mq设置三十分钟未支付失效
+        HealthyGoodQueue.DelayQueue.CANCEL_ORDER.send(rabbitTemplate, orderDetailResultResponse.getBody().getCode(), 30 * 60 * 1000);
         return orderDetailResultResponse;
     }
 

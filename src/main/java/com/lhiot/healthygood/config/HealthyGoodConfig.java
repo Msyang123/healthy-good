@@ -56,6 +56,8 @@ public class HealthyGoodConfig {
 
         private String customplanCallbackUrl;
 
+        private String customplanRefundCallbackUrl;
+
         //调用的基础服务微信支付账户简称
         private String configName;
     }

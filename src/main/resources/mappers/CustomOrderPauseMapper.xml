@@ -80,6 +80,15 @@
         </trim>
     </insert>
 
+    <update id="update" parameterType="com.lhiot.healthygood.domain.customplan.CustomOrderPause">
+        update custom_order_pause
+        set
+        pause_end_at= #{pauseEndAt}
+        pause_day = #{pauseDay}
+        oper_status = #{operStatus}
+        where id = #{id}
+    </update>
+
     <!--查询是否有实际设置的暂停时间是否在已经设置的内部-->
 	<select id="selectCustomOrderPause" resultMap="BaseResultMap" parameterType="com.lhiot.healthygood.domain.customplan.CustomOrderPause">
         select <include refid="Base_Column_List" />
@@ -100,23 +109,15 @@
         </where>
 	</select>
 
-    <!--查询暂停的时间是否等于具体的暂停开始时间 且结束时间在-->
-    <select id="selectBeginEqCustomOrderPause" resultMap="BaseResultMap" parameterType="com.lhiot.healthygood.domain.customplan.CustomOrderPause">
-        select <include refid="Base_Column_List" />
-        from custom_order_pause
-        <where>
-            <if test="customOrderCode != null ">
-                and custom_order_code = #{customOrderCode}
-            </if>
-            <if test="pauseBeginAt != null ">
-                and pause_begin_at <![CDATA[ <= ]]> #{pauseBeginAt}
-            </if>
-            <if test="pauseEndAt != null ">
-                and pause_end_at <![CDATA[ >= ]]> #{pauseEndAt}
-            </if>
-            <if test="operStatus !=null">
-                and oper_status =#{operStatus}
-            </if>
-        </where>
+    <!--计算已经暂停总天数，计划暂停的还进行中的也计算在内-->
+    <select id="selectHadPauseDays" resultType="int" parameterType="com.lhiot.healthygood.domain.customplan.CustomOrderPause">
+        select sum(pause_day) as pauseDays
+        from custom_order_pause custom_order_code = #{customOrderCode}
+    </select>
+
+    <!--查询所有状态的定制订单设置的暂停或者恢复设置记录 (过滤条件 暂停开始时间<=当前时间)-->
+    <select id="selectAll" resultMap="BaseResultMap">
+    select <include refid="Base_Column_List" />
+      from custom_order_pause where pause_begin_at <![CDATA[ <= ]]>now()
     </select>
 </mapper>

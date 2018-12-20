@@ -35,7 +35,7 @@ public interface OrderServiceFeign {
     @RequestMapping(value = "/orders/{orderCode}/hd-status", method = RequestMethod.PUT)
     ResponseEntity sendOrderToHd(@PathVariable("orderCode") String orderCode);
 
-    //修改订单状态(DISPATCHING,RECEIVED,其它状态请使用特定接口)
+    //修改订单状态(DISPATCHING,RECEIVED,FAILURE,其它状态请使用特定接口)
     @RequestMapping(value = "/orders/{orderCode}/status", method = RequestMethod.PUT)
     ResponseEntity updateOrderStatus(@PathVariable("orderCode") String orderCode, @RequestParam("orderStatus") OrderStatus orderStatus);
 
