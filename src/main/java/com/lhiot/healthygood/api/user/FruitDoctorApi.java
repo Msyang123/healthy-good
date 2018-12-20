@@ -186,7 +186,7 @@ public class FruitDoctorApi {
         }
     }
 
-    @Sessions.Uncheck
+   /* @Sessions.Uncheck
     @ApiOperation(value = "结算申请修改(后台)")
     @ApiImplicitParams({
             @ApiImplicitParam(paramType = ApiParamType.PATH, name = "id", value = "结算申请id", required = true, dataType = "Long"),
@@ -198,7 +198,7 @@ public class FruitDoctorApi {
 
         Tips tips = settlementApplicationService.updateById(id, settlementApplication);
         return tips.err() ? ResponseEntity.badRequest().body(tips.getMessage()) : ResponseEntity.ok().build();
-    }
+    }*/
 
     @Sessions.Uncheck
     @ApiOperation(value = "结算申请分页查询(后台)", response = SettlementApplication.class, responseContainer = "Set")
@@ -378,7 +378,12 @@ public class FruitDoctorApi {
         if (Objects.isNull(fruitDoctor)) {
             return ResponseEntity.badRequest().body("鲜果师不存在");
         }
-        return ResponseEntity.ok(doctorAchievementLogService.myIncome(fruitDoctor.getId()));
+        IncomeStat incomeStat = doctorAchievementLogService.myIncome(fruitDoctor.getId());
+        if (Objects.nonNull(incomeStat)){
+            incomeStat.setBonus(fruitDoctor.getBonus());
+            incomeStat.setBonusCanBeSettled(fruitDoctor.getSettlement());
+        }
+        return ResponseEntity.ok(incomeStat);
     }
 
     @Sessions.Uncheck
@@ -426,7 +431,7 @@ public class FruitDoctorApi {
         Achievement total =
                 doctorAchievementLogService.achievement(DateTypeEnum.DAY, PeriodType.current, fruitDoctor.getId(), true, true, null);
         //构建返回值
-        current.setSummaryAmount(total.getSalesAmount());
+        current.setSalesAmount(total.getSalesAmount());
         ResponseEntity userInfo = baseUserServerFeign.findById(Long.valueOf(userId));
         if (userInfo.getStatusCode().isError()) {
             return ResponseEntity.badRequest().body(userInfo.getBody());
@@ -480,7 +485,7 @@ public class FruitDoctorApi {
 
     @GetMapping("/customers")
     @ApiOperation(value = "查询鲜果师客户列表", response = DoctorCustomer.class, responseContainer = "List")
-    public ResponseEntity doctorCustomers(Sessions.User user) throws BadHanyuPinyinOutputFormatCombination {
+    public ResponseEntity doctorCustomers(Sessions.User user) {
         String userId = user.getUser().get("userId").toString();
         FruitDoctor fruitDoctor = fruitDoctorService.selectByUserId(Long.valueOf(userId));
         if (Objects.isNull(fruitDoctor)) {
@@ -591,6 +596,7 @@ public class FruitDoctorApi {
             logParam.setSettlement("true");
             logParam.setSourceType(SourceType.SUB_DISTRIBUTOR);
             if (doctorAchievementLogService.doctorAchievementLogCounts(logParam) > 0) {
+                log.info(fruitDoctor.getRealName()+fruitDoctor.getId()+"已执行过");
                 return;
             }
             FruitDoctor subordinateParam = new FruitDoctor();

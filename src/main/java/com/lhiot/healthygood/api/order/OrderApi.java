@@ -24,6 +24,7 @@ import com.lhiot.healthygood.feign.type.*;
 import com.lhiot.healthygood.service.activity.ActivityProductRecordService;
 import com.lhiot.healthygood.service.activity.ActivityProductService;
 import com.lhiot.healthygood.service.activity.SpecialProductActivityService;
+import com.lhiot.healthygood.mq.HealthyGoodQueue;
 import com.lhiot.healthygood.service.order.OrderService;
 import com.lhiot.healthygood.service.user.DoctorCustomerService;
 import com.lhiot.healthygood.service.user.FruitDoctorService;
@@ -37,6 +38,7 @@ import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -67,6 +69,7 @@ public class OrderApi {
     private final ActivityProductService activityProductService;
     private final ActivityProductRecordService activityProductRecordService;
     private final SpecialProductActivityService specialProductActivityService;
+    private final RabbitTemplate rabbitTemplate;
 
     @Autowired
     public OrderApi(BaseDataServiceFeign baseDataServiceFeign,
@@ -74,7 +77,7 @@ public class OrderApi {
                     OrderServiceFeign orderServiceFeign,
                     PaymentServiceFeign paymentServiceFeign,
                     OrderService orderService,
-                    DoctorCustomerService doctorCustomerService, FruitDoctorService fruitDoctorService, HealthyGoodConfig healthyGoodConfig, ActivityProductService activityProductService, ActivityProductRecordService activityProductRecordService, SpecialProductActivityService specialProductActivityService) {
+                    DoctorCustomerService doctorCustomerService, FruitDoctorService fruitDoctorService, HealthyGoodConfig healthyGoodConfig, RabbitTemplate rabbitTemplate, ActivityProductService activityProductService, ActivityProductRecordService activityProductRecordService, SpecialProductActivityService specialProductActivityService) {
         this.baseDataServiceFeign = baseDataServiceFeign;
         this.thirdpartyServerFeign = thirdpartyServerFeign;
         this.orderServiceFeign = orderServiceFeign;
@@ -83,6 +86,7 @@ public class OrderApi {
         this.doctorCustomerService = doctorCustomerService;
         this.fruitDoctorService = fruitDoctorService;
         this.wechatPayConfig = healthyGoodConfig.getWechatPay();
+        this.rabbitTemplate = rabbitTemplate;
         this.activityProductService = activityProductService;
         this.activityProductRecordService = activityProductRecordService;
         this.specialProductActivityService = specialProductActivityService;
@@ -126,7 +130,7 @@ public class OrderApi {
         //查找基础服务上架商品信息
         Tips<Pages<ProductShelf>> productShelfTips = FeginResponseTools.convertResponse(baseDataServiceFeign.searchProductShelves(productShelfParam));
         if (productShelfTips.err()) {
-            return ResponseEntity.badRequest().body(productShelfTips);
+            return ResponseEntity.badRequest().body(productShelfTips.getMessage());
         }
         Pages<ProductShelf> productShelfPages = productShelfTips.getData();
         String[] barcodes = productShelfPages.getArray().parallelStream()
@@ -146,7 +150,7 @@ public class OrderApi {
                 if (Objects.equals(productShelf.getProductSpecification().getBarcode(), businv.get("barCode"))
                         && productShelf.getProductSpecification().getLimitInventory() > Double.valueOf(businv.get("qty").toString())) {
                     return ResponseEntity.badRequest().body(
-                            Tips.warn(String.format("%s实际库存%s低于安全库存%d，不允许销售", productShelf.getProductSpecification().getBarcode(), businv.get("qty").toString(), productShelf.getProductSpecification().getLimitInventory()))
+                            String.format("%s实际库存%s低于安全库存%d，不允许销售", productShelf.getProductSpecification().getBarcode(), businv.get("qty").toString(), productShelf.getProductSpecification().getLimitInventory())
                     );
                 }
             }
@@ -230,7 +234,8 @@ public class OrderApi {
 
             });
         }
-        //TODO mq设置三十分钟失效
+        //mq设置三十分钟未支付失效
+        HealthyGoodQueue.DelayQueue.CANCEL_ORDER.send(rabbitTemplate, orderDetailResultResponse.getBody().getCode(), 30 * 60 * 1000);
         return orderDetailResultResponse;
     }
 
@@ -314,12 +319,7 @@ public class OrderApi {
 
     @GetMapping("/orders/{orderCode}/detail")
     @ApiOperation(value = "根据订单code查询订单详情", response = OrderDetailResult.class)
-    public ResponseEntity orderDetial(@Valid @NotBlank @PathVariable("orderCode") String orderCode, Sessions.User user) {
-        Long userId = Long.valueOf(user.getUser().get("userId").toString());
-        ResponseEntity validateResult = validateOrderOwner(userId, orderCode);
-        if (Objects.isNull(validateResult) || validateResult.getStatusCode().isError()) {
-            return validateResult;
-        }
+    public ResponseEntity orderDetial(@Valid @NotBlank @PathVariable("orderCode") String orderCode) {
         return orderServiceFeign.orderDetail(orderCode, true, true);
     }
 

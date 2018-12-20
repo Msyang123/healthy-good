@@ -14,6 +14,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
+import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
 
 public abstract class Session {
@@ -91,7 +92,7 @@ public abstract class Session {
 
         try {
             Transformer transformer = tffactory.newTransformer();
-            transformer.transform(new DOMSource(document), new StreamResult(new OutputStreamWriter(this.os, "utf-8")));
+            transformer.transform(new DOMSource(document), new StreamResult(new OutputStreamWriter(this.os, StandardCharsets.UTF_8)));
         } catch (Exception var4) {
             var4.printStackTrace();
         }

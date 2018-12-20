@@ -149,6 +149,13 @@ public class FruitDoctor{
     private Integer bonus;
 
     /**
+     *可结算余额
+     */
+    @JsonProperty("settlement")
+    @ApiModelProperty(value = "可结算余额", dataType = "Integer")
+    private Integer settlement;
+
+    /**
      *当月销售额
      */
     @JsonProperty("amountOfMonth")
@@ -182,13 +189,6 @@ public class FruitDoctor{
     @JsonProperty("applicationId")
     @ApiModelProperty(value = "审核通过记录id", dataType = "Long")
     private Long applicationId;
-
-    /**
-     *可结算余额
-     */
-    @JsonProperty("settlement")
-    @ApiModelProperty(value = "可结算余额", dataType = "Integer")
-    private Integer settlement;
 
     @ApiModelProperty(value = "openId", dataType = "String")
     private String openId;

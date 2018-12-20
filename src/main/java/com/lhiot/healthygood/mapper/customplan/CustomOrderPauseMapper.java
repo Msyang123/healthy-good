@@ -27,10 +27,17 @@ public interface CustomOrderPauseMapper {
      */
     int create(CustomOrderPause customOrderPause);
 
-    CustomOrderPause selectCustomOrderPause(CustomOrderPause customOrderCode);
+    /**
+     * 恢复暂停记录
+     * @param customOrderPause
+     * @return
+     */
+    int update(CustomOrderPause customOrderPause);
 
-    CustomOrderPause selectBeginEqCustomOrderPause(CustomOrderPause customOrderCode);
+    CustomOrderPause selectCustomOrderPause(CustomOrderPause customOrderPause);
 
+    Integer selectHadPauseDays(String customOrderCode);
 
+    List<CustomOrderPause> selectAll();
 
 }

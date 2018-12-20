@@ -22,6 +22,7 @@ import javax.servlet.http.HttpServletRequest;
 import java.io.*;
 import java.net.ConnectException;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.cert.CertificateException;
@@ -194,7 +195,7 @@ public class WeChatUtil {
 			try {
 				result = httpsRequest(requestUrl, "GET", null);
 				amapMap = Jackson.map(result);
-				e.printStackTrace();;
+				e.printStackTrace();
 			}catch (Exception e2){
 				e2.printStackTrace();
 				log.info("获取accessToken失败,重试第二次:url="+requestUrl);
@@ -235,7 +236,7 @@ public class WeChatUtil {
 		String gensignature = null;
 		try {
 			MessageDigest md = MessageDigest.getInstance("SHA-1");
-			byte[] digest = md.digest(content.toString().getBytes());
+			byte[] digest = md.digest(content.getBytes());
 			gensignature = byteToStr(digest);
 		} catch (NoSuchAlgorithmException e) {
 			log.error(e.getMessage(), e);
@@ -388,10 +389,10 @@ public class WeChatUtil {
 					return null;
 				}
 
-				public void checkServerTrusted(X509Certificate[] chain, String authType) throws CertificateException {
+				public void checkServerTrusted(X509Certificate[] chain, String authType) {
 				}
 
-				public void checkClientTrusted(X509Certificate[] chain, String authType) throws CertificateException {
+				public void checkClientTrusted(X509Certificate[] chain, String authType) {
 				}
 			} };
 			SSLContext sslContext = SSLContext.getInstance("SSL", "SunJSSE");
@@ -410,12 +411,12 @@ public class WeChatUtil {
 			if (null != outputStr) {
 				OutputStream outputStream = conn.getOutputStream();
 				// 注意编码格式
-				outputStream.write(outputStr.getBytes("UTF-8"));
+				outputStream.write(outputStr.getBytes(StandardCharsets.UTF_8));
 				outputStream.close();
 			}
 			// 从输入流读取返回内容
 			InputStream inputStream = conn.getInputStream();
-			InputStreamReader inputStreamReader = new InputStreamReader(inputStream, "utf-8");
+			InputStreamReader inputStreamReader = new InputStreamReader(inputStream, StandardCharsets.UTF_8);
 			BufferedReader bufferedReader = new BufferedReader(inputStreamReader);
 			String str = null;
 			StringBuffer buffer = new StringBuffer();

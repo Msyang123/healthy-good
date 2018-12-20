@@ -34,6 +34,6 @@ public class TeamAchievement {
     private Long amountOfMonth;
 
     @ApiModelProperty(notes = "本月产生红利", dataType = "Long")
-    private Long incomeAmountOfMonth;
+    private Long bonusOfMonth;//老字段 incomeAmountOfMonth
 
 }

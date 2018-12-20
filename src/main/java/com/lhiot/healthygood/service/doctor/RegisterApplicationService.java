@@ -1,12 +1,15 @@
 package com.lhiot.healthygood.service.doctor;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.leon.microx.util.BeanUtils;
+import com.leon.microx.util.Jackson;
 import com.leon.microx.util.auditing.Random;
 import com.leon.microx.web.result.Pages;
 import com.leon.microx.web.result.Tips;
 import com.lhiot.healthygood.domain.doctor.RegisterApplication;
 import com.lhiot.healthygood.domain.user.DoctorCustomer;
 import com.lhiot.healthygood.domain.user.FruitDoctor;
+import com.lhiot.healthygood.domain.user.KeywordValue;
 import com.lhiot.healthygood.feign.BaseUserServerFeign;
 import com.lhiot.healthygood.feign.model.UserDetailResult;
 import com.lhiot.healthygood.mapper.doctor.RegisterApplicationMapper;
@@ -17,6 +20,7 @@ import com.lhiot.healthygood.util.DataItem;
 import com.lhiot.healthygood.util.DataObject;
 import com.lhiot.healthygood.wechat.WeChatUtil;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.amqp.AmqpException;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -198,6 +202,7 @@ public class RegisterApplicationService {
         int total = pageFlag ? this.count(registerApplication) : list.size();
         return Pages.of(total, list);
     }
+
 
     /**
      * 鲜果师审核发送模板消息

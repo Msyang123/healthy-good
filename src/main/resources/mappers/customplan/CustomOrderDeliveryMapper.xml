@@ -122,7 +122,7 @@
         where order_code = #{orderCode}
     </update>
 
-    <!-- 根据customOrderId查找 -->
+    <!-- 根据customOrderId查找定制计划的商品与实际提取记录 -->
     <select id="selectByCustomOrderId" resultMap="BaseResultMap" parameterType="Long">
         select <include refid="Base_Column_List"/>
         from
@@ -132,4 +132,7 @@
         on p.id= d.custom_plan_product_id
     </select>
 
+    <select id="selectDeliveryByCustomOrderId" resultType="com.lhiot.healthygood.domain.customplan.CustomOrderDelivery" parameterType="Long">
+        select * from custom_order_delivery where custom_order_id =#{0}
+    </select>
 </mapper>

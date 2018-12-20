@@ -37,6 +37,10 @@
         </dependency>
         <dependency>
             <groupId>com.leon.microx.common</groupId>
+            <artifactId>microx-amqp-core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.leon.microx.common</groupId>
             <artifactId>microx-redis-core</artifactId>
         </dependency>
         <dependency>
