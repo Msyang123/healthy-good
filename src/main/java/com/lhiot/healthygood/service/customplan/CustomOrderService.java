@@ -68,8 +68,8 @@ public class CustomOrderService {
 
     private final RabbitTemplate rabbitTemplate;
     //暂停开始结束时间
-    private static final LocalTime BEGIN_PAUSE_OF_DAY = LocalTime.parse("00:00:00");
-    private static final LocalTime END_PAUSE_OF_DAY = LocalTime.parse("23:59:59");
+    private static final LocalTime PAUSE_TIME = LocalTime.parse("00:00:00");
+    //private static final LocalTime END_PAUSE_OF_DAY = LocalTime.parse("23:59:59");
     private static final DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
     @Autowired
@@ -98,7 +98,7 @@ public class CustomOrderService {
         this.dictionaryClient = dictionaryClient;
         this.rabbitTemplate = rabbitTemplate;
         //初始化调用修改暂停恢复定制计划每五分钟调用一次
-        HealthyGoodQueue.DelayQueue.UPDATE_CUSTOM_ORDER_STATUS.send(rabbitTemplate,"nothing",5*60*1000);
+        HealthyGoodQueue.DelayQueue.UPDATE_CUSTOM_ORDER_STATUS.send(rabbitTemplate,"nothing",1*60*1000);
     }
 
     /**
@@ -183,18 +183,19 @@ public class CustomOrderService {
         //暂停开始日期
         LocalDate pauseBegin = LocalDate.parse(customOrderPause.getPauseBegin(), dateTimeFormatter);
         //暂停开始时间
-        LocalDateTime begin = pauseBegin.atTime(BEGIN_PAUSE_OF_DAY);
+        LocalDateTime begin = pauseBegin.atTime(PAUSE_TIME);
         //计划暂停结束时间
-        LocalDateTime last = pauseBegin.plusDays(customOrderPause.getPauseDay()).atTime(END_PAUSE_OF_DAY);
+        LocalDateTime last = pauseBegin.plusDays(customOrderPause.getPlanPauseDay()).atTime(PAUSE_TIME);
+        Date lastDate = Date.from(last.atZone(ZoneId.systemDefault()).toInstant());
 
         //查询当前设置暂停时间是否已经存在了 如果存在不允许设置
         CustomOrderPause customOrderPauseParam = new CustomOrderPause();
         customOrderPauseParam.setPauseBeginAt(Date.from(begin.atZone(ZoneId.systemDefault()).toInstant()));//暂停开始时间
-        customOrderPauseParam.setPlanPauseEndAt(Date.from(last.atZone(ZoneId.systemDefault()).toInstant()));//计划暂停结束时间
+        customOrderPauseParam.setPlanPauseEndAt(lastDate);//计划暂停结束时间
         customOrderPauseParam.setOperStatus(OperStatus.PAUSE);//暂停状态
         customOrderPauseParam.setCustomOrderCode(customOrderCode);
         if (Objects.nonNull(customOrderPauseMapper.selectCustomOrderPause(customOrderPauseParam))) {
-            return Tips.warn("设定时间段已经存在暂停状态");
+            return Tips.warn("当前设置与已暂停时间段冲突");
         }
         //查询已经使用暂停天数
         Integer hadPauseDays = customOrderPauseMapper.selectHadPauseDays(customOrderCode);
@@ -223,8 +224,11 @@ public class CustomOrderService {
             return Tips.warn("已经超过最大暂停天数");
         }
         //默认所有暂停结束设置都为计划的设置，如果恢复，那么再修改实际结束时间
-        customOrderPause.setPauseEndAt(customOrderPause.getPlanPauseEndAt());
+        customOrderPause.setPauseBeginAt(Date.from(begin.atZone(ZoneId.systemDefault()).toInstant()));//暂停开始时间
+        customOrderPause.setPauseEndAt(lastDate);//实际暂停结束时间
+        customOrderPause.setPlanPauseEndAt(lastDate);//计划暂停结束时间
         customOrderPause.setPauseDay(customOrderPause.getPlanPauseDay());
+        customOrderPause.setOperStatus(OperStatus.PAUSE);
         int saveResult = customOrderPauseMapper.create(customOrderPause);
         //保持暂停记录
         return saveResult > 0 ? Tips.info("设置成功") : Tips.warn("设置失败");

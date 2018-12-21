@@ -6,7 +6,6 @@ import com.leon.microx.util.Calculator;
 import com.leon.microx.util.StringUtils;
 import com.leon.microx.web.result.Pages;
 import com.leon.microx.web.result.Tips;
-import com.leon.microx.web.result.Tuple;
 import com.leon.microx.web.session.Sessions;
 import com.lhiot.healthygood.config.HealthyGoodConfig;
 import com.lhiot.healthygood.domain.activity.ActivityProduct;
@@ -21,10 +20,10 @@ import com.lhiot.healthygood.feign.PaymentServiceFeign;
 import com.lhiot.healthygood.feign.ThirdpartyServerFeign;
 import com.lhiot.healthygood.feign.model.*;
 import com.lhiot.healthygood.feign.type.*;
+import com.lhiot.healthygood.mq.HealthyGoodQueue;
 import com.lhiot.healthygood.service.activity.ActivityProductRecordService;
 import com.lhiot.healthygood.service.activity.ActivityProductService;
 import com.lhiot.healthygood.service.activity.SpecialProductActivityService;
-import com.lhiot.healthygood.mq.HealthyGoodQueue;
 import com.lhiot.healthygood.service.order.OrderService;
 import com.lhiot.healthygood.service.user.DoctorCustomerService;
 import com.lhiot.healthygood.service.user.FruitDoctorService;
@@ -268,6 +267,8 @@ public class OrderApi {
         }
         OrderDetailResult orderDetailResult = (OrderDetailResult) validateResult.getBody();
         ResponseEntity refundOrderTips = null;
+        returnOrderParam.setNotifyUrl(wechatPayConfig.getOrderRefundCallbackUrl());//设置退款回调
+        //TODO 验证与计算订单金额
         switch (orderDetailResult.getStatus()) {
             //订单未发送海鼎，退款
             case WAIT_SEND_OUT:
@@ -298,6 +299,7 @@ public class OrderApi {
                                                                Sessions.User user) {
         baseOrderParam.setUserIds(user.getUser().get("userId").toString());
         baseOrderParam.setOrderType(OrderType.NORMAL);
+        baseOrderParam.setApplicationType(ApplicationType.HEALTH_GOOD);
         return orderServiceFeign.ordersPages(baseOrderParam);
     }
 
@@ -314,6 +316,7 @@ public class OrderApi {
         String userIds = StringUtils.arrayToCommaDelimitedString(doctorCustomerList.parallelStream().map(DoctorCustomer::getUserId).toArray(Object[]::new));
         baseOrderParam.setUserIds(userIds);
         baseOrderParam.setOrderType(OrderType.NORMAL);
+        baseOrderParam.setApplicationType(ApplicationType.HEALTH_GOOD);
         return orderServiceFeign.ordersPages(baseOrderParam);
     }
 
@@ -326,29 +329,32 @@ public class OrderApi {
     @GetMapping("/orders/count/status")
     @ApiOperation("统计我的用户订单各状态数量")
     public ResponseEntity<OrderGroupCount> countStatus(Sessions.User user) {
-        Long userId = Long.valueOf(user.getUser().get("userId").toString());
-
         OrderGroupCount orderGroupCount = new OrderGroupCount();
-        ResponseEntity<Tuple<OrderDetailResult>> waitPayment = orderServiceFeign.ordersByUserId(userId, OrderType.NORMAL, OrderStatus.WAIT_PAYMENT);
-        Tips<Tuple<OrderDetailResult>> waitPaymentTips = FeginResponseTools.convertResponse(waitPayment);
-        if (waitPaymentTips.err()) {
-            orderGroupCount.setWaitPaymentCount(waitPaymentTips.getData().getArray().size());
-        } else {
+
+        BaseOrderParam baseOrderParam =new BaseOrderParam();
+        baseOrderParam.setUserIds(user.getUser().get("userId").toString());
+        baseOrderParam.setOrderType(OrderType.NORMAL);
+        baseOrderParam.setApplicationType(ApplicationType.HEALTH_GOOD);
+        baseOrderParam.setOrderStatuses(new OrderStatus[]{OrderStatus.WAIT_PAYMENT});
+        ResponseEntity<Pages<OrderDetailResult>>  ordersPages = orderServiceFeign.ordersPages(baseOrderParam);
+        Tips<Pages<OrderDetailResult>> waitPaymentListTips= FeginResponseTools.convertResponse(ordersPages);
+
+        //ResponseEntity<Tuple<OrderDetailResult>> waitPayment = orderServiceFeign.ordersByUserId(userId, OrderType.NORMAL, OrderStatus.WAIT_PAYMENT);
+        //Tips<Tuple<OrderDetailResult>> waitPaymentTips = FeginResponseTools.convertResponse(waitPayment);
+        if (waitPaymentListTips.err()) {
             orderGroupCount.setWaitPaymentCount(0);
-        }
-        ResponseEntity<Tuple<OrderDetailResult>> waitReceive = orderServiceFeign.ordersByUserId(userId, OrderType.NORMAL, OrderStatus.DISPATCHING);//配送中
-        Tips<Tuple<OrderDetailResult>> waitReceiveTips = FeginResponseTools.convertResponse(waitReceive);
-        if (waitReceiveTips.err()) {
-            orderGroupCount.setWaitReceiveCount(waitReceiveTips.getData().getArray().size());
         } else {
+            orderGroupCount.setWaitPaymentCount(waitPaymentListTips.getData().getTotal());
+        }
+        //ResponseEntity<Tuple<OrderDetailResult>> waitReceive = orderServiceFeign.ordersByUserId(userId, OrderType.NORMAL, OrderStatus.DISPATCHING);//配送中
+        //Tips<Tuple<OrderDetailResult>> waitReceiveTips = FeginResponseTools.convertResponse(waitReceive);
+        baseOrderParam.setOrderStatuses(new OrderStatus[]{OrderStatus.WAIT_SEND_OUT,OrderStatus.SEND_OUTING,OrderStatus.WAIT_DISPATCHING,OrderStatus.DISPATCHING});
+        ordersPages = orderServiceFeign.ordersPages(baseOrderParam);
+        Tips<Pages<OrderDetailResult>> waitReceiveListTips= FeginResponseTools.convertResponse(ordersPages);
+        if (waitReceiveListTips.err()) {
             orderGroupCount.setWaitReceiveCount(0);
-        }
-        ResponseEntity<Tuple<OrderDetailResult>> returning = orderServiceFeign.ordersByUserId(userId, OrderType.NORMAL, OrderStatus.RETURNING);
-        Tips<Tuple<OrderDetailResult>> returningTips = FeginResponseTools.convertResponse(returning);
-        if (returningTips.err()) {
-            orderGroupCount.setReturningCount(returningTips.getData().getArray().size());
         } else {
-            orderGroupCount.setReturningCount(0);
+            orderGroupCount.setWaitReceiveCount(waitReceiveListTips.getData().getTotal());
         }
         return ResponseEntity.ok(orderGroupCount);
     }
@@ -411,14 +417,14 @@ public class OrderApi {
     //验证是否属于当前用户的订单
     private ResponseEntity validateOrderOwner(Long userId, String orderCode) {
 
-        ResponseEntity<OrderDetailResult> orderDetailResultTips = orderServiceFeign.orderDetail(orderCode, false, false);
-        if (Objects.isNull(orderDetailResultTips) || orderDetailResultTips.getStatusCode().isError()) {
-            return orderDetailResultTips;
+        ResponseEntity<OrderDetailResult> orderDetailResultEntity = orderServiceFeign.orderDetail(orderCode, false, false);
+        if (Objects.isNull(orderDetailResultEntity) || orderDetailResultEntity.getStatusCode().isError()) {
+            return orderDetailResultEntity;
         }
-        if (!Objects.equals(orderDetailResultTips.getBody().getUserId(), userId)) {
+        if (!Objects.equals(orderDetailResultEntity.getBody().getUserId(), userId)) {
             return ResponseEntity.badRequest().body("当前操作订单不属于登录用户");
         }
-        return ResponseEntity.ok(orderDetailResultTips);
+        return orderDetailResultEntity;
     }
 
 

@@ -104,7 +104,23 @@ public class WxCallbackApi {
                 + "<xml><return_code><![CDATA[SUCCESS]]></return_code>"
                 + "<return_msg><![CDATA[OK]]></return_msg></xml>");
     }
-    //TODO 普通订单退款回调也需要处理并且告知基础支付服务
+
+    @Sessions.Uncheck
+    @PostMapping("/orders-refund")
+    @ApiOperation("普通订单微信退款回调-后端回调处理")
+    public ResponseEntity<String> wxRefundOrderCallback(HttpServletRequest request) {
+        Map<String, String> parameters = ConvertRequestToMap.convertRequestXmlFormatToMap(request);
+        //调用基础服务验证参数签名是否正确
+        Tips wxVerifyTips = wxVerify(parameters);
+        if (wxVerifyTips.err()) {
+            //基础支付服务如果有取消或者关单接口就调用
+            log.error("普通订单微信退款回调-后端回调处理微信退款回调参数验签失败:{},{}", parameters, wxVerifyTips);
+            return ResponseEntity.badRequest().body(wxVerifyTips.getMessage());
+        }
+        log.info("发送基础服务支付通知退款完成{}",parameters.get("out_refund_no"));
+        paymentServiceFeign.completed(parameters.get("out_refund_no"));
+        return ResponseEntity.ok("success");
+    }
 
     @Sessions.Uncheck
     @PostMapping("/recharge")

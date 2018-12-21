@@ -14,6 +14,7 @@ import com.lhiot.healthygood.feign.DeliverServiceFeign;
 import com.lhiot.healthygood.feign.model.*;
 import com.lhiot.healthygood.feign.type.ApplicationType;
 import com.lhiot.healthygood.feign.type.CoordinateSystem;
+import com.lhiot.healthygood.feign.type.DeliverAtType;
 import com.lhiot.healthygood.service.common.CommonService;
 import com.lhiot.healthygood.type.ShelfType;
 import com.lhiot.healthygood.util.FeginResponseTools;
@@ -111,6 +112,7 @@ public class CommonsApi {
         }
         Store store = storeResponseEntity.getBody();
         feeQuery.setStoreId(store.getId());//设置门店id
+        feeQuery.setDeliverAtType(DeliverAtType.ALL_DAY);
         //如果有地址依据地址设置经纬度
         if(StringUtils.isNotBlank(feeQuery.getAddress())){
             Position.GCJ02 position = commonService.getPositionFromAddres(feeQuery.getAddress());//地址转经纬度

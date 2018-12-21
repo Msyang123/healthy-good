@@ -54,6 +54,9 @@
             <if test="planPauseEndAt != null ">
                 plan_pause_end_at,
             </if>
+            <if test="operStatus !=null">
+                oper_status,
+            </if>
         </trim>
         <trim prefix="values (" suffix=")" suffixOverrides="," >
             <if test="customOrderCode != null ">
@@ -77,14 +80,17 @@
             <if test="planPauseEndAt != null ">
                 #{planPauseEndAt},
             </if>
+            <if test="operStatus !=null">
+                #{operStatus},
+            </if>
         </trim>
     </insert>
 
     <update id="update" parameterType="com.lhiot.healthygood.domain.customplan.CustomOrderPause">
         update custom_order_pause
         set
-        pause_end_at= #{pauseEndAt}
-        pause_day = #{pauseDay}
+        pause_end_at= #{pauseEndAt},
+        pause_day = #{pauseDay},
         oper_status = #{operStatus}
         where id = #{id}
     </update>
@@ -100,8 +106,8 @@
             <if test="pauseBeginAt != null ">
                 and pause_begin_at <![CDATA[ <= ]]> #{pauseBeginAt}
             </if>
-            <if test="pauseEndAt != null ">
-                and pause_end_at <![CDATA[ >= ]]> #{pauseEndAt}
+            <if test="pauseBeginAt != null ">
+                and pause_end_at <![CDATA[ > ]]> #{pauseBeginAt}
             </if>
             <if test="operStatus !=null">
                 and oper_status =#{operStatus}
@@ -111,8 +117,8 @@
 
     <!--计算已经暂停总天数，计划暂停的还进行中的也计算在内-->
     <select id="selectHadPauseDays" resultType="int" parameterType="com.lhiot.healthygood.domain.customplan.CustomOrderPause">
-        select sum(pause_day) as pauseDays
-        from custom_order_pause custom_order_code = #{customOrderCode}
+        select IFNULL(sum(pause_day),0) as pauseDays
+        from custom_order_pause where custom_order_code = #{customOrderCode}
     </select>
 
     <!--查询所有状态的定制订单设置的暂停或者恢复设置记录 (过滤条件 暂停开始时间<=当前时间)-->

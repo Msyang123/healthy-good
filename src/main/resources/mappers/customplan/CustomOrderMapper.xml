@@ -25,6 +25,7 @@
         <result column="pay_id" property="payId"/>
         <result column="description" property="description"/>
         <result column="end_extraction_at" property="endExtractionAt"/>
+        <result column="already_pause_day" property="alreadyPauseDay"/>
     </resultMap>
 
     <!-- 数据库连表查询字段对象关系映射 -->
@@ -52,6 +53,7 @@
         <result column="pay_id" property="payId"/>
         <result column="description" property="description"/>
         <result column="end_extraction_at" property="endExtractionAt"/>
+        <result column="already_pause_day" property="alreadyPauseDay"/>
         <association property="customPlan" javaType="com.lhiot.healthygood.domain.customplan.CustomPlan">
             <id column="p_id" property="id"/>
             <result column="p_name" property="name"/>
@@ -65,28 +67,29 @@
     <!-- base查询字段  -->
     <sql id="Base_Column_List">
         <trim suffixOverrides=",">
-            id,
-            custom_order_code,
-            user_id,
-            nickname,
-            phone,
-            status,
-            remaining_qty,
-            delivery_type,
-            total_qty,
-            plan_id,
-            price,
-            create_at,
-            receive_user,
-            contact_phone,
-            delivery_address,
-            delivery_time,
-            specification_id,
-            quantity,
-            store_code,
-            pay_id,
-            description,
-            end_extraction_at,
+            o.id,
+            o.custom_order_code,
+            o.user_id,
+            o.nickname,
+            o.phone,
+            o.status,
+            o.remaining_qty,
+            o.delivery_type,
+            o.total_qty,
+            o.plan_id,
+            o.price,
+            o.create_at,
+            o.receive_user,
+            o.contact_phone,
+            o.delivery_address,
+            o.delivery_time,
+            o.specification_id,
+            o.quantity,
+            o.store_code,
+            o.pay_id,
+            o.description,
+            o.end_extraction_at,
+            (select IFNULL(sum(pause_day),0) from custom_order_pause c where c.custom_order_code = o.custom_order_code) as already_pause_day,
         </trim>
     </sql>
 
@@ -116,6 +119,8 @@
             o.description,
             o.end_extraction_at,
 
+            (select IFNULL(sum(pause_day),0) from custom_order_pause c where c.custom_order_code = o.custom_order_code) as already_pause_day,
+
             p.id p_id,
             p.name p_name,
             p.description p_description,
@@ -133,6 +138,12 @@
         <trim prefix="(" suffix=")" suffixOverrides=",">
             <if test="userId != null ">
                 user_id,
+            </if>
+            <if test="nickname != null ">
+                nickname,
+            </if>
+            <if test="phone != null ">
+                phone,
             </if>
             <if test="customOrderCode != null ">
                 custom_order_code,
@@ -189,6 +200,12 @@
         <trim prefix="values (" suffix=")" suffixOverrides=",">
             <if test="userId != null ">
                 #{userId},
+            </if>
+            <if test="nickname != null ">
+                #{nickname},
+            </if>
+            <if test="phone != null ">
+                #{phone},
             </if>
             <if test="customOrderCode != null ">
                 #{customOrderCode},
@@ -267,7 +284,7 @@
     <select id="selectByCode" resultMap="BaseResultMap" parameterType="String">
         select
         <include refid="Base_Column_List"/>
-        from custom_order where custom_order_code = #{0}
+        from custom_order o where custom_order_code = #{0}
     </select>
 
     <!-- base where条件  -->
