@@ -19,6 +19,7 @@ import com.lhiot.healthygood.feign.type.SourceType;
 import com.lhiot.healthygood.service.customplan.CustomOrderService;
 import com.lhiot.healthygood.type.CustomOrderBuyType;
 import com.lhiot.healthygood.type.CustomOrderStatus;
+import com.lhiot.healthygood.util.FeginResponseTools;
 import com.lhiot.healthygood.util.RealClientIp;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
@@ -60,6 +61,14 @@ public class CustomOrderApi {
     public ResponseEntity create(@Valid @RequestBody CustomOrder customOrder, Sessions.User user) {
         Long userId = Long.valueOf(user.getUser().get("userId").toString());
         customOrder.setUserId(userId);
+        ResponseEntity<UserDetailResult> userDetailResultResponseEntity = baseUserServerFeign.findById(userId);
+        Tips<UserDetailResult> userDetailResultTips = FeginResponseTools.convertResponse(userDetailResultResponseEntity);
+        if (!userDetailResultTips.err()) {
+            customOrder.setNickname(userDetailResultTips.getData().getNickname());
+            customOrder.setPhone(userDetailResultTips.getData().getPhone());
+        } else {
+            log.warn("立即定制-创建定制计划 查询业务用户信息错误{}", userDetailResultResponseEntity);
+        }
         CustomOrder result = customOrderService.createCustomOrder(customOrder);
         if (Objects.isNull(result)) {
             return ResponseEntity.badRequest().body("创建失败");
@@ -136,7 +145,7 @@ public class CustomOrderApi {
         }
         //不需要检测当前是否是暂停中的定制
         int result = customOrderService.resumeCustomOrder(orderCode);
-        return result>0?ResponseEntity.ok("修改成功"):ResponseEntity.badRequest().body("修改失败");
+        return result > 0 ? ResponseEntity.ok("修改成功") : ResponseEntity.badRequest().body("修改失败");
     }
 
     @PutMapping("/custom-orders/{orderCode}/delivery-time")

@@ -50,6 +50,8 @@ public class HealthyGoodConfig {
     public static class WechatPayConfig {
         private String orderCallbackUrl;
 
+        private String orderRefundCallbackUrl;
+
         private String rechargeCallbackUrl;
 
         private String activityCallbackUrl;
