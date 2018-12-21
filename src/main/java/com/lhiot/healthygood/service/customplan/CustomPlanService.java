@@ -2,7 +2,6 @@ package com.lhiot.healthygood.service.customplan;
 
 import com.leon.microx.predefine.OnOff;
 import com.leon.microx.util.BeanUtils;
-import com.leon.microx.util.Maps;
 import com.leon.microx.util.StringUtils;
 import com.leon.microx.web.result.Pages;
 import com.leon.microx.web.result.Tips;
@@ -14,10 +13,7 @@ import com.lhiot.healthygood.feign.BaseDataServiceFeign;
 import com.lhiot.healthygood.feign.model.Product;
 import com.lhiot.healthygood.feign.model.ProductShelf;
 import com.lhiot.healthygood.feign.model.ProductShelfParam;
-import com.lhiot.healthygood.mapper.customplan.CustomPlanMapper;
-import com.lhiot.healthygood.mapper.customplan.CustomPlanProductMapper;
-import com.lhiot.healthygood.mapper.customplan.CustomPlanSectionRelationMapper;
-import com.lhiot.healthygood.mapper.customplan.CustomPlanSpecificationMapper;
+import com.lhiot.healthygood.mapper.customplan.*;
 import com.lhiot.healthygood.util.FeginResponseTools;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -38,18 +34,20 @@ public class CustomPlanService {
     private final BaseDataServiceFeign baseDataServiceFeign;
     private final CustomPlanProductMapper customPlanProductMapper;
     private DictionaryClient dictionaryClient;
+    private final CustomPlanSpecificationStandardMapper customPlanSpecificationStandardMapper;
 
 
     @Autowired
     public CustomPlanService(CustomPlanMapper customPlanMapper,
                              CustomPlanSpecificationMapper customPlanSpecificationMapper, CustomPlanSectionRelationMapper customPlanSectionRelationMapper,
-                             BaseDataServiceFeign baseDataServiceFeign, CustomPlanProductMapper customPlanProductMapper, DictionaryClient dictionaryClient) {
+                             BaseDataServiceFeign baseDataServiceFeign, CustomPlanProductMapper customPlanProductMapper, DictionaryClient dictionaryClient, CustomPlanSpecificationStandardMapper customPlanSpecificationStandardMapper) {
         this.customPlanMapper = customPlanMapper;
         this.customPlanSpecificationMapper = customPlanSpecificationMapper;
         this.customPlanSectionRelationMapper = customPlanSectionRelationMapper;
         this.baseDataServiceFeign = baseDataServiceFeign;
         this.customPlanProductMapper = customPlanProductMapper;
         this.dictionaryClient = dictionaryClient;
+        this.customPlanSpecificationStandardMapper = customPlanSpecificationStandardMapper;
     }
 
     public CustomPlanDetailResult findDetail(Long id) {
@@ -116,9 +114,11 @@ public class CustomPlanService {
                 .filter(productShelf -> Objects.equals(customPlanProduct.getProductShelfId(), productShelf.getId()))
                 .forEach(item -> {
                     CustomPlanProductResult customPlanProductResult = new CustomPlanProductResult();
-                    BeanUtils.copyProperties(customPlanProduct,customPlanPeriodResult );
+                    BeanUtils.copyProperties(customPlanProduct,customPlanProductResult);
                     customPlanProductResult.setImage(item.getImage());//设置上架图
                     customPlanProductResult.setProductName(item.getName());//设置上架名称
+                    customPlanProductResult.setProductShelfId(item.getShelfId());
+                    customPlanProductResult.setDescription(item.getDescription());
                     if (Objects.nonNull(item.getProductSpecification())) {
                         Tips<Product> productTips = FeginResponseTools.convertResponse(baseDataServiceFeign.single(item.getProductSpecification().getProductId()));//查询商品益处
                         if (!productTips.err()) {
@@ -162,8 +162,6 @@ public class CustomPlanService {
             return Pages.of(total, customPlanDetailResultList);
         }
 
-        // 查询周期类型集合
-        List<CustomPlanPeriodResult> customPlanPeriodResultList = new ArrayList<>();
         // 根据定制计划ids查询定制规格信息
         List<Long> planIdList = customPlanList.stream().map(CustomPlan::getId).collect(Collectors.toList());
         List<CustomPlanSpecification> customPlanSpecificationList = customPlanSpecificationMapper.findByPlanIds(planIdList);
@@ -175,21 +173,22 @@ public class CustomPlanService {
             if (!CollectionUtils.isEmpty(customPlanSpecificationList)) {
                 List<CustomPlanSpecification> customPlanSpecifications = customPlanSpecificationList.stream().filter(customPlanSpecification -> Objects.equals(customPlanDetailResult.getId(), customPlanSpecification.getPlanId())).collect(Collectors.toList());
                 // 周期集合
+                List<CustomPlanPeriodResult> customPlanPeriodResultList = new ArrayList<>();
+
                 List<Integer> planPeriodList = customPlanSpecifications.stream().map(CustomPlanSpecification::getPlanPeriod).distinct().collect(Collectors.toList());
                 if (!CollectionUtils.isEmpty(planPeriodList)) {
                     planPeriodList.forEach(planPeriod -> {
                         // 周期类型对象
                         CustomPlanPeriodResult customPlanPeriodResult = new CustomPlanPeriodResult();
-                        // 设置周期类型-周期
+                        // 设置周期类型-周期关联板块ids和排序ids长度不一致
                         customPlanPeriodResult.setPlanPeriod(planPeriod);
                         List<CustomPlanSpecification> filterCustomPlanSpecificationList = customPlanSpecifications.stream().filter(customPlanSpecification -> Objects.equals(planPeriod, customPlanSpecification.getPlanPeriod())).collect(Collectors.toList());
                         // 设置周期类型-对应周期的定制规格集合
                         customPlanPeriodResult.setSpecificationList(filterCustomPlanSpecificationList);
-                        // 将周期类型添加至周期集合
+                        // 将周期类型关联板块ids和排序ids长度不一致添加至周期集合
                         customPlanPeriodResultList.add(customPlanPeriodResult);
                         customPlanDetailResult.setPeriodList(customPlanPeriodResultList);
                     });
-
                 }
             }
             customPlanDetailResultList.add(customPlanDetailResult);
@@ -229,26 +228,26 @@ public class CustomPlanService {
         List<CustomPlanSectionRelation> customPlanSectionRelation = new ArrayList<>();
         String[] sectionIds = StringUtils.tokenizeToStringArray(customPlanDetailResult.getCustomPlanSectionIds(), ",");
         List<String> sectionIdList = Stream.of(sectionIds).collect(Collectors.toList());
-        String[] sortIds = StringUtils.tokenizeToStringArray(customPlanDetailResult.getSorts(), ",");
-        List<String> sortIdList = Stream.of(sortIds).collect(Collectors.toList());
-        if (sectionIdList.isEmpty() || sortIdList.isEmpty() || sectionIdList.size() != sortIdList.size()) {
-            return Tips.warn("关联板块ids和排序ids长度不一致");
+        if (sectionIdList.isEmpty()) {
+            return Tips.warn("关联板块不能为空");
         }
         sectionIdList.stream().forEach(sectionId -> {
             CustomPlanSectionRelation customPlanSectionRelation1 = new CustomPlanSectionRelation();
             customPlanSectionRelation1.setPlanId(customPlanId);
             customPlanSectionRelation1.setSectionId(Long.valueOf(sectionId));
-            customPlanSectionRelation1.setSort(Long.valueOf(sortIdList.get(sectionIdList.indexOf(sectionId))));
+            customPlanSectionRelation1.setSort(1L);
             customPlanSectionRelation.add(customPlanSectionRelation1);
         });
         boolean addRelation = customPlanSectionRelationMapper.insertList(customPlanSectionRelation) > 0;
-
         if (!addRelation) {
             return Tips.warn("定制计划和定制板块关联失败");
         }
+
         // 获取定制周期中的定制规格和定制计划列表
         List<CustomPlanPeriodResult> customPlanPeriodResultList = customPlanDetailResult.getPeriodList();
-        if (!customPlanPeriodResultList.isEmpty() && customPlanPeriodResultList.size() > 0) {
+        // 查询定制定制计划规格基础数据表
+        List<CustomPlanSpecificationStandard> planSpecificationStandardList = customPlanSpecificationStandardMapper.findList();
+        if (!CollectionUtils.isEmpty(customPlanPeriodResultList)) {
             customPlanPeriodResultList.forEach(customPlanPeriodResult -> {
                 Integer planPeriod = customPlanPeriodResult.getPlanPeriod();
 
@@ -257,6 +256,15 @@ public class CustomPlanService {
                 specificationList.forEach(specification -> {
                     specification.setPlanPeriod(planPeriod);
                     specification.setPlanId(customPlanId);
+                    if (!CollectionUtils.isEmpty(planSpecificationStandardList)){
+                        planSpecificationStandardList.forEach(planSpecificationStandard -> {
+                            if (Objects.equals(specification.getQuantity(), planSpecificationStandard.getQuantity())){
+                                specification.setDescription(planSpecificationStandard.getDescription());
+                                specification.setImage(planSpecificationStandard.getImage());
+                                specification.setStandardId(planSpecificationStandard.getId());
+                            }
+                        });
+                    }
                 });
                 boolean addCustomPlanSpecification = customPlanSpecificationMapper.insertList(specificationList) > 0;
                 if (!addCustomPlanSpecification) {
