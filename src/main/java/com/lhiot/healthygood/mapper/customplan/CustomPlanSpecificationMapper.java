@@ -90,6 +90,16 @@ public interface CustomPlanSpecificationMapper {
     List<CustomPlanSpecification> findByPlanIdAndPerid(Map<String,Object> param);
 
     /**
+     * Description: 根据定制计划ids查询定制计划规格
+     *
+     * @param planIds
+     * @return
+     * @author hufan
+     * @date 2018/12/20 18:49:27
+     */
+    List<CustomPlanSpecification> findByPlanIds(List<Long> planIds);
+
+    /**
      * 查找指定定制计划里面定制规格的最低价格
      * @param planId
      * @return

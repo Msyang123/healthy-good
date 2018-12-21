@@ -4,13 +4,16 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.leon.microx.util.Jackson;
 import com.leon.microx.web.result.Pages;
 import com.leon.microx.web.result.Tips;
+import com.lhiot.healthygood.domain.doctor.DoctorAchievementLog;
 import com.lhiot.healthygood.domain.doctor.SettlementApplication;
 import com.lhiot.healthygood.domain.user.FruitDoctor;
 import com.lhiot.healthygood.domain.user.KeywordValue;
+import com.lhiot.healthygood.mapper.doctor.DoctorAchievementLogMapper;
 import com.lhiot.healthygood.mapper.doctor.SettlementApplicationMapper;
 import com.lhiot.healthygood.mapper.user.FruitDoctorMapper;
 import com.lhiot.healthygood.type.FruitDoctorOrderExchange;
 import com.lhiot.healthygood.type.SettlementStatus;
+import com.lhiot.healthygood.type.SourceType;
 import com.lhiot.healthygood.type.TemplateMessageEnum;
 import org.springframework.amqp.AmqpException;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
@@ -39,12 +42,14 @@ public class SettlementApplicationService {
     private final SettlementApplicationMapper settlementApplicationMapper;
     private final FruitDoctorMapper fruitDoctorMapper;
     private final RabbitTemplate rabbit;
+    private final DoctorAchievementLogMapper doctorAchievementLogMapper;
 
     @Autowired
-    public SettlementApplicationService(SettlementApplicationMapper settlementApplicationMapper, FruitDoctorMapper fruitDoctorMapper, RabbitTemplate rabbit) {
+    public SettlementApplicationService(SettlementApplicationMapper settlementApplicationMapper, FruitDoctorMapper fruitDoctorMapper, RabbitTemplate rabbit, DoctorAchievementLogMapper doctorAchievementLogMapper) {
         this.settlementApplicationMapper = settlementApplicationMapper;
         this.fruitDoctorMapper = fruitDoctorMapper;
         this.rabbit = rabbit;
+        this.doctorAchievementLogMapper = doctorAchievementLogMapper;
     }
 
     /**
@@ -66,7 +71,7 @@ public class SettlementApplicationService {
      * @param settlementApplication
      * @return
      */
-    public Tips updateById(Long id, SettlementApplication settlementApplication) {
+   /* public Tips updateById(Long id, SettlementApplication settlementApplication) {
         settlementApplication.setId(id);
         settlementApplication.setDealAt(Date.from(Instant.now()));
         // 已结算只能结算一次，成功后不可修改
@@ -85,7 +90,7 @@ public class SettlementApplicationService {
                 return Tips.warn("鲜果师不存在！");
             }
             // 该鲜果师的可结算金额是否大于申请结算金额
-            if (settlementApplication.getAmount() > findFruitDoctor.getBalance()) {
+            if (settlementApplication.getAmount() > findFruitDoctor.getSettlement()) {
                 return Tips.warn("申请结算金额大于用户可结算金额，结算失败");
             }
 
@@ -94,15 +99,25 @@ public class SettlementApplicationService {
                 return Tips.warn("结算修改失败");
             }
             // 结算状态修改成功后扣减用户可结算金额
-            findFruitDoctor.setBalance(findFruitDoctor.getBalance() - settlementApplication.getAmount());
+            findFruitDoctor.setSettlement(findFruitDoctor.getSettlement() - settlementApplication.getAmount());
             boolean balanceUpdated = fruitDoctorMapper.updateById(findFruitDoctor) > 0;
             if (!balanceUpdated) {
                 return Tips.warn("扣减鲜果师可结算金额失败");
             }
+            DoctorAchievementLog doctorAchievementLog = new DoctorAchievementLog();
+            doctorAchievementLog.setDoctorId(settlementApplication.getDoctorId());
+            doctorAchievementLog.setUserId(findFruitDoctor.getUserId());
+            doctorAchievementLog.setAmount(-settlementApplication.getAmount());
+            doctorAchievementLog.setSourceType(SourceType.SETTLEMENT);
+            doctorAchievementLog.setCreateAt(Date.from(Instant.now()));
+            boolean addDoctorAchievementLog = doctorAchievementLogMapper.create(doctorAchievementLog) > 0;
+            if (!addDoctorAchievementLog) {
+                return Tips.warn("写鲜果师业绩记录失败");
+            }
         }
         boolean settlementUpdated = settlementApplicationMapper.updateById(settlementApplication) > 0;
         return settlementUpdated ? Tips.info("结算修改成功") : Tips.warn("结算修改失败");
-    }
+    }*/
 
     /**
      * Description:根据ids删除结算申请

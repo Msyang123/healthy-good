@@ -202,6 +202,18 @@
         </if>
     </select>
 
+    <!-- 根据板块id查询定制计划 -->
+    <select id="findByPlanIds" resultMap="BaseResultMap"
+            parameterType="map">select
+        <include refid="Base_Column_List"/>
+        from
+        custom_plan_specification where plan_id in
+        <foreach collection="list" item="item" open="("
+                 separator="," close=")">
+            #{item}
+        </foreach>
+    </select>
+
     <!--查找指定定制计划里面定制规格的最低价格-->
     <select id="findMinPriceByPlanId" resultType="Long" parameterType="long">
         select min(price) from custom_plan_specification where  plan_id =#{0}

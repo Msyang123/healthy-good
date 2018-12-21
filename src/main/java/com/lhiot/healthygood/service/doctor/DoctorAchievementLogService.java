@@ -182,12 +182,7 @@ public class DoctorAchievementLogService {
      * @date 2018/07/26 12:08:13
      */
     public IncomeStat myIncome(Long id){
-    	IncomeStat incomeStat = this.doctorAchievementLogMapper.myIncome(id);
-    	if(Objects.isNull(incomeStat)){
-    		incomeStat = new IncomeStat();
-    	}
-    	incomeStat.setBonusCanBeSettled(incomeStat.getBonusCanBeSettled()-incomeStat.getBonusSettling());//剩余可结算金额 = 可结算金额 - 正在结算中的金额
-        return incomeStat;
+        return this.doctorAchievementLogMapper.myIncome(id);
     }
 
     
@@ -196,9 +191,8 @@ public class DoctorAchievementLogService {
 	 * @param dateType
 	 * @param periodType
 	 * @param doctorId 鲜果师id
-	 * @param isAll 鲜果师id
-	 * @param statisticalIncome 是否统计统计收益
-	 * @param isAll 是否统计所有
+	 * @param isAll 是否加时间过滤
+	 * @param statisticalIncome 是否统计收益
 	 * @return
 	 */
 	public Achievement achievement(DateTypeEnum dateType, PeriodType periodType,

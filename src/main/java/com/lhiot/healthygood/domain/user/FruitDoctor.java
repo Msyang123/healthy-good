@@ -142,11 +142,18 @@ public class FruitDoctor{
     private Hot hot;
 
     /**
-    *剩余可结算金额
+    *红利余额
     */
-    @JsonProperty("balance")
-    @ApiModelProperty(value = "剩余可结算金额", dataType = "Integer")
-    private Integer balance;
+    @JsonProperty("bonus")
+    @ApiModelProperty(value = "红利余额", dataType = "Integer")
+    private Integer bonus;
+
+    /**
+     *可结算余额
+     */
+    @JsonProperty("settlement")
+    @ApiModelProperty(value = "可结算余额", dataType = "Integer")
+    private Integer settlement;
 
     /**
      *当月销售额
