@@ -45,6 +45,11 @@ public interface OrderServiceFeign {
                                                   @RequestParam("needOrderFlowList") boolean needOrderFlowList);
 
 
+    @Deprecated
+    /**
+     * 建议使用 ordersPages
+     * @see ordersPages
+     */
     @RequestMapping(value = "/orders/user/{userId}", method = RequestMethod.GET)
     ResponseEntity<Tuple<OrderDetailResult>> ordersByUserId(@PathVariable("userId") Long userId,
                                                             @RequestParam(value = "orderType", required = false) OrderType orderType,
