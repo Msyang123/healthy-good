@@ -15,6 +15,4 @@ public class OrderGroupCount {
     private int waitPaymentCount;
     @ApiModelProperty(notes = "待收货", dataType = "int")
     private int waitReceiveCount;
-    @ApiModelProperty(notes = "退货中", dataType = "int")
-    private int returningCount;
 }

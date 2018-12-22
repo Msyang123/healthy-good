@@ -80,10 +80,8 @@ public class CustomPlanDetailResult {
     private List<CustomPlanPeriodResult> periodList;
 
     /**
-     * 定制计划和定制板块关联
+     * 关联的定制板块
      */
-    @ApiModelProperty(value = "定制板块关联定制计划排序，英文逗号分隔", dataType = "String")
-    private String sorts;
     @ApiModelProperty(value = "定制板块ids，英文逗号分隔", dataType = "String")
     private String customPlanSectionIds;
 }
