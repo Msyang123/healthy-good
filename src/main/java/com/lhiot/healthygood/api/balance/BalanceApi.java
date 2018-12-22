@@ -123,8 +123,16 @@ public class BalanceApi {
         OrderDetailResult order = (OrderDetailResult) orderDetailResultResponseEntity.getBody();
         fruitDoctorService.calculationCommission(order);//鲜果师业绩提成
         //延迟发送海鼎
-        orderService.delaySendToHd(orderCode, Jackson.object(orderDetailResult.getDeliverTime(), DeliverTime.class));
+        orderService.delaySendToHd(orderCode, Jackson.object(orderDetailResult.getDeliverAt(), DeliverTime.class));
         return ResponseEntity.ok(orderDetailResult);
+    }
+
+    @Sessions.Uncheck
+    @PostMapping("/test")
+    @ApiOperation(value = "测试延迟消息队列")
+    public ResponseEntity test(@RequestBody String deliverTime){
+        orderService.delaySendToHd("HG9252921106206720", Jackson.object(deliverTime, DeliverTime.class));
+        return ResponseEntity.ok().build();
     }
 
     @PostMapping("/balance/custom-order/payment")

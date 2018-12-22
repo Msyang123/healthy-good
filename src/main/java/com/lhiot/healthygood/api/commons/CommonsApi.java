@@ -1,7 +1,6 @@
 package com.lhiot.healthygood.api.commons;
 
 import com.leon.microx.predefine.OnOff;
-import com.leon.microx.util.BeanUtils;
 import com.leon.microx.util.Position;
 import com.leon.microx.util.StringUtils;
 import com.leon.microx.web.result.Pages;
@@ -156,6 +155,10 @@ public class CommonsApi {
         feeQuery.setWeight(weight.get().doubleValue());
         feeQuery.setOrderFee(productAmount.get());
         //查询配送中心配送费
-        return deliverServiceFeign.search(feeQuery);
+        ResponseEntity<Fee> responseEntity = deliverServiceFeign.search(feeQuery);
+        if(Objects.nonNull(responseEntity) && responseEntity.getStatusCode().is2xxSuccessful()){
+            return ResponseEntity.ok(responseEntity.getBody());
+        }
+        return responseEntity;
     }
 }

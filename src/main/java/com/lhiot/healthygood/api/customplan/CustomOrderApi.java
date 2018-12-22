@@ -1,5 +1,6 @@
 package com.lhiot.healthygood.api.customplan;
 
+import com.leon.microx.util.Jackson;
 import com.leon.microx.web.result.Pages;
 import com.leon.microx.web.result.Tips;
 import com.leon.microx.web.session.Sessions;
@@ -11,6 +12,7 @@ import com.lhiot.healthygood.domain.customplan.CustomOrderGroupCount;
 import com.lhiot.healthygood.domain.customplan.CustomOrderPause;
 import com.lhiot.healthygood.feign.BaseUserServerFeign;
 import com.lhiot.healthygood.feign.PaymentServiceFeign;
+import com.lhiot.healthygood.feign.model.DeliverTime;
 import com.lhiot.healthygood.feign.model.OrderDetailResult;
 import com.lhiot.healthygood.feign.model.UserDetailResult;
 import com.lhiot.healthygood.feign.model.WxPayModel;
@@ -26,8 +28,6 @@ import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.configurationprocessor.json.JSONException;
-import org.springframework.boot.configurationprocessor.json.JSONObject;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -255,12 +255,8 @@ public class CustomOrderApi {
         // 自动配送解析配送时间
         if (Objects.equals(CustomOrderBuyType.AUTO, customOrder.getDeliveryType())) {
             String deliveryTime = customOrder.getDeliveryTime();
-            try {
-                JSONObject jsonObject = new JSONObject(deliveryTime);
-                customOrder.setDeliveryTime(jsonObject.getString("display"));
-            } catch (JSONException e) {
-                e.printStackTrace();
-            }
+            DeliverTime deliverTime =Jackson.object(deliveryTime, DeliverTime.class);
+            customOrder.setDeliveryTime(deliverTime.getDisplay());
         }
         return ResponseEntity.ok(customOrder);
     }
