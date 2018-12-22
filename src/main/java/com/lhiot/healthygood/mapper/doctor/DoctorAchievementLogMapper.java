@@ -109,4 +109,6 @@ public interface DoctorAchievementLogMapper {
 	DoctorAchievementLog selectByOrderId(Long orderId);
 
 	Integer selectFruitDoctorCommission(List<Long> ids);
+
+	Integer superiorBonusOfMonth(Map<String,Object> map);
 }
