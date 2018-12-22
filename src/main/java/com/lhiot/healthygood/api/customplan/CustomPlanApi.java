@@ -7,6 +7,7 @@ import com.leon.microx.web.session.Sessions;
 import com.leon.microx.web.swagger.ApiParamType;
 import com.lhiot.dc.dictionary.module.Dictionary;
 import com.lhiot.healthygood.domain.customplan.CustomPlanAndSpecification;
+import com.lhiot.healthygood.domain.customplan.CustomPlanProduct;
 import com.lhiot.healthygood.domain.customplan.model.CustomPlanDetailResult;
 import com.lhiot.healthygood.domain.customplan.model.CustomPlanParam;
 import com.lhiot.healthygood.service.customplan.CustomPlanService;
@@ -85,7 +86,7 @@ public class CustomPlanApi {
     })
     @PutMapping("/custom-plans/{id}")
     public ResponseEntity update(@PathVariable("id") Long id, @Valid @RequestBody CustomPlanDetailResult customPlanDetailResult) {
-        log.debug("修改定制计划\t id:{} param:{}", id,customPlanDetailResult);
+        log.debug("修改定制计划\t id:{} param:{}", id, customPlanDetailResult);
 
         Tips tips = customPlanService.update(id, customPlanDetailResult);
         return tips.err() ? ResponseEntity.badRequest().body("修改定制计划失败!") : ResponseEntity.ok().build();
@@ -95,14 +96,28 @@ public class CustomPlanApi {
     @ApiOperation("修改定制计划商品(后台)")
     @ApiImplicitParams({
             @ApiImplicitParam(paramType = ApiParamType.PATH, name = "id", value = "定制计划id", dataType = "Long", required = true),
-            @ApiImplicitParam(paramType = ApiParamType.BODY, name = "customPlanDetailResult", value = "定制计划商品", dataType = "CustomPlanDetailResult", required = true)
+            @ApiImplicitParam(paramType = ApiParamType.BODY, name = "customPlanProduct", value = "定制计划商品", dataType = "CustomPlanProduct", required = true)
     })
     @PutMapping("/custom-plan-product/{id}")
-    public ResponseEntity updateProduct(@PathVariable("id") Long id, @RequestBody CustomPlanDetailResult customPlanDetailResult) {
-        log.debug("修改定制计划商品\t id:{} param:{}", id,customPlanDetailResult);
+    public ResponseEntity updateProduct(@PathVariable("id") Long id, @RequestBody CustomPlanProduct customPlanProduct) {
+        log.debug("修改定制计划商品\t id:{} param:{}", id, customPlanProduct);
 
-        Tips tips = customPlanService.updateProduct(id, customPlanDetailResult);
+        Tips tips = customPlanService.updateProduct(id, customPlanProduct);
         return tips.err() ? ResponseEntity.badRequest().body("修改定制计划商品失败!") : ResponseEntity.ok().build();
+    }
+
+    @Sessions.Uncheck
+    @ApiOperation("修改定制计划规格(后台)")
+    @ApiImplicitParams({
+            @ApiImplicitParam(paramType = ApiParamType.PATH, name = "id", value = "定制计划id", dataType = "Long", required = true),
+            @ApiImplicitParam(paramType = ApiParamType.BODY, name = "customPlanDetailResult", value = "定制计划", dataType = "CustomPlanDetailResult", required = true)
+    })
+    @PutMapping("/custom-plan-specification/{id}")
+    public ResponseEntity updateSpecification(@PathVariable("id") Long id, @RequestBody CustomPlanDetailResult customPlanDetailResult) {
+        log.debug("修改定制计划规格\t id:{} param:{}", id, customPlanDetailResult);
+
+        Tips tips = customPlanService.updateSpecification(id, customPlanDetailResult);
+        return tips.err() ? ResponseEntity.badRequest().body("修改定制计划规格失败!") : ResponseEntity.ok().build();
     }
 
     @Sessions.Uncheck
@@ -130,14 +145,14 @@ public class CustomPlanApi {
     @Sessions.Uncheck
     @GetMapping("/custom-plans/image")
     @ApiOperation(value = "获取定制计划套餐配置说明图")
-    public ResponseEntity<List<Dictionary.Entry>> customPlanImage(){
+    public ResponseEntity<List<Dictionary.Entry>> customPlanImage() {
         return ResponseEntity.ok(customPlanService.dictionaryOptional("customPlanImage").get().getEntries());
     }
 
     @Sessions.Uncheck
     @GetMapping("/custom-plans/max-pause")
     @ApiOperation(value = "定制计划最大暂停天数")
-    public ResponseEntity<Dictionary> customPlanMaxPauseDay(){
+    public ResponseEntity<Dictionary> customPlanMaxPauseDay() {
         return ResponseEntity.ok(customPlanService.customPlanMaxPauseDay());
     }
 

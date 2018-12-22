@@ -8,7 +8,10 @@ import com.leon.microx.web.result.Tips;
 import com.lhiot.dc.dictionary.DictionaryClient;
 import com.lhiot.dc.dictionary.module.Dictionary;
 import com.lhiot.healthygood.domain.customplan.*;
-import com.lhiot.healthygood.domain.customplan.model.*;
+import com.lhiot.healthygood.domain.customplan.model.CustomPlanDetailResult;
+import com.lhiot.healthygood.domain.customplan.model.CustomPlanParam;
+import com.lhiot.healthygood.domain.customplan.model.CustomPlanPeriodResult;
+import com.lhiot.healthygood.domain.customplan.model.CustomPlanProductResult;
 import com.lhiot.healthygood.feign.BaseDataServiceFeign;
 import com.lhiot.healthygood.feign.model.Product;
 import com.lhiot.healthygood.feign.model.ProductShelf;
@@ -114,7 +117,7 @@ public class CustomPlanService {
                 .filter(productShelf -> Objects.equals(customPlanProduct.getProductShelfId(), productShelf.getId()))
                 .forEach(item -> {
                     CustomPlanProductResult customPlanProductResult = new CustomPlanProductResult();
-                    BeanUtils.copyProperties(customPlanProduct,customPlanProductResult);
+                    BeanUtils.copyProperties(customPlanProduct, customPlanProductResult);
                     customPlanProductResult.setImage(item.getImage());//设置上架图
                     customPlanProductResult.setProductName(item.getName());//设置上架名称
                     customPlanProductResult.setProductShelfId(item.getShelfId());
@@ -134,15 +137,15 @@ public class CustomPlanService {
     }
 
     public CustomPlanAndSpecification findCustomPlanSpecificationDetail(Long id) {
-        CustomPlanAndSpecification customPlanAndSpecification = new  CustomPlanAndSpecification();
+        CustomPlanAndSpecification customPlanAndSpecification = new CustomPlanAndSpecification();
         customPlanAndSpecification.setCustomPlanSpecification(customPlanSpecificationMapper.selectById(id));
         customPlanAndSpecification.setCustomPlan(customPlanMapper.selectById(customPlanAndSpecification.getCustomPlanSpecification().getPlanId()));
         return customPlanAndSpecification;
     }
 
-    public Optional<Dictionary> dictionaryOptional(String code){
+    public Optional<Dictionary> dictionaryOptional(String code) {
         Optional<Dictionary> optional = dictionaryClient.dictionary(code);
-         return optional;
+        return optional;
     }
 
 
@@ -256,9 +259,9 @@ public class CustomPlanService {
                 specificationList.forEach(specification -> {
                     specification.setPlanPeriod(planPeriod);
                     specification.setPlanId(customPlanId);
-                    if (!CollectionUtils.isEmpty(planSpecificationStandardList)){
+                    if (!CollectionUtils.isEmpty(planSpecificationStandardList)) {
                         planSpecificationStandardList.forEach(planSpecificationStandard -> {
-                            if (Objects.equals(specification.getQuantity(), planSpecificationStandard.getQuantity())){
+                            if (Objects.equals(specification.getQuantity(), planSpecificationStandard.getQuantity())) {
                                 specification.setDescription(planSpecificationStandard.getDescription());
                                 specification.setImage(planSpecificationStandard.getImage());
                                 specification.setStandardId(planSpecificationStandard.getId());
@@ -306,57 +309,7 @@ public class CustomPlanService {
         customPlan.setCreateAt(Date.from(Instant.now()));
         boolean updateCustomPlan = customPlanMapper.updateById(customPlan) > 0;
         if (!updateCustomPlan) {
-            Tips.warn("修饰定制计划失败");
-        }
-
-        // 获取定制周期中的定制规格和定制计划列表
-        List<CustomPlanPeriodResult> customPlanPeriodResultList = customPlanDetailResult.getPeriodList();
-        if (!customPlanPeriodResultList.isEmpty() && customPlanPeriodResultList.size() > 0) {
-            // 批量删除定制规格
-            boolean deleteCustomPlanSpecification = customPlanSpecificationMapper.deleteByPlanId(id) > 0;
-            if (!deleteCustomPlanSpecification) {
-                return Tips.warn("批量删除定制计划规格失败");
-            }
-            // 批量删除定制商品
-            boolean deleteCustomPlanProduct = customPlanProductMapper.deleteByPlanId(id) > 0;
-            if (!deleteCustomPlanProduct) {
-                return Tips.warn("批量删除定制计划商品失败");
-            }
-            customPlanPeriodResultList.forEach(customPlanPeriodResult -> {
-                Integer planPeriod = customPlanPeriodResult.getPlanPeriod();
-
-                // 修改定制计划规格
-                List<CustomPlanSpecification> specificationList = customPlanPeriodResult.getSpecificationList();
-                specificationList.forEach(specification -> {
-                    specification.setPlanPeriod(planPeriod);
-                    specification.setPlanId(id);
-                });
-
-                // 再批量新增定制计划规格
-                boolean addCustomPlanSpecification = customPlanSpecificationMapper.insertList(specificationList) > 0;
-                if (!addCustomPlanSpecification) {
-                    return;//Tips.warn("定制计划规格添加失败");
-                }
-                // 修改定制计划商品
-                // 将List<CustomPlanProductResult>转换为List<CustomPlanProduct>
-                List<CustomPlanProductResult> planProductResultList = customPlanPeriodResult.getProducts();
-                List<CustomPlanProduct> customPlanProductList = new ArrayList<>();
-                planProductResultList.forEach(productResult -> {
-                    CustomPlanProduct planProduct = new CustomPlanProduct();
-                    BeanUtils.copyProperties(productResult, planProduct);
-                    planProduct.setPlanPeriod(planPeriod);
-                    planProduct.setPlanId(id);
-                    // 第几天排序为几
-                    planProduct.setSort(planProduct.getDayOfPeriod());
-                    customPlanProductList.add(planProduct);
-                });
-
-                // 再批量新增定制计划商品
-                boolean addCustomPlanProduct = customPlanProductMapper.insertList(customPlanProductList) > 0;
-                if (!addCustomPlanProduct) {
-                    return;//Tips.warn("定制计划商品添加失败");
-                }
-            });
+            return Tips.warn("修饰定制计划失败");
         }
         return Tips.info("修改定制计划成功");
     }
@@ -365,42 +318,47 @@ public class CustomPlanService {
     /**
      * 修改定制计划商品
      *
+     * @param customPlanProduct
+     * @return
+     */
+    public Tips updateProduct(Long id, CustomPlanProduct customPlanProduct) {
+
+        CustomPlanProduct planProduct = new CustomPlanProduct();
+        planProduct.setId(id);
+        planProduct.setProductShelfId(customPlanProduct.getProductShelfId());
+        boolean updated = customPlanProductMapper.updateById(planProduct) > 0;
+        if (!updated) {
+            return Tips.warn("修改定制商品失败");
+        }
+        return Tips.info("修改定制商品成功");
+    }
+
+    /**
+     * 修改定制计划规格
+     *
      * @param customPlanDetailResult
      * @return
      */
-    public Tips updateProduct(Long id, CustomPlanDetailResult customPlanDetailResult) {
-        // 获取定制周期中的定制规格和定制计划列表
-        List<CustomPlanPeriodResult> customPlanPeriodResultList = customPlanDetailResult.getPeriodList();
-        if (!customPlanPeriodResultList.isEmpty() && customPlanPeriodResultList.size() > 0) {
-            // 批量删除定制商品
-            boolean deleteCustomPlanProduct = customPlanProductMapper.deleteByPlanId(id) > 0;
-            if (!deleteCustomPlanProduct) {
-                return Tips.warn("批量删除定制商品失败");
-            }
-            customPlanPeriodResultList.forEach(customPlanPeriodResult -> {
-                Integer planPeriod = customPlanPeriodResult.getPlanPeriod();
-                // 修改定制计划商品
-                // 将List<CustomPlanProductResult>转换为List<CustomPlanProduct>
-                List<CustomPlanProductResult> planProductResultList = customPlanPeriodResult.getProducts();
-                List<CustomPlanProduct> customPlanProductList = new ArrayList<>();
-                planProductResultList.forEach(productResult -> {
-                    CustomPlanProduct planProduct = new CustomPlanProduct();
-                    BeanUtils.copyProperties(productResult, planProduct);
-                    planProduct.setPlanPeriod(planPeriod);
-                    planProduct.setPlanId(id);
-                    // 第几天排序为几
-                    planProduct.setSort(planProduct.getDayOfPeriod());
-                    customPlanProductList.add(planProduct);
-                });
+    public Tips updateSpecification(Long id, CustomPlanDetailResult customPlanDetailResult) {
 
-                // 再批量新增
-                boolean addCustomPlanProduct = customPlanProductMapper.insertList(customPlanProductList) > 0;
-                if (!addCustomPlanProduct) {
-                    return;//Tips.warn("定制计划商品添加失败");
-                }
+        // 获取定制周期中的定制规格列表
+        List<CustomPlanPeriodResult> customPlanPeriodResultList = customPlanDetailResult.getPeriodList();
+        if (!CollectionUtils.isEmpty(customPlanPeriodResultList)) {
+            List<CustomPlanSpecification> updateSpecificationList = new ArrayList<>();
+            customPlanPeriodResultList.forEach(customPlanPeriodResult -> {
+                List<CustomPlanSpecification> specifications = customPlanPeriodResult.getSpecificationList();
+                updateSpecificationList.addAll(specifications);
             });
+
+            // 批量修改
+            if (!CollectionUtils.isEmpty(updateSpecificationList)) {
+                boolean updated = customPlanSpecificationMapper.updateBatch(updateSpecificationList) > 0;
+                if (!updated) {
+                    return Tips.warn("批量修改定制计划规失败");
+                }
+            }
         }
-        return Tips.info("修改定制商品成功");
+        return Tips.info("批量修改定制计划规格成功");
     }
 
 
@@ -427,19 +385,21 @@ public class CustomPlanService {
         if (!deleteCustomPlan) {
             return Tips.warn("批量删除定制计划失败");
         }
+        // 批量删除定制商品
+        customPlanProductMapper.deleteByPlanIds(Arrays.asList(ids.split(",")));
+        // 批量删除定制规格
+        customPlanSpecificationMapper.deleteByPlanIds(Arrays.asList(ids.split(",")));
         // 批量删除定制计划与定制板块的关联
-        boolean deleteRelation = customPlanSectionRelationMapper.deleteRelationList(null, ids) > 0;
-        if (!deleteRelation) {
-            return Tips.warn("批量删除定制计划与定制板块的关联失败");
-        }
-        return  Tips.info("删除成功");
+        customPlanSectionRelationMapper.deleteByPlanIds(Arrays.asList(ids.split(",")));
+        return Tips.info("删除成功");
     }
 
     /**
      * 最大暂停天数
+     *
      * @return
      */
-    public Dictionary customPlanMaxPauseDay(){
+    public Dictionary customPlanMaxPauseDay() {
         return dictionaryClient.dictionary("customPlanMaxPauseDay").get();
     }
 }

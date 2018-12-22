@@ -223,13 +223,22 @@
 
     <!-- 根据定制计划ID集合删除相关关系 -->
     <delete id="deleteRelationList">
-        delete from custom_plan_section_relation where section_id = #{sectionId}
+        delete from custom_plan_section_relation where
+        section_id = #{sectionId}
         <if test="planIds != null and planIds != ''">
             and plan_id in
             <foreach item="item" index="index" collection="planIds.split(',')" open="(" separator="," close=")">
                 #{item}
             </foreach>
         </if>
+    </delete>
+
+    <!-- 根据定制计划ID集合删除相关关系 -->
+    <delete id="deleteByPlanIds">
+        delete from custom_plan_section_relation where plan_id in
+        <foreach collection="list" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
     </delete>
 
 
