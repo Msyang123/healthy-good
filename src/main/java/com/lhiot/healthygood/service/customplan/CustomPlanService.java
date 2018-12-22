@@ -235,11 +235,11 @@ public class CustomPlanService {
             return Tips.warn("关联板块不能为空");
         }
         sectionIdList.stream().forEach(sectionId -> {
-            CustomPlanSectionRelation customPlanSectionRelation1 = new CustomPlanSectionRelation();
-            customPlanSectionRelation1.setPlanId(customPlanId);
-            customPlanSectionRelation1.setSectionId(Long.valueOf(sectionId));
-            customPlanSectionRelation1.setSort(1L);
-            customPlanSectionRelation.add(customPlanSectionRelation1);
+            CustomPlanSectionRelation addCustomPlanSectionRelation = new CustomPlanSectionRelation();
+            addCustomPlanSectionRelation.setPlanId(customPlanId);
+            addCustomPlanSectionRelation.setSectionId(Long.valueOf(sectionId));
+            addCustomPlanSectionRelation.setSort(1L);
+            customPlanSectionRelation.add(addCustomPlanSectionRelation);
         });
         boolean addRelation = customPlanSectionRelationMapper.insertList(customPlanSectionRelation) > 0;
         if (!addRelation) {
