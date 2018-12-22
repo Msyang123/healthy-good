@@ -130,14 +130,19 @@
     </delete>
 
     <!-- 统计鲜果师上个月的红利-->
-    <select id="selectFruitDoctorCommission" resultType="Integer" parameterType="java.util.List">
-        select IFNULL(sum(fruit_doctor_commission),0) fruitDoctorCommission from doctor_achievement_log where doctor_id
-        in
-        <foreach item="item" index="index" collection="list" open="(" separator="," close=")">
-            #{item}
-        </foreach>
+    <select id="selectFruitDoctorCommission" resultType="Integer" parameterType="Long">
+        SELECT SUM(a.fruitDoctorCommission) FROM (
+        select IFNULL(sum(fruit_doctor_commission),0) fruitDoctorCommission from doctor_achievement_log where superior_doctor_id = #{0}
         and source_type = "ORDER" and PERIOD_DIFF(date_format(now( ) ,'%Y%m'),date_format(create_at,'%Y%m')) =1
+        UNION
+        select IFNULL(sum(commission),0) fruitDoctorCommission from doctor_achievement_log where doctor_id = #{0}
+        and source_type = "ORDER" and PERIOD_DIFF(date_format(now( ) ,'%Y%m'),date_format(create_at,'%Y%m')) =1) a
     </select>
+
+    <!--<select id="selectLastOfMonthCommission" resultType="Integer" parameterType="Long">
+        select IFNULL(sum(commission),0) fruitDoctorCommission from doctor_achievement_log where doctor_id = #{0}
+        and source_type = "ORDER" and PERIOD_DIFF(date_format(now( ) ,'%Y%m'),date_format(create_at,'%Y%m')) =1
+    </select>-->
 
 
     <!-- 根据id查找鲜果师业绩记录 -->
@@ -175,12 +180,12 @@
             <if test="sourceType != null ">
                 and source_type = #{sourceType}
             </if>
-            <!--<if test="incomeType != null and incomeType.name=='INCOME'"> Fixme 可能没用
+            <if test="incomeType != null and incomeType.name=='INCOME'">
                 and source_type in('ORDER','SUB_DISTRIBUTOR')
             </if>
             <if test="incomeType != null and incomeType.name=='EXPENDITURE'">
                 and source_type in('SETTLEMENT','REFUND')
-            </if>-->
+            </if>
             <if test="settlement != null">
                 and date_format(create_at,'%y-%m-%d')=date_format(now(),'%y-%m-%d')
             </if>
@@ -212,13 +217,24 @@
 
 
     <!--查询我的收入 -->
+    <select id="superiorBonusOfMonth" resultType="int"
+            parameterType="map">
+        select IFNULL(SUM(fruit_doctor_commission),0)
+        from doctor_achievement_log where superior_doctor_id=#{doctorId} and source_type in('ORDER','REFUND')
+        <if test=" currentMonth!=null ">
+            and create_at between CONCAT(date_add(curdate(),interval -day(curdate())+1 day),' 00:00:00')
+            and  CONCAT(date_add(curdate()-day(curdate())+1,interval 1 month),' 00:00:00')
+        </if>
+    </select>
+
+    <!--查询上级鲜果师当月红利-->
     <select id="myIncome" resultType="com.lhiot.healthygood.domain.doctor.IncomeStat"
             parameterType="long">
         select IFNULL(sum(amount),0 )as amount,
-        (select IFNULL(sum(commission+fruit_doctor_commission),0)
+        (select IFNULL(sum(commission),0)
         from doctor_achievement_log where doctor_id=#{0}
         and source_type in('ORDER','REFUND')) as bonusOfHistory,
-        (select IFNULL(sum(commission+fruit_doctor_commission),0)
+        (select IFNULL(sum(commission),0)
         from doctor_achievement_log where doctor_id=#{0}
         and source_type in('SETTLEMENT')) as bonusSettled,
         (select IFNULL(sum(amount),0) from fruit_doctor_settlement
@@ -227,7 +243,6 @@
         and settlement_status='UNSETTLED' and doctor_id=#{0}) as bonusSettling
         from doctor_achievement_log where doctor_id=#{0}
     </select>
-
 
     <!--查询我的团队销售业绩-->
     <select id="teamAchievement" parameterType="long" resultType="com.lhiot.healthygood.domain.doctor.TeamAchievement">
@@ -242,7 +257,7 @@
         and create_at between CONCAT(date_add(curdate(),interval -day(curdate())+1 day),' 00:00:00')
         and  CONCAT(date_add(curdate()-day(curdate())+1,interval 1 month),' 00:00:00')
 				)as amountOfMonth,
-        (select IFNULL(sum(fruit_doctor_commission+commission),0)
+        (select IFNULL(sum(commission),0)
         from doctor_achievement_log where doctor_id=#{0}
         and source_type in('ORDER','REFUND')
         and create_at between CONCAT(date_add(curdate(),interval -day(curdate())+1 day),' 00:00:00')

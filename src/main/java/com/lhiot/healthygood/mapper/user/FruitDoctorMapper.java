@@ -5,6 +5,7 @@ import org.apache.ibatis.annotations.Mapper;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Map;
 
 /**
 * Description:鲜果师成员Mapper类
@@ -34,6 +35,13 @@ public interface FruitDoctorMapper {
     * @date 2018/07/26 12:08:13
     */
     int updateById(FruitDoctor fruitDoctor);
+
+    /**
+     * 鲜果师红利增减和可结算余额增加
+     * @param map
+     * @return
+     */
+    int updateBouns(Map<String,Object> map);
 
     /**
     * Description:根据ids删除鲜果师成员

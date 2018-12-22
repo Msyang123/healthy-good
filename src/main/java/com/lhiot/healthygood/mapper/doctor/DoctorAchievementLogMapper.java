@@ -108,5 +108,7 @@ public interface DoctorAchievementLogMapper {
 	//根据订单id查询记录
 	DoctorAchievementLog selectByOrderId(Long orderId);
 
-	Integer selectFruitDoctorCommission(List<Long> ids);
+	Integer selectFruitDoctorCommission(Long id);
+
+	Integer superiorBonusOfMonth(Map<String,Object> map);
 }

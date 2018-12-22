@@ -1,6 +1,7 @@
 package com.lhiot.healthygood.service.user;
 
 import com.leon.microx.util.BeanUtils;
+import com.leon.microx.util.Maps;
 import com.leon.microx.util.auditing.Random;
 import com.leon.microx.web.result.Pages;
 import com.leon.microx.web.result.Tips;
@@ -18,6 +19,7 @@ import com.lhiot.healthygood.mapper.user.DoctorCustomerMapper;
 import com.lhiot.healthygood.mapper.user.FruitDoctorMapper;
 import com.lhiot.healthygood.service.customplan.CustomPlanService;
 import com.lhiot.healthygood.service.doctor.DoctorAchievementLogService;
+import com.lhiot.healthygood.type.BalanceType;
 import com.lhiot.healthygood.type.DoctorLevel;
 import com.lhiot.healthygood.type.DoctorStatus;
 import com.lhiot.healthygood.type.SourceType;
@@ -31,6 +33,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * Description:鲜果师成员服务类
@@ -210,8 +213,15 @@ public class FruitDoctorService {
         if (fruitDoctor.getRows() != null && fruitDoctor.getRows() > 0) {
             total = this.count(fruitDoctor);
         }
+
+        List<FruitDoctor> doctors =this.fruitDoctorMapper.subordinate(fruitDoctor).stream().filter(Objects::nonNull).map(item -> {
+            Integer bouns = doctorAchievementLogService.superiorBonusOfMonth(Maps.of("doctorId",item.getId(),"currentMonth","yes"));
+            item.setBounsOfMonth(item.getBounsOfMonth() + bouns);
+            return item;
+        }).collect(Collectors.toList());
+
         return Pages.of(total,
-                this.fruitDoctorMapper.subordinate(fruitDoctor));
+                doctors);
     }
 
     /**
@@ -251,6 +261,8 @@ public class FruitDoctorService {
         log.info("鲜果师注册时绑定手机号码，发送模板消息");
     }
 
+
+
     /**
      * 计算销售提成
      *
@@ -259,8 +271,8 @@ public class FruitDoctorService {
     public void calculationCommission(OrderDetailResult orderDetailResult) {
         try {
             FruitDoctor doctor = this.findSuperiorFruitDoctorByUserId(orderDetailResult.getUserId());//查询用户的上级鲜果师
-            if (Objects.isNull(doctor)){
-                log.info(orderDetailResult.getUserId()+" , "+"该用户没有上级鲜果师");
+            if (Objects.isNull(doctor)) {
+                log.info(orderDetailResult.getUserId() + " , " + "该用户没有上级鲜果师");
                 return;
             }
             Optional<Dictionary.Entry> salesCommissions = customPlanService.dictionaryOptional("commissions").get().entry("SALES_COMMISSIONS");//销售提成百分比
@@ -274,8 +286,6 @@ public class FruitDoctorService {
             Integer saleCommission = commissionBD.multiply(new BigDecimal(baseAmount)).intValue();
             Integer doctorCommission = fruitDoctorCommissionBD.multiply(new BigDecimal(baseAmount)).intValue();
             DoctorAchievementLog doctorAchievementLog = new DoctorAchievementLog();
-            doctorAchievementLog.setCommission(saleCommission);
-            doctorAchievementLog.setFruitDoctorCommission(doctorCommission);
             doctorAchievementLog.setOrderId(orderDetailResult.getCode());
             doctorAchievementLog.setUserId(orderDetailResult.getUserId());
             doctorAchievementLog.setAmount(baseAmount);
@@ -285,23 +295,32 @@ public class FruitDoctorService {
             logParam.setDoctorId(doctor.getId());
             logParam.setOrderId(orderDetailResult.getCode());
             String str = "";
+            Integer orderCommission = 0;
             if (Objects.equals(OrderStatus.WAIT_SEND_OUT, orderDetailResult.getStatus()) || Objects.equals(OrderStatus.DISPATCHING, orderDetailResult.getStatus())) {
                 logParam.setSourceType(SourceType.ORDER);
                 doctorAchievementLog.setSourceType(SourceType.ORDER);
+                doctorAchievementLog.setCommission(saleCommission);
+                doctorAchievementLog.setFruitDoctorCommission(doctorCommission);
                 str = "订单分成";
-            }else if (Objects.equals(OrderStatus.ALREADY_RETURN,orderDetailResult.getStatus())){
+                orderCommission = saleCommission;
+            } else if (Objects.equals(OrderStatus.ALREADY_RETURN, orderDetailResult.getStatus())) {
                 doctorAchievementLog.setSourceType(SourceType.REFUND);
+                doctorAchievementLog.setCommission(-saleCommission);
+                doctorAchievementLog.setFruitDoctorCommission(-doctorCommission);
                 logParam.setSourceType(SourceType.REFUND);
                 str = "订单退款";
+                orderCommission = -saleCommission;
             }
-            Integer counts = doctorAchievementLogService.doctorAchievementLogCounts(logParam);//等幂操作，是否存在记录
+            Integer counts = doctorAchievementLogService.doctorAchievementLogCounts(logParam);//幂等操作，是否存在记录
             if (counts > 0) {
-                log.info(orderDetailResult.getUserId()+","+str+","+"已执行过");
+                log.info(orderDetailResult.getUserId() + "," + str + "," + "已执行过");
                 return;
             }
             if (doctorAchievementLogService.create(doctorAchievementLog) < 0) {
-                log.error(str+"存入失败");
+                log.error(str + "存入失败");
             }
+            Tips tips = doctorAchievementLogService.updateBonus(doctor.getId(),orderCommission, BalanceType.BOUNS);//鲜果师红利余额计算
+            log.info(tips.getMessage());
         } catch (Exception e) {
             e.printStackTrace();
         }

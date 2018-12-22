@@ -163,6 +163,13 @@ public class FruitDoctor{
     private Integer amountOfMonth;
 
     /**
+     *当月销售额
+     */
+    @JsonProperty("bounsOfMonth")
+    @ApiModelProperty(value = "当月绩效", dataType = "Integer")
+    private Integer bounsOfMonth;
+
+    /**
     *头像
     */
     @JsonProperty("avatar")
