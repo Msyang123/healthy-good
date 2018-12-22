@@ -331,8 +331,8 @@ public class UserApi {
         Achievement total =
                 doctorAchievementLogService.achievement(DateTypeEnum.MONTH, PeriodType.current, null, true, true, userId);
         //构建返回值
-        total.setSalesAmountOfThisMonth(Objects.nonNull(thisMonth.getSalesAmount())?thisMonth.getSalesAmount():0);
-        total.setOrderCountOfThisMonth(Objects.nonNull(thisMonth.getOrderCount())?thisMonth.getOrderCount():0);
+        total.setSalesAmountOfThisMonth(thisMonth.getSalesAmount());
+        total.setOrderCountOfThisMonth(thisMonth.getOrderCount());
 
         //获取用户信息
         ResponseEntity userDetailResult = baseUserServerFeign.findById(userId);

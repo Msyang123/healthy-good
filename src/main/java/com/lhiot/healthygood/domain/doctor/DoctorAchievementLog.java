@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.leon.microx.util.BeanUtils;
+import com.lhiot.healthygood.type.IncomeType;
 import com.lhiot.healthygood.type.SourceType;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
@@ -58,6 +59,13 @@ public class DoctorAchievementLog{
     @JsonProperty("amount")
     @ApiModelProperty(value = "业绩金额", dataType = "Integer")
     private Integer amount;
+
+    /**
+     *收入支出类型(INCOME -- 收入，EXPENDITURE – 支出，默认为全部)
+     */
+    @JsonProperty("incomeType")
+    @ApiModelProperty(value = "收入支出类型(INCOME -- 收入，EXPENDITURE – 支出，默认为全部)", dataType = "IncomeType")
+    private IncomeType incomeType;
 
     /**
     *红利收支类型:订单分成(收入)- ORDER,分销商分成(收入)-SUB_DISTRIBUTOR 红利结算(支出)-SETTLEMENT 客户退款(支出)-REFUND

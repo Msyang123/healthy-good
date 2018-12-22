@@ -2,24 +2,24 @@ package com.lhiot.healthygood.service.doctor;
 
 import com.leon.microx.util.Maps;
 import com.leon.microx.web.result.Pages;
+import com.leon.microx.web.result.Tips;
 import com.lhiot.healthygood.domain.doctor.Achievement;
 import com.lhiot.healthygood.domain.doctor.DoctorAchievementLog;
 import com.lhiot.healthygood.domain.doctor.IncomeStat;
 import com.lhiot.healthygood.domain.doctor.TeamAchievement;
-import com.lhiot.healthygood.domain.user.DoctorCustomer;
 import com.lhiot.healthygood.domain.user.FruitDoctor;
+import com.lhiot.healthygood.feign.type.OperationStatus;
 import com.lhiot.healthygood.mapper.doctor.DoctorAchievementLogMapper;
 import com.lhiot.healthygood.mapper.user.DoctorCustomerMapper;
 import com.lhiot.healthygood.mapper.user.FruitDoctorMapper;
+import com.lhiot.healthygood.type.BalanceType;
 import com.lhiot.healthygood.type.DateTypeEnum;
 import com.lhiot.healthygood.type.PeriodType;
 import com.lhiot.healthygood.util.DateCalculation;
-import io.swagger.models.auth.In;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.sql.Timestamp;
 import java.util.*;
 
 /**
@@ -115,6 +115,28 @@ public class DoctorAchievementLogService {
         return this.doctorAchievementLogMapper.updateById(doctorAchievementLog);
     }
 
+	/**
+	 * 加减鲜果师红利余额和可结算余额
+	 * @param id 鲜果师ID
+	 * @param money
+	 * @param balanceType
+	 * @return
+	 */
+    public Tips updateBonus(Long id, Integer money, BalanceType balanceType){
+		FruitDoctor doctor = fruitDoctorMapper.selectById(id);
+		if (Objects.isNull(doctor)){
+			System.out.println("鲜果师信息不存在");
+			return Tips.of(-1,"鲜果师信息不存在");
+		}
+		boolean flag = fruitDoctorMapper.updateBouns(Maps.of("id",id,"money",money,"balanceType",balanceType.name()))>0;
+		if (!flag){
+			System.out.println("可结算余额或者可结算红利更新失败");
+			return Tips.of(-2,"可结算余额或者可结算红利更新失败");
+		}
+		System.out.println("操作成功");
+		return Tips.of(1,"操作成功");
+	}
+
     /** 
     * Description:根据ids删除鲜果师业绩记录
     *  
@@ -182,7 +204,11 @@ public class DoctorAchievementLogService {
      * @date 2018/07/26 12:08:13
      */
     public IncomeStat myIncome(Long id){
-        return this.doctorAchievementLogMapper.myIncome(id);
+        Integer bouns =  this.superiorBonusOfMonth(Maps.of("doctort",id));
+        IncomeStat incomeStat = this.doctorAchievementLogMapper.myIncome(id);
+        incomeStat.setBonusOfHistory(incomeStat.getBonusOfHistory()+bouns);
+        incomeStat.setBonusSettled(incomeStat.getBonusSettled()+bouns);
+        return incomeStat;
     }
 
     
@@ -218,8 +244,15 @@ public class DoctorAchievementLogService {
 	 * @return
 	 */
 	public TeamAchievement teamAchievement(Long doctorId){
-		return doctorAchievementLogMapper.teamAchievement(doctorId);
+	    Integer bonus = this.superiorBonusOfMonth(Maps.of("doctorId",doctorId,"currentMonth","yes"));
+        TeamAchievement teamAchievement = doctorAchievementLogMapper.teamAchievement(doctorId);
+        teamAchievement.setBonusOfMonth(teamAchievement.getBonusOfMonth()+bonus);//该鲜果师订单分成+鲜果师分成
+		return teamAchievement;
 	}
+
+	public Integer superiorBonusOfMonth(Map<String,Object> map){
+	    return doctorAchievementLogMapper.superiorBonusOfMonth(map);
+    }
 	
 	/**
 	 * 计算统计的起始时间

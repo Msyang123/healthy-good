@@ -354,10 +354,10 @@ public class FruitDoctorApi {
     @ApiImplicitParams({
             @ApiImplicitParam(paramType = "query", name = "page", dataType = "int", required = true, value = "多少页"),
             @ApiImplicitParam(paramType = "query", name = "rows", dataType = "int", required = true, value = "数据多少条"),
-            @ApiImplicitParam(paramType = "query", name = "incomeType", dataTypeClass = SourceType.class, required = true, value = "收入支出类型")
+            @ApiImplicitParam(paramType = "query", name = "incomeType", dataTypeClass = IncomeType.class, required = true, value = "收入支出类型")
     })
     @ApiOperation(value = "收支明细", response = DoctorAchievementLog.class, responseContainer = "Set")
-    public ResponseEntity pageQuery(Sessions.User user, @RequestParam Integer page, @RequestParam Integer rows) {
+    public ResponseEntity pageQuery(Sessions.User user,@RequestParam IncomeType incomeType, @RequestParam Integer page, @RequestParam Integer rows) {
         String userId = user.getUser().get("userId").toString();
         FruitDoctor fruitDoctor = fruitDoctorService.selectByUserId(Long.valueOf(userId));
         if (Objects.isNull(fruitDoctor)) {
@@ -431,7 +431,9 @@ public class FruitDoctorApi {
         Achievement total =
                 doctorAchievementLogService.achievement(DateTypeEnum.DAY, PeriodType.current, fruitDoctor.getId(), true, true, null);
         //构建返回值
-        current.setSalesAmount(total.getSalesAmount());
+
+        current.setSalesToday(current.getSalesAmount());//今日销售额
+        current.setSalesAmount(total.getSalesAmount());//总销售额
         ResponseEntity userInfo = baseUserServerFeign.findById(Long.valueOf(userId));
         if (userInfo.getStatusCode().isError()) {
             return ResponseEntity.badRequest().body(userInfo.getBody());
@@ -609,11 +611,14 @@ public class FruitDoctorApi {
                     ids.add(subordinate.getId());
                 });
                 Integer fruitDoctorBonus = doctorAchievementLogService.selectFruitDoctorCommission(ids);//轮询统计每个鲜果师上个月的红利
-                DoctorAchievementLog doctorAchievementLog = new DoctorAchievementLog();
-                doctorAchievementLog.setDoctorId(fruitDoctor.getId());
-                doctorAchievementLog.setSourceType(SourceType.SUB_DISTRIBUTOR);
-                doctorAchievementLog.setFruitDoctorCommission(fruitDoctorBonus);
-                doctorAchievementLogService.create(doctorAchievementLog);
+                Tips tips = doctorAchievementLogService.updateBonus(fruitDoctor.getId(),fruitDoctorBonus,BalanceType.SETTLEMENT);
+                if (Objects.equals(tips.getCode(),"1")){
+                    DoctorAchievementLog doctorAchievementLog = new DoctorAchievementLog();
+                    doctorAchievementLog.setDoctorId(fruitDoctor.getId());
+                    doctorAchievementLog.setSourceType(SourceType.SUB_DISTRIBUTOR);
+                    doctorAchievementLog.setFruitDoctorCommission(fruitDoctorBonus);
+                    doctorAchievementLogService.create(doctorAchievementLog);
+                }
             }
         });
         return ResponseEntity.ok().build();
@@ -623,7 +628,7 @@ public class FruitDoctorApi {
     @PostMapping("/ceshi/commission")
     @ApiOperation(value = "测试鲜果师订单分成接口")
     public ResponseEntity ceshi() {
-        ResponseEntity orderDetailResult = orderServiceFeign.orderDetail("HG6634032908177408", false, false);
+        ResponseEntity orderDetailResult = orderServiceFeign.orderDetail("HG9232847708327936", false, false);
         OrderDetailResult order = (OrderDetailResult) orderDetailResult.getBody();
         fruitDoctorService.calculationCommission(order);
         return ResponseEntity.ok().build();
