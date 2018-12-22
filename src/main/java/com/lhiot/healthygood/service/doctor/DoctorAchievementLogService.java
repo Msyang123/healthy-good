@@ -300,8 +300,8 @@ public class DoctorAchievementLogService {
 	 * @param ids
 	 * @return
 	 */
-	public Integer selectFruitDoctorCommission(List<Long> ids){
-		return doctorAchievementLogMapper.selectFruitDoctorCommission(ids);
+	public Integer selectFruitDoctorCommission(Long id){
+		return doctorAchievementLogMapper.selectFruitDoctorCommission(id);
 	}
 }
 
