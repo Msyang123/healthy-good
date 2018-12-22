@@ -240,12 +240,6 @@
             <if test="hot != null ">
                 hot = #{hot},
             </if>
-            <if test="bonus != null ">
-                bonus = #{bonus},
-            </if>
-            <if test="settlement != null ">
-                settlement = #{settlement},
-            </if>
             <if test="avatar != null ">
                 avatar = #{avatar},
             </if>
@@ -257,6 +251,20 @@
             </if>
             <if test="applicationId != null ">
                 application_id = #{applicationId},
+            </if>
+        </set>
+        where id=#{id}
+    </update>
+
+    <!--加减鲜果师红利和可结算余额-->
+    <update id="updateBouns" parameterType="map">
+        update fruit_doctor
+        <set>
+            <if test="balanceType == 'BOUNS'  and money != null">
+                bonus = bonus + #{money},
+            </if>
+            <if test="balanceType == 'SETTLEMENT' and money != null">
+                settlement = settlement + #{money},
             </if>
         </set>
         where id=#{id}
@@ -384,11 +392,11 @@
     <!--查询鲜果师团队列表-->
     <select id="subordinate" resultMap="BaseResultMap"
             parameterType="com.lhiot.healthygood.domain.user.FruitDoctor">
-        select <include refid="Base_Column_List" />,ifnull((select sum(amount/commission) from doctor_achievement_log where doctor_id=f.id
+        select <include refid="Base_Column_List" />,ifnull((select sum(commission) from doctor_achievement_log where doctor_id=f.id
         and source_type in('ORDER','REFUND')
         and create_at between CONCAT(date_add(curdate(),interval -day(curdate())+1 day),' 00:00:00')
         and  CONCAT(date_add(curdate()-day(curdate())+1,interval 1 month),' 00:00:00')
-        ),0) as amount_of_month
+        ),0) as bounsOfMonth
         from fruit_doctor f
         <include refid="Base_Where_Condition" />
         <if test="rows != null and rows > 0 ">

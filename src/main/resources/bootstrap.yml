@@ -2,7 +2,7 @@ server:
   port: 8012
 spring:
   application:
-    name: healthy-good-service-v2-0-yj
+    name: healthy-good-service-v2-0
   cloud:
     config:
       name: healthy-good-service-v2-0, rabbit-mq, application, redisson
