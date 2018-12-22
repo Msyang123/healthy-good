@@ -422,15 +422,17 @@ public class CustomPlanService {
      * @return
      */
     public Tips batchDeleteByIds(String ids) {
-        // 定制计划是否关联了定制板块
-        List<Map<String, Object>> relationList = customPlanSectionRelationMapper.findBySectionIdsAndPlanIds(null, ids);
-        if (!relationList.isEmpty()) {
-            List<String> resultList = new ArrayList<>();
-            relationList.forEach(section -> resultList.add(section.get("planId").toString()));
-            List<String> id = resultList.stream().distinct().collect(Collectors.toList());
-            return Tips.warn("以下定制计划id不可删除:" + id);
+        // 批量删除定制计划
+        boolean deleteCustomPlan = customPlanMapper.deleteByIds(Arrays.asList(ids.split(","))) > 0;
+        if (!deleteCustomPlan) {
+            return Tips.warn("批量删除定制计划失败");
         }
-        return customPlanMapper.deleteByIds(Arrays.asList(ids.split(","))) > 0 ? Tips.info("删除成功") : Tips.warn("删除失败");
+        // 批量删除定制计划与定制板块的关联
+        boolean deleteRelation = customPlanSectionRelationMapper.deleteRelationList(null, ids) > 0;
+        if (!deleteRelation) {
+            return Tips.warn("批量删除定制计划与定制板块的关联失败");
+        }
+        return  Tips.info("删除成功");
     }
 
     /**
