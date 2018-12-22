@@ -130,14 +130,19 @@
     </delete>
 
     <!-- 统计鲜果师上个月的红利-->
-    <select id="selectFruitDoctorCommission" resultType="Integer" parameterType="java.util.List">
-        select IFNULL(sum(fruit_doctor_commission),0) fruitDoctorCommission from doctor_achievement_log where superior_doctor_id
-        in
-        <foreach item="item" index="index" collection="list" open="(" separator="," close=")">
-            #{item}
-        </foreach>
+    <select id="selectFruitDoctorCommission" resultType="Integer" parameterType="Long">
+        SELECT SUM(a.fruitDoctorCommission) FROM (
+        select IFNULL(sum(fruit_doctor_commission),0) fruitDoctorCommission from doctor_achievement_log where superior_doctor_id = #{0}
         and source_type = "ORDER" and PERIOD_DIFF(date_format(now( ) ,'%Y%m'),date_format(create_at,'%Y%m')) =1
+        UNION
+        select IFNULL(sum(commission),0) fruitDoctorCommission from doctor_achievement_log where doctor_id = #{0}
+        and source_type = "ORDER" and PERIOD_DIFF(date_format(now( ) ,'%Y%m'),date_format(create_at,'%Y%m')) =1) a
     </select>
+
+    <!--<select id="selectLastOfMonthCommission" resultType="Integer" parameterType="Long">
+        select IFNULL(sum(commission),0) fruitDoctorCommission from doctor_achievement_log where doctor_id = #{0}
+        and source_type = "ORDER" and PERIOD_DIFF(date_format(now( ) ,'%Y%m'),date_format(create_at,'%Y%m')) =1
+    </select>-->
 
 
     <!-- 根据id查找鲜果师业绩记录 -->
