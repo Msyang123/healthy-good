@@ -36,6 +36,17 @@ public interface CustomPlanSpecificationMapper {
     */
     int updateById(CustomPlanSpecification customPlanSpecification);
 
+
+    /**
+     * Description:根据id修改定制计划规格
+     *
+     * @param specificationList
+     * @return
+     * @author hufan
+     * @date 2018/12/22 15:53:47
+     */
+    int updateBatch(List<CustomPlanSpecification> specificationList);
+
     /**
     * Description:根据ids删除定制计划规格
     *
@@ -49,12 +60,12 @@ public interface CustomPlanSpecificationMapper {
     /**
      * Description:根据计划id删除定制计划规格
      *
-     * @param planId
+     * @param planIds
      * @return
      * @author hufan
      * @date 2018/11/22 12:09:27
      */
-    int deleteByPlanId(Long planId);
+    int deleteByPlanIds(List<String> planIds);
 
     /**
     * Description:根据id查找定制计划规格

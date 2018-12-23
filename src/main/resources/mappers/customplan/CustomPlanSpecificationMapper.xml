@@ -119,6 +119,23 @@
         where id=#{id}
     </update>
 
+    <!--批量修改定制计划关联商品-->
+    <update id="updateBatch" parameterType="list">
+        update custom_plan_specification
+        <trim prefix="set">
+            <trim prefix="price = case" suffix="end">
+                <foreach collection="list" item="item">
+                    <if test="item.price != null">when id = #{item.id} then #{item.price}</if>
+                </foreach>
+            </trim>
+        </trim>
+        where
+        <foreach collection="list" separator="or" item="item">
+            id = #{item.id}
+        </foreach>
+    </update>
+
+
     <!--根据ids删除定制计划规格-->
     <delete id="deleteByIds" parameterType="java.util.List">
         delete from custom_plan_specification where id in
@@ -129,8 +146,11 @@
     </delete>
 
     <!--根据ids删除定制计划关联商品-->
-    <delete id="deleteByPlanId" parameterType="Long">
-        delete from custom_plan_specification where plan_id  = #{planId}
+    <delete id="deleteByPlanIds" parameterType="java.util.List">
+        delete from custom_plan_specification where plan_id  in
+        <foreach collection="list" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
     </delete>
 
 

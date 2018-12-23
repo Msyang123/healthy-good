@@ -117,6 +117,14 @@ public interface CustomPlanSectionRelationMapper {
     int deleteRelationList(@Param("sectionId") Long sectionId, @Param("planIds") String planIds);
 
     /**
+     * 批量删除定制计划与版块关系记录
+     *
+     * @param planIds  定制计划ID集合
+     * @return 执行结果
+     */
+    int deleteByPlanIds(List<String> planIds);
+
+    /**
      * 根据定制板块id 查询关联的定制计划信息
      * @param sectionId
      * @return
