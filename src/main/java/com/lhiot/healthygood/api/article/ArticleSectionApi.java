@@ -24,7 +24,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-@Api(description = "文章板块类接口")
+@Api(description = "文章板块类接口(no session)")
 @Slf4j
 @RestController
 public class ArticleSectionApi {

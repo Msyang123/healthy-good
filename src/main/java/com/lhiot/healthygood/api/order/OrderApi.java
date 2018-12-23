@@ -92,7 +92,7 @@ public class OrderApi {
     }
 
     @PostMapping("/orders")
-    @ApiOperation(value = "和色果膳--创建订单", response = OrderDetailResult.class)
+    @ApiOperation(value = "和色果膳--创建订单*", response = OrderDetailResult.class)
     @ApiImplicitParam(paramType = "body", name = "orderParam", dataType = "CreateOrderParam", required = true, value = "创建订单传入参数")
     public ResponseEntity createOrder(@Valid @RequestBody CreateOrderParam orderParam, Sessions.User user) {
 
@@ -239,7 +239,7 @@ public class OrderApi {
     }
 
     @DeleteMapping("/orders/{orderCode}")
-    @ApiOperation("和色果膳--取消订单")
+    @ApiOperation("和色果膳--取消订单*")
     @ApiImplicitParam(paramType = "path", name = "orderCode", dataType = "String", required = true, value = "订单id")
     public ResponseEntity createOrder(@Valid @NotBlank @PathVariable("orderCode") String orderCode, Sessions.User user) {
         Long userId = Long.valueOf(user.getUser().get("userId").toString());
@@ -252,7 +252,7 @@ public class OrderApi {
 
 
     @PutMapping("/orders/{orderCode}/refund")
-    @ApiOperation(value = "订单退货", response = String.class)
+    @ApiOperation(value = "订单退货*", response = String.class)
     @ApiImplicitParams({
             @ApiImplicitParam(paramType = "path", name = "orderCode", dataType = "String", required = true, value = "订单编码"),
             @ApiImplicitParam(paramType = "body", name = "returnOrderParam", dataType = "ReturnOrderParam", required = true, value = "退货参数")
@@ -294,7 +294,7 @@ public class OrderApi {
 
 
     @PostMapping("/orders/status")
-    @ApiOperation(value = "我的用户订单列表")
+    @ApiOperation(value = "我的用户订单列表*")
     public ResponseEntity<Pages<OrderDetailResult>> orderPages(@RequestBody BaseOrderParam baseOrderParam,
                                                                Sessions.User user) {
         baseOrderParam.setUserIds(user.getUser().get("userId").toString());
@@ -304,7 +304,7 @@ public class OrderApi {
     }
 
     @PostMapping("/orders/fruit-doctor/customers")
-    @ApiOperation(value = "我的鲜果师客户订单列表", response = OrderDetailResult.class, responseContainer = "List")
+    @ApiOperation(value = "我的鲜果师客户订单列表*", response = OrderDetailResult.class, responseContainer = "List")
     public ResponseEntity customersOrders(@RequestBody BaseOrderParam baseOrderParam, Sessions.User user) {
         String userId = user.getUser().get("userId").toString();
         FruitDoctor fruitDoctor = fruitDoctorService.selectByUserId(Long.valueOf(userId));
@@ -327,7 +327,7 @@ public class OrderApi {
     }
 
     @GetMapping("/orders/count/status")
-    @ApiOperation("统计我的用户订单各状态数量")
+    @ApiOperation("统计我的用户订单各状态数量*")
     public ResponseEntity<OrderGroupCount> countStatus(Sessions.User user) {
         OrderGroupCount orderGroupCount = new OrderGroupCount();
 
@@ -360,7 +360,7 @@ public class OrderApi {
     }
 
     @PostMapping("/orders/{orderCode}/payment-sign")
-    @ApiOperation(value = "订单微信支付签名", response = String.class)
+    @ApiOperation(value = "订单微信支付签名*", response = String.class)
     public ResponseEntity paymentSign(@Valid @NotBlank @PathVariable("orderCode") String orderCode, HttpServletRequest request, Sessions.User user) {
         Long userId = Long.valueOf(user.getUser().get("userId").toString());
         String openId = user.getUser().get("openId").toString();
