@@ -27,7 +27,7 @@ import java.util.List;
 /**
  * 定制计划api /custom-plan-sections
  */
-@Api(description = "定制计划接口")
+@Api(description = "定制计划接口(no session)")
 @Slf4j
 @RestController
 public class CustomPlanApi {

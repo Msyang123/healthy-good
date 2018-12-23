@@ -3,18 +3,15 @@ package com.lhiot.healthygood.service.doctor;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.leon.microx.util.Jackson;
 import com.leon.microx.web.result.Pages;
-import com.leon.microx.web.result.Tips;
-import com.lhiot.healthygood.domain.doctor.DoctorAchievementLog;
 import com.lhiot.healthygood.domain.doctor.SettlementApplication;
 import com.lhiot.healthygood.domain.user.FruitDoctor;
-import com.lhiot.healthygood.domain.user.KeywordValue;
 import com.lhiot.healthygood.mapper.doctor.DoctorAchievementLogMapper;
 import com.lhiot.healthygood.mapper.doctor.SettlementApplicationMapper;
 import com.lhiot.healthygood.mapper.user.FruitDoctorMapper;
-import com.lhiot.healthygood.type.FruitDoctorOrderExchange;
-import com.lhiot.healthygood.type.SettlementStatus;
-import com.lhiot.healthygood.type.SourceType;
-import com.lhiot.healthygood.type.TemplateMessageEnum;
+import com.lhiot.healthygood.type.*;
+import com.lhiot.healthygood.util.DataItem;
+import com.lhiot.healthygood.util.DataObject;
+import com.lhiot.healthygood.wechat.WeChatUtil;
 import org.springframework.amqp.AmqpException;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,11 +20,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.text.SimpleDateFormat;
-import java.time.Instant;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
-import java.util.Objects;
 
 /**
  * Description:结算申请服务类
@@ -43,13 +38,15 @@ public class SettlementApplicationService {
     private final FruitDoctorMapper fruitDoctorMapper;
     private final RabbitTemplate rabbit;
     private final DoctorAchievementLogMapper doctorAchievementLogMapper;
+    private final WeChatUtil weChatUtil;
 
     @Autowired
-    public SettlementApplicationService(SettlementApplicationMapper settlementApplicationMapper, FruitDoctorMapper fruitDoctorMapper, RabbitTemplate rabbit, DoctorAchievementLogMapper doctorAchievementLogMapper) {
+    public SettlementApplicationService(SettlementApplicationMapper settlementApplicationMapper, FruitDoctorMapper fruitDoctorMapper, RabbitTemplate rabbit, DoctorAchievementLogMapper doctorAchievementLogMapper, WeChatUtil weChatUtil) {
         this.settlementApplicationMapper = settlementApplicationMapper;
         this.fruitDoctorMapper = fruitDoctorMapper;
         this.rabbit = rabbit;
         this.doctorAchievementLogMapper = doctorAchievementLogMapper;
+        this.weChatUtil = weChatUtil;
     }
 
     /**
@@ -178,25 +175,34 @@ public class SettlementApplicationService {
      * @throws JsonProcessingException
      * @throws AmqpException
      */
-    public void settlementApplicationSendToQueue(SettlementApplication settlementApplication) throws AmqpException, JsonProcessingException {
-        String currentTime = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());
+    public void settlementApplicationSendTemplate(SettlementApplication settlementApplication) throws AmqpException, JsonProcessingException {
         Integer amount = (null == settlementApplication.getAmount() ? 0 : settlementApplication.getAmount());
         //获取鲜果师用户信息
         FruitDoctor fruitDoctor = fruitDoctorMapper.selectById(settlementApplication.getDoctorId());
         //提现金额
         String fee = new BigDecimal(amount).divide(new BigDecimal(100), 2, BigDecimal.ROUND_HALF_UP).toString();
 
-        KeywordValue keywordValue = new KeywordValue();
-        keywordValue.setTemplateType(TemplateMessageEnum.NOTICE_OF_PRESENTATION);
-        keywordValue.setKeyword1Value(currentTime);
-        keywordValue.setKeyword2Value(fee);
+        String currentTime = new SimpleDateFormat("yyyy-MM-dd").format(new Date());
+        DataItem dataItem = new DataItem();
+        DataObject first = new DataObject();
+        DataObject keyword1 = new DataObject();
+        DataObject keyword2 = new DataObject();
+        DataObject keyword3 = new DataObject();
+        DataObject keyword4 = new DataObject();
+        DataObject remark = new DataObject();
 
-        keywordValue.setUserId(fruitDoctor.getUserId());
-        keywordValue.setSendToDoctor(false);
+        first.setValue(FirstAndRemarkData.NOTICE_OF_PRESENTATION.getFirstData());
+        keyword1.setValue(TemplateMessageEnum.NOTICE_OF_PRESENTATION.getTemplateName());
+        keyword2.setValue(currentTime);
+        keyword3.setValue(fee);
+        keyword4.setValue(FirstAndRemarkData.NOTICE_OF_PRESENTATION.getRemarkData());
 
-        //发送模板消息
-        rabbit.convertAndSend(FruitDoctorOrderExchange.FRUIT_TEMPLATE_MESSAGE.getExchangeName(),
-                FruitDoctorOrderExchange.FRUIT_TEMPLATE_MESSAGE.getQueueName(), Jackson.json(keywordValue));
+        dataItem.setFirst(first);
+        dataItem.setKeyword1(keyword1);
+        dataItem.setKeyword2(keyword2);
+        dataItem.setKeyword3(keyword3);
+        weChatUtil.sendMessageToWechat(TemplateMessageEnum.NOTICE_OF_PRESENTATION, settlementApplication.getOpenId(), dataItem);
+
     }
 
     /**

@@ -110,12 +110,11 @@ public class RegisterApplicationService {
             DataObject keyword3 = new DataObject();
             DataObject keyword4 = new DataObject();
             DataObject remark = new DataObject();
-            first.setValue(TemplateMessageEnum.UPGRADE_FRUIT_DOCTOR.getTemplateName());
+            first.setValue(FirstAndRemarkData.UPGRADE_FRUIT_DOCTOR.getFirstData());
             keyword1.setValue("明星鲜果师");
             keyword2.setValue("成功");
             keyword3.setValue(currentTime);
             keyword4.setValue("如有疑问请致电0731-85240088");
-            remark.setValue("如有疑问请致电0731-85240088");
 
             dataItem.setFirst(first);
             dataItem.setKeyword1(keyword1);
