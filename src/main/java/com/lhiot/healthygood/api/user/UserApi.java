@@ -164,6 +164,8 @@ public class UserApi {
             Sessions.User sessionUser = session.create(request).user(Maps.of("userId", searchUser.getId(), "baseUserId",searchUser.getBaseUserId(),
                     "openId", searchUser.getOpenId()))
                     .timeToLive(30, TimeUnit.MINUTES);
+            //sessionUser.authorities(Authority.of("/**", RequestMethod.values()));
+
             ResponseEntity imsOperationRes = imsServiceFeign.selectAuthority();
             if (imsOperationRes.getStatusCode().isError()){
                 return ;
@@ -173,6 +175,7 @@ public class UserApi {
                     .map(op -> Authority.of(op.getAntUrl(), StringUtils.tokenizeToStringArray(op.getType(), ",")))
                     .collect(Collectors.toList());
             sessionUser.authorities(authorityList);
+
             String sessionId = session.cache(sessionUser);
             clientUri = accessToken.getOpenId() + "?sessionId=" + sessionId + "&clientUri=" + clientUri;
         }
@@ -213,7 +216,7 @@ public class UserApi {
         UserDetailResult searchUser = (UserDetailResult) searchUserEntity.getBody();
         Sessions.User sessionUser = session.create(request).user(Maps.of("userId", searchUser.getId(), "baseUserId",searchUser.getBaseUserId(),
                 "openId", searchUser.getOpenId())).timeToLive(3, TimeUnit.HOURS);
-                /*.authorities(Authority.of("/**", RequestMethod.values()));*/
+        //sessionUser.authorities(Authority.of("/**", RequestMethod.values()));
         ResponseEntity imsOperationRes = imsServiceFeign.selectAuthority();
         if (imsOperationRes.getStatusCode().isError()){
             return ResponseEntity.badRequest().body("请求失败");
