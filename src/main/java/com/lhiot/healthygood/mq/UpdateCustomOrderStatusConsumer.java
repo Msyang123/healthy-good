@@ -72,6 +72,7 @@ public class UpdateCustomOrderStatusConsumer {
                     customOrder.setCustomOrderCode(item.getCustomOrderCode());
                     //设置定制订单为恢复
                     customOrder.setStatus(CustomOrderStatus.CUSTOMING);
+                    customOrderService.updateByCode(customOrder);
                     //定制设置已经过了设置的时间了，不在做恢复状态修改
                 }
             });

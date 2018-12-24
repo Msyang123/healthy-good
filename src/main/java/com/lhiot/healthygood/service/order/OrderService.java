@@ -96,7 +96,7 @@ public class OrderService {
                     deliveryParam.setBackUrl(StringUtils.format(deliverConfig.getBackUrl(), deliverConfig.getType()));//配置回调
                     deliveryParam.setCoordinate(CoordinateSystem.AMAP);
 
-                    deliveryParam.setDeliverTime(Jackson.object(orderDetailResult.getDeliverTime(), DeliverTime.class));
+                    deliveryParam.setDeliverTime(Jackson.object(orderDetailResult.getDeliverAt(), DeliverTime.class));
                     deliveryParam.setDeliveryType(DeliverType.valueOf(deliverConfig.getType()));
                     Position.GCJ02 position = commonService.getPositionFromAddres(orderDetailResult.getAddress());//地址转经纬度
                     if (Objects.isNull(position)) {

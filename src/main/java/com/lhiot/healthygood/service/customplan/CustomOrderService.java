@@ -290,11 +290,11 @@ public class CustomOrderService {
         orderParam.setNickname(customOrder.getReceiveUser());
         orderParam.setReceiveUser(customOrder.getReceiveUser());
         orderParam.setReceivingWay(ReceivingWay.TO_THE_HOME);//所有的都是送货上门
-        orderParam.setAllowRefund(AllowRefund.YES);//允许退货
+        orderParam.setAllowRefund(AllowRefund.NO);//允许退货
         orderParam.setOrderType(OrderType.CUSTOM);//定制订单
         orderParam.setRemark(remark);
 
-        orderParam.setDeliveryAt(deliveryTime);
+        orderParam.setDeliverAt(deliveryTime);
 
         String storeCode = customOrder.getStoreCode();//门店编码
         //判断门店是否存在
@@ -442,13 +442,13 @@ public class CustomOrderService {
      * 查询用户定制订单
      *
      * @param customOrder 定制订单
-     * @param needChlid   是否查询子集
+     * @param needChild   是否查询子集
      * @return
      */
-    public Pages<CustomOrder> customOrderListByStatus(CustomOrder customOrder, boolean needChlid) {
+    public Pages<CustomOrder> customOrderListByStatus(CustomOrder customOrder, boolean needChild) {
         //查询购买的定制计划列表
         List<CustomOrder> customOrderList = customOrderMapper.pageCustomOrder(customOrder);
-        if (needChlid) {
+        if (needChild) {
             customOrderList.forEach(item -> {
                 item.setCustomOrderDeliveryList(customOrderDeliveryMapper.selectByCustomOrderId(item.getPlanId(), item.getId()));//设置定制配送记录
                 item.setCustomPlan(customPlanService.findById(item.getPlanId()));//设置定制计划

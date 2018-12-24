@@ -5,6 +5,7 @@ import com.leon.microx.web.result.Tips;
 import com.lhiot.healthygood.feign.model.DeliverFeeQuery;
 import com.lhiot.healthygood.feign.model.DeliverOrder;
 import com.lhiot.healthygood.feign.model.DeliverUpdate;
+import com.lhiot.healthygood.feign.model.Fee;
 import com.lhiot.healthygood.feign.type.CoordinateSystem;
 import com.lhiot.healthygood.feign.type.DeliverType;
 import org.springframework.cloud.openfeign.FeignClient;
@@ -45,5 +46,5 @@ public interface DeliverServiceFeign {
 
     //计算配送费
     @RequestMapping(value = "/delivery/fee/search", method = RequestMethod.POST)
-    ResponseEntity search(@RequestBody DeliverFeeQuery feeQuery);
+    ResponseEntity<Fee> search(@RequestBody DeliverFeeQuery feeQuery);
 }
