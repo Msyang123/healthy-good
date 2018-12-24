@@ -131,7 +131,7 @@ public class BalanceApi {
     @PostMapping("/test")
     @ApiOperation(value = "测试延迟消息队列")
     public ResponseEntity test(@RequestBody String deliverTime){
-        orderService.delaySendToHd("HG9252921106206720", Jackson.object(deliverTime, DeliverTime.class));
+        orderService.delaySendToHd("HG9239875965128704", Jackson.object(deliverTime, DeliverTime.class));
         return ResponseEntity.ok().build();
     }
 

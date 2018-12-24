@@ -20,7 +20,7 @@ public interface HealthyGoodQueue {
     }
 
     default void send(RabbitTemplate delegate, Serializable data, long delay) {
-        delegate.convertAndSend(this.getExchange(), this.getDlx(), Jackson.json(data), message -> {
+        delegate.convertAndSend(this.getExchange(), this.getDlx(), data, message -> {
             message.getMessageProperties().setExpiration(String.valueOf(delay));
             return message;
         });
