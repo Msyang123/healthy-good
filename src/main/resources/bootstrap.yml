@@ -7,6 +7,7 @@ spring:
     config:
       name: healthy-good-service-v2-0, rabbit-mq, application, redisson
       profile: ${RUN_LEVEL:dev}
+
       label: ${RUN_LEVEL:dev}
       failFast: true
       discovery:
