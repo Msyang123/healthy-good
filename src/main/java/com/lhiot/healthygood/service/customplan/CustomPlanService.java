@@ -229,15 +229,14 @@ public class CustomPlanService {
             return Tips.warn("定制计划与版块关联重复，添加失败");
         }
         List<CustomPlanSectionRelation> customPlanSectionRelation = new ArrayList<>();
-        String[] sectionIds = StringUtils.tokenizeToStringArray(customPlanDetailResult.getCustomPlanSectionIds(), ",");
-        List<String> sectionIdList = Stream.of(sectionIds).collect(Collectors.toList());
+        List<Long> sectionIdList = customPlanDetailResult.getCustomPlanSectionIds();
         if (sectionIdList.isEmpty()) {
             return Tips.warn("关联板块不能为空");
         }
         sectionIdList.stream().forEach(sectionId -> {
             CustomPlanSectionRelation addCustomPlanSectionRelation = new CustomPlanSectionRelation();
             addCustomPlanSectionRelation.setPlanId(customPlanId);
-            addCustomPlanSectionRelation.setSectionId(Long.valueOf(sectionId));
+            addCustomPlanSectionRelation.setSectionId(sectionId);
             addCustomPlanSectionRelation.setSort(1L);
             customPlanSectionRelation.add(addCustomPlanSectionRelation);
         });
