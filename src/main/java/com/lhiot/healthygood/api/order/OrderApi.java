@@ -340,6 +340,7 @@ public class OrderApi {
         return orderServiceFeign.ordersPages(baseOrderParam);
     }
 
+    @Sessions.Uncheck
     @GetMapping("/orders/{orderCode}/detail")
     @ApiOperation(value = "根据订单code查询订单详情", response = OrderDetailResult.class)
     public ResponseEntity orderDetial(@Valid @NotBlank @PathVariable("orderCode") String orderCode) {
