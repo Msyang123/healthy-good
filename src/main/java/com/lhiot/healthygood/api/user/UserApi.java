@@ -14,6 +14,7 @@ import com.lhiot.healthygood.domain.user.FruitDoctor;
 import com.lhiot.healthygood.domain.user.UserBindingPhoneParam;
 import com.lhiot.healthygood.domain.user.ValidateParam;
 import com.lhiot.healthygood.feign.BaseUserServerFeign;
+import com.lhiot.healthygood.feign.ImsServiceFeign;
 import com.lhiot.healthygood.feign.ThirdpartyServerFeign;
 import com.lhiot.healthygood.feign.model.*;
 import com.lhiot.healthygood.feign.type.ApplicationType;
@@ -45,11 +46,9 @@ import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.text.MessageFormat;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 /**
  * 用户信息api
@@ -73,6 +72,7 @@ public class UserApi {
     private Sessions session;
     private RedissonClient redissonClient;
     private final HealthyGoodConfig.WechatOauthConfig wechatOauth;
+    private final ImsServiceFeign imsServiceFeign;
 
     @Autowired
     public UserApi(WeChatUtil weChatUtil, FruitDoctorUserService fruitDoctorUserService,
@@ -82,7 +82,7 @@ public class UserApi {
                    ObjectProvider<Sessions> sessionsObjectProvider,
                    RedissonClient redissonClient,
                    DoctorAchievementLogService doctorAchievementLogService,
-                   HealthyGoodConfig healthyGoodConfig) {
+                   HealthyGoodConfig healthyGoodConfig, ImsServiceFeign imsServiceFeign) {
         this.weChatUtil = weChatUtil;
         this.fruitDoctorUserService = fruitDoctorUserService;
         this.fruitDoctorService = fruitDoctorService;
@@ -93,6 +93,7 @@ public class UserApi {
         this.redissonClient = redissonClient;
         this.session = sessionsObjectProvider.getIfAvailable();
         this.wechatOauth = healthyGoodConfig.getWechatOauth();
+        this.imsServiceFeign = imsServiceFeign;
     }
 
     /*****************************************微信授权登陆*****************************************************/
@@ -112,7 +113,7 @@ public class UserApi {
     @ApiOperation(value = "微信oauth鉴权登录 authorize back之后处理业务", response = String.class)
     public void wechatAuthorize(HttpServletRequest request, HttpServletResponse response) throws IOException {
         Map<String, String> resultMap = paramsToMap(request);
-        String code = resultMap.get("code");
+        String code = (Objects.nonNull(resultMap.get("code")))?resultMap.get("code"):"#";
         String state = resultMap.get("state");
         String[] states = state.split("\\|");
 
@@ -121,10 +122,7 @@ public class UserApi {
         if (states.length > 1) {
             inviteCode = states[1];
         }
-        log.info("===========>state:" + state);
         AccessToken accessToken = weChatUtil.getAccessTokenByCode(wechatOauth.getAppId(), wechatOauth.getAppSecret(), code);
-        log.info("===========>weixinAuthorize:" + accessToken);
-        //判断是否在数据库中存在此记录，如果存在直接登录，否则就注册用户微信信息
         RMapCache<String, String> cache = redissonClient.getMapCache(PREFIX_REDIS + "userToken");
         //将access_token(2小时) 缓存起来
         cache.put("accessToken" + accessToken.getOpenId(), accessToken.getAccessToken(), 2, TimeUnit.HOURS);
@@ -138,7 +136,6 @@ public class UserApi {
         ResponseEntity searchUserEntity = baseUserServerFeign.findByOpenId(accessToken.getOpenId());
         //注册
         if (searchUserEntity.getStatusCode().isError()) {
-            //写入数据库中
             String weixinUserInfo = weChatUtil.getOauth2UserInfo(accessToken.getOpenId(), accessToken.getAccessToken());
             WeChatRegisterParam weChatRegisterParam = fruitDoctorUserService.convert(weixinUserInfo);//传给基础服务的用户数据
             if (Objects.nonNull(fruitDoctor)) {
@@ -149,8 +146,7 @@ public class UserApi {
             UserDetailResult userDetailResult = (UserDetailResult) tips.getData();
             Sessions.User sessionUser = session.create(request).user(Maps.of("userId", userDetailResult.getId(), "baseUserId",userDetailResult.getBaseUserId()
                     , "openId", userDetailResult.getOpenId()))
-                    .timeToLive(30, TimeUnit.MINUTES)
-                    .authorities(Authority.of("/**", RequestMethod.values()));// TODO 还没有加权限;
+                    .timeToLive(30, TimeUnit.MINUTES);
             String sessionId = session.cache(sessionUser);
             clientUri = accessToken.getOpenId() + "?sessionId=" + sessionId + "&clientUri=" + clientUri;
         } else {
@@ -167,8 +163,16 @@ public class UserApi {
             }
             Sessions.User sessionUser = session.create(request).user(Maps.of("userId", searchUser.getId(), "baseUserId",searchUser.getBaseUserId(),
                     "openId", searchUser.getOpenId()))
-                    .timeToLive(3, TimeUnit.HOURS)
-                    .authorities(Authority.of("/**", RequestMethod.values()));// TODO 还没有加权限;
+                    .timeToLive(30, TimeUnit.MINUTES);
+            ResponseEntity imsOperationRes = imsServiceFeign.selectAuthority();
+            if (imsOperationRes.getStatusCode().isError()){
+                return ;
+            }
+            List<ImsOperation> imsOperations = (List<ImsOperation>) imsOperationRes.getBody();
+            List<Authority> authorityList = imsOperations.stream()
+                    .map(op -> Authority.of(op.getAntUrl(), StringUtils.tokenizeToStringArray(op.getType(), ",")))
+                    .collect(Collectors.toList());
+            sessionUser.authorities(authorityList);
             String sessionId = session.cache(sessionUser);
             clientUri = accessToken.getOpenId() + "?sessionId=" + sessionId + "&clientUri=" + clientUri;
         }
@@ -178,7 +182,7 @@ public class UserApi {
     }
 
     @GetMapping("/session")
-    @ApiOperation(value = "根据sessionId重新获取session", response = UserDetailResult.class)
+    @ApiOperation(value = "根据sessionId重新获取session*", response = UserDetailResult.class)
     public ResponseEntity userInfo(Sessions.User user) {
         String openId = user.getUser().get("openId").toString();
         ResponseEntity searchUserEntity = baseUserServerFeign.findByOpenId(openId);
@@ -208,8 +212,17 @@ public class UserApi {
         }
         UserDetailResult searchUser = (UserDetailResult) searchUserEntity.getBody();
         Sessions.User sessionUser = session.create(request).user(Maps.of("userId", searchUser.getId(), "baseUserId",searchUser.getBaseUserId(),
-                "openId", searchUser.getOpenId())).timeToLive(3, TimeUnit.HOURS)
-                .authorities(Authority.of("/**", RequestMethod.values()));
+                "openId", searchUser.getOpenId())).timeToLive(3, TimeUnit.HOURS);
+                /*.authorities(Authority.of("/**", RequestMethod.values()));*/
+        ResponseEntity imsOperationRes = imsServiceFeign.selectAuthority();
+        if (imsOperationRes.getStatusCode().isError()){
+            return ResponseEntity.badRequest().body("请求失败");
+        }
+        List<ImsOperation> imsOperations = (List<ImsOperation>) imsOperationRes.getBody();
+        List<Authority> authorityList = imsOperations.stream()
+                .map(op -> Authority.of(op.getAntUrl(), StringUtils.tokenizeToStringArray(op.getType(), ",")))
+                .collect(Collectors.toList());
+        sessionUser.authorities(authorityList);
         String sessionId = session.cache(sessionUser);
         return ResponseEntity.ok()
                 .header(Sessions.HTTP_HEADER_NAME, sessionId).body(sessionId);
@@ -292,7 +305,7 @@ public class UserApi {
     }
 
     @PostMapping("/sms/captcha")
-    @ApiOperation(value = "发送申请验证码短信")
+    @ApiOperation(value = "发送申请验证码短信*")
     @ApiImplicitParam(paramType = "query", name = "phone", value = "发送用户注册验证码对应手机号", required = true, dataType = "String")
     public ResponseEntity captcha(Sessions.User user, @RequestParam String phone) {
         Long userId = Long.valueOf(user.getUser().get("userId").toString());
@@ -309,7 +322,7 @@ public class UserApi {
     }
 
     @PutMapping("/binding")
-    @ApiOperation(value = "用户绑定手机号")
+    @ApiOperation(value = "用户绑定手机号*")
     @ApiImplicitParam(paramType = "body", name = "validateParam", value = "要用户注册", required = true, dataType = "ValidateParam")
     public ResponseEntity bandPhone(@ApiIgnore Sessions.User user, @RequestBody ValidateParam validateParam) {
         Long userId = (Long) user.getUser().get("userId");
@@ -351,7 +364,7 @@ public class UserApi {
         return ResponseEntity.ok(total);
     }
 
-    @ApiOperation(value = "用户余额明细",response = BalanceLog.class)
+    @ApiOperation(value = "用户余额明细*",response = BalanceLog.class)
     @PostMapping("/balance-log/page")
     public ResponseEntity findUserBalanceLog(Sessions.User user,@RequestBody PagesParam pagesParam){
         Long baseUserId = Long.valueOf(user.getUser().get("baseUserId").toString());

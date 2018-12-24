@@ -83,7 +83,7 @@ public class BalanceApi {
 
 
     @PostMapping("/balance/order/payment")
-    @ApiOperation(value = "鲜果币支付普通订单接口")
+    @ApiOperation(value = "鲜果币支付普通订单接口*")
     public ResponseEntity balanceOrderPayment(@RequestBody BalancePayModel balancePayModel, Sessions.User user) {
         Long userId = Long.valueOf(user.getUser().get("userId").toString());
         String orderCode = balancePayModel.getOrderCode();
@@ -136,7 +136,7 @@ public class BalanceApi {
     }
 
     @PostMapping("/balance/custom-order/payment")
-    @ApiOperation(value = "鲜果币支付定制订单接口")
+    @ApiOperation(value = "鲜果币支付定制订单接口*")
     public ResponseEntity balanceCustomOrderPayment(@RequestBody BalancePayModel balancePayModel, Sessions.User user) {
         Long userId = Long.valueOf(user.getUser().get("userId").toString());
         ResponseEntity validateResult = validateCustomOrderOwner(userId, balancePayModel.getOrderCode());
