@@ -107,14 +107,13 @@ public class FruitDoctorApi {
             @ApiImplicitParam(paramType = ApiParamType.BODY, name = "registerApplication", value = "要更新的鲜果师申请记录", required = true, dataType = "RegisterApplication")
     })
     @PutMapping("/qualifications/{id}")
-    public ResponseEntity update(@PathVariable("id") Long id, @RequestBody RegisterApplication registerApplication) throws AmqpException, JsonProcessingException {
+    public ResponseEntity update(@PathVariable("id") Long id, @RequestBody RegisterApplication registerApplication){
         log.debug("根据id更新鲜果师申请记录\t id:{} param:{}", id, registerApplication);
 
         RegisterApplication findLastApplication = registerApplicationService.findLastApplicationById(registerApplication.getUserId());
         if (Objects.isNull(findLastApplication)) {
             return ResponseEntity.badRequest().body("未找到该用户审核记录");
         }
-
         registerApplication.setId(id);
         Tips tips = registerApplicationService.updateById(registerApplication);
         if (tips.err()) {
@@ -186,7 +185,7 @@ public class FruitDoctorApi {
         }
     }
 
-   /* @Sessions.Uncheck
+    @Sessions.Uncheck
     @ApiOperation(value = "结算申请修改(后台)")
     @ApiImplicitParams({
             @ApiImplicitParam(paramType = ApiParamType.PATH, name = "id", value = "结算申请id", required = true, dataType = "Long"),
@@ -198,7 +197,18 @@ public class FruitDoctorApi {
 
         Tips tips = settlementApplicationService.updateById(id, settlementApplication);
         return tips.err() ? ResponseEntity.badRequest().body(tips.getMessage()) : ResponseEntity.ok().build();
-    }*/
+    }
+
+    @Sessions.Uncheck
+    @ApiOperation(value = "结算申请退款(后台)")
+    @ApiImplicitParam(paramType = ApiParamType.PATH, name = "id", value = "结算申请id", required = true, dataType = "Long")
+    @PutMapping("/settlement/refund/{id}")
+    public ResponseEntity refund(@PathVariable("id") Long id) {
+        log.debug("结算申请退款\t id:{},param:{}", id);
+
+        Tips tips = settlementApplicationService.refund(id);
+        return tips.err() ? ResponseEntity.badRequest().body(tips.getMessage()) : ResponseEntity.ok().build();
+    }
 
     @Sessions.Uncheck
     @ApiOperation(value = "结算申请分页查询(后台)", response = SettlementApplication.class, responseContainer = "Set")

@@ -50,7 +50,7 @@ public class DoctorAchievementLog{
     *订单编号
     */
     @JsonProperty("orderId")
-    @ApiModelProperty(value = "订单编号", dataType = "Long")
+    @ApiModelProperty(value = "订单编号", dataType = "String")
     private String orderId;
 
     /**
@@ -105,6 +105,10 @@ public class DoctorAchievementLog{
 
     @ApiModelProperty(value = "是否已经结算过红利了", dataType = "Integer")
     private String settlement;
+
+    @ApiModelProperty(value = "上级鲜果师编号", dataType = "Long")
+    private Long superiorDoctorId;
+
 
     public DoctorAchievementLog toDoctorBonusLog(){
     	DoctorAchievementLog doctorAchievementLog = new DoctorAchievementLog();

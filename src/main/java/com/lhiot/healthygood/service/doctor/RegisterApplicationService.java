@@ -138,9 +138,6 @@ public class RegisterApplicationService {
         if (!updated) {
             return Tips.warn("修改鲜果师申请记录失败");
         }
-        // 发送模板消息
-        this.doctorApplicationSendTemplate(registerApplication.getAuditStatus(), registerApplication.getUserId());
-
         // 审核通过 新增鲜果师成员记录
         if (Objects.equals(AuditStatus.AGREE, registerApplication.getAuditStatus())) {
             // 幂等添加
@@ -176,6 +173,8 @@ public class RegisterApplicationService {
             fruitDoctor.setUserId(registerApplication.getUserId());
             return fruitDoctorMapper.create(fruitDoctor) > 0 ? Tips.info("添加鲜果师成员成功") : Tips.warn("添加鲜果师成员失败");
         }
+        // 发送模板消息
+        this.doctorApplicationSendTemplate(registerApplication.getAuditStatus(), registerApplication.getUserId());
         return Tips.info("修改成功");
     }
 

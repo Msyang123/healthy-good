@@ -1,14 +1,19 @@
 package com.lhiot.healthygood.service.doctor;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.leon.microx.util.Jackson;
+import com.leon.microx.util.Maps;
 import com.leon.microx.web.result.Pages;
+import com.leon.microx.web.result.Tips;
+import com.lhiot.healthygood.domain.doctor.DoctorAchievementLog;
 import com.lhiot.healthygood.domain.doctor.SettlementApplication;
 import com.lhiot.healthygood.domain.user.FruitDoctor;
 import com.lhiot.healthygood.mapper.doctor.DoctorAchievementLogMapper;
 import com.lhiot.healthygood.mapper.doctor.SettlementApplicationMapper;
 import com.lhiot.healthygood.mapper.user.FruitDoctorMapper;
-import com.lhiot.healthygood.type.*;
+import com.lhiot.healthygood.type.FirstAndRemarkData;
+import com.lhiot.healthygood.type.SettlementStatus;
+import com.lhiot.healthygood.type.SourceType;
+import com.lhiot.healthygood.type.TemplateMessageEnum;
 import com.lhiot.healthygood.util.DataItem;
 import com.lhiot.healthygood.util.DataObject;
 import com.lhiot.healthygood.wechat.WeChatUtil;
@@ -20,9 +25,11 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.text.SimpleDateFormat;
+import java.time.Instant;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * Description:结算申请服务类
@@ -39,6 +46,7 @@ public class SettlementApplicationService {
     private final RabbitTemplate rabbit;
     private final DoctorAchievementLogMapper doctorAchievementLogMapper;
     private final WeChatUtil weChatUtil;
+    private DoctorAchievementLog findDoctorAchievementLog;
 
     @Autowired
     public SettlementApplicationService(SettlementApplicationMapper settlementApplicationMapper, FruitDoctorMapper fruitDoctorMapper, RabbitTemplate rabbit, DoctorAchievementLogMapper doctorAchievementLogMapper, WeChatUtil weChatUtil) {
@@ -68,11 +76,12 @@ public class SettlementApplicationService {
      * @param settlementApplication
      * @return
      */
-   /* public Tips updateById(Long id, SettlementApplication settlementApplication) {
+    public Tips updateById(Long id, SettlementApplication settlementApplication) {
         settlementApplication.setId(id);
         settlementApplication.setDealAt(Date.from(Instant.now()));
         // 已结算只能结算一次，成功后不可修改
         if (Objects.equals(SettlementStatus.SUCCESS, settlementApplication.getSettlementStatus())) {
+            // FIXME 提交结算时扣减，结算通过操作只写记录
             SettlementApplication findSettlementApplication = settlementApplicationMapper.selectById(id);
             // 结算用户是否一致
             if (!Objects.equals(findSettlementApplication.getDoctorId(), settlementApplication.getDoctorId())) {
@@ -101,20 +110,71 @@ public class SettlementApplicationService {
             if (!balanceUpdated) {
                 return Tips.warn("扣减鲜果师可结算金额失败");
             }
+
+            // ——————————————————————————————————————
+            // 结算成功后写操作记录
+            // 幂等操作
+            DoctorAchievementLog findDoctorAchievementLog = doctorAchievementLogMapper.selectByOrderIdAndType(id, SourceType.SETTLEMENT);
+            if (Objects.nonNull(findDoctorAchievementLog)) {
+                return Tips.warn("该用户结算记录已存在");
+            }
             DoctorAchievementLog doctorAchievementLog = new DoctorAchievementLog();
             doctorAchievementLog.setDoctorId(settlementApplication.getDoctorId());
             doctorAchievementLog.setUserId(findFruitDoctor.getUserId());
             doctorAchievementLog.setAmount(-settlementApplication.getAmount());
             doctorAchievementLog.setSourceType(SourceType.SETTLEMENT);
             doctorAchievementLog.setCreateAt(Date.from(Instant.now()));
+            doctorAchievementLog.setOrderId(id.toString());
             boolean addDoctorAchievementLog = doctorAchievementLogMapper.create(doctorAchievementLog) > 0;
             if (!addDoctorAchievementLog) {
                 return Tips.warn("写鲜果师业绩记录失败");
             }
         }
+        // 状态为未处理或者是已过期时 直接修改
         boolean settlementUpdated = settlementApplicationMapper.updateById(settlementApplication) > 0;
         return settlementUpdated ? Tips.info("结算修改成功") : Tips.warn("结算修改失败");
-    }*/
+    }
+
+    /**
+     * 根据id修改结算申请
+     *
+     * @param id
+     * @return
+     */
+    public Tips refund(Long id) {
+        SettlementApplication settlementApplication = settlementApplicationMapper.selectById(id);
+        // 增加鲜果师可结算金额
+        FruitDoctor findFruitDoctor = fruitDoctorMapper.selectById(settlementApplication.getDoctorId());
+        boolean settlementUpdated = fruitDoctorMapper.updateBouns(Maps.of("id", findFruitDoctor.getId(), "money", settlementApplication.getAmount(), "balanceType","SETTLEMENT")) > 0;
+
+        if (!settlementUpdated) {
+            return Tips.warn("增加鲜果师可结算金额失败");
+        }
+
+        // 结算成功后写操作记录
+        // 幂等操作
+        DoctorAchievementLog findDoctorAchievementLog = doctorAchievementLogMapper.selectByOrderIdAndType(id, SourceType.SETTLEMENT_REFUND);
+        if (Objects.nonNull(findDoctorAchievementLog)) {
+            return Tips.warn("该结算记录退款已存在");
+        }
+        DoctorAchievementLog doctorAchievementLog = new DoctorAchievementLog();
+        doctorAchievementLog.setDoctorId(settlementApplication.getDoctorId());
+        doctorAchievementLog.setUserId(findFruitDoctor.getUserId());
+        doctorAchievementLog.setAmount(settlementApplication.getAmount());
+        doctorAchievementLog.setSourceType(SourceType.SETTLEMENT_REFUND);
+        doctorAchievementLog.setCreateAt(Date.from(Instant.now()));
+        doctorAchievementLog.setOrderId(id.toString());
+        //查询用户的上级鲜果师
+        FruitDoctor doctor = fruitDoctorMapper.findSuperiorFruitDoctorByUserId(findFruitDoctor.getUserId());
+        if (Objects.nonNull(doctor.getId())) {
+            doctorAchievementLog.setSuperiorDoctorId(doctor.getId());
+        }
+        boolean addDoctorAchievementLog = doctorAchievementLogMapper.create(doctorAchievementLog) > 0;
+        if (!addDoctorAchievementLog) {
+            return Tips.warn("写鲜果师业绩记录失败");
+        }
+        return Tips.info("薪资结算退款成功");
+    }
 
     /**
      * Description:根据ids删除结算申请
