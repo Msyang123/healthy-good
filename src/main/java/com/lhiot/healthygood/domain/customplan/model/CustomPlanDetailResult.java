@@ -82,6 +82,6 @@ public class CustomPlanDetailResult {
     /**
      * 关联的定制板块
      */
-    @ApiModelProperty(value = "定制板块ids，英文逗号分隔", dataType = "String")
-    private String customPlanSectionIds;
+    @ApiModelProperty(value = "定制板块ids", dataType = "List")
+    private List<Long> customPlanSectionIds;
 }

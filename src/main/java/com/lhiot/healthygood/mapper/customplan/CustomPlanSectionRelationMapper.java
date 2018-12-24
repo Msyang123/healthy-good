@@ -155,6 +155,6 @@ public interface CustomPlanSectionRelationMapper {
      * @param sectionIds 定制版块ID集合
      * @return 关系集合
      */
-    List<CustomPlanSectionRelation> selectRelationListByPlanId(@Param("planId") Long planId, @Param("sectionIds") String sectionIds);
+    List<CustomPlanSectionRelation> selectRelationListByPlanId(@Param("planId") Long planId, @Param("sectionIds") List<Long> sectionIds);
 
 }
