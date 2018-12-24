@@ -56,7 +56,7 @@ public class CustomOrderApi {
     }
 
     @PostMapping("/custom-orders")
-    @ApiOperation(value = "立即定制-创建定制计划", response = CustomOrder.class)
+    @ApiOperation(value = "立即定制-创建定制计划*", response = CustomOrder.class)
     @ApiHideBodyProperty({"id", "beginCreateAt", "endCreateAt", "user", "rows", "page"})
     public ResponseEntity create(@Valid @RequestBody CustomOrder customOrder, Sessions.User user) {
         Long userId = Long.valueOf(user.getUser().get("userId").toString());
@@ -77,7 +77,7 @@ public class CustomOrderApi {
     }
 
     @DeleteMapping("/custom-orders/{orderCode}")
-    @ApiOperation(value = "取消购买定制计划", response = String.class)
+    @ApiOperation(value = "取消购买定制计划*", response = String.class)
     public ResponseEntity cancel(@PathVariable("orderCode") String orderCode, Sessions.User user) {
         Long userId = Long.valueOf(user.getUser().get("userId").toString());
         ResponseEntity validateOrderOwner = validateOrderOwner(userId, orderCode);
@@ -96,7 +96,7 @@ public class CustomOrderApi {
     }
 
     @PostMapping("/custom-orders/{orderCode}/payment-sign")
-    @ApiOperation(value = "定制计划支付时微信签名", response = String.class)
+    @ApiOperation(value = "定制计划支付时微信签名*", response = String.class)
     public ResponseEntity paymentSign(@PathVariable("orderCode") String orderCode, HttpServletRequest request, Sessions.User user) {
         String openId = user.getUser().get("openId").toString();
         Long userId = Long.valueOf(user.getUser().get("userId").toString());
@@ -121,7 +121,7 @@ public class CustomOrderApi {
 
 
     @PutMapping("/custom-orders/{orderCode}/delivery-pause")
-    @ApiOperation(value = "修改个人购买计划状态（暂停配送）", response = String.class)
+    @ApiOperation(value = "修改个人购买计划状态（暂停配送）*", response = String.class)
     public ResponseEntity deliveryPause(@PathVariable("orderCode") String orderCode, @Valid @RequestBody CustomOrderPause customOrderPause, Sessions.User user) {
         Long userId = Long.valueOf(user.getUser().get("userId").toString());
         ResponseEntity validateOrderOwner = validateOrderOwner(userId, orderCode);
@@ -136,7 +136,7 @@ public class CustomOrderApi {
 
 
     @PutMapping("/custom-orders/{orderCode}/delivery-recovery")
-    @ApiOperation(value = "修改个人购买计划状态（恢复配送）", response = String.class)
+    @ApiOperation(value = "修改个人购买计划状态（恢复配送）*", response = String.class)
     public ResponseEntity deliveryRecovery(@PathVariable("orderCode") String orderCode, Sessions.User user) {
         Long userId = Long.valueOf(user.getUser().get("userId").toString());
         ResponseEntity validateOrderOwner = validateOrderOwner(userId, orderCode);
@@ -149,7 +149,7 @@ public class CustomOrderApi {
     }
 
     @PutMapping("/custom-orders/{orderCode}/delivery-time")
-    @ApiOperation(value = "修改个人购买计划配送时间", response = String.class)
+    @ApiOperation(value = "修改个人购买计划配送时间*", response = String.class)
     public ResponseEntity deliveryTime(@PathVariable("orderCode") String orderCode,
                                        @Valid @NotBlank @RequestParam("deliveryTime") String deliveryTime,
                                        Sessions.User user) {
@@ -167,7 +167,7 @@ public class CustomOrderApi {
     }
 
     @PutMapping("/custom-orders/{orderCode}/extraction")
-    @ApiOperation(value = "手动提取套餐", response = OrderDetailResult.class)
+    @ApiOperation(value = "手动提取套餐*", response = OrderDetailResult.class)
     public ResponseEntity extraction(@PathVariable("orderCode") String orderCode,
                                      @RequestParam("remark") String remark,
                                      @Valid @NotBlank @RequestParam("deliveryTime") String deliveryTime,
@@ -190,7 +190,7 @@ public class CustomOrderApi {
     }
 
     @GetMapping("/custom-orders/count/status")
-    @ApiOperation(value = "我的定制订单状态统计")
+    @ApiOperation(value = "我的定制订单状态统计*")
     public ResponseEntity<CustomOrderGroupCount> statusCount(Sessions.User user) {
         Long userId = Long.valueOf(user.getUser().get("userId").toString());
         return ResponseEntity.ok(customOrderService.statusCount(userId).getData());
@@ -198,7 +198,7 @@ public class CustomOrderApi {
 
 
     @PostMapping("/custom-orders/status")
-    @ApiOperation(value = "我的订单状态列表")
+    @ApiOperation(value = "我的订单状态列表*")
     public ResponseEntity<Pages<CustomOrder>> customOrderList(@RequestBody CustomOrder customOrder, Sessions.User user) {
         Long userId = Long.valueOf(user.getUser().get("userId").toString());
         customOrder.setUserId(userId);
@@ -206,7 +206,7 @@ public class CustomOrderApi {
     }
 
     @GetMapping("/custom-orders/{orderCode}/detail")
-    @ApiOperation(value = "个人购买定制计划-定制详情", response = CustomOrder.class)
+    @ApiOperation(value = "个人购买定制计划-定制详情*", response = CustomOrder.class)
     public ResponseEntity customOrderDetail(@PathVariable("orderCode") String orderCode, Sessions.User user) {
         Long userId = Long.valueOf(user.getUser().get("userId").toString());
         ResponseEntity validateOrderOwner = validateOrderOwner(userId, orderCode);

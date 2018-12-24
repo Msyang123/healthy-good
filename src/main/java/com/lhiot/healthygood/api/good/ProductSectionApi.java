@@ -115,7 +115,7 @@ public class ProductSectionApi {
 
     @GetMapping("/product/{id}")
     @ApiImplicitParam(paramType = ApiParamType.PATH, name = "id", value = "商品上架Id", dataType = "Long", required = true)
-    @ApiOperation(value = "查询商品详情",response = ProductDetailResult.class)
+    @ApiOperation(value = "查询商品详情*",response = ProductDetailResult.class)
     public ResponseEntity singeProduct(Sessions.User user, @PathVariable(value = "id") Long id) {
         ResponseEntity<ProductShelf> productShelfResponseEntity = baseDataServiceFeign.singleShelf(id,true);
         if (Objects.isNull(productShelfResponseEntity) || productShelfResponseEntity.getStatusCode().isError()) {
@@ -171,7 +171,7 @@ public class ProductSectionApi {
 
     @GetMapping("/product/cart")
     @ApiImplicitParam(paramType = ApiParamType.QUERY, name = "ids", value = "商品上架Ids", dataType = "String", required = true)
-    @ApiOperation(value = "查询用户购物车商品", response = ProductShelf.class, responseContainer = "List")
+    @ApiOperation(value = "查询用户购物车商品*", response = ProductShelf.class, responseContainer = "List")
     public ResponseEntity cart(Sessions.User user, @RequestParam(value = "ids") String ids) {
         ProductShelfParam productShelfParam = new ProductShelfParam();
         productShelfParam.setIds(ids);

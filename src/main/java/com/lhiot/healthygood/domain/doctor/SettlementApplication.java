@@ -31,6 +31,10 @@ public class SettlementApplication {
     @ApiModelProperty(value = "id", dataType = "Long")
     private Long id;
 
+    @JsonProperty("openId")
+    @ApiModelProperty(value = "openId", dataType = "String")
+    private String openId;
+
     /**
      * 申请人（鲜果师编号）
      */

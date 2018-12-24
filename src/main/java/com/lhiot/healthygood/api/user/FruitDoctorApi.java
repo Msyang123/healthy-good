@@ -83,7 +83,7 @@ public class FruitDoctorApi {
     }
 
     @PostMapping("/qualifications")
-    @ApiOperation(value = "添加鲜果师申请记录", response = RegisterApplication.class)
+    @ApiOperation(value = "添加鲜果师申请记录*", response = RegisterApplication.class)
     @ApiImplicitParam(paramType = "body", name = "registerApplication", value = "要添加的鲜果师申请记录", required = true, dataType = "RegisterApplication")
     public ResponseEntity qualifications(Sessions.User user, @RequestBody RegisterApplication registerApplication) {
         log.debug("添加鲜果师申请记录\t param:{}", registerApplication);
@@ -141,7 +141,7 @@ public class FruitDoctorApi {
     }
 
     @PostMapping("/settlement")
-    @ApiOperation(value = "申请提现红利")
+    @ApiOperation(value = "申请提现红利*")
     @ApiImplicitParams({
             @ApiImplicitParam(paramType = "query", name = "amount", value = "申请提现红利", required = true, dataType = "int")
     })
@@ -159,13 +159,12 @@ public class FruitDoctorApi {
         LocalDate fifteen = LocalDate.of(localDate.getYear(), localDate.getMonth(), 15);
         //每月17号
         LocalDate seventeen = LocalDate.of(localDate.getYear(), localDate.getMonth(), 17);
-        if (localDate.isBefore(fifteen) || localDate.isAfter(seventeen)) {
+        /*if (localDate.isBefore(fifteen) || localDate.isAfter(seventeen)) {
             return ResponseEntity.badRequest().body("不在每月15-17日申请时间段内");
-        }
+        }*/
         //查询申请金额是否超过实际金额
-        IncomeStat incomeStat = doctorAchievementLogService.myIncome(fruitDoctor.getId());
-        if (incomeStat.getBonusCanBeSettled() == null || incomeStat.getBonusCanBeSettled().longValue() < amount) {
-            return ResponseEntity.badRequest().body("申请红利超过可结算红利");
+        if (Objects.isNull(fruitDoctor.getSettlement()) || fruitDoctor.getSettlement() < amount) {
+            return ResponseEntity.badRequest().body("申请金额超过可结算余额");
         }
         SettlementApplication settlementApplication = new SettlementApplication();
 
@@ -173,10 +172,11 @@ public class FruitDoctorApi {
         settlementApplication.setDoctorId(fruitDoctor.getId());
         settlementApplication.setCreateAt(Date.from(Instant.now()));
         settlementApplication.setSettlementStatus(SettlementStatus.UNSETTLED);
+        settlementApplication.setOpenId(user.getUser().get("openId").toString());
         int result = settlementApplicationService.create(settlementApplication);
         if (result > 0) {
             try {
-                settlementApplicationService.settlementApplicationSendToQueue(settlementApplication);
+                settlementApplicationService.settlementApplicationSendTemplate(settlementApplication);
             } catch (JsonProcessingException e) {
                 e.printStackTrace();
             }
@@ -262,7 +262,7 @@ public class FruitDoctorApi {
     }*/
 
     @PutMapping("/remark")
-    @ApiOperation(value = "鲜果师修改用户备注")
+    @ApiOperation(value = "鲜果师修改用户备注*")
     @ApiImplicitParam(paramType = "body", name = "DoctorCustomer", value = "鲜果师修改用户备注实体信息", required = true, dataType = "DoctorCustomer")
     public ResponseEntity updateRemarkName(Sessions.User user, @RequestBody DoctorCustomer DoctorCustomer) {
         String userId = user.getUser().get("userId").toString();
@@ -282,7 +282,7 @@ public class FruitDoctorApi {
 
 
     @GetMapping("/subordinate")
-    @ApiOperation(value = "团队列表", response = FruitDoctor.class, responseContainer = "Set")
+    @ApiOperation(value = "团队列表*", response = FruitDoctor.class, responseContainer = "Set")
     public ResponseEntity team(Sessions.User user) {
         String userId = user.getUser().get("userId").toString();
         FruitDoctor fruitDoctor = fruitDoctorService.selectByUserId(Long.valueOf(userId));
@@ -295,7 +295,7 @@ public class FruitDoctorApi {
     }
 
     @GetMapping("/page")
-    @ApiOperation(value = "查询鲜果师成员分页列表", response = FruitDoctor.class, responseContainer = "Set")
+    @ApiOperation(value = "查询鲜果师成员分页列表*", response = FruitDoctor.class, responseContainer = "Set")
     public ResponseEntity pageQuery(Sessions.User user) {
         String userId = user.getUser().get("userId").toString();
         FruitDoctor fruitDoctor = fruitDoctorService.selectByUserId(Long.valueOf(userId));
@@ -356,7 +356,7 @@ public class FruitDoctorApi {
             @ApiImplicitParam(paramType = "query", name = "rows", dataType = "int", required = true, value = "数据多少条"),
             @ApiImplicitParam(paramType = "query", name = "incomeType", dataTypeClass = IncomeType.class, required = true, value = "收入支出类型")
     })
-    @ApiOperation(value = "收支明细", response = DoctorAchievementLog.class, responseContainer = "Set")
+    @ApiOperation(value = "收支明细*", response = DoctorAchievementLog.class, responseContainer = "Set")
     public ResponseEntity pageQuery(Sessions.User user, @RequestParam IncomeType incomeType, @RequestParam Integer page, @RequestParam Integer rows) {
         String userId = user.getUser().get("userId").toString();
         FruitDoctor fruitDoctor = fruitDoctorService.selectByUserId(Long.valueOf(userId));
@@ -372,7 +372,7 @@ public class FruitDoctorApi {
     }
 
     @GetMapping("/incomes")
-    @ApiOperation(value = "我的收入", response = IncomeStat.class, responseContainer = "Set")
+    @ApiOperation(value = "我的收入*", response = IncomeStat.class, responseContainer = "Set")
     public ResponseEntity myIncome(Sessions.User user) {
         String userId = user.getUser().get("userId").toString();
         FruitDoctor fruitDoctor = fruitDoctorService.selectByUserId(Long.valueOf(userId));
@@ -395,7 +395,7 @@ public class FruitDoctorApi {
         return ResponseEntity.ok(doctorAchievementLogService.teamAchievement(doctorId));
     }
 
-    @ApiOperation(value = "统计本期和上期的日周月季度的业绩", response = Achievement.class, responseContainer = "Set")
+    @ApiOperation(value = "统计本期和上期的日周月季度的业绩*", response = Achievement.class, responseContainer = "Set")
     @ApiImplicitParam(paramType = "query", name = "dateType", dataTypeClass = DateTypeEnum.class, required = true, value = "统计的类型")
     @GetMapping("/achievement/period")
     public ResponseEntity findAchievement(Sessions.User user, @RequestParam DateTypeEnum dateType) {
@@ -417,7 +417,7 @@ public class FruitDoctorApi {
         return ResponseEntity.ok(achievementMap);
     }
 
-    @ApiOperation(value = "统计今日业绩订单数及总的业绩", response = Achievement.class, responseContainer = "Set")
+    @ApiOperation(value = "统计今日业绩订单数及总的业绩*", response = Achievement.class, responseContainer = "Set")
     @GetMapping("/achievement")
     public ResponseEntity findTodayAchievement(Sessions.User user) {
         String userId = user.getUser().get("userId").toString();
@@ -450,7 +450,7 @@ public class FruitDoctorApi {
     }
 
     @PostMapping("/bank-card")
-    @ApiOperation(value = "银行卡添加")
+    @ApiOperation(value = "银行卡添加*")
     @ApiImplicitParam(paramType = "body", name = "cardUpdateLog", value = "要添加的", required = true, dataType = "CardUpdateLog")
     public ResponseEntity create(Sessions.User user, @RequestBody CardUpdateLog cardUpdateLog) {
         log.debug("添加\t param:{}", cardUpdateLog);
@@ -466,7 +466,7 @@ public class FruitDoctorApi {
         return ResponseEntity.ok(cardUpdateLogService.create(cardUpdateLog) > 0 ? "添加成功" : "添加失败");
     }
 
-    @ApiOperation(value = "查询鲜果师银行卡信息", notes = "根据session里的doctorId查询", response = CardUpdateLog.class)
+    @ApiOperation(value = "查询鲜果师银行卡信息*", notes = "根据session里的doctorId查询", response = CardUpdateLog.class)
     @GetMapping("/bank-card")
     public ResponseEntity findCardUpdateLog(Sessions.User user) {
         String userId = user.getUser().get("userId").toString();
@@ -479,7 +479,7 @@ public class FruitDoctorApi {
         return ResponseEntity.ok(cardUpdateLogService.selectByCard(cardUpdateLog));
     }
 
-    @ApiOperation(value = "查询鲜果师最新申请记录", notes = "查询鲜果师最新申请记录", response = RegisterApplication.class)
+    @ApiOperation(value = "查询鲜果师最新申请记录*", notes = "查询鲜果师最新申请记录", response = RegisterApplication.class)
     @GetMapping("/new-application")
     public ResponseEntity<RegisterApplication> findLastApplicationById(Sessions.User user) {
         Long userId = Long.valueOf(user.getUser().get("userId").toString());
@@ -487,7 +487,7 @@ public class FruitDoctorApi {
     }
 
     @GetMapping("/customers")
-    @ApiOperation(value = "查询鲜果师客户列表", response = DoctorCustomer.class, responseContainer = "List")
+    @ApiOperation(value = "查询鲜果师客户列表*", response = DoctorCustomer.class, responseContainer = "List")
     public ResponseEntity doctorCustomers(Sessions.User user) {
         String userId = user.getUser().get("userId").toString();
         FruitDoctor fruitDoctor = fruitDoctorService.selectByUserId(Long.valueOf(userId));
@@ -627,7 +627,7 @@ public class FruitDoctorApi {
     }
 
     @PutMapping("/info")
-    @ApiOperation(value = "修改鲜果师信息")
+    @ApiOperation(value = "修改鲜果师信息*")
     @ApiImplicitParam(paramType = "body", name = "fruitDoctor", value = "要更新的鲜果师成员", required = true, dataType = "FruitDoctor")
     public ResponseEntity update(Sessions.User user, @RequestBody FruitDoctor fruitDoctor) {
         String userId = user.getUser().get("userId").toString();

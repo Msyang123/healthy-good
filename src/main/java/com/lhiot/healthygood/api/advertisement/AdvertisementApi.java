@@ -20,7 +20,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.Objects;
 
 
-@Api(description = "广告类接口")
+@Api(description = "广告类接口(no session)")
 @Slf4j
 @RestController
 public class AdvertisementApi {

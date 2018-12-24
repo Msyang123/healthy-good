@@ -25,7 +25,7 @@ import java.net.URI;
 /**
  * @author hufan created in 2018/11/27 10:42
  **/
-@Api(description = "定制板块接口")
+@Api(description = "定制板块接口(no session)")
 @Slf4j
 @RestController
 public class CustomPlanSectionApi {
