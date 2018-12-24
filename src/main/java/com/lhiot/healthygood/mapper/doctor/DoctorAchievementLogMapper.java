@@ -5,7 +5,9 @@ import com.lhiot.healthygood.domain.doctor.Achievement;
 import com.lhiot.healthygood.domain.doctor.DoctorAchievementLog;
 import com.lhiot.healthygood.domain.doctor.IncomeStat;
 import com.lhiot.healthygood.domain.doctor.TeamAchievement;
+import com.lhiot.healthygood.type.SourceType;
 import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -105,10 +107,12 @@ public interface DoctorAchievementLogMapper {
 	//统计鲜果师的业绩
 	Achievement achievement(Map<String, Object> map);
 
-	//根据订单id查询记录
+	//根据订单id查询记录 FIXME 数据库查询为id
 	DoctorAchievementLog selectByOrderId(Long orderId);
 
-	Integer selectFruitDoctorCommission(Long id);
+    DoctorAchievementLog selectByOrderIdAndType(@Param("orderId") Long orderId, @Param("sourceType") SourceType sourceType);
+
+    Integer selectFruitDoctorCommission(Long id);
 
 	Integer superiorBonusOfMonth(Map<String,Object> map);
 }
