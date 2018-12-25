@@ -31,7 +31,6 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Date;
-import java.util.Map;
 import java.util.Objects;
 
 @Api(description = "鲜果币接口")
@@ -59,7 +58,7 @@ public class BalanceApi {
 
     @PostMapping("/recharge/payment-sign")
     @ApiOperation("充值签名")
-    public ResponseEntity<String> paymentSign(@RequestBody WxPayModel paySign, HttpServletRequest request, Sessions.User user) {
+    public ResponseEntity paymentSign(@RequestBody WxPayModel paySign, HttpServletRequest request, Sessions.User user) {
         String openId = user.getUser().get("openId").toString();
         Long userId = Long.valueOf(user.getUser().get("userId").toString());
 
@@ -73,12 +72,7 @@ public class BalanceApi {
         paySign.setSourceType(SourceType.RECHARGE);
         paySign.setUserId(userId);
         paySign.setAttach(user.getUser().get("userId").toString());
-        ResponseEntity<Map> responseEntity = paymentServiceFeign.wxJsSign(paySign);
-        if (Objects.isNull(responseEntity) || responseEntity.getStatusCode().isError()) {
-            log.error("调用基础服务充值签名错误{}", responseEntity);
-            return ResponseEntity.badRequest().body("调用错误");
-        }
-        return ResponseEntity.ok(Jackson.json(responseEntity.getBody()));
+        return paymentServiceFeign.wxJsSign(paySign);
     }
 
     @PostMapping("/balance/order/payment")
