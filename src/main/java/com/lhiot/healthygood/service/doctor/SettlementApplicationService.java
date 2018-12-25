@@ -81,37 +81,7 @@ public class SettlementApplicationService {
         settlementApplication.setDealAt(Date.from(Instant.now()));
         // 已结算只能结算一次，成功后不可修改
         if (Objects.equals(SettlementStatus.SUCCESS, settlementApplication.getSettlementStatus())) {
-            // FIXME 提交结算时扣减，结算通过操作只写记录
-            SettlementApplication findSettlementApplication = settlementApplicationMapper.selectById(id);
-            // 结算用户是否一致
-            if (!Objects.equals(findSettlementApplication.getDoctorId(), settlementApplication.getDoctorId())) {
-                return Tips.warn("要结算的用户不一致，结算失败");
-            }
-            // 该条结算记录是否已结算过
-            if (Objects.equals(SettlementStatus.SUCCESS, findSettlementApplication.getSettlementStatus())) {
-                return Tips.warn("请勿重复结算");
-            }
             FruitDoctor findFruitDoctor = fruitDoctorMapper.selectById(settlementApplication.getDoctorId());
-            if (Objects.isNull(findFruitDoctor)) {
-                return Tips.warn("鲜果师不存在！");
-            }
-            // 该鲜果师的可结算金额是否大于申请结算金额
-            if (settlementApplication.getAmount() > findFruitDoctor.getSettlement()) {
-                return Tips.warn("申请结算金额大于用户可结算金额，结算失败");
-            }
-
-            boolean settlementUpdated = settlementApplicationMapper.updateById(settlementApplication) > 0;
-            if (!settlementUpdated) {
-                return Tips.warn("结算修改失败");
-            }
-            // 结算状态修改成功后扣减用户可结算金额
-            findFruitDoctor.setSettlement(findFruitDoctor.getSettlement() - settlementApplication.getAmount());
-            boolean balanceUpdated = fruitDoctorMapper.updateById(findFruitDoctor) > 0;
-            if (!balanceUpdated) {
-                return Tips.warn("扣减鲜果师可结算金额失败");
-            }
-
-            // ——————————————————————————————————————
             // 结算成功后写操作记录
             // 幂等操作
             DoctorAchievementLog findDoctorAchievementLog = doctorAchievementLogMapper.selectByOrderIdAndType(id, SourceType.SETTLEMENT);
