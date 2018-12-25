@@ -187,20 +187,17 @@ public class SettlementApplicationService {
         DataObject first = new DataObject();
         DataObject keyword1 = new DataObject();
         DataObject keyword2 = new DataObject();
-        DataObject keyword3 = new DataObject();
-        DataObject keyword4 = new DataObject();
         DataObject remark = new DataObject();
 
         first.setValue(FirstAndRemarkData.NOTICE_OF_PRESENTATION.getFirstData());
-        keyword1.setValue(TemplateMessageEnum.NOTICE_OF_PRESENTATION.getTemplateName());
-        keyword2.setValue(currentTime);
-        keyword3.setValue(fee);
-        keyword4.setValue(FirstAndRemarkData.NOTICE_OF_PRESENTATION.getRemarkData());
+        keyword1.setValue(currentTime);
+        keyword2.setValue(fee);
+        remark.setValue(FirstAndRemarkData.NOTICE_OF_PRESENTATION.getRemarkData());
 
         dataItem.setFirst(first);
         dataItem.setKeyword1(keyword1);
         dataItem.setKeyword2(keyword2);
-        dataItem.setKeyword3(keyword3);
+        dataItem.setRemark(remark);
         weChatUtil.sendMessageToWechat(TemplateMessageEnum.NOTICE_OF_PRESENTATION, settlementApplication.getOpenId(), dataItem);
 
     }
