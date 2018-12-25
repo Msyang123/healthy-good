@@ -1,9 +1,6 @@
 package com.lhiot.healthygood.feign.model;
 
-import com.lhiot.healthygood.feign.type.AllowRefund;
-import com.lhiot.healthygood.feign.type.ApplicationType;
-import com.lhiot.healthygood.feign.type.HdStatus;
-import com.lhiot.healthygood.feign.type.OrderStatus;
+import com.lhiot.healthygood.feign.type.*;
 import com.lhiot.healthygood.type.ReceivingWay;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
@@ -62,7 +59,11 @@ public class OrderDetailResult {
     private AllowRefund allowRefund = AllowRefund.YES;
     @ApiModelProperty(notes = "订单创建时间",dataType = "Date")
     private Date createAt;
-    @ApiModelProperty(notes = "订单商品", dataType = "java.util.list")
+    @ApiModelProperty(notes = "支付Id",dataType = "String")
+    private String payId;
+    @ApiModelProperty(notes = "支付类型", dataType = "TradeType")
+    private TradeType tradeType;
+    @ApiModelProperty(notes = "订单商品", dataType = "List")
     private List<OrderProduct> orderProductList;
     @ApiModelProperty(notes = "订单门店信息", dataType = "OrderStore")
     private OrderStore orderStore;

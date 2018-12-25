@@ -344,7 +344,21 @@ public class OrderApi {
     @GetMapping("/orders/{orderCode}/detail")
     @ApiOperation(value = "根据订单code查询订单详情", response = OrderDetailResult.class)
     public ResponseEntity orderDetial(@Valid @NotBlank @PathVariable("orderCode") String orderCode) {
-        return orderServiceFeign.orderDetail(orderCode, true, true);
+       ResponseEntity<OrderDetailResult> orderDetailResultResponseEntity = orderServiceFeign.orderDetail(orderCode, true, true);
+       Tips<OrderDetailResult> orderDetailResultTips = FeginResponseTools.convertResponse(orderDetailResultResponseEntity);
+       if(orderDetailResultTips.err()){
+           return orderDetailResultResponseEntity;
+       }
+       if(StringUtils.isNotBlank(orderDetailResultTips.getData().getPayId())){
+           ResponseEntity<Record> payLog = paymentServiceFeign.one(orderDetailResultTips.getData().getPayId());
+           Tips<Record> recordTips = FeginResponseTools.convertResponse(payLog);
+           if(recordTips.err()){
+               return orderDetailResultResponseEntity;
+           }
+           //设置支付类型
+           orderDetailResultResponseEntity.getBody().setTradeType(recordTips.getData().getTradeType());
+       }
+       return orderDetailResultResponseEntity;
     }
 
     @GetMapping("/orders/count/status")
