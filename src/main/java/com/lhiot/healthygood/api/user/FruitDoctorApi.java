@@ -115,6 +115,7 @@ public class FruitDoctorApi {
             return ResponseEntity.badRequest().body("未找到该用户审核记录");
         }
         registerApplication.setId(id);
+        registerApplication.setAuditAt(Date.from(Instant.now()));
         Tips tips = registerApplicationService.updateById(registerApplication);
         if (tips.err()) {
             return ResponseEntity.badRequest().body(tips.getMessage());

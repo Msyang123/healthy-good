@@ -220,14 +220,16 @@
             parameterType="com.lhiot.healthygood.domain.customplan.CustomPlanSection">
         select
         <include refid="Relation_Column_List"/>
-        from custom_plan_section s
-        left join custom_plan_section_relation r on s.id = r.section_id
-        left join custom_plan p on r.plan_id = p.id
+        from
+        (select<include refid="Base_Column_List"/>
+        from custom_plan_section
         <include refid="Base_Where_Condition"/>
         <if test="rows != null and rows > 0 ">
-            order by s.id desc
             limit #{startRow} , #{rows}
-        </if>
+        </if>) s
+        left join custom_plan_section_relation r on s.id = r.section_id
+        left join custom_plan p on r.plan_id = p.id
+        order by s.id desc
     </select>
 
     <!--查询定制计划板块总记录-->
@@ -235,8 +237,6 @@
             parameterType="com.lhiot.healthygood.domain.customplan.CustomPlanSection">
         select count(1)
         from custom_plan_section s
-        left join custom_plan_section_relation r on s.id = r.section_id
-        left join custom_plan p on r.plan_id = p.id
         <include refid="Base_Where_Condition"/>
     </select>
 

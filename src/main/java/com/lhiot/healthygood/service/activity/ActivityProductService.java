@@ -80,7 +80,7 @@ public class ActivityProductService {
             // 一个定制板块活动只会关联一个商品板块,如果有多个活动则要修改
             ActivitySectionRelation relation = activitySectionRelationMapper.selectRelation(Maps.of("activityId", activityId));
             // 根据板块id和上架id在基础服务中添加关联关系
-            ResponseEntity entity = baseDataServiceFeign.create(new ProductSectionRelation(null, relation.getSectionId(), productShelfId));
+            ResponseEntity entity = baseDataServiceFeign.create(new ProductSectionRelation(null, productShelfId, relation.getSectionId()));
             if (entity.getStatusCode().isError()) {
                 return Tips.warn((String) entity.getBody());
             }
@@ -111,18 +111,18 @@ public class ActivityProductService {
             return Tips.warn("修改活动商品失败");
         }
         // 修改上架商品与新品尝鲜板块的关联
-        // 先删除 再新增
-        @NotNull(message = "活动id不为空") Long activityId = activityProduct.getActivityId();
-        // 一个定制板块活动只会关联一个商品板块,如果有多个活动则要修改
-        ActivitySectionRelation relation = activitySectionRelationMapper.selectRelation(Maps.of("activityId", activityId));
-        ResponseEntity deleteEntity = baseDataServiceFeign.deleteBatch(relation.getSectionId(), beforeShelfId.toString());
-        if (deleteEntity.getStatusCode().isError()) {
-            return Tips.warn((String) deleteEntity.getBody());
-        }
-        ResponseEntity addEntity = baseDataServiceFeign.create(new ProductSectionRelation(null, relation.getSectionId(), activityProduct.getProductShelfId()));
-        if (addEntity.getStatusCode().isError()) {
-            return Tips.warn((String) addEntity.getBody());
-        }
+//        // 先删除 再新增
+//        @NotNull(message = "活动id不为空") Long activityId = activityProduct.getActivityId();
+//        // 一个定制板块活动只会关联一个商品板块,如果有多个活动则要修改
+//        ActivitySectionRelation relation = activitydeleteBatchSectionRelationMapper.selectRelation(Maps.of("activityId", activityId));
+//        ResponseEntity deleteEntity = baseDataServiceFeign.deleteBatch(relation.getSectionId(), beforeShelfId.toString());
+//        if (deleteEntity.getStatusCode().isError()) {
+//            return Tips.warn((String) deleteEntity.getBody());
+//        }
+//        ResponseEntity addEntity = baseDataServiceFeign.create(new ProductSectionRelation(null, relation.getSectionId(), activityProduct.getProductShelfId()));
+//        if (addEntity.getStatusCode().isError()) {
+//            return Tips.warn((String) addEntity.getBody());
+//        }
         return Tips.info("修改活动商品成功");
     }
 
@@ -166,6 +166,7 @@ public class ActivityProductService {
      * @return 活动商品信息列表
      */
     public Tips<Pages<ActivityProductResult>> findList(ActivityProductParam param) {
+        List<ActivityProductResult> results = new ArrayList<>();
         // 查询活动商品信息
         ActivityProduct activityProduct = new ActivityProduct();
         BeanUtils.of(activityProduct).populate(param);
@@ -195,39 +196,46 @@ public class ActivityProductService {
         int total = pageFlag ? this.count(activityProduct) : activityProductList.size();
 
         // 查询商品上架信息
-        List<Long> shelfIdList = activityProductList.stream().map(ActivityProduct::getProductShelfId).collect(Collectors.toList());
-        String shelfIds = StringUtils.collectionToDelimitedString(shelfIdList, ",");
-        ProductShelfParam productShelfParam = new ProductShelfParam();
-        productShelfParam.setIds(shelfIds);
-        productShelfParam.setIncludeProduct(true);
-        ResponseEntity productShelfEntity = baseDataServiceFeign.searchProductShelves(productShelfParam);
-        if (productShelfEntity.getStatusCode().isError()) {
-            return Tips.warn((String) productShelfEntity.getBody());
-        }
-        Pages<ProductShelf> productShelfPages = (Pages<ProductShelf>) productShelfEntity.getBody();
-        List<ProductShelf> productShelfList = productShelfPages.getArray();
-
-        // 结果转换
-        List<ActivityProductResult> results = new ArrayList<>();
-        // List<ActivityProduct> 转换为  List<ActivityProductResult>
-        activityProductList.forEach(item -> {
-            ActivityProductResult activityProductResult = new ActivityProductResult();
-            BeanUtils.copyProperties(item, activityProductResult);
-            ProductShelf productShelf = productShelfList.get(activityProductList.indexOf(item));
-            BeanUtils.copyProperties(productShelf,activityProductResult);
-            ProductSpecification productSpecification = productShelf.getProductSpecification();
-            if (Objects.nonNull(productSpecification)) {
-                String specification = productSpecification.getWeight() + productSpecification.getPackagingUnit() + "*" + productSpecification.getSpecificationQty() + "份";
-                activityProductResult.setSpecification(specification);
-                activityProductResult.setProductShelfId(productShelf.getShelfId());
-                activityProductResult.setBarcode(productSpecification.getBarcode());
-                activityProductResult.setId(item.getId());
-                activityProductResult.setActivityPrice(item.getActivityPrice());
-                String specificationInfo = productShelf.getName() + " " + specification + " [" + productSpecification.getBarcode() + "]";
-                activityProductResult.setSpecificationInfo(specificationInfo);
-                results.add(activityProductResult);
+        if (!CollectionUtils.isEmpty(activityProductList)) {
+            List<Long> shelfIdList = activityProductList.stream().map(ActivityProduct::getProductShelfId).collect(Collectors.toList());
+            String shelfIds = StringUtils.collectionToDelimitedString(shelfIdList, ",");
+            ProductShelfParam productShelfParam = new ProductShelfParam();
+            productShelfParam.setIds(shelfIds);
+            productShelfParam.setIncludeProduct(true);
+            ResponseEntity productShelfEntity = baseDataServiceFeign.searchProductShelves(productShelfParam);
+            if (productShelfEntity.getStatusCode().isError()) {
+                return Tips.warn((String) productShelfEntity.getBody());
             }
-        });
+            if (Objects.nonNull(productShelfEntity.getBody())){
+                Pages<ProductShelf> productShelfPages = (Pages<ProductShelf>) productShelfEntity.getBody();
+                List<ProductShelf> productShelfList = productShelfPages.getArray();
+                // 结果转换
+                // List<ActivityProduct> 转换为  List<ActivityProductResult>
+                activityProductList.forEach(item -> {
+                    ActivityProductResult activityProductResult = new ActivityProductResult();
+                    BeanUtils.copyProperties(item, activityProductResult);
+                    productShelfList.forEach(productShelf -> {
+                        if (Objects.equals(activityProductResult.getProductShelfId(), productShelf.getId())){
+                            BeanUtils.copyProperties(productShelf,activityProductResult);
+                            ProductSpecification productSpecification  = productShelf.getProductSpecification();
+                            if (Objects.nonNull(productSpecification)) {
+                                String specification = productSpecification.getWeight() + productSpecification.getPackagingUnit() + "*" + productSpecification.getSpecificationQty() + "份";
+                                activityProductResult.setSpecification(specification);
+                                activityProductResult.setProductShelfId(productShelf.getShelfId());
+                                activityProductResult.setBarcode(productSpecification.getBarcode());
+                                activityProductResult.setId(item.getId());
+                                activityProductResult.setActivityPrice(item.getActivityPrice());
+                                String specificationInfo = productShelf.getName() + " " + specification + " [" + productSpecification.getBarcode() + "]";
+                                activityProductResult.setSpecificationInfo(specificationInfo);
+                                results.add(activityProductResult);
+                            }
+                        }
+                    });
+                });
+            }
+        }
+
+
         return Tips.<Pages<ActivityProductResult>>empty().data(Pages.of(total, results));
     }
 

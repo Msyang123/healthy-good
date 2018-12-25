@@ -115,13 +115,6 @@ public class CustomPlanSectionService {
      */
     public Tips batchDeleteByIds(String ids) {
         // 定制板块是否关联了定制计划
-        List<Map<String, Object>> relationList = customPlanSectionRelationMapper.findBySectionIdsAndPlanIds(ids, null);
-        if (!relationList.isEmpty()) {
-            List<String> resultList = new ArrayList<>();
-            relationList.forEach(section -> resultList.add(section.get("sectionId").toString()));
-            List<String> id = resultList.stream().distinct().collect(Collectors.toList());
-            return Tips.warn("以下定制板块id不可删除:" + id);
-        }
         return customPlanSectionMapper.deleteByIds(Arrays.asList(ids.split(","))) > 0 ? Tips.info("删除成功") : Tips.warn("删除失败");
     }
 
