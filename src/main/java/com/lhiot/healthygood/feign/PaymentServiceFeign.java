@@ -63,7 +63,7 @@ public interface PaymentServiceFeign {
 
 
     //按支付单号查询一个支付记录
-    @RequestMapping(value = "/records/{outTradeNo}", method = RequestMethod.PUT)
+    @RequestMapping(value = "/records/{outTradeNo}", method = RequestMethod.GET)
     ResponseEntity<Record> one(@Valid @PathVariable("outTradeNo") String outTradeNo);
     /**********修改支付日志信息************************/
 
