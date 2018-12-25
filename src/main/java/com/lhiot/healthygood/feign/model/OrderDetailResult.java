@@ -57,7 +57,7 @@ public class OrderDetailResult {
     @ApiModelProperty(notes = "用户昵称", dataType = "String")
     private String nickname;
     @ApiModelProperty(notes = "配送时间段  eg {display:'立即配送',startTime:'2018-12-22 00:00:00',endTime:'2018-12-22 01:00:00'}", dataType = "String")
-    private String deliverTime;
+    private String deliverAt;
     @ApiModelProperty(notes = "是否允许退款YES是NO否", dataType = "AllowRefund")
     private AllowRefund allowRefund = AllowRefund.YES;
     @ApiModelProperty(notes = "订单创建时间",dataType = "Date")

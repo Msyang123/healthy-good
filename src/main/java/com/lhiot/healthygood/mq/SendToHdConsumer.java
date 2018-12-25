@@ -4,8 +4,6 @@ import com.leon.microx.amqp.RabbitInitializer;
 import com.leon.microx.probe.collector.ProbeEventPublisher;
 import com.leon.microx.util.Maps;
 import com.lhiot.healthygood.feign.OrderServiceFeign;
-import com.lhiot.healthygood.mapper.customplan.CustomOrderPauseMapper;
-import com.lhiot.healthygood.service.customplan.CustomOrderService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.annotation.RabbitHandler;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
@@ -38,6 +36,7 @@ public class SendToHdConsumer {
     @RabbitHandler
     @RabbitListener(queues = HealthyGoodQueue.DelayQueue.SEND_TO_HD_CONSUMER)
     public void sendToHd(String orderCode) {
+        log.info("配送时间内发送到基础订单修改为配送状态:{}",orderCode);
         try {
             ResponseEntity responseEntity = orderServiceFeign.sendOrderToHd(orderCode);
             if (Objects.isNull(responseEntity)) {

@@ -81,7 +81,6 @@ public class BalanceApi {
         return ResponseEntity.ok(Jackson.json(responseEntity.getBody()));
     }
 
-
     @PostMapping("/balance/order/payment")
     @ApiOperation(value = "鲜果币支付普通订单接口*")
     public ResponseEntity balanceOrderPayment(@RequestBody BalancePayModel balancePayModel, Sessions.User user) {
@@ -123,7 +122,7 @@ public class BalanceApi {
         OrderDetailResult order = (OrderDetailResult) orderDetailResultResponseEntity.getBody();
         fruitDoctorService.calculationCommission(order);//鲜果师业绩提成
         //延迟发送海鼎
-        orderService.delaySendToHd(orderCode, Jackson.object(orderDetailResult.getDeliverTime(), DeliverTime.class));
+        orderService.delaySendToHd(orderCode, Jackson.object(orderDetailResult.getDeliverAt(), DeliverTime.class));
         return ResponseEntity.ok(orderDetailResult);
     }
 

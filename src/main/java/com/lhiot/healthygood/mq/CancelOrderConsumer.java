@@ -41,6 +41,7 @@ public class CancelOrderConsumer {
     @RabbitListener(queues = HealthyGoodQueue.DelayQueue.CANCEL_ORDER_CONSUMER)
     public void cancelUnPayOrder(String orderCode) {
         try {
+
             ResponseEntity<OrderDetailResult> orderDetailResultResponseEntity = orderServiceFeign.orderDetail(orderCode,false,false);
             Tips<OrderDetailResult> orderDetailResultTips = FeginResponseTools.convertResponse(orderDetailResultResponseEntity);
             if(orderDetailResultTips.err()){

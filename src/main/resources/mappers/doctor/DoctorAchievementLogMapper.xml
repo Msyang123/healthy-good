@@ -14,6 +14,7 @@
         <result column="create_at" property="createAt"/>
         <result column="fruit_doctor_commission" property="fruitDoctorCommission"/>
         <result column="commission" property="commission"/>
+        <result column="superior_doctor_id" property="superiorDoctorId"/>
     </resultMap>
 
     <!-- base查询字段  -->
@@ -28,6 +29,7 @@
             create_at,
             fruit_doctor_commission,
             commission,
+            superior_doctor_id,
         </trim>
     </sql>
 
@@ -61,6 +63,9 @@
             <if test="commission != null ">
                 commission,
             </if>
+            <if test="superiorDoctorId != null ">
+                superior_doctor_id,
+            </if>
         </trim>
         <trim prefix="values (" suffix=")" suffixOverrides=",">
             <if test="id != null ">
@@ -87,6 +92,9 @@
             </if>
             <if test="commission != null ">
                 #{commission},
+            </if>
+            <if test="superiorDoctorId != null ">
+                #{superiorDoctorId},
             </if>
         </trim>
     </insert>
@@ -293,4 +301,20 @@
         <include refid="Base_Column_List"/>
         from doctor_achievement_log where id = #{0} and source_type = 'ORDER'
     </select>
+
+    <!-- hufan 根据订单id和类型查询记录 -->
+    <select id="selectByOrderIdAndType" parameterType="Long" resultMap="BaseResultMap">
+        select
+        <include refid="Base_Column_List"/>
+        from doctor_achievement_log
+        <where>
+            <if test=" orderId !=null">
+                and order_id = #{orderId}
+            </if>
+            <if test=" sourceType !=null">
+                and source_type = #{sourceType}
+            </if>
+        </where>
+    </select>
+
 </mapper>

@@ -47,6 +47,7 @@ import javax.validation.Valid;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 import java.math.BigDecimal;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -101,6 +102,7 @@ public class OrderApi {
         orderParam.setUserId(userId);//设置业务用户id
         orderParam.setApplicationType(ApplicationType.HEALTH_GOOD);
         orderParam.setOrderType(OrderType.NORMAL);//普通订单
+        orderParam.setAllowRefund(AllowRefund.YES);
 
         String storeCode = orderParam.getOrderStore().getStoreCode();
         //判断门店是否存在
@@ -268,7 +270,25 @@ public class OrderApi {
         OrderDetailResult orderDetailResult = (OrderDetailResult) validateResult.getBody();
         ResponseEntity refundOrderTips = null;
         returnOrderParam.setNotifyUrl(wechatPayConfig.getOrderRefundCallbackUrl());//设置退款回调
-        //TODO 验证与计算订单金额
+        //查询退款金额
+        ResponseEntity<Fee> refundFeeResponseEntity = orderServiceFeign.refundFee(orderCode,returnOrderParam.getOrderProductIds(),returnOrderParam.getRefundType());
+        Tips<Fee> refundFeeTips = FeginResponseTools.convertResponse(refundFeeResponseEntity);
+        AtomicReference<Integer> refundFeeSum = new AtomicReference<>(0);
+        //计算订单金额
+        if(refundFeeTips.err()){
+            //如果查询失败那么就直接使用本地计算的退款费用退款
+            //给商品赋值规格数量
+            Arrays.asList(returnOrderParam.getOrderProductIds().split(",")).forEach(refundOrderProductId ->
+                    orderDetailResult.getOrderProductList().stream()
+                    //上架id相同的订单商品信息，通过基础服务获取的赋值给订单商品信息
+                    .filter(orderProduct -> Objects.equals(orderProduct.getId(), Long.valueOf(refundOrderProductId)))
+                    .forEach(item -> refundFeeSum.updateAndGet(v->v+item.getDiscountPrice()))
+            );
+        }else{
+            Fee refundFee = refundFeeTips.getData();
+            refundFeeSum.updateAndGet(v->v+refundFee.getFee());
+        }
+        returnOrderParam.setFee(refundFeeSum.get());
         switch (orderDetailResult.getStatus()) {
             //订单未发送海鼎，退款
             case WAIT_SEND_OUT:
@@ -418,7 +438,7 @@ public class OrderApi {
     //验证是否属于当前用户的订单
     private ResponseEntity validateOrderOwner(Long userId, String orderCode) {
 
-        ResponseEntity<OrderDetailResult> orderDetailResultEntity = orderServiceFeign.orderDetail(orderCode, false, false);
+        ResponseEntity<OrderDetailResult> orderDetailResultEntity = orderServiceFeign.orderDetail(orderCode, true, false);
         if (Objects.isNull(orderDetailResultEntity) || orderDetailResultEntity.getStatusCode().isError()) {
             return orderDetailResultEntity;
         }
