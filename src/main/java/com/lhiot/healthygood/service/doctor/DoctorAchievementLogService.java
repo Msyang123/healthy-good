@@ -313,11 +313,31 @@ public class DoctorAchievementLogService {
     /**
      * 根据鲜果师ids统计一个月的红利
      *
-     * @param ids
+     * @param id
      * @return
      */
     public Integer selectFruitDoctorCommission(Long id) {
         return doctorAchievementLogMapper.selectFruitDoctorCommission(id);
+    }
+
+    /**
+     * 鲜果师一个月红利结算
+     * @param doctorId
+     */
+    public void bounsSettlement(Long doctorId){
+        Integer fruitDoctorBonus = doctorAchievementLogMapper.selectFruitDoctorCommission(doctorId);//轮询统计每个鲜果师上个月的红利
+        Tips result = this.updateBonus(doctorId, -fruitDoctorBonus, BalanceType.BOUNS);
+        if (result.err()){
+            return;
+        }
+        Tips tips = this.updateBonus(doctorId, fruitDoctorBonus, BalanceType.SETTLEMENT);
+        if (fruitDoctorBonus > 0 && Objects.equals(tips.getCode(), "1")) {
+            DoctorAchievementLog doctorAchievementLog = new DoctorAchievementLog();
+            doctorAchievementLog.setDoctorId(doctorId);
+            doctorAchievementLog.setSourceType(SourceType.SUB_DISTRIBUTOR);
+            doctorAchievementLog.setFruitDoctorCommission(fruitDoctorBonus);
+            doctorAchievementLogMapper.create(doctorAchievementLog);
+        }
     }
 }
 

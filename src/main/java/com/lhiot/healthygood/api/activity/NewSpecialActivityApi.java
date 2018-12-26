@@ -58,7 +58,7 @@ public class NewSpecialActivityApi {
     public ResponseEntity specialActivity(Sessions.User user, @RequestBody PagesParam pagesParam){
         SpecialProductActivity specialProductActivity = specialProductActivityService.selectActivity();
         if (Objects.isNull(specialProductActivity)){
-            return ResponseEntity.badRequest().body("没有开这个活动哦");
+            return ResponseEntity.badRequest().body("没有开这个活动");
         }
         ActivityProduct activityProduct = new ActivityProduct();
         activityProduct.setActivityId(specialProductActivity.getId());
@@ -66,6 +66,7 @@ public class NewSpecialActivityApi {
         List<ActivityProduct> activityProductsList = activityProductService.activityProductList(activityProduct);
         List<ActivityProducts> activityProducts = new ArrayList<ActivityProducts>();
 
+        Long userId = Long.valueOf(user.getUser().get("userId").toString());
         activityProductsList.forEach(item -> {
             //从基础服务里查上架商品
             ResponseEntity<ProductShelf> shelfProductResponse = baseDataServiceFeign.singleShelf(item.getProductShelfId(),false);
@@ -82,7 +83,6 @@ public class NewSpecialActivityApi {
             product.setPrice(Objects.isNull(productShelf.getPrice()) ? productShelf.getOriginalPrice() : productShelf.getPrice());
             product.setProductName(productShelf.getName());
 
-            Long userId = Long.valueOf(user.getUser().get("userId").toString());
             ActivityProductRecord activityProductRecord = new ActivityProductRecord();
             activityProductRecord.setUserId(userId);
             activityProductRecord.setProductShelfId(productShelf.getId());

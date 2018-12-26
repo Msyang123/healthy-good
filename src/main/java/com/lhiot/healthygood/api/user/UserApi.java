@@ -312,7 +312,7 @@ public class UserApi {
     @ApiImplicitParam(paramType = "query", name = "phone", value = "发送用户注册验证码对应手机号", required = true, dataType = "String")
     public ResponseEntity captcha(Sessions.User user, @RequestParam String phone) {
         Long userId = Long.valueOf(user.getUser().get("userId").toString());
-        //TODO 需要申请发送短信模板
+
         ResponseEntity<UserDetailResult> userDetailResultResponseEntity = baseUserServerFeign.findById(userId);
         if (Objects.isNull(userDetailResultResponseEntity) || userDetailResultResponseEntity.getStatusCode().isError()) {
             return userDetailResultResponseEntity;
@@ -325,10 +325,14 @@ public class UserApi {
     }
 
     @PutMapping("/binding")
-    @ApiOperation(value = "用户绑定手机号*")
+    @ApiOperation(value = "用户绑定手机号*",response = UserDetailResult.class)
     @ApiImplicitParam(paramType = "body", name = "validateParam", value = "要用户注册", required = true, dataType = "ValidateParam")
     public ResponseEntity bandPhone(@ApiIgnore Sessions.User user, @RequestBody ValidateParam validateParam) {
         Long userId = (Long) user.getUser().get("userId");
+        ResponseEntity responseEntity = baseUserServerFeign.findById(userId);
+        if (responseEntity.getStatusCode().isError()){
+            return ResponseEntity.badRequest().body(responseEntity.getBody());
+        }
         UserBindingPhoneParam userBindingPhoneParam = new UserBindingPhoneParam();
         userBindingPhoneParam.setPhone(validateParam.getPhoneNumber());
         userBindingPhoneParam.setApplicationType(ApplicationType.HEALTH_GOOD);
