@@ -54,7 +54,7 @@ public interface BaseUserServerFeign {
 	 * @return
 	 */
 	@RequestMapping(value="/users/{id}/binding-phone",method = RequestMethod.PUT)
-	ResponseEntity userBindingPhone(@PathVariable("id") Long userId,@RequestBody UserBindingPhoneParam param);
+	ResponseEntity<UserDetailResult> userBindingPhone(@PathVariable("id") Long userId,@RequestBody UserBindingPhoneParam param);
 
 	/**
 	 * 用户鲜果币加减

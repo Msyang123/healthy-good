@@ -325,10 +325,14 @@ public class UserApi {
     }
 
     @PutMapping("/binding")
-    @ApiOperation(value = "用户绑定手机号*")
+    @ApiOperation(value = "用户绑定手机号*",response = UserDetailResult.class)
     @ApiImplicitParam(paramType = "body", name = "validateParam", value = "要用户注册", required = true, dataType = "ValidateParam")
     public ResponseEntity bandPhone(@ApiIgnore Sessions.User user, @RequestBody ValidateParam validateParam) {
         Long userId = (Long) user.getUser().get("userId");
+        ResponseEntity responseEntity = baseUserServerFeign.findById(userId);
+        if (responseEntity.getStatusCode().isError()){
+            return ResponseEntity.badRequest().body(responseEntity.getBody());
+        }
         UserBindingPhoneParam userBindingPhoneParam = new UserBindingPhoneParam();
         userBindingPhoneParam.setPhone(validateParam.getPhoneNumber());
         userBindingPhoneParam.setApplicationType(ApplicationType.HEALTH_GOOD);
