@@ -10,9 +10,9 @@ import com.lhiot.healthygood.config.HealthyGoodConfig;
 import com.lhiot.healthygood.domain.customplan.CustomOrder;
 import com.lhiot.healthygood.domain.customplan.CustomOrderGroupCount;
 import com.lhiot.healthygood.domain.customplan.CustomOrderPause;
+import com.lhiot.healthygood.domain.customplan.CustomOrderTime;
 import com.lhiot.healthygood.feign.BaseUserServerFeign;
 import com.lhiot.healthygood.feign.PaymentServiceFeign;
-import com.lhiot.healthygood.feign.model.DeliverTime;
 import com.lhiot.healthygood.feign.model.OrderDetailResult;
 import com.lhiot.healthygood.feign.model.UserDetailResult;
 import com.lhiot.healthygood.feign.model.WxPayModel;
@@ -255,7 +255,7 @@ public class CustomOrderApi {
         // 自动配送解析配送时间
         if (Objects.equals(CustomOrderBuyType.AUTO, customOrder.getDeliveryType())) {
             String deliveryTime = customOrder.getDeliveryTime();
-            DeliverTime deliverTime =Jackson.object(deliveryTime, DeliverTime.class);
+            CustomOrderTime deliverTime =Jackson.object(deliveryTime, CustomOrderTime.class);
             customOrder.setDeliveryTime(deliverTime.getDisplay());
         }
         return ResponseEntity.ok(customOrder);

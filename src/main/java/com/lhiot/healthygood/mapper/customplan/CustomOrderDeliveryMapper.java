@@ -29,7 +29,7 @@ public interface CustomOrderDeliveryMapper {
 
     int updateByOrderCode(String orderCode);
 
-    List<CustomOrderDelivery> selectByCustomOrderId(@Param("planId") Long planId,@Param("customOrderId") Long customOrderId);
+    List<CustomOrderDelivery> selectByCustomOrderId(@Param("planId") Long planId, @Param("planPeriod") Integer planPeriod, @Param("customOrderId") Long customOrderId);
 
     /**
      * 查询当前定制订单的所有配送记录
