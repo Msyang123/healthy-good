@@ -215,6 +215,14 @@ public class RegisterApplicationService {
         if (Objects.isNull(fruitDoctor)) {
             return Tips.warn("鲜果师不存在");
         }
+        ResponseEntity baseUserEntity = baseUserServerFeign.findById(fruitDoctor.getUserId());
+        if (baseUserEntity.getStatusCode().isError()){
+            return Tips.warn("基础用户调用失败");
+        }
+        if (Objects.isNull(baseUserEntity.getBody())){
+            return Tips.warn("用户不存在");
+        }
+        UserDetailResult userDetailResult = (UserDetailResult)baseUserEntity.getBody();
         String currentTime = new SimpleDateFormat("yyyy-MM-dd").format(new Date());
         DataItem dataItem = new DataItem();
         DataObject first = new DataObject();
@@ -223,7 +231,6 @@ public class RegisterApplicationService {
         DataObject keyword3 = new DataObject();
         DataObject keyword4 = new DataObject();
         DataObject remark = new DataObject();
-
         if (AuditStatus.UNAUDITED.equals(auditStatus)) {
             keyword1.setValue(BacklogEnum.APPLICATION.getBacklog());
             keyword2.setValue(BacklogEnum.APPLICATION.getStatus());
@@ -246,7 +253,7 @@ public class RegisterApplicationService {
         dataItem.setKeyword3(keyword3);
         dataItem.setKeyword4(keyword4);
         dataItem.setRemark(remark);
-        weChatUtil.sendMessageToWechat(TemplateMessageEnum.APPLY_FRUIT_DOCTOR, fruitDoctor.getOpenId(), dataItem);
+        weChatUtil.sendMessageToWechat(TemplateMessageEnum.APPLY_FRUIT_DOCTOR, userDetailResult.getOpenId(), dataItem);
         return Tips.info("修改成功");
     }
 }

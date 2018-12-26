@@ -200,7 +200,7 @@
         select <include refid="Base_Column_List" />
         from fruit_doctor_qualification
         <include refid="Base_Where_Condition" />
-        order by case audit_status when 'UNAUDITED' then 0 when 'AGREE' then 1 when 'REJECT' then 2 else 3 end asc, id desc
+        order by case audit_status when 'UNAUDITED' then 0  when 'AGREE' then 1 when 'REJECT' then 2 else 3 end asc, id desc
     </select>
 
     <!--查询鲜果师申请记录总记录-->

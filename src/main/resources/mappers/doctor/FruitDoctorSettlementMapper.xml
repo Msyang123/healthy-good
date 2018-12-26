@@ -194,8 +194,8 @@
         LEFT JOIN fruit_doctor f ON s.doctor_id = f.id
         <include refid="Base_Where_Condition"/>
         <if test="rows != null and rows > 0 ">
-            order by case s.settlement_status when 'UNSETTLED' then 0 when 'SUCCESS' then 1 when 'EXPIRED' then 2 else
-            3 end asc,
+            order by case s.settlement_status when 'UNSETTLED' then 0 when 'SUCCESS' then 1 when 'REFUND' then 2  when 'EXPIRED' then 3 else
+            4 end asc,
             s.id desc
             limit #{startRow} , #{rows}
         </if>

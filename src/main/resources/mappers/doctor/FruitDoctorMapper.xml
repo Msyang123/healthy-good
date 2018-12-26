@@ -425,7 +425,7 @@
     <select id="findFruitDoctorByUserId" resultMap="BaseResultMap"
             parameterType="Long">
         select *
-        from doctor_user
+        from doctor_customer
         where user_id = #{id}
     </select>
 </mapper>
