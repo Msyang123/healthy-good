@@ -31,6 +31,8 @@ public interface CustomOrderMapper {
 
     int updateByCode(CustomOrder customOrder);
 
+    int updateById(CustomOrder customOrder);
+
     List<CustomOrder> pageCustomOrder(CustomOrder customOrder);
 
     int pageCustomOrderCounts(CustomOrder customOrder);

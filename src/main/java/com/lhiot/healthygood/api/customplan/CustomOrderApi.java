@@ -34,6 +34,7 @@ import org.springframework.web.bind.annotation.*;
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 import javax.validation.constraints.NotBlank;
+import java.util.Map;
 import java.util.Objects;
 
 @Api(description = "购买定制计划")
@@ -116,7 +117,9 @@ public class CustomOrderApi {
         wxPayModel.setSourceType(SourceType.CUSTOM_PLAN);
         wxPayModel.setUserId(userId);
         wxPayModel.setAttach(orderCode);//定制订单code
-        return paymentServiceFeign.wxJsSign(wxPayModel);
+        log.info("定制计划支付时微信签名{}",orderCode);
+        ResponseEntity<Map> responseEntity  = paymentServiceFeign.wxJsSign(wxPayModel);
+        return responseEntity;
     }
 
 

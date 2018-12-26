@@ -273,11 +273,36 @@
             <if test="remainingQty != null ">
                 remaining_qty = remaining_qty-1,
             </if>
+            <if test="remainingQtyAdd != null ">
+                remaining_qty = remaining_qty+1,
+            </if>
             <if test="payId !=null">
                 pay_id = #{payId},
             </if>
         </set>
         where custom_order_code=#{customOrderCode}
+    </update>
+
+    <update id="updateById" parameterType="com.lhiot.healthygood.domain.customplan.CustomOrder">
+        update custom_order
+        <set>
+            <if test="status != null ">
+                status = #{status},
+            </if>
+            <if test="deliveryTime != null ">
+                delivery_time = #{deliveryTime},
+            </if>
+            <if test="remainingQty != null ">
+                remaining_qty = remaining_qty-1,
+            </if>
+            <if test="remainingQtyAdd != null ">
+                remaining_qty = remaining_qty+1,
+            </if>
+            <if test="payId !=null">
+                pay_id = #{payId},
+            </if>
+        </set>
+        where id=#{id}
     </update>
 
     <!-- 根据code查找定制计划 -->

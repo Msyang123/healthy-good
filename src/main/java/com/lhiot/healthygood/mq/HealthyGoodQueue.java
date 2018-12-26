@@ -1,7 +1,6 @@
 package com.lhiot.healthygood.mq;
 
 import com.leon.microx.amqp.RabbitInitializer;
-import com.leon.microx.util.Jackson;
 import lombok.Getter;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 
