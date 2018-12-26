@@ -312,7 +312,7 @@ public class UserApi {
     @ApiImplicitParam(paramType = "query", name = "phone", value = "发送用户注册验证码对应手机号", required = true, dataType = "String")
     public ResponseEntity captcha(Sessions.User user, @RequestParam String phone) {
         Long userId = Long.valueOf(user.getUser().get("userId").toString());
-        //TODO 需要申请发送短信模板
+
         ResponseEntity<UserDetailResult> userDetailResultResponseEntity = baseUserServerFeign.findById(userId);
         if (Objects.isNull(userDetailResultResponseEntity) || userDetailResultResponseEntity.getStatusCode().isError()) {
             return userDetailResultResponseEntity;

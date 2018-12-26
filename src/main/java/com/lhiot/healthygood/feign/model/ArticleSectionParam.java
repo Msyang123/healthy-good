@@ -1,6 +1,7 @@
 package com.lhiot.healthygood.feign.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.lhiot.healthygood.feign.type.ApplicationType;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
@@ -23,7 +24,7 @@ public class ArticleSectionParam {
     @ApiModelProperty(notes = "板块英文名称", dataType = "String")
     private String nameEn;
     @ApiModelProperty(notes = "应用类型", dataType = "String")
-    private String applicationType;
+    private ApplicationType applicationType;
     @ApiModelProperty(notes = "起始创建时间", dataType = "Date")
     private Date beginCreateAt;
     @ApiModelProperty(notes = "截止创建时间", dataType = "Date")

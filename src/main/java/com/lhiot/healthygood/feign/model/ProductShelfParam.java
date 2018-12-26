@@ -2,6 +2,7 @@ package com.lhiot.healthygood.feign.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.leon.microx.predefine.OnOff;
+import com.lhiot.healthygood.feign.type.ApplicationType;
 import com.lhiot.healthygood.type.ShelfType;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
@@ -24,7 +25,7 @@ public class ProductShelfParam {
     @ApiModelProperty(notes = "上架类型：NORMAL-普通商品,GIFT-赠品", dataType = "ShelfType")
     private ShelfType shelfType;
     @ApiModelProperty(notes = "应用类型", dataType = "String")
-    private String applicationType;
+    private ApplicationType applicationType;
     @ApiModelProperty(notes = "最小特价", dataType = "Integer")
     private Integer minPrice;
     @ApiModelProperty(notes = "最大特价", dataType = "Integer")
