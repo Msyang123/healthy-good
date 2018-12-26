@@ -146,11 +146,11 @@ public class FruitDoctorUserService {
      * @param phone 待发送验证码手机号
      */
     public void bandPhoneSendTemplateMessage(String phone) {
-
         //发送模板消息
         publisher.publishEvent(new SendCaptchaSmsEvent(phone));
     }
 
 
 }
+
 

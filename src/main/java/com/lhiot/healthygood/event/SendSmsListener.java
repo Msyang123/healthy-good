@@ -36,7 +36,7 @@ public class SendSmsListener {
         //调用发送注册鲜果师短信验证码
         CaptchaParam captchaParam=new CaptchaParam();
         captchaParam.setApplicationName(ApplicationType.HEALTH_GOOD.getDescription());
-        captchaParam.setFreeSignName(FreeSignName.FRUIT_DOCTOR);//TODO 基础服务没有加
+        captchaParam.setFreeSignName(FreeSignName.FRUIT_DOCTOR);
         captchaParam.setPhoneNumber(event.getPhone());
         thirdpartyServerFeign.captcha(CaptchaTemplate.REGISTER,captchaParam);
     }
@@ -48,7 +48,7 @@ public class SendSmsListener {
         AccountAuditParam parameters=new AccountAuditParam();
         parameters.setAccount(event.getAccount());
         parameters.setApplicationName(ApplicationType.HEALTH_GOOD.getDescription());
-        parameters.setFreeSignName(FreeSignName.FRUIT_DOCTOR);//TODO 基础服务没有加
+        parameters.setFreeSignName(FreeSignName.FRUIT_DOCTOR);
         parameters.setPhoneNumber(event.getPhone());
         parameters.setStatus(event.getAccountAuditStatus());
         thirdpartyServerFeign.accountAudit(parameters);

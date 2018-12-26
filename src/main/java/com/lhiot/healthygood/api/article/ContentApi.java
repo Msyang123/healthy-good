@@ -6,6 +6,7 @@ import com.lhiot.healthygood.feign.ContentServiceFeign;
 import com.lhiot.healthygood.feign.model.FaqCategory;
 import com.lhiot.healthygood.feign.model.FaqParam;
 import com.lhiot.healthygood.feign.model.Feedback;
+import com.lhiot.healthygood.feign.type.ApplicationType;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiOperation;
@@ -33,7 +34,7 @@ public class ContentApi {
     public ResponseEntity<List<FaqCategory>> faqs(@RequestParam String categoryEnName){
         FaqParam faqParam = new FaqParam();
         faqParam.setCategoryEnName(categoryEnName);
-        faqParam.setApplicationType("FRUIT_DOCTOR");
+        faqParam.setApplicationType(ApplicationType.HEALTH_GOOD);
         return contentServiceFeign.faqList(faqParam);
     }
 
@@ -42,7 +43,7 @@ public class ContentApi {
     @ApiOperation(value = "用户反馈*" )
     public ResponseEntity feedback(Sessions.User user, @RequestBody Feedback feedback){
         feedback.setUserId(Long.valueOf(user.getUser().get("userId").toString()));
-        feedback.setApplicationType("HEALTH_GOOD");
+        feedback.setApplicationType(ApplicationType.HEALTH_GOOD);
         return contentServiceFeign.create(feedback);
     }
 }
