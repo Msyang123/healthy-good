@@ -10,10 +10,7 @@ import com.lhiot.healthygood.domain.user.FruitDoctor;
 import com.lhiot.healthygood.mapper.doctor.DoctorAchievementLogMapper;
 import com.lhiot.healthygood.mapper.doctor.SettlementApplicationMapper;
 import com.lhiot.healthygood.mapper.user.FruitDoctorMapper;
-import com.lhiot.healthygood.type.FirstAndRemarkData;
-import com.lhiot.healthygood.type.SettlementStatus;
-import com.lhiot.healthygood.type.SourceType;
-import com.lhiot.healthygood.type.TemplateMessageEnum;
+import com.lhiot.healthygood.type.*;
 import com.lhiot.healthygood.util.DataItem;
 import com.lhiot.healthygood.util.DataObject;
 import com.lhiot.healthygood.wechat.WeChatUtil;
@@ -70,6 +67,23 @@ public class SettlementApplicationService {
     }
 
     /**
+     * 结算进行扣款
+     * @param settlementApplication
+     * @return
+     */
+    public int settlement(SettlementApplication settlementApplication){
+        boolean flag = fruitDoctorMapper.updateBouns(Maps.of("id", settlementApplication.getDoctorId(), "money", -settlementApplication.getAmount(), "balanceType", BalanceType.SETTLEMENT.name()))>0;
+        if (!flag) {
+            return -1;
+        }
+        int result = settlementApplicationMapper.create(settlementApplication);
+        if (result>0){
+            this.settlementApplicationSendTemplate(settlementApplication);
+        }
+        return result;
+    }
+
+    /**
      * 根据id修改结算申请
      *
      * @param id
@@ -81,37 +95,7 @@ public class SettlementApplicationService {
         settlementApplication.setDealAt(Date.from(Instant.now()));
         // 已结算只能结算一次，成功后不可修改
         if (Objects.equals(SettlementStatus.SUCCESS, settlementApplication.getSettlementStatus())) {
-            // FIXME 提交结算时扣减，结算通过操作只写记录
-            SettlementApplication findSettlementApplication = settlementApplicationMapper.selectById(id);
-            // 结算用户是否一致
-            if (!Objects.equals(findSettlementApplication.getDoctorId(), settlementApplication.getDoctorId())) {
-                return Tips.warn("要结算的用户不一致，结算失败");
-            }
-            // 该条结算记录是否已结算过
-            if (Objects.equals(SettlementStatus.SUCCESS, findSettlementApplication.getSettlementStatus())) {
-                return Tips.warn("请勿重复结算");
-            }
             FruitDoctor findFruitDoctor = fruitDoctorMapper.selectById(settlementApplication.getDoctorId());
-            if (Objects.isNull(findFruitDoctor)) {
-                return Tips.warn("鲜果师不存在！");
-            }
-            // 该鲜果师的可结算金额是否大于申请结算金额
-            if (settlementApplication.getAmount() > findFruitDoctor.getSettlement()) {
-                return Tips.warn("申请结算金额大于用户可结算金额，结算失败");
-            }
-
-            boolean settlementUpdated = settlementApplicationMapper.updateById(settlementApplication) > 0;
-            if (!settlementUpdated) {
-                return Tips.warn("结算修改失败");
-            }
-            // 结算状态修改成功后扣减用户可结算金额
-            findFruitDoctor.setSettlement(findFruitDoctor.getSettlement() - settlementApplication.getAmount());
-            boolean balanceUpdated = fruitDoctorMapper.updateById(findFruitDoctor) > 0;
-            if (!balanceUpdated) {
-                return Tips.warn("扣减鲜果师可结算金额失败");
-            }
-
-            // ——————————————————————————————————————
             // 结算成功后写操作记录
             // 幂等操作
             DoctorAchievementLog findDoctorAchievementLog = doctorAchievementLogMapper.selectByOrderIdAndType(id, SourceType.SETTLEMENT);
@@ -235,7 +219,7 @@ public class SettlementApplicationService {
      * @throws JsonProcessingException
      * @throws AmqpException
      */
-    public void settlementApplicationSendTemplate(SettlementApplication settlementApplication) throws AmqpException, JsonProcessingException {
+    public void settlementApplicationSendTemplate(SettlementApplication settlementApplication) throws AmqpException{
         Integer amount = (null == settlementApplication.getAmount() ? 0 : settlementApplication.getAmount());
         //获取鲜果师用户信息
         FruitDoctor fruitDoctor = fruitDoctorMapper.selectById(settlementApplication.getDoctorId());

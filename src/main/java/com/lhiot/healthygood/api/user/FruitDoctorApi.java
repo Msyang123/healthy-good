@@ -115,6 +115,7 @@ public class FruitDoctorApi {
             return ResponseEntity.badRequest().body("未找到该用户审核记录");
         }
         registerApplication.setId(id);
+        registerApplication.setAuditAt(Date.from(Instant.now()));
         Tips tips = registerApplicationService.updateById(registerApplication);
         if (tips.err()) {
             return ResponseEntity.badRequest().body(tips.getMessage());
@@ -166,23 +167,13 @@ public class FruitDoctorApi {
             return ResponseEntity.badRequest().body("申请金额超过可结算余额");
         }
         SettlementApplication settlementApplication = new SettlementApplication();
-
         settlementApplication.setAmount(amount);
         settlementApplication.setDoctorId(fruitDoctor.getId());
         settlementApplication.setCreateAt(Date.from(Instant.now()));
         settlementApplication.setSettlementStatus(SettlementStatus.UNSETTLED);
         settlementApplication.setOpenId(user.getUser().get("openId").toString());
-        int result = settlementApplicationService.create(settlementApplication);
-        if (result > 0) {
-            try {
-                settlementApplicationService.settlementApplicationSendTemplate(settlementApplication);
-            } catch (JsonProcessingException e) {
-                e.printStackTrace();
-            }
-            return ResponseEntity.ok("申请成功！");
-        } else {
-            return ResponseEntity.badRequest().body("申请失败！");
-        }
+        int result = settlementApplicationService.settlement(settlementApplication);
+        return result > 0 ? ResponseEntity.ok("申请成功！") : ResponseEntity.badRequest().body("申请失败！");
     }
 
     @Sessions.Uncheck
@@ -612,16 +603,7 @@ public class FruitDoctorApi {
                 log.info(fruitDoctor.getRealName() + fruitDoctor.getId() + "已执行过");
                 return;
             }
-
-            Integer fruitDoctorBonus = doctorAchievementLogService.selectFruitDoctorCommission(fruitDoctor.getId());//轮询统计每个鲜果师上个月的红利
-            Tips tips = doctorAchievementLogService.updateBonus(fruitDoctor.getId(), fruitDoctorBonus, BalanceType.SETTLEMENT);
-            if (fruitDoctorBonus > 0 && Objects.equals(tips.getCode(), "1")) {
-                DoctorAchievementLog doctorAchievementLog = new DoctorAchievementLog();
-                doctorAchievementLog.setDoctorId(fruitDoctor.getId());
-                doctorAchievementLog.setSourceType(SourceType.SUB_DISTRIBUTOR);
-                doctorAchievementLog.setFruitDoctorCommission(fruitDoctorBonus);
-                doctorAchievementLogService.create(doctorAchievementLog);
-            }
+            doctorAchievementLogService.bounsSettlement(fruitDoctor.getId());
         });
         return ResponseEntity.ok().build();
     }
