@@ -174,7 +174,59 @@ public class RegisterApplicationService {
             return fruitDoctorMapper.create(fruitDoctor) > 0 ? Tips.info("添加鲜果师成员成功") : Tips.warn("添加鲜果师成员失败");
         }
         // 发送模板消息
-        this.doctorApplicationSendTemplate(registerApplication.getAuditStatus(), registerApplication.getUserId());
+        ResponseEntity findBaseUser = baseUserServerFeign.findById(registerApplication.getUserId());
+        if (findBaseUser.getStatusCode().isError() || Objects.isNull(findBaseUser.getBody())) {
+            return Tips.warn("基础服务查询失败");
+        }
+        UserDetailResult userDetailResult = (UserDetailResult) findBaseUser.getBody();
+        this.doctorApplicationSendTemplate(registerApplication.getAuditStatus(), userDetailResult.getOpenId());
+        return Tips.info("修改成功");
+    }
+
+    /**
+     * 鲜果师审核发送模板消息
+     *
+     * @param auditStatus
+     * @param openId
+     */
+    public Tips doctorApplicationSendTemplate(AuditStatus auditStatus, String openId) {
+        log.info("===============鲜果师审核发送模板消息:" + auditStatus + ",openId:" + openId);
+
+        String currentTime = new SimpleDateFormat("yyyy-MM-dd").format(new Date());
+        DataItem dataItem = new DataItem();
+        DataObject first = new DataObject();
+        DataObject keyword1 = new DataObject();
+        DataObject keyword2 = new DataObject();
+        DataObject keyword3 = new DataObject();
+        DataObject keyword4 = new DataObject();
+        DataObject remark = new DataObject();
+
+        if (AuditStatus.UNAUDITED.equals(auditStatus)) {
+            first.setValue(FirstAndRemarkData.APPLY.getFirstData());
+            keyword1.setValue(BacklogEnum.APPLICATION.getBacklog());
+            keyword2.setValue(BacklogEnum.APPLICATION.getStatus());
+            keyword4.setValue(BacklogEnum.APPLICATION.getRemark());
+        } else if (AuditStatus.AGREE.equals(auditStatus)) {
+            first.setValue(FirstAndRemarkData.APPLY_FAILURE.getFirstData());
+            keyword1.setValue(BacklogEnum.APPLICATION_SUCCESS.getBacklog());
+            keyword2.setValue(BacklogEnum.APPLICATION_SUCCESS.getRemark());
+            keyword4.setValue(BacklogEnum.APPLICATION_SUCCESS.getStatus());
+        } else if (AuditStatus.REJECT.equals(auditStatus)) {
+            first.setValue(FirstAndRemarkData.APPLY_SUCCESS.getFirstData());
+            keyword1.setValue(BacklogEnum.APPLICATION_FAILURE.getBacklog());
+            keyword2.setValue(BacklogEnum.APPLICATION_FAILURE.getRemark());
+            keyword4.setValue(BacklogEnum.APPLICATION_FAILURE.getStatus());
+        }
+        keyword3.setValue(currentTime);
+        remark.setValue("如有疑问请致电0731-85240088");
+
+        dataItem.setFirst(first);
+        dataItem.setKeyword1(keyword1);
+        dataItem.setKeyword2(keyword2);
+        dataItem.setKeyword3(keyword3);
+        dataItem.setKeyword4(keyword4);
+        dataItem.setRemark(remark);
+        weChatUtil.sendMessageToWechat(TemplateMessageEnum.APPLY_FRUIT_DOCTOR, openId, dataItem);
         return Tips.info("修改成功");
     }
 
@@ -199,62 +251,6 @@ public class RegisterApplicationService {
         boolean pageFlag = Objects.nonNull(registerApplication.getPage()) && Objects.nonNull(registerApplication.getRows()) && registerApplication.getPage() > 0 && registerApplication.getRows() > 0;
         int total = pageFlag ? this.count(registerApplication) : list.size();
         return Pages.of(total, list);
-    }
-
-
-    /**
-     * 鲜果师审核发送模板消息
-     *
-     * @param auditStatus
-     * @param userId
-     */
-    public Tips doctorApplicationSendTemplate(AuditStatus auditStatus, Long userId) {
-        log.info("===============鲜果师审核发送模板消息:" + auditStatus + ",userId:" + userId);
-
-        FruitDoctor fruitDoctor = fruitDoctorMapper.selectByUserId(userId);
-        if (Objects.isNull(fruitDoctor)) {
-            return Tips.warn("鲜果师不存在");
-        }
-        ResponseEntity baseUserEntity = baseUserServerFeign.findById(fruitDoctor.getUserId());
-        if (baseUserEntity.getStatusCode().isError()){
-            return Tips.warn("基础用户调用失败");
-        }
-        if (Objects.isNull(baseUserEntity.getBody())){
-            return Tips.warn("用户不存在");
-        }
-        UserDetailResult userDetailResult = (UserDetailResult)baseUserEntity.getBody();
-        String currentTime = new SimpleDateFormat("yyyy-MM-dd").format(new Date());
-        DataItem dataItem = new DataItem();
-        DataObject first = new DataObject();
-        DataObject keyword1 = new DataObject();
-        DataObject keyword2 = new DataObject();
-        DataObject keyword3 = new DataObject();
-        DataObject keyword4 = new DataObject();
-        DataObject remark = new DataObject();
-        if (AuditStatus.UNAUDITED.equals(auditStatus)) {
-            keyword1.setValue(BacklogEnum.APPLICATION.getBacklog());
-            keyword2.setValue(BacklogEnum.APPLICATION.getStatus());
-            keyword4.setValue(BacklogEnum.APPLICATION.getRemark());
-        } else if (AuditStatus.AGREE.equals(auditStatus)) {
-            keyword1.setValue(BacklogEnum.APPLICATION_SUCCESS.getBacklog());
-            keyword2.setValue(BacklogEnum.APPLICATION_SUCCESS.getRemark());
-            keyword4.setValue(BacklogEnum.APPLICATION_SUCCESS.getStatus());
-        } else if (AuditStatus.REJECT.equals(auditStatus)) {
-            keyword1.setValue(BacklogEnum.APPLICATION_FAILURE.getBacklog());
-            keyword2.setValue(BacklogEnum.APPLICATION_FAILURE.getRemark());
-            keyword4.setValue(BacklogEnum.APPLICATION_FAILURE.getStatus());
-        }
-        keyword3.setValue(currentTime);
-        remark.setValue("如有疑问请致电0731-85240088");
-
-        dataItem.setFirst(first);
-        dataItem.setKeyword1(keyword1);
-        dataItem.setKeyword2(keyword2);
-        dataItem.setKeyword3(keyword3);
-        dataItem.setKeyword4(keyword4);
-        dataItem.setRemark(remark);
-        weChatUtil.sendMessageToWechat(TemplateMessageEnum.APPLY_FRUIT_DOCTOR, userDetailResult.getOpenId(), dataItem);
-        return Tips.info("修改成功");
     }
 }
 
