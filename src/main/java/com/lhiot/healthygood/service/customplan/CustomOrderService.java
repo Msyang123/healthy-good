@@ -24,7 +24,9 @@ import com.lhiot.healthygood.mapper.customplan.CustomOrderMapper;
 import com.lhiot.healthygood.mapper.customplan.CustomOrderPauseMapper;
 import com.lhiot.healthygood.mapper.customplan.CustomPlanSpecificationMapper;
 import com.lhiot.healthygood.mq.HealthyGoodQueue;
+import com.lhiot.healthygood.service.doctor.DoctorAchievementLogService;
 import com.lhiot.healthygood.service.order.OrderService;
+import com.lhiot.healthygood.service.user.FruitDoctorService;
 import com.lhiot.healthygood.type.CustomOrderDeliveryStatus;
 import com.lhiot.healthygood.type.CustomOrderStatus;
 import com.lhiot.healthygood.type.OperStatus;
@@ -65,7 +67,7 @@ public class CustomOrderService {
     private final CustomOrderDeliveryMapper customOrderDeliveryMapper;
     private final Generator<Long> generator;
     private final DictionaryClient dictionaryClient;
-
+    private final FruitDoctorService fruitDoctorService;
     private final RabbitTemplate rabbitTemplate;
     //暂停开始结束时间
     private static final LocalTime PAUSE_TIME = LocalTime.parse("00:00:00");
@@ -84,7 +86,7 @@ public class CustomOrderService {
                               CustomOrderDeliveryMapper customOrderDeliveryMapper,
                               Generator<Long> generator,
                               DictionaryClient dictionaryClient,
-                              RabbitTemplate rabbitTemplate) {
+                              DoctorAchievementLogService doctorAchievementLogService, FruitDoctorService fruitDoctorService, RabbitTemplate rabbitTemplate) {
         this.customPlanService = customPlanService;
         this.orderService = orderService;
         this.baseDataServiceFeign = baseDataServiceFeign;
@@ -96,6 +98,7 @@ public class CustomOrderService {
         this.customOrderDeliveryMapper = customOrderDeliveryMapper;
         this.generator = generator;
         this.dictionaryClient = dictionaryClient;
+        this.fruitDoctorService = fruitDoctorService;
         this.rabbitTemplate = rabbitTemplate;
         //初始化调用修改暂停恢复定制计划每五分钟调用一次
         HealthyGoodQueue.DelayQueue.UPDATE_CUSTOM_ORDER_STATUS.send(rabbitTemplate,"nothing",1*60*1000);
@@ -394,6 +397,7 @@ public class CustomOrderService {
         }
 
         //本地修改提取次数
+        fruitDoctorService.calculationCommission(orderDetailResultTips.getData());//鲜果师业绩
         String orderCode = orderDetailResultTips.getData().getCode();
         CustomOrderDelivery customOrderDelivery = new CustomOrderDelivery();
         customOrderDelivery.setProductShelfId(customPlanProductResult.getProductShelfId());

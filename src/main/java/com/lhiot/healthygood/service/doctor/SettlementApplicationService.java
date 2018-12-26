@@ -10,10 +10,7 @@ import com.lhiot.healthygood.domain.user.FruitDoctor;
 import com.lhiot.healthygood.mapper.doctor.DoctorAchievementLogMapper;
 import com.lhiot.healthygood.mapper.doctor.SettlementApplicationMapper;
 import com.lhiot.healthygood.mapper.user.FruitDoctorMapper;
-import com.lhiot.healthygood.type.FirstAndRemarkData;
-import com.lhiot.healthygood.type.SettlementStatus;
-import com.lhiot.healthygood.type.SourceType;
-import com.lhiot.healthygood.type.TemplateMessageEnum;
+import com.lhiot.healthygood.type.*;
 import com.lhiot.healthygood.util.DataItem;
 import com.lhiot.healthygood.util.DataObject;
 import com.lhiot.healthygood.wechat.WeChatUtil;
@@ -67,6 +64,23 @@ public class SettlementApplicationService {
      */
     public int create(SettlementApplication settlementApplication) {
         return this.settlementApplicationMapper.create(settlementApplication);
+    }
+
+    /**
+     * 结算进行扣款
+     * @param settlementApplication
+     * @return
+     */
+    public int settlement(SettlementApplication settlementApplication){
+        boolean flag = fruitDoctorMapper.updateBouns(Maps.of("id", settlementApplication.getDoctorId(), "money", -settlementApplication.getAmount(), "balanceType", BalanceType.SETTLEMENT.name()))>0;
+        if (!flag) {
+            return -1;
+        }
+        int result = settlementApplicationMapper.create(settlementApplication);
+        if (result>0){
+            this.settlementApplicationSendTemplate(settlementApplication);
+        }
+        return result;
     }
 
     /**
@@ -235,7 +249,7 @@ public class SettlementApplicationService {
      * @throws JsonProcessingException
      * @throws AmqpException
      */
-    public void settlementApplicationSendTemplate(SettlementApplication settlementApplication) throws AmqpException, JsonProcessingException {
+    public void settlementApplicationSendTemplate(SettlementApplication settlementApplication) throws AmqpException{
         Integer amount = (null == settlementApplication.getAmount() ? 0 : settlementApplication.getAmount());
         //获取鲜果师用户信息
         FruitDoctor fruitDoctor = fruitDoctorMapper.selectById(settlementApplication.getDoctorId());
