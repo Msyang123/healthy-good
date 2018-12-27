@@ -198,7 +198,7 @@ public class OrderApi {
                         ActivityProduct ac = activitPriceMap.get(item.getId());
                         Integer canBuyActivityCounts = ac.getLimitCount() - ac.getAlreadyBuyCount();//计算出剩余可购买次数
                         Integer originalCounts = orderProduct.getProductQty() - canBuyActivityCounts;//超过活动限购后，按原价购买数量
-                        Integer discountPrice = (int) Calculator.add(Calculator.mul(price, originalCounts), Calculator.mul(ac.getActivityPrice(), canBuyActivityCounts));
+                        Integer discountPrice = canBuyActivityCounts>originalCounts ? (int) Calculator.mul(ac.getActivityPrice(), orderProduct.getProductQty()) : (int) Calculator.add(Calculator.mul(price, originalCounts), Calculator.mul(ac.getActivityPrice(), canBuyActivityCounts));
                         orderProduct.setDiscountPrice(discountPrice);
                     } else {
                         orderProduct.setDiscountPrice((int) Calculator.mul(price, orderProduct.getProductQty()));//去除优惠有单品总价
@@ -221,22 +221,15 @@ public class OrderApi {
         }
         if (activityProducts.size() > 0) {
             activityProducts.forEach(activityProduct -> {
-                ActivityProductRecord recordParam = new ActivityProductRecord();
-                recordParam.setUserId(userId);
-                recordParam.setProductShelfId(activityProduct.getProductShelfId());
-                Integer counts = activityProductRecordService.selectRecordCount(recordParam);
-                if (counts<=activityProduct.getLimitCount()){
-                    int canBuyCount = activityProduct.getLimitCount()-counts;
-                    for (int i=0;i<canBuyCount;i++){
-                        ActivityProductRecord record = new ActivityProductRecord();
-                        record.setProductShelfId(activityProduct.getProductShelfId());
-                        record.setUserId(userId);
-                        record.setActivityId(activityProduct.getActivityId());
-                        record.setOrderCode(orderDetailResultResponse.getBody().getCode());
-                        record.setActivityType(ActivityType.NEW_SPECIAL);
-                        activityProductRecordService.create(record);
-                    }
-                }
+                orderParam.getOrderProducts().stream().filter(orderProduct -> Objects.equals(orderProduct.getShelfId(),activityProduct.getProductShelfId())).forEach(map -> {
+                    ActivityProductRecord record = new ActivityProductRecord();
+                    record.setProductShelfId(activityProduct.getProductShelfId());
+                    record.setUserId(userId);
+                    record.setActivityId(activityProduct.getActivityId());
+                    record.setOrderCode(orderDetailResultResponse.getBody().getCode());
+                    record.setActivityType(ActivityType.NEW_SPECIAL);
+                    activityProductRecordService.create(record);
+                });
 
             });
         }
