@@ -31,6 +31,7 @@ import com.lhiot.healthygood.service.order.OrderService;
 import com.lhiot.healthygood.service.user.DoctorCustomerService;
 import com.lhiot.healthygood.service.user.FruitDoctorService;
 import com.lhiot.healthygood.type.ActivityType;
+import com.lhiot.healthygood.type.CustomOrderDeliveryStatus;
 import com.lhiot.healthygood.type.ShelfType;
 import com.lhiot.healthygood.util.ConvertRequestToMap;
 import com.lhiot.healthygood.util.FeginResponseTools;
@@ -304,10 +305,16 @@ public class OrderApi {
             //海鼎备货后提交退货
             case WAIT_DISPATCHING:
                 refundOrder = orderServiceFeign.returnsRefundOrder(orderCode, returnOrderParam);
+                if(Objects.nonNull(refundOrder) && refundOrder.getStatusCode().is2xxSuccessful()){
+                    customOrderService.updateCustomOrderDeliveryStatus(orderCode,CustomOrderDeliveryStatus.RETURNING);//修改为退货中
+                }
                 break;
             //已收货
             case RECEIVED:
                 refundOrder = orderServiceFeign.returnsRefundOrder(orderCode, returnOrderParam);
+                if(Objects.nonNull(refundOrder) && refundOrder.getStatusCode().is2xxSuccessful()){
+                    customOrderService.updateCustomOrderDeliveryStatus(orderCode,CustomOrderDeliveryStatus.RETURNING);//修改为退货中
+                }
                 break;
             //订单发送海鼎，未备货退货
             case SEND_OUTING:
