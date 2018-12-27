@@ -583,12 +583,24 @@ public class CustomOrderService {
             return Tips.warn("找不到提取的定制配送记录");
         }
         CustomOrder customOrder = new CustomOrder();
-        customOrder.setId(customOrderDelivery.getCustomOrderId());
+        customOrder.setId(customOrderDelivery.getCustomOrderId());//定制订单id
         customOrder.setRemainingQtyAdd(1);//退还一次剩余
         this.updateById(customOrder);
-        ResponseEntity  notPayedRefundResponse= orderServiceFeign.notPayedRefund(orderCode, notPayRefundWay);
-        log.info("定制订单发送基础服务订单实际未支付退货（无需退款）{}",notPayedRefundResponse);
+
+        //修改当前配送记录为已退货
+        this.updateCustomOrderDeliveryStatus(orderCode, CustomOrderDeliveryStatus.ALREADY_RETURN);
+
+        ResponseEntity notPayedRefundResponse = orderServiceFeign.notPayedRefund(orderCode, notPayRefundWay);
+        log.info("定制订单发送基础服务订单实际未支付退货（无需退款）{}", notPayedRefundResponse);
         return Tips.info("退还剩余次数成功");
+    }
+
+    public void updateCustomOrderDeliveryStatus(String orderCode, CustomOrderDeliveryStatus customOrderDeliveryStatus) {
+        CustomOrderDelivery updateCustomOrderDelivery = new CustomOrderDelivery();
+        updateCustomOrderDelivery.setOrderCode(orderCode);
+        updateCustomOrderDelivery.setDeliveryStatus(customOrderDeliveryStatus);
+        //修改当前配送记录为已退货
+        customOrderDeliveryMapper.updateByOrderCode(updateCustomOrderDelivery);
     }
 
 }

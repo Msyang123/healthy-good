@@ -27,7 +27,7 @@ public interface CustomOrderDeliveryMapper {
      */
     int create(CustomOrderDelivery customOrderDelivery);
 
-    int updateByOrderCode(String orderCode);
+    int updateByOrderCode(CustomOrderDelivery customOrderDelivery);
 
     List<CustomOrderDelivery> selectByCustomOrderId(@Param("planId") Long planId, @Param("planPeriod") Integer planPeriod, @Param("customOrderId") Long customOrderId);
 
