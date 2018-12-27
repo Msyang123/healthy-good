@@ -142,6 +142,9 @@ public class OrderService {
                         customOrder.setId(customOrderDelivery.getCustomOrderId());
                         customOrder.setRemainingQtyAdd(1);//退还一次剩余
                         customOrderMapper.updateById(customOrder);
+                        //通知基础服务已经海鼎回调退货到门店
+                        ResponseEntity  notPayedRefundResponse= orderServiceFeign.notPayedRefund(orderCode, NotPayRefundWay.STOCKING);
+                        log.info("定制订单发送基础服务订单实际未支付退货（无需退款）{}",notPayedRefundResponse);
                     } else {
                         //普通订单
                         Tips refundOrderTips = FeginResponseTools.convertResponse(orderServiceFeign.refundOrder(orderDetailResult.getCode(), null));//此处为用户依据申请了退货了，海鼎回调中不需要再告知基础服务退货列表

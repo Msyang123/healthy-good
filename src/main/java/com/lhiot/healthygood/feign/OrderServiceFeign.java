@@ -3,10 +3,7 @@ package com.lhiot.healthygood.feign;
 import com.leon.microx.web.result.Pages;
 import com.leon.microx.web.result.Tuple;
 import com.lhiot.healthygood.feign.model.*;
-import com.lhiot.healthygood.feign.type.OrderRefundStatus;
-import com.lhiot.healthygood.feign.type.OrderStatus;
-import com.lhiot.healthygood.feign.type.OrderType;
-import com.lhiot.healthygood.feign.type.RefundType;
+import com.lhiot.healthygood.feign.type.*;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
@@ -82,7 +79,11 @@ public interface OrderServiceFeign {
     @RequestMapping(value = "/orders/{payId}/refund/confirmation", method = RequestMethod.PUT)
     ResponseEntity refundConfirmation(@PathVariable("payId") String payId, @RequestParam("refundStatus") OrderRefundStatus refundStatus);
 
+    //订单实际未支付退货（无需退款）
+    @RequestMapping(value = "orders/{orderCode}/not-payed/refund", method = RequestMethod.PUT)
+    ResponseEntity notPayedRefund(@PathVariable("orderCode") String orderCode, @RequestParam("notPayRefundWay") NotPayRefundWay notPayRefundWay);
+
     //查询退款费用
     @RequestMapping(value = "orders/{orderCode}/refund/fee", method = RequestMethod.GET)
-    ResponseEntity<Fee> refundFee(@PathVariable("orderCode") String orderCode,@RequestParam("productIds") String productIds,@RequestParam("refundType") RefundType refundType);
+    ResponseEntity<Fee> refundFee(@PathVariable("orderCode") String orderCode, @RequestParam("productIds") String productIds, @RequestParam("refundType") RefundType refundType);
 }

@@ -297,17 +297,16 @@ public class OrderApi {
         switch (orderDetailResult.getStatus()) {
             //订单未发送海鼎，退款
             case WAIT_SEND_OUT:
-                refundOrder = orderServiceFeign.notSendHdRefundOrder(orderCode, returnOrderParam);
-                if (Objects.nonNull(refundOrder)&&refundOrder.getStatusCode().is2xxSuccessful()){
                     //如果是定制订单，需要退剩余次数+1
                     if (Objects.equals(OrderType.CUSTOM, orderDetailResult.getOrderType())) {
                         //定制订单 只退用户剩余次数，不退款
-                        Tips refundResult = customOrderService.refundCustomOrderDelivery(orderCode);
+                        Tips refundResult = customOrderService.refundCustomOrderDelivery(orderCode,NotPayRefundWay.NOT_SEND_HD);
                         if(refundResult.err()){
                             return ResponseEntity.badRequest().body(refundResult.getMessage());
                         }
+                    }else{
+                        refundOrder = orderServiceFeign.notSendHdRefundOrder(orderCode, returnOrderParam);
                     }
-                }
                 break;
             //海鼎备货后提交退货
             case WAIT_DISPATCHING:
@@ -319,16 +318,15 @@ public class OrderApi {
                 break;
             //订单发送海鼎，未备货退货
             case SEND_OUTING:
-                refundOrder = orderServiceFeign.sendHdRefundOrder(orderCode, returnOrderParam);
-                if (Objects.nonNull(refundOrder)&&refundOrder.getStatusCode().is2xxSuccessful()){
-                    //如果是定制订单，需要退剩余次数+1
-                    if (Objects.equals(OrderType.CUSTOM, orderDetailResult.getOrderType())) {
-                        //定制订单 只退用户剩余次数，不退款
-                        Tips refundResult = customOrderService.refundCustomOrderDelivery(orderCode);
-                        if(refundResult.err()){
-                            return ResponseEntity.badRequest().body(refundResult.getMessage());
-                        }
+                //如果是定制订单，需要退剩余次数+1
+                if (Objects.equals(OrderType.CUSTOM, orderDetailResult.getOrderType())) {
+                    //定制订单 只退用户剩余次数，不退款
+                    Tips refundResult = customOrderService.refundCustomOrderDelivery(orderCode,NotPayRefundWay.NOT_STOCKING);
+                    if(refundResult.err()){
+                        return ResponseEntity.badRequest().body(refundResult.getMessage());
                     }
+                }else{
+                    refundOrder = orderServiceFeign.sendHdRefundOrder(orderCode, returnOrderParam);
                 }
                 break;
 
