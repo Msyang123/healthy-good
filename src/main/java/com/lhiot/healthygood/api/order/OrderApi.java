@@ -199,7 +199,7 @@ public class OrderApi {
                         ActivityProduct ac = activitPriceMap.get(item.getId());
                         Integer canBuyActivityCounts = ac.getLimitCount() - ac.getAlreadyBuyCount();//计算出剩余可购买次数
                         Integer originalCounts = orderProduct.getProductQty() - canBuyActivityCounts;//超过活动限购后，按原价购买数量
-                        Integer discountPrice = (int) Calculator.add(Calculator.mul(price, originalCounts), Calculator.mul(ac.getActivityPrice(), canBuyActivityCounts));
+                        Integer discountPrice = canBuyActivityCounts > originalCounts ? (int) Calculator.mul(ac.getActivityPrice(), orderProduct.getProductQty()) : (int) Calculator.add(Calculator.mul(price, originalCounts), Calculator.mul(ac.getActivityPrice(), canBuyActivityCounts));
                         orderProduct.setDiscountPrice(discountPrice);
                     } else {
                         orderProduct.setDiscountPrice((int) Calculator.mul(price, orderProduct.getProductQty()));//去除优惠有单品总价
@@ -222,13 +222,8 @@ public class OrderApi {
         }
         if (activityProducts.size() > 0) {
             activityProducts.forEach(activityProduct -> {
-                ActivityProductRecord recordParam = new ActivityProductRecord();
-                recordParam.setUserId(userId);
-                recordParam.setProductShelfId(activityProduct.getProductShelfId());
-                Integer counts = activityProductRecordService.selectRecordCount(recordParam);
-                if (counts<=activityProduct.getLimitCount()){
-                    int canBuyCount = activityProduct.getLimitCount()-counts;
-                    for (int i=0;i<canBuyCount;i++){
+                orderParam.getOrderProducts().stream().filter(orderProduct -> Objects.equals(orderProduct.getShelfId(), activityProduct.getProductShelfId())).forEach(map -> {
+                    for (int i = 0; map.getProductQty() > i; i++) {
                         ActivityProductRecord record = new ActivityProductRecord();
                         record.setProductShelfId(activityProduct.getProductShelfId());
                         record.setUserId(userId);
@@ -237,7 +232,7 @@ public class OrderApi {
                         record.setActivityType(ActivityType.NEW_SPECIAL);
                         activityProductRecordService.create(record);
                     }
-                }
+                });
 
             });
         }
@@ -277,50 +272,50 @@ public class OrderApi {
         ResponseEntity refundOrder = null;
         returnOrderParam.setNotifyUrl(wechatPayConfig.getOrderRefundCallbackUrl());//设置退款回调
         //查询退款金额
-        ResponseEntity<Fee> refundFeeResponseEntity = orderServiceFeign.refundFee(orderCode,returnOrderParam.getOrderProductIds(),returnOrderParam.getRefundType());
+        ResponseEntity<Fee> refundFeeResponseEntity = orderServiceFeign.refundFee(orderCode, returnOrderParam.getOrderProductIds(), returnOrderParam.getRefundType());
         Tips<Fee> refundFeeTips = FeginResponseTools.convertResponse(refundFeeResponseEntity);
         AtomicReference<Integer> refundFeeSum = new AtomicReference<>(0);
         //计算订单金额
-        if(refundFeeTips.err()){
+        if (refundFeeTips.err()) {
             //如果查询失败那么就直接使用本地计算的退款费用退款
             //给商品赋值规格数量
             Arrays.asList(returnOrderParam.getOrderProductIds().split(",")).forEach(refundOrderProductId ->
                     orderDetailResult.getOrderProductList().stream()
-                    //上架id相同的订单商品信息，通过基础服务获取的赋值给订单商品信息
-                    .filter(orderProduct -> Objects.equals(orderProduct.getId(), Long.valueOf(refundOrderProductId)))
-                    .forEach(item -> refundFeeSum.updateAndGet(v->v+item.getDiscountPrice()))
+                            //上架id相同的订单商品信息，通过基础服务获取的赋值给订单商品信息
+                            .filter(orderProduct -> Objects.equals(orderProduct.getId(), Long.valueOf(refundOrderProductId)))
+                            .forEach(item -> refundFeeSum.updateAndGet(v -> v + item.getDiscountPrice()))
             );
-        }else{
+        } else {
             Fee refundFee = refundFeeTips.getData();
-            refundFeeSum.updateAndGet(v->v+refundFee.getFee());
+            refundFeeSum.updateAndGet(v -> v + refundFee.getFee());
         }
         returnOrderParam.setFee(refundFeeSum.get());
         switch (orderDetailResult.getStatus()) {
             //订单未发送海鼎，退款
             case WAIT_SEND_OUT:
-                    //如果是定制订单，需要退剩余次数+1
-                    if (Objects.equals(OrderType.CUSTOM, orderDetailResult.getOrderType())) {
-                        //定制订单 只退用户剩余次数，不退款
-                        Tips refundResult = customOrderService.refundCustomOrderDelivery(orderCode,NotPayRefundWay.NOT_SEND_HD);
-                        if(refundResult.err()){
-                            return ResponseEntity.badRequest().body(refundResult.getMessage());
-                        }
-                    }else{
-                        refundOrder = orderServiceFeign.notSendHdRefundOrder(orderCode, returnOrderParam);
+                //如果是定制订单，需要退剩余次数+1
+                if (Objects.equals(OrderType.CUSTOM, orderDetailResult.getOrderType())) {
+                    //定制订单 只退用户剩余次数，不退款
+                    Tips refundResult = customOrderService.refundCustomOrderDelivery(orderCode, NotPayRefundWay.NOT_SEND_HD);
+                    if (refundResult.err()) {
+                        return ResponseEntity.badRequest().body(refundResult.getMessage());
                     }
+                } else {
+                    refundOrder = orderServiceFeign.notSendHdRefundOrder(orderCode, returnOrderParam);
+                }
                 break;
             //海鼎备货后提交退货
             case WAIT_DISPATCHING:
                 refundOrder = orderServiceFeign.returnsRefundOrder(orderCode, returnOrderParam);
-                if(Objects.nonNull(refundOrder) && refundOrder.getStatusCode().is2xxSuccessful()){
-                    customOrderService.updateCustomOrderDeliveryStatus(orderCode,CustomOrderDeliveryStatus.RETURNING);//修改为退货中
+                if (Objects.nonNull(refundOrder) && refundOrder.getStatusCode().is2xxSuccessful()) {
+                    customOrderService.updateCustomOrderDeliveryStatus(orderCode, CustomOrderDeliveryStatus.RETURNING);//修改为退货中
                 }
                 break;
             //已收货
             case RECEIVED:
                 refundOrder = orderServiceFeign.returnsRefundOrder(orderCode, returnOrderParam);
-                if(Objects.nonNull(refundOrder) && refundOrder.getStatusCode().is2xxSuccessful()){
-                    customOrderService.updateCustomOrderDeliveryStatus(orderCode,CustomOrderDeliveryStatus.RETURNING);//修改为退货中
+                if (Objects.nonNull(refundOrder) && refundOrder.getStatusCode().is2xxSuccessful()) {
+                    customOrderService.updateCustomOrderDeliveryStatus(orderCode, CustomOrderDeliveryStatus.RETURNING);//修改为退货中
                 }
                 break;
             //订单发送海鼎，未备货退货
@@ -328,17 +323,17 @@ public class OrderApi {
                 //如果是定制订单，需要退剩余次数+1
                 if (Objects.equals(OrderType.CUSTOM, orderDetailResult.getOrderType())) {
                     //定制订单 只退用户剩余次数，不退款
-                    Tips refundResult = customOrderService.refundCustomOrderDelivery(orderCode,NotPayRefundWay.NOT_STOCKING);
-                    if(refundResult.err()){
+                    Tips refundResult = customOrderService.refundCustomOrderDelivery(orderCode, NotPayRefundWay.NOT_STOCKING);
+                    if (refundResult.err()) {
                         return ResponseEntity.badRequest().body(refundResult.getMessage());
                     }
-                }else{
+                } else {
                     refundOrder = orderServiceFeign.sendHdRefundOrder(orderCode, returnOrderParam);
                 }
                 break;
 
         }
-            fruitDoctorService.calculationCommission(orderDetailResult);
+        fruitDoctorService.calculationCommission(orderDetailResult);
         return refundOrder;
     }
 
@@ -374,21 +369,21 @@ public class OrderApi {
     @GetMapping("/orders/{orderCode}/detail")
     @ApiOperation(value = "根据订单code查询订单详情", response = OrderDetailResult.class)
     public ResponseEntity orderDetial(@Valid @NotBlank @PathVariable("orderCode") String orderCode) {
-       ResponseEntity<OrderDetailResult> orderDetailResultResponseEntity = orderServiceFeign.orderDetail(orderCode, true, true);
-       Tips<OrderDetailResult> orderDetailResultTips = FeginResponseTools.convertResponse(orderDetailResultResponseEntity);
-       if(orderDetailResultTips.err()){
-           return orderDetailResultResponseEntity;
-       }
-       if(StringUtils.isNotBlank(orderDetailResultTips.getData().getPayId())){
-           ResponseEntity<Record> payLog = paymentServiceFeign.one(orderDetailResultTips.getData().getPayId());
-           Tips<Record> recordTips = FeginResponseTools.convertResponse(payLog);
-           if(recordTips.err()){
-               return orderDetailResultResponseEntity;
-           }
-           //设置支付类型
-           orderDetailResultResponseEntity.getBody().setTradeType(recordTips.getData().getTradeType());
-       }
-       return orderDetailResultResponseEntity;
+        ResponseEntity<OrderDetailResult> orderDetailResultResponseEntity = orderServiceFeign.orderDetail(orderCode, true, true);
+        Tips<OrderDetailResult> orderDetailResultTips = FeginResponseTools.convertResponse(orderDetailResultResponseEntity);
+        if (orderDetailResultTips.err()) {
+            return orderDetailResultResponseEntity;
+        }
+        if (StringUtils.isNotBlank(orderDetailResultTips.getData().getPayId())) {
+            ResponseEntity<Record> payLog = paymentServiceFeign.one(orderDetailResultTips.getData().getPayId());
+            Tips<Record> recordTips = FeginResponseTools.convertResponse(payLog);
+            if (recordTips.err()) {
+                return orderDetailResultResponseEntity;
+            }
+            //设置支付类型
+            orderDetailResultResponseEntity.getBody().setTradeType(recordTips.getData().getTradeType());
+        }
+        return orderDetailResultResponseEntity;
     }
 
     @GetMapping("/orders/count/status")
@@ -396,13 +391,13 @@ public class OrderApi {
     public ResponseEntity<OrderGroupCount> countStatus(Sessions.User user) {
         OrderGroupCount orderGroupCount = new OrderGroupCount();
 
-        BaseOrderParam baseOrderParam =new BaseOrderParam();
+        BaseOrderParam baseOrderParam = new BaseOrderParam();
         baseOrderParam.setUserIds(user.getUser().get("userId").toString());
         baseOrderParam.setOrderType(OrderType.NORMAL);
         baseOrderParam.setApplicationType(ApplicationType.HEALTH_GOOD);
         baseOrderParam.setOrderStatuses(new OrderStatus[]{OrderStatus.WAIT_PAYMENT});
-        ResponseEntity<Pages<OrderDetailResult>>  ordersPages = orderServiceFeign.ordersPages(baseOrderParam);
-        Tips<Pages<OrderDetailResult>> waitPaymentListTips= FeginResponseTools.convertResponse(ordersPages);
+        ResponseEntity<Pages<OrderDetailResult>> ordersPages = orderServiceFeign.ordersPages(baseOrderParam);
+        Tips<Pages<OrderDetailResult>> waitPaymentListTips = FeginResponseTools.convertResponse(ordersPages);
 
         //ResponseEntity<Tuple<OrderDetailResult>> waitPayment = orderServiceFeign.ordersByUserId(userId, OrderType.NORMAL, OrderStatus.WAIT_PAYMENT);
         //Tips<Tuple<OrderDetailResult>> waitPaymentTips = FeginResponseTools.convertResponse(waitPayment);
@@ -413,9 +408,9 @@ public class OrderApi {
         }
         //ResponseEntity<Tuple<OrderDetailResult>> waitReceive = orderServiceFeign.ordersByUserId(userId, OrderType.NORMAL, OrderStatus.DISPATCHING);//配送中
         //Tips<Tuple<OrderDetailResult>> waitReceiveTips = FeginResponseTools.convertResponse(waitReceive);
-        baseOrderParam.setOrderStatuses(new OrderStatus[]{OrderStatus.WAIT_SEND_OUT,OrderStatus.SEND_OUTING,OrderStatus.WAIT_DISPATCHING,OrderStatus.DISPATCHING});
+        baseOrderParam.setOrderStatuses(new OrderStatus[]{OrderStatus.WAIT_SEND_OUT, OrderStatus.SEND_OUTING, OrderStatus.WAIT_DISPATCHING, OrderStatus.DISPATCHING});
         ordersPages = orderServiceFeign.ordersPages(baseOrderParam);
-        Tips<Pages<OrderDetailResult>> waitReceiveListTips= FeginResponseTools.convertResponse(ordersPages);
+        Tips<Pages<OrderDetailResult>> waitReceiveListTips = FeginResponseTools.convertResponse(ordersPages);
         if (waitReceiveListTips.err()) {
             orderGroupCount.setWaitReceiveCount(0);
         } else {
