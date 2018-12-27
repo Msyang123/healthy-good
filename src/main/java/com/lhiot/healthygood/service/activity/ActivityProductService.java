@@ -66,7 +66,7 @@ public class ActivityProductService {
         @NotNull(message = "商品上架id不为空") Long productShelfId = activityProduct.getProductShelfId();
         ActivityProduct findActivityProduct = activityProductMapper.selectBySpecialIdAndShelfId(specialProductActivityId, productShelfId);
         if (Objects.nonNull(findActivityProduct)) {
-            return Tips.warn("上架id重复关联，添加失败");
+            return Tips.warn("该商品重复关联，添加失败");
         }
         // 添加活动商品
         boolean addActivityProduct = activityProductMapper.create(activityProduct) > 0;

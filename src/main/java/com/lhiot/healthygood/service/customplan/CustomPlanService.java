@@ -26,7 +26,6 @@ import org.springframework.util.CollectionUtils;
 import java.time.Instant;
 import java.util.*;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 @Service
 @Transactional(rollbackFor = Exception.class)
@@ -62,7 +61,14 @@ public class CustomPlanService {
         BeanUtils.copyProperties(customPlan, result);
         List<CustomPlanPeriodResult> customPlanPeriodResultList = getCustomPlanPeriodResultList(id);
         result.setPeriodList(customPlanPeriodResultList);
-        result.setPrice(customPlanSpecificationMapper.findMinPriceByPlanId(id));//最低定制规格价格
+        // 最低定制规格价格
+        result.setPrice(customPlanSpecificationMapper.findMinPriceByPlanId(id));
+        // 定制计划关联的定制板块
+        List<CustomPlanSectionRelation> customPlanSectionRelationList = customPlanSectionRelationMapper.findByPlanId(id);
+        if (!CollectionUtils.isEmpty(customPlanPeriodResultList)) {
+            List<Long> sectionIdList = customPlanSectionRelationList.stream().map(CustomPlanSectionRelation::getSectionId).collect(Collectors.toList());
+            result.setCustomPlanSectionIds(sectionIdList);
+        }
         return result;
     }
 
@@ -308,7 +314,7 @@ public class CustomPlanService {
         customPlan.setCreateAt(Date.from(Instant.now()));
         boolean updateCustomPlan = customPlanMapper.updateById(customPlan) > 0;
         if (!updateCustomPlan) {
-            return Tips.warn("修饰定制计划失败");
+            return Tips.warn("修改定制计划失败");
         }
         return Tips.info("修改定制计划成功");
     }
