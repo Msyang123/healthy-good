@@ -132,7 +132,7 @@
         on p.id= d.custom_plan_product_id
     </select>
 
-    <select id="selectDeliveryByCustomOrderId" resultType="com.lhiot.healthygood.domain.customplan.CustomOrderDelivery" parameterType="Long">
-        select * from custom_order_delivery where custom_order_id =#{0}
+    <select id="selectOrderCode" resultType="com.lhiot.healthygood.domain.customplan.CustomOrderDelivery" parameterType="String">
+        select * from custom_order_delivery where order_code =#{0}
     </select>
 </mapper>

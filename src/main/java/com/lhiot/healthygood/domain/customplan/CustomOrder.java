@@ -40,6 +40,9 @@ public class CustomOrder {
     @ApiModelProperty(value = "剩余配送次数",dataType = "Integer")
     private Integer remainingQty;
 
+    @ApiModelProperty(value = "剩余配送次数退款时退回",dataType = "Integer")
+    private Integer remainingQtyAdd;
+
     @ApiModelProperty(notes = "MANUAL-手动，AUTO-自动", dataType = "CustomOrderBuyType")
     private CustomOrderBuyType deliveryType;
 

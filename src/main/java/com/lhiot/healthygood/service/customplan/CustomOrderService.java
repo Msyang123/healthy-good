@@ -102,7 +102,7 @@ public class CustomOrderService {
         this.fruitDoctorService = fruitDoctorService;
         this.rabbitTemplate = rabbitTemplate;
         //初始化调用修改暂停恢复定制计划每五分钟调用一次
-        HealthyGoodQueue.DelayQueue.UPDATE_CUSTOM_ORDER_STATUS.send(rabbitTemplate,"nothing",1*60*1000);
+        HealthyGoodQueue.DelayQueue.UPDATE_CUSTOM_ORDER_STATUS.send(rabbitTemplate, "nothing", 1 * 60 * 1000);
     }
 
     /**
@@ -135,15 +135,15 @@ public class CustomOrderService {
         LocalDateTime endExtractionAt = LocalDateTime.now().plusDays(maxExtractionDay);
         customOrder.setEndExtractionAt(Date.from(endExtractionAt.atZone(ZoneId.systemDefault()).toInstant()));//定制提取截止时间
         int result = customOrderMapper.create(customOrder);
-        if(result > 0){
+        if (result > 0) {
             //mq设置三十分钟未支付失效
             HealthyGoodQueue.DelayQueue.CANCEL_CUSTOM_ORDER.send(rabbitTemplate, orderCode, 30 * 60 * 1000);
             //mq超过最后提取期限，给用户原路按照定制均价退款
-            long delay =customOrder.getEndExtractionAt().getTime()-current.getTime();//最后提取时间毫秒数-当前时间毫秒数
+            long delay = customOrder.getEndExtractionAt().getTime() - current.getTime();//最后提取时间毫秒数-当前时间毫秒数
             HealthyGoodQueue.DelayQueue.LAST_EXTRACTION.send(rabbitTemplate, orderCode, delay);
             return customOrder;
         }
-         return null;
+        return null;
     }
 
     /**
@@ -558,6 +558,35 @@ public class CustomOrderService {
         //等待到下一次配送的时间处理提取
         //发送自动提取定制订单延迟队列
         HealthyGoodQueue.DelayQueue.AUTO_EXTRACTION.send(rabbitTemplate, customOrderCode, interval);
+    }
+
+    public CustomOrderDelivery selectOrderCode(String orderCode) {
+        return customOrderDeliveryMapper.selectOrderCode(orderCode);
+    }
+
+    public void updateById(CustomOrder customOrder) {
+        customOrderMapper.updateById(customOrder);
+    }
+
+    /**
+     * 售后 退还定制订单剩余次数+1
+     * 不退款
+     *
+     * @return
+     */
+    public Tips refundCustomOrderDelivery(String orderCode) {
+        //如果是定制订单，需要退剩余次数+1
+        //定制订单 只退用户剩余次数，不退款
+        CustomOrderDelivery customOrderDelivery = this.selectOrderCode(orderCode);
+        if (Objects.isNull(customOrderDelivery)) {
+            log.error("订单退货,找不到提取的定制配送记录,{}", orderCode);
+            return Tips.warn("找不到提取的定制配送记录");
+        }
+        CustomOrder customOrder = new CustomOrder();
+        customOrder.setId(customOrderDelivery.getCustomOrderId());
+        customOrder.setRemainingQtyAdd(1);//退还一次剩余
+        this.updateById(customOrder);
+        return Tips.info("退还剩余次数成功");
     }
 
 }

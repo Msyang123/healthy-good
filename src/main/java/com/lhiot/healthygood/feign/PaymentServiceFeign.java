@@ -42,7 +42,7 @@ public interface PaymentServiceFeign {
     ResponseEntity<Map> wxJsSign(@Valid @RequestBody WxPayModel wxPay);
 
     //支付 - 验签
-    @RequestMapping(value = "/we-chat/payed/{outTradeNo}/verification", method = RequestMethod.POST)
+    @RequestMapping(value = "/we-chat/paid/{outTradeNo}/verification", method = RequestMethod.POST)
     ResponseEntity wxVerify(@PathVariable("outTradeNo") String outTradeNo, @RequestBody Map<String, String> notifiedParameters);
     /**********微信*******************************/
 
@@ -74,6 +74,7 @@ public interface PaymentServiceFeign {
 
     @RequestMapping(value = "/refunds/{outRefundNo}/completed", method = RequestMethod.PUT)
     @ApiOperation("修改退款单为完成状态 退款回调中调用此接口 参数为微信回调中的out_refund_no")
-    ResponseEntity completed(@PathVariable("outRefundNo") String outRefundNo);
+    ResponseEntity refundCompleted(@PathVariable("outRefundNo") String outRefundNo);
+
     /************支付退款*****************************/
 }

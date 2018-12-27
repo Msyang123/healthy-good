@@ -2,6 +2,8 @@ package com.lhiot.healthygood.api.callback;
 
 import com.leon.microx.util.DateTime;
 import com.leon.microx.util.Jackson;
+import com.leon.microx.util.xml.XNode;
+import com.leon.microx.util.xml.XReader;
 import com.leon.microx.web.result.Tips;
 import com.leon.microx.web.session.Sessions;
 import com.lhiot.healthygood.domain.customplan.CustomOrder;
@@ -12,6 +14,7 @@ import com.lhiot.healthygood.feign.PaymentServiceFeign;
 import com.lhiot.healthygood.feign.model.*;
 import com.lhiot.healthygood.feign.type.ApplicationType;
 import com.lhiot.healthygood.feign.type.OperationStatus;
+import com.lhiot.healthygood.feign.type.OrderRefundStatus;
 import com.lhiot.healthygood.mapper.customplan.CustomOrderMapper;
 import com.lhiot.healthygood.service.customplan.CustomOrderService;
 import com.lhiot.healthygood.service.order.OrderService;
@@ -33,8 +36,10 @@ import org.springframework.web.bind.annotation.RestController;
 import javax.servlet.http.HttpServletRequest;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.TreeMap;
 import java.util.concurrent.TimeUnit;
 
 @Api(description = "微信支付回调接口")
@@ -72,7 +77,9 @@ public class WxCallbackApi {
         if (wxVerifyTips.err()) {
             //基础支付服务如果有取消或者关单接口就调用
             log.error("订单支付微信回调参数验签失败:{},{}", parameters, wxVerifyTips);
-            return ResponseEntity.badRequest().body(wxVerifyTips.getMessage());
+            return ResponseEntity.ok("<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
+                    + "<xml><return_code><![CDATA[SUCCESS]]></return_code>"
+                    + "<return_msg><![CDATA[OK]]></return_msg></xml>");
         }
 
         //传递支付单号(parameters.get("outTradeNo")) 调用订单中心修改为成功支付
@@ -118,8 +125,12 @@ public class WxCallbackApi {
             return ResponseEntity.badRequest().body(wxVerifyTips.getMessage());
         }
         log.info("发送基础服务支付通知退款完成{}",parameters.get("out_refund_no"));
-        paymentServiceFeign.completed(parameters.get("out_refund_no"));
-        return ResponseEntity.ok("success");
+        paymentServiceFeign.refundCompleted(parameters.get("out_refund_no"));
+        ResponseEntity refundConfirmation = orderServiceFeign.refundConfirmation(parameters.get("out_refund_no"), OrderRefundStatus.ALREADY_RETURN);
+        log.info("发起用户退款{}", refundConfirmation);
+        return ResponseEntity.ok("<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
+                + "<xml><return_code><![CDATA[SUCCESS]]></return_code>"
+                + "<return_msg><![CDATA[OK]]></return_msg></xml>");
     }
 
     @Sessions.Uncheck
@@ -131,7 +142,9 @@ public class WxCallbackApi {
         if (wxVerifyTips.err()) {
             //基础支付服务如果有取消或者关单接口就调用
             log.error("充值微信回调参数验签失败{},{}", parameters, wxVerifyTips);
-            return ResponseEntity.badRequest().body(wxVerifyTips.getMessage());
+            return ResponseEntity.ok("<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
+                    + "<xml><return_code><![CDATA[SUCCESS]]></return_code>"
+                    + "<return_msg><![CDATA[OK]]></return_msg></xml>");
         }
 
         Long userId = Long.valueOf(parameters.get("attach"));
@@ -169,7 +182,9 @@ public class WxCallbackApi {
         if (wxVerifyTips.err()) {
             //基础支付服务如果有取消或者关单接口就调用
             log.error("定制计划支付微信回调参数验签失败:{},{}", parameters, wxVerifyTips);
-            return ResponseEntity.badRequest().body(wxVerifyTips.getMessage());
+            return ResponseEntity.ok("<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
+                    + "<xml><return_code><![CDATA[SUCCESS]]></return_code>"
+                    + "<return_msg><![CDATA[OK]]></return_msg></xml>");
         }
 
         PayedModel payed = new PayedModel();
@@ -198,7 +213,9 @@ public class WxCallbackApi {
         LocalDateTime deliveryDateTime = LocalDate.now().atTime(customOrderTime.getStartTime());
         deliveryDateTime=deliveryDateTime.plusDays(1);
         customOrderService.scheduleDeliveryCustomOrder(deliveryDateTime,customOrderCode);
-        return ResponseEntity.ok("success");
+        return ResponseEntity.ok("<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
+                + "<xml><return_code><![CDATA[SUCCESS]]></return_code>"
+                + "<return_msg><![CDATA[OK]]></return_msg></xml>");
     }
 
     @Sessions.Uncheck
@@ -214,8 +231,10 @@ public class WxCallbackApi {
             return ResponseEntity.badRequest().body(wxVerifyTips.getMessage());
         }
         log.info("发送基础服务支付通知退款完成{}",parameters.get("out_refund_no"));
-        paymentServiceFeign.completed(parameters.get("out_refund_no"));
-        return ResponseEntity.ok("success");
+        paymentServiceFeign.refundCompleted(parameters.get("out_refund_no"));
+        return ResponseEntity.ok("<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
+                + "<xml><return_code><![CDATA[SUCCESS]]></return_code>"
+                + "<return_msg><![CDATA[OK]]></return_msg></xml>");
     }
 
     /**

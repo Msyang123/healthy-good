@@ -1,11 +1,11 @@
 package com.lhiot.healthygood.feign.model;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
 import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.NotEmpty;
 import java.util.Date;
 
 /**
@@ -22,7 +22,7 @@ public class PayedModel {
     @ApiModelProperty(value = "付款方式", dataType = "String", required = true)
     private String bankType;
 
-    @NotEmpty
     @ApiModelProperty(value = "付款时间", dataType = "Date", required = true)
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
     private Date payAt;
 }

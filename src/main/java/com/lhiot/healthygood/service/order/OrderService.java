@@ -5,6 +5,8 @@ import com.leon.microx.util.Position;
 import com.leon.microx.util.StringUtils;
 import com.leon.microx.web.result.Tips;
 import com.lhiot.healthygood.config.HealthyGoodConfig;
+import com.lhiot.healthygood.domain.customplan.CustomOrder;
+import com.lhiot.healthygood.domain.customplan.CustomOrderDelivery;
 import com.lhiot.healthygood.feign.DeliverServiceFeign;
 import com.lhiot.healthygood.feign.OrderServiceFeign;
 import com.lhiot.healthygood.feign.model.DeliverTime;
@@ -12,8 +14,11 @@ import com.lhiot.healthygood.feign.model.DeliverUpdate;
 import com.lhiot.healthygood.feign.model.DeliveryParam;
 import com.lhiot.healthygood.feign.model.OrderDetailResult;
 import com.lhiot.healthygood.feign.type.*;
+import com.lhiot.healthygood.mapper.customplan.CustomOrderDeliveryMapper;
+import com.lhiot.healthygood.mapper.customplan.CustomOrderMapper;
 import com.lhiot.healthygood.mq.HealthyGoodQueue;
 import com.lhiot.healthygood.service.common.CommonService;
+import com.lhiot.healthygood.service.customplan.CustomOrderService;
 import com.lhiot.healthygood.type.ReceivingWay;
 import com.lhiot.healthygood.util.FeginResponseTools;
 import lombok.extern.slf4j.Slf4j;
@@ -45,6 +50,8 @@ public class OrderService {
     private final DeliverServiceFeign deliverServiceFeign;
     private final HealthyGoodConfig.DeliverConfig deliverConfig;
     private final CommonService commonService;
+    private final CustomOrderMapper customOrderMapper;
+    private final CustomOrderDeliveryMapper customOrderDeliveryMapper;
     private final RabbitTemplate rabbitTemplate;
 
 
@@ -52,18 +59,20 @@ public class OrderService {
     public OrderService(OrderServiceFeign orderServiceFeign,
                         DeliverServiceFeign deliverServiceFeign,
                         HealthyGoodConfig healthyGoodConfig, CommonService commonService,
-                        RabbitTemplate rabbitTemplate) {
+                        CustomOrderMapper customOrderMapper, CustomOrderDeliveryMapper customOrderDeliveryMapper, RabbitTemplate rabbitTemplate) {
 
         this.orderServiceFeign = orderServiceFeign;
         this.deliverServiceFeign = deliverServiceFeign;
         this.deliverConfig = healthyGoodConfig.getDeliver();
         this.commonService = commonService;
+        this.customOrderMapper = customOrderMapper;
+        this.customOrderDeliveryMapper = customOrderDeliveryMapper;
         this.rabbitTemplate = rabbitTemplate;
     }
 
     //处理海鼎回调
     public Tips hdCallbackDeal(@RequestBody Map<String, Object> map) {
-        Map<String, String> contentMap = (Map<String, String>) map.get("content");
+        Map<String, String> contentMap = (Map<String,String>)map.get("content");
 
         log.info("content = " + contentMap.toString());
         String orderCode = contentMap.get("front_order_id");
@@ -79,7 +88,7 @@ public class OrderService {
             // 订单备货
             if ("order.shipped".equals(map.get("topic"))) {
                 log.info("订单备货回调********");
-                if (!Objects.equals(orderDetailResult.getStatus(), OrderStatus.WAIT_SEND_OUT)) {
+                if (!Objects.equals(orderDetailResult.getStatus(), OrderStatus.SEND_OUTING)) {
                     //如果已经处理此订单信息，就不重复处理
                     return Tips.info(orderCode);
                 }
@@ -120,15 +129,30 @@ public class OrderService {
                 log.info("订单退货回调*********{}", orderDetailResult);
                 if (Objects.equals(OrderStatus.RETURNING, orderDetailResult.getStatus())) {
                     log.info("给用户退款", orderDetailResult);
-                    Tips refundOrderTips = FeginResponseTools.convertResponse(orderServiceFeign.refundOrder(orderDetailResult.getCode(), null));//此处为用户依据申请了退货了，海鼎回调中不需要再告知基础服务退货列表
-                    if (refundOrderTips.err()) {
-                        log.error("调用基础服务 refundOrder失败{}", orderDetailResult);
-                        return Tips.warn(String.valueOf(orderDetailResultResponseEntity.getBody()));
+
+                    if (Objects.equals(OrderType.CUSTOM, orderDetailResult.getOrderType())) {
+                        //定制订单 只退用户剩余次数，不退款
+                        CustomOrderDelivery customOrderDelivery = customOrderDeliveryMapper.selectOrderCode(orderCode);
+                        if (Objects.isNull(customOrderDelivery)) {
+                            log.error("订单退货回调,找不到提取的定制配送记录,{}", orderCode);
+                            return Tips.warn("订单退货回调,找不到提取的定制配送记录");
+                        }
+
+                        CustomOrder customOrder = new CustomOrder();
+                        customOrder.setId(customOrderDelivery.getCustomOrderId());
+                        customOrder.setRemainingQtyAdd(1);//退还一次剩余
+                        customOrderMapper.updateById(customOrder);
+                    } else {
+                        //普通订单
+                        Tips refundOrderTips = FeginResponseTools.convertResponse(orderServiceFeign.refundOrder(orderDetailResult.getCode(), null));//此处为用户依据申请了退货了，海鼎回调中不需要再告知基础服务退货列表
+                        if (refundOrderTips.err()) {
+                            log.error("调用基础服务 refundOrder失败{}", orderDetailResult);
+                            return Tips.warn(String.valueOf(orderDetailResultResponseEntity.getBody()));
+                        }
+                        //发起用户退款 等待用户退款回调然后发送orderServiceFeign.refundConfirmation
                     }
-                    //发起用户退款 等待用户退款回调然后发送orderServiceFeign.refundConfirmation
-                    ResponseEntity refundConfirmation = orderServiceFeign.refundConfirmation(orderDetailResult.getCode(), OrderRefundStatus.ALREADY_RETURN);
-                    log.info("发起用户退款{}", refundConfirmation);
                 }
+                return Tips.info(orderCode);
             } else {
                 log.info("hd other group message= " + map.get("group"));
             }
@@ -204,7 +228,7 @@ public class OrderService {
         final Long interval = deliverTime.getStartTime().getTime() - current.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli();
         //如果计算结果为负数，那么就只延迟1秒钟
         //延迟发送到海鼎
-        HealthyGoodQueue.DelayQueue.SEND_TO_HD.send(rabbitTemplate,orderCode,(interval <= 0 ? 1000L : interval));
+        HealthyGoodQueue.DelayQueue.SEND_TO_HD.send(rabbitTemplate, orderCode, (interval <= 0 ? 1000L : interval));
         log.info("创建定制订单提取延迟发送到海鼎:{},{}", orderCode, interval);
     }
 

@@ -11,6 +11,8 @@ import com.lhiot.healthygood.config.HealthyGoodConfig;
 import com.lhiot.healthygood.domain.activity.ActivityProduct;
 import com.lhiot.healthygood.domain.activity.ActivityProductRecord;
 import com.lhiot.healthygood.domain.activity.SpecialProductActivity;
+import com.lhiot.healthygood.domain.customplan.CustomOrder;
+import com.lhiot.healthygood.domain.customplan.CustomOrderDelivery;
 import com.lhiot.healthygood.domain.order.OrderGroupCount;
 import com.lhiot.healthygood.domain.user.DoctorCustomer;
 import com.lhiot.healthygood.domain.user.FruitDoctor;
@@ -24,6 +26,7 @@ import com.lhiot.healthygood.mq.HealthyGoodQueue;
 import com.lhiot.healthygood.service.activity.ActivityProductRecordService;
 import com.lhiot.healthygood.service.activity.ActivityProductService;
 import com.lhiot.healthygood.service.activity.SpecialProductActivityService;
+import com.lhiot.healthygood.service.customplan.CustomOrderService;
 import com.lhiot.healthygood.service.order.OrderService;
 import com.lhiot.healthygood.service.user.DoctorCustomerService;
 import com.lhiot.healthygood.service.user.FruitDoctorService;
@@ -63,6 +66,7 @@ public class OrderApi {
     private final OrderServiceFeign orderServiceFeign;
     private final PaymentServiceFeign paymentServiceFeign;
     private final OrderService orderService;
+    private final CustomOrderService customOrderService;
     private final DoctorCustomerService doctorCustomerService;
     private final FruitDoctorService fruitDoctorService;
     private final HealthyGoodConfig.WechatPayConfig wechatPayConfig;
@@ -77,12 +81,13 @@ public class OrderApi {
                     OrderServiceFeign orderServiceFeign,
                     PaymentServiceFeign paymentServiceFeign,
                     OrderService orderService,
-                    DoctorCustomerService doctorCustomerService, FruitDoctorService fruitDoctorService, HealthyGoodConfig healthyGoodConfig, RabbitTemplate rabbitTemplate, ActivityProductService activityProductService, ActivityProductRecordService activityProductRecordService, SpecialProductActivityService specialProductActivityService) {
+                    CustomOrderService customOrderService, DoctorCustomerService doctorCustomerService, FruitDoctorService fruitDoctorService, HealthyGoodConfig healthyGoodConfig, RabbitTemplate rabbitTemplate, ActivityProductService activityProductService, ActivityProductRecordService activityProductRecordService, SpecialProductActivityService specialProductActivityService) {
         this.baseDataServiceFeign = baseDataServiceFeign;
         this.thirdpartyServerFeign = thirdpartyServerFeign;
         this.orderServiceFeign = orderServiceFeign;
         this.paymentServiceFeign = paymentServiceFeign;
         this.orderService = orderService;
+        this.customOrderService = customOrderService;
         this.doctorCustomerService = doctorCustomerService;
         this.fruitDoctorService = fruitDoctorService;
         this.wechatPayConfig = healthyGoodConfig.getWechatPay();
@@ -268,7 +273,7 @@ public class OrderApi {
             return validateResult;
         }
         OrderDetailResult orderDetailResult = (OrderDetailResult) validateResult.getBody();
-        ResponseEntity refundOrderTips = null;
+        ResponseEntity refundOrder = null;
         returnOrderParam.setNotifyUrl(wechatPayConfig.getOrderRefundCallbackUrl());//设置退款回调
         //查询退款金额
         ResponseEntity<Fee> refundFeeResponseEntity = orderServiceFeign.refundFee(orderCode,returnOrderParam.getOrderProductIds(),returnOrderParam.getRefundType());
@@ -292,24 +297,44 @@ public class OrderApi {
         switch (orderDetailResult.getStatus()) {
             //订单未发送海鼎，退款
             case WAIT_SEND_OUT:
-                refundOrderTips = orderServiceFeign.notSendHdRefundOrder(orderCode, returnOrderParam);
+                refundOrder = orderServiceFeign.notSendHdRefundOrder(orderCode, returnOrderParam);
+                if (Objects.nonNull(refundOrder)&&refundOrder.getStatusCode().is2xxSuccessful()){
+                    //如果是定制订单，需要退剩余次数+1
+                    if (Objects.equals(OrderType.CUSTOM, orderDetailResult.getOrderType())) {
+                        //定制订单 只退用户剩余次数，不退款
+                        Tips refundResult = customOrderService.refundCustomOrderDelivery(orderCode);
+                        if(refundResult.err()){
+                            return ResponseEntity.badRequest().body(refundResult.getMessage());
+                        }
+                    }
+                }
                 break;
             //海鼎备货后提交退货
             case WAIT_DISPATCHING:
-                refundOrderTips = orderServiceFeign.returnsRefundOrder(orderCode, returnOrderParam);
+                refundOrder = orderServiceFeign.returnsRefundOrder(orderCode, returnOrderParam);
                 break;
             //已收货
             case RECEIVED:
-                refundOrderTips = orderServiceFeign.returnsRefundOrder(orderCode, returnOrderParam);
+                refundOrder = orderServiceFeign.returnsRefundOrder(orderCode, returnOrderParam);
                 break;
             //订单发送海鼎，未备货退货
             case SEND_OUTING:
-                refundOrderTips = orderServiceFeign.sendHdRefundOrder(orderCode, returnOrderParam);
+                refundOrder = orderServiceFeign.sendHdRefundOrder(orderCode, returnOrderParam);
+                if (Objects.nonNull(refundOrder)&&refundOrder.getStatusCode().is2xxSuccessful()){
+                    //如果是定制订单，需要退剩余次数+1
+                    if (Objects.equals(OrderType.CUSTOM, orderDetailResult.getOrderType())) {
+                        //定制订单 只退用户剩余次数，不退款
+                        Tips refundResult = customOrderService.refundCustomOrderDelivery(orderCode);
+                        if(refundResult.err()){
+                            return ResponseEntity.badRequest().body(refundResult.getMessage());
+                        }
+                    }
+                }
                 break;
 
         }
             fruitDoctorService.calculationCommission(orderDetailResult);
-        return refundOrderTips;
+        return refundOrder;
     }
 
 
