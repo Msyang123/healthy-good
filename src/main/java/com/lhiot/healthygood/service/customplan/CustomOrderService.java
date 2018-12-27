@@ -18,13 +18,13 @@ import com.lhiot.healthygood.feign.ThirdpartyServerFeign;
 import com.lhiot.healthygood.feign.model.*;
 import com.lhiot.healthygood.feign.type.AllowRefund;
 import com.lhiot.healthygood.feign.type.ApplicationType;
+import com.lhiot.healthygood.feign.type.NotPayRefundWay;
 import com.lhiot.healthygood.feign.type.OrderType;
 import com.lhiot.healthygood.mapper.customplan.CustomOrderDeliveryMapper;
 import com.lhiot.healthygood.mapper.customplan.CustomOrderMapper;
 import com.lhiot.healthygood.mapper.customplan.CustomOrderPauseMapper;
 import com.lhiot.healthygood.mapper.customplan.CustomPlanSpecificationMapper;
 import com.lhiot.healthygood.mq.HealthyGoodQueue;
-import com.lhiot.healthygood.service.doctor.DoctorAchievementLogService;
 import com.lhiot.healthygood.service.order.OrderService;
 import com.lhiot.healthygood.service.user.FruitDoctorService;
 import com.lhiot.healthygood.type.CustomOrderDeliveryStatus;
@@ -87,7 +87,7 @@ public class CustomOrderService {
                               CustomOrderDeliveryMapper customOrderDeliveryMapper,
                               Generator<Long> generator,
                               DictionaryClient dictionaryClient,
-                              DoctorAchievementLogService doctorAchievementLogService, FruitDoctorService fruitDoctorService, RabbitTemplate rabbitTemplate) {
+                              FruitDoctorService fruitDoctorService, RabbitTemplate rabbitTemplate) {
         this.customPlanService = customPlanService;
         this.orderService = orderService;
         this.baseDataServiceFeign = baseDataServiceFeign;
@@ -495,7 +495,7 @@ public class CustomOrderService {
                 }
                 Pages<ProductShelf> productShelfPages = (Pages<ProductShelf>) productEntity.getBody();
                 List<ProductShelf> productShelfList = productShelfPages.getArray();
-                if (!CollectionUtils.isEmpty(productShelfList)){
+                if (!CollectionUtils.isEmpty(productShelfList)) {
                     productShelfList.forEach(productShelf ->
                             customOrderDeliveryList.forEach(customOrderDelivery -> {
                                 if (Objects.equals(productShelf.getId(), customOrderDelivery.getProductShelfId())) {
@@ -574,7 +574,7 @@ public class CustomOrderService {
      *
      * @return
      */
-    public Tips refundCustomOrderDelivery(String orderCode) {
+    public Tips refundCustomOrderDelivery(String orderCode, NotPayRefundWay notPayRefundWay) {
         //如果是定制订单，需要退剩余次数+1
         //定制订单 只退用户剩余次数，不退款
         CustomOrderDelivery customOrderDelivery = this.selectOrderCode(orderCode);
@@ -586,6 +586,8 @@ public class CustomOrderService {
         customOrder.setId(customOrderDelivery.getCustomOrderId());
         customOrder.setRemainingQtyAdd(1);//退还一次剩余
         this.updateById(customOrder);
+        ResponseEntity  notPayedRefundResponse= orderServiceFeign.notPayedRefund(orderCode, notPayRefundWay);
+        log.info("定制订单发送基础服务订单实际未支付退货（无需退款）{}",notPayedRefundResponse);
         return Tips.info("退还剩余次数成功");
     }
 
