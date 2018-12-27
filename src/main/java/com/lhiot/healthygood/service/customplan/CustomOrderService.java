@@ -294,7 +294,7 @@ public class CustomOrderService {
         orderParam.setNickname(customOrder.getReceiveUser());
         orderParam.setReceiveUser(customOrder.getReceiveUser());
         orderParam.setReceivingWay(ReceivingWay.TO_THE_HOME);//所有的都是送货上门
-        orderParam.setAllowRefund(AllowRefund.NO);//允许退货
+        orderParam.setAllowRefund(AllowRefund.YES);//允许退货
         orderParam.setOrderType(OrderType.CUSTOM);//定制订单
         orderParam.setRemark(remark);
 

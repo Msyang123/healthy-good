@@ -15,6 +15,7 @@ import com.lhiot.healthygood.feign.type.SourceType;
 import com.lhiot.healthygood.service.customplan.CustomOrderService;
 import com.lhiot.healthygood.service.order.OrderService;
 import com.lhiot.healthygood.service.user.FruitDoctorService;
+import com.lhiot.healthygood.type.CustomOrderBuyType;
 import com.lhiot.healthygood.type.CustomOrderStatus;
 import com.lhiot.healthygood.util.RealClientIp;
 import io.swagger.annotations.Api;
@@ -153,10 +154,12 @@ public class BalanceApi {
         customOrderService.updateByCode(customOrder);
 
         //自动提取订单自动提取
-        CustomOrderTime customOrderTime = Jackson.object(customOrderDetial.getDeliveryTime(), CustomOrderTime.class);
-        LocalDateTime deliveryDateTime = LocalDate.now().atTime(customOrderTime.getStartTime());
-        deliveryDateTime = deliveryDateTime.plusDays(1);
-        customOrderService.scheduleDeliveryCustomOrder(deliveryDateTime, customOrderCode);
+        if(Objects.equals(CustomOrderBuyType.AUTO,customOrderDetial.getDeliveryType())) {
+            CustomOrderTime customOrderTime = Jackson.object(customOrderDetial.getDeliveryTime(), CustomOrderTime.class);
+            LocalDateTime deliveryDateTime = LocalDate.now().atTime(customOrderTime.getStartTime());
+            deliveryDateTime = deliveryDateTime.plusDays(1);
+            customOrderService.scheduleDeliveryCustomOrder(deliveryDateTime, customOrderCode);
+        }
         return ResponseEntity.ok().build();
     }
 
