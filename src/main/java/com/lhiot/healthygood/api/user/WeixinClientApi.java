@@ -165,6 +165,7 @@ public class WeixinClientApi {
         }
     }
 
+    @Sessions.Uncheck
     @PostMapping("/rebulidWexinMenu")
     @ApiOperation(value = "微信生成自定义菜单")
     public ResponseEntity rebulidWexinMenu(@RequestBody String menuContent) {
@@ -174,6 +175,8 @@ public class WeixinClientApi {
                 "POST",menuContent)
         );
     }
+
+    @Sessions.Uncheck
     @GetMapping("/getWexinMenu")
     @ApiOperation(value = "微信生成自定义菜单")
     public ResponseEntity getWexinMenu() {
@@ -183,4 +186,15 @@ public class WeixinClientApi {
                 "GET",null)
         );
     }
+
+    @Sessions.Uncheck
+    @DeleteMapping("/weixinMenu")
+    @ApiOperation(value = "自定义菜单删除接口")
+    public ResponseEntity deleteWeixinMenu(){
+        return ResponseEntity.ok(
+          weChatUtil.httpsRequest("https://api.weixin.qq.com/cgi-bin/menu/delete?access_token="+
+                  weChatUtil.getToken().getAccessToken(),"DELETE",null)
+        );
+    }
 }
+

@@ -128,7 +128,7 @@
         from
         (select * from custom_plan_product where plan_id = #{planId} and plan_period = #{planPeriod} order by sort asc) p
         left join
-        (select * from custom_order_delivery where custom_order_id = #{customOrderId}) d
+        (select * from custom_order_delivery where custom_order_id = #{customOrderId} and delivery_status!='RETURNING' and delivery_status!='ALREADY_RETURN' ) d
         on p.id= d.custom_plan_product_id
     </select>
 
