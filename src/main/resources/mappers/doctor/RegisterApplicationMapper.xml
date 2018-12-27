@@ -18,6 +18,7 @@
         <result column="audit_at" property="auditAt" />
         <result column="audit_user" property="auditUser" />
         <result column="user_id" property="userId" />
+        <result column="referee_id" property="refereeId" />
     </resultMap>
 
     <!-- base查询字段  -->
@@ -36,6 +37,7 @@
             audit_at,
             audit_user,
             user_id,
+            referee_id,
         </trim>
     </sql>
 
@@ -70,6 +72,9 @@
             <if test="userId != null ">
                 user_id,
             </if>
+            <if test="refereeId != null ">
+                referee_id,
+            </if>
         </trim>
         <trim prefix="values (" suffix=")" suffixOverrides="," >
             <if test="idcardNo != null ">
@@ -98,6 +103,9 @@
             </if>
             <if test="userId != null ">
                 #{userId},
+            </if>
+            <if test="refereeId != null ">
+                #{refereeId},
             </if>
         </trim>
     </insert>
@@ -145,6 +153,9 @@
             <if test="userId != null ">
                 user_id = #{userId},
             </if>
+            <if test="refereeId != null ">
+                referee_id = #{refereeId},
+            </if>
         </set>
         where id=#{id}
     </update>
@@ -189,6 +200,7 @@
             <if test="auditAt != null ">and audit_at = #{auditAt}</if>
             <if test="auditUser != null and auditUser != '' ">and audit_user like concat('%',#{auditUser}, '%')</if>
             <if test="userId != null ">and user_id = #{userId}</if>
+            <if test="refereeId != null ">and referee_id = #{refereeId}</if>
             <if test="beginCreateAt != null">and create_at <![CDATA[ >= ]]> #{beginCreateAt}</if>
             <if test="endCreateAt != null">and create_at <![CDATA[ <= ]]> #{endCreateAt}</if>
         </where>
