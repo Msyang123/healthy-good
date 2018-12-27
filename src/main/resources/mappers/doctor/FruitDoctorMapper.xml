@@ -421,11 +421,11 @@
         where t1.user_id = #{id}
     </select>
 
-    <!--根据用户id查询上级鲜果师信息-->
+    <!--根据用户id鲜果师信息-->
     <select id="findFruitDoctorByUserId" resultMap="BaseResultMap"
             parameterType="Long">
         select *
-        from doctor_customer
+        from fruit_doctor
         where user_id = #{id}
     </select>
 </mapper>

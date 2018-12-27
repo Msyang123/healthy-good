@@ -126,6 +126,13 @@ public class RegisterApplication{
     @ApiModelProperty(value = "用户id", dataType = "Long")
     private Long userId;
 
+    /**
+     *推荐人（鲜果师编号）
+     */
+    @JsonProperty("refereeId")
+    @JsonSerialize(using = ToStringSerializer.class)
+    @ApiModelProperty(value = "推荐人（鲜果师编号）", dataType = "Long")
+    private Long refereeId;
 
     /**
      *起始创建时间

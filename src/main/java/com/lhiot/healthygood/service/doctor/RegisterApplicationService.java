@@ -5,19 +5,16 @@ import com.leon.microx.util.auditing.Random;
 import com.leon.microx.web.result.Pages;
 import com.leon.microx.web.result.Tips;
 import com.lhiot.healthygood.domain.doctor.RegisterApplication;
-import com.lhiot.healthygood.domain.user.DoctorCustomer;
 import com.lhiot.healthygood.domain.user.FruitDoctor;
 import com.lhiot.healthygood.feign.BaseUserServerFeign;
 import com.lhiot.healthygood.feign.model.UserDetailResult;
 import com.lhiot.healthygood.mapper.doctor.RegisterApplicationMapper;
-import com.lhiot.healthygood.mapper.user.DoctorCustomerMapper;
 import com.lhiot.healthygood.mapper.user.FruitDoctorMapper;
 import com.lhiot.healthygood.type.*;
 import com.lhiot.healthygood.util.DataItem;
 import com.lhiot.healthygood.util.DataObject;
 import com.lhiot.healthygood.wechat.WeChatUtil;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -42,17 +39,13 @@ public class RegisterApplicationService {
 
     private final RegisterApplicationMapper registerApplicationMapper;
     private final FruitDoctorMapper fruitDoctorMapper;
-    private final DoctorCustomerMapper doctorCustomerMapper;
-    private final RabbitTemplate rabbit;
     private final BaseUserServerFeign baseUserServerFeign;
     private WeChatUtil weChatUtil;
 
     @Autowired
-    public RegisterApplicationService(RegisterApplicationMapper registerApplicationMapper, FruitDoctorMapper fruitDoctorMapper, DoctorCustomerMapper doctorCustomerMapper, RabbitTemplate rabbit, BaseUserServerFeign baseUserServerFeign, WeChatUtil weChatUtil) {
+    public RegisterApplicationService(RegisterApplicationMapper registerApplicationMapper, FruitDoctorMapper fruitDoctorMapper,BaseUserServerFeign baseUserServerFeign, WeChatUtil weChatUtil) {
         this.registerApplicationMapper = registerApplicationMapper;
         this.fruitDoctorMapper = fruitDoctorMapper;
-        this.doctorCustomerMapper = doctorCustomerMapper;
-        this.rabbit = rabbit;
         this.baseUserServerFeign = baseUserServerFeign;
         this.weChatUtil = weChatUtil;
     }
@@ -149,11 +142,7 @@ public class RegisterApplicationService {
             fruitDoctor.setDoctorLevel(DoctorLevel.TRAINING.toString());
             fruitDoctor.setDoctorStatus(DoctorStatus.VALID);
             fruitDoctor.setCreateAt(Date.from(Instant.now()));
-            //查找推荐人
-            DoctorCustomer doctorCustomer = doctorCustomerMapper.selectByUserId(registerApplication.getUserId());
-            if (Objects.nonNull(doctorCustomer)) {
-                fruitDoctor.setRefereeId(doctorCustomer.getDoctorId());
-            }
+            fruitDoctor.setRefereeId(registerApplication.getRefereeId());
             //查找基础服务对应的微信用户信息
             ResponseEntity<UserDetailResult> userEntity = baseUserServerFeign.findById(registerApplication.getUserId());
             if (userEntity.getStatusCode().isError()) {
@@ -167,6 +156,7 @@ public class RegisterApplicationService {
             fruitDoctor.setPhone(registerApplication.getPhone());
             fruitDoctor.setApplicationId(registerApplication.getId());
             fruitDoctor.setUserId(registerApplication.getUserId());
+            fruitDoctor.setHot(Hot.NO);
             return fruitDoctorMapper.create(fruitDoctor) > 0 ? Tips.info("添加鲜果师成员成功") : Tips.warn("添加鲜果师成员失败");
         }
         // 发送模板消息
