@@ -79,8 +79,8 @@ public interface OrderServiceFeign {
     ResponseEntity sendHdRefundOrder(@PathVariable("orderCode") String orderCode, @RequestBody ReturnOrderParam returnOrderParam);
 
     //退款确认，修改订单状态
-    @RequestMapping(value = "/orders/{orderCode}/refund/confirmation", method = RequestMethod.PUT)
-    ResponseEntity refundConfirmation(@PathVariable("orderCode") String orderCode, @RequestParam("refundStatus") OrderRefundStatus refundStatus);
+    @RequestMapping(value = "/orders/{payId}/refund/confirmation", method = RequestMethod.PUT)
+    ResponseEntity refundConfirmation(@PathVariable("payId") String payId, @RequestParam("refundStatus") OrderRefundStatus refundStatus);
 
     //查询退款费用
     @RequestMapping(value = "orders/{orderCode}/refund/fee", method = RequestMethod.GET)

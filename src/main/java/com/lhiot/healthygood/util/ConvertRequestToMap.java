@@ -35,7 +35,9 @@ public class ConvertRequestToMap {
                 String parameterString = StringUtils.collectionToDelimitedString(IOUtils.readLines(in), "");
                 log.info("request转换成字符串结果：{}", parameterString);
                 if (StringUtils.isNotBlank(parameterString)) {
-                    parameters = Jackson.map(parameterString);
+                    String converResultStr=parameterString.replaceAll("\"\\{","{").replaceAll("}\"","}").replaceAll("\\\\","");
+                    log.info("字符转换处理后结果：{}", converResultStr);
+                    parameters = Jackson.map(converResultStr);
                 }
             }
         } catch (IOException ignore) {

@@ -72,7 +72,7 @@ public class OrderService {
 
     //处理海鼎回调
     public Tips hdCallbackDeal(@RequestBody Map<String, Object> map) {
-        Map<String, String> contentMap = (Map<String, String>) map.get("content");
+        Map<String, String> contentMap = (Map<String,String>)map.get("content");
 
         log.info("content = " + contentMap.toString());
         String orderCode = contentMap.get("front_order_id");
@@ -88,7 +88,7 @@ public class OrderService {
             // 订单备货
             if ("order.shipped".equals(map.get("topic"))) {
                 log.info("订单备货回调********");
-                if (!Objects.equals(orderDetailResult.getStatus(), OrderStatus.WAIT_SEND_OUT)) {
+                if (!Objects.equals(orderDetailResult.getStatus(), OrderStatus.SEND_OUTING)) {
                     //如果已经处理此订单信息，就不重复处理
                     return Tips.info(orderCode);
                 }
@@ -130,19 +130,19 @@ public class OrderService {
                 if (Objects.equals(OrderStatus.RETURNING, orderDetailResult.getStatus())) {
                     log.info("给用户退款", orderDetailResult);
 
-                    if(Objects.equals(OrderType.CUSTOM,orderDetailResult.getOrderType())){
+                    if (Objects.equals(OrderType.CUSTOM, orderDetailResult.getOrderType())) {
                         //定制订单 只退用户剩余次数，不退款
-                        CustomOrderDelivery customOrderDelivery =customOrderDeliveryMapper.selectOrderCode(orderCode);
-                        if(Objects.isNull(customOrderDelivery)){
-                            log.error("订单退货回调,找不到提取的定制配送记录,{}",orderCode);
+                        CustomOrderDelivery customOrderDelivery = customOrderDeliveryMapper.selectOrderCode(orderCode);
+                        if (Objects.isNull(customOrderDelivery)) {
+                            log.error("订单退货回调,找不到提取的定制配送记录,{}", orderCode);
                             return Tips.warn("订单退货回调,找不到提取的定制配送记录");
                         }
 
-                        CustomOrder customOrder =new CustomOrder();
+                        CustomOrder customOrder = new CustomOrder();
                         customOrder.setId(customOrderDelivery.getCustomOrderId());
                         customOrder.setRemainingQtyAdd(1);//退还一次剩余
                         customOrderMapper.updateById(customOrder);
-                    }else{
+                    } else {
                         //普通订单
                         Tips refundOrderTips = FeginResponseTools.convertResponse(orderServiceFeign.refundOrder(orderDetailResult.getCode(), null));//此处为用户依据申请了退货了，海鼎回调中不需要再告知基础服务退货列表
                         if (refundOrderTips.err()) {
@@ -150,9 +150,6 @@ public class OrderService {
                             return Tips.warn(String.valueOf(orderDetailResultResponseEntity.getBody()));
                         }
                         //发起用户退款 等待用户退款回调然后发送orderServiceFeign.refundConfirmation
-                        ResponseEntity refundConfirmation = orderServiceFeign.refundConfirmation(orderDetailResult.getCode(), OrderRefundStatus.ALREADY_RETURN);
-                        log.info("发起用户退款{}", refundConfirmation);
-                        //TODO 鲜果币支付需要处理
                     }
                 }
                 return Tips.info(orderCode);
@@ -231,7 +228,7 @@ public class OrderService {
         final Long interval = deliverTime.getStartTime().getTime() - current.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli();
         //如果计算结果为负数，那么就只延迟1秒钟
         //延迟发送到海鼎
-        HealthyGoodQueue.DelayQueue.SEND_TO_HD.send(rabbitTemplate,orderCode,(interval <= 0 ? 1000L : interval));
+        HealthyGoodQueue.DelayQueue.SEND_TO_HD.send(rabbitTemplate, orderCode, (interval <= 0 ? 1000L : interval));
         log.info("创建定制订单提取延迟发送到海鼎:{},{}", orderCode, interval);
     }
 

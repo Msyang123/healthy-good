@@ -14,6 +14,7 @@ import com.lhiot.healthygood.feign.PaymentServiceFeign;
 import com.lhiot.healthygood.feign.model.*;
 import com.lhiot.healthygood.feign.type.ApplicationType;
 import com.lhiot.healthygood.feign.type.OperationStatus;
+import com.lhiot.healthygood.feign.type.OrderRefundStatus;
 import com.lhiot.healthygood.mapper.customplan.CustomOrderMapper;
 import com.lhiot.healthygood.service.customplan.CustomOrderService;
 import com.lhiot.healthygood.service.order.OrderService;
@@ -125,6 +126,8 @@ public class WxCallbackApi {
         }
         log.info("发送基础服务支付通知退款完成{}",parameters.get("out_refund_no"));
         paymentServiceFeign.refundCompleted(parameters.get("out_refund_no"));
+        ResponseEntity refundConfirmation = orderServiceFeign.refundConfirmation(parameters.get("out_refund_no"), OrderRefundStatus.ALREADY_RETURN);
+        log.info("发起用户退款{}", refundConfirmation);
         return ResponseEntity.ok("<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
                 + "<xml><return_code><![CDATA[SUCCESS]]></return_code>"
                 + "<return_msg><![CDATA[OK]]></return_msg></xml>");
