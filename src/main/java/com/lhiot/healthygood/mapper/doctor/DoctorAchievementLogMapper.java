@@ -107,7 +107,7 @@ public interface DoctorAchievementLogMapper {
 	//统计鲜果师的业绩
 	Achievement achievement(Map<String, Object> map);
 
-	//根据订单id查询记录 FIXME 数据库查询为id
+	//根据订单id查询记录
 	DoctorAchievementLog selectByOrderId(Long orderId);
 
     DoctorAchievementLog selectByOrderIdAndType(@Param("orderId") Long orderId, @Param("sourceType") SourceType sourceType);

@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
+import com.lhiot.healthygood.feign.type.ApplicationType;
 import com.lhiot.healthygood.feign.type.FeedbackStatusEnum;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
@@ -53,7 +54,7 @@ public class Feedback implements Serializable {
 
     @JsonSerialize(using = ToStringSerializer.class)
     @ApiModelProperty(notes = "应用类型", dataType = "String")
-    private String applicationType;
+    private ApplicationType applicationType;
 
     @ApiModelProperty(notes = "回复人", dataType = "String")
     private String backEditor;

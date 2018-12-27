@@ -8,6 +8,7 @@ import com.lhiot.healthygood.feign.model.Advertisement;
 import com.lhiot.healthygood.feign.model.AdvertisementParam;
 import com.lhiot.healthygood.feign.model.UiPosition;
 import com.lhiot.healthygood.feign.model.UiPositionParam;
+import com.lhiot.healthygood.feign.type.ApplicationType;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
@@ -37,13 +38,13 @@ public class AdvertisementApi {
     @GetMapping("/advertisements/position")
     public ResponseEntity searchAdvertisementPages(@RequestParam String code){
         UiPositionParam uiPositionParam = new UiPositionParam();
-        uiPositionParam.setApplicationType("HEALTH_GOOD");
+        uiPositionParam.setApplicationType(ApplicationType.HEALTH_GOOD);
         uiPositionParam.setCodes(code);
         ResponseEntity<Pages<UiPosition>> uiPositionEntity = baseDataServiceFeign.searchUiPosition(uiPositionParam);
         if (Objects.isNull(uiPositionEntity) || uiPositionEntity.getStatusCode().isError()){
             return uiPositionEntity;
         }
-         Long positionId = uiPositionEntity.getBody().getArray().get(0).getId();//TODO 这里需要改
+         Long positionId = uiPositionEntity.getBody().getArray().get(0).getId();
         AdvertisementParam advertisementParam = new AdvertisementParam();
         advertisementParam.setPositionId(positionId);
         advertisementParam.setAdvertiseStatus(OnOff.ON);

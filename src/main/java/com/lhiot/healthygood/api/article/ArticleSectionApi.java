@@ -10,6 +10,7 @@ import com.lhiot.healthygood.feign.model.ArticleSection;
 import com.lhiot.healthygood.feign.model.ArticleSectionParam;
 import com.lhiot.healthygood.feign.model.UiPosition;
 import com.lhiot.healthygood.feign.model.UiPositionParam;
+import com.lhiot.healthygood.feign.type.ApplicationType;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiOperation;
@@ -40,7 +41,7 @@ public class ArticleSectionApi {
     @ApiOperation(value = "发现文章推荐列表",response = ArticleSection.class)
     public ResponseEntity recommendArticle(){
         UiPositionParam uiPositionParam = new UiPositionParam();
-        uiPositionParam.setApplicationType("HEALTH_GOOD");
+        uiPositionParam.setApplicationType(ApplicationType.HEALTH_GOOD);
         uiPositionParam.setCodes("SEARCH_ARTICLES");
         ResponseEntity<Pages<UiPosition>> uiPositionEntity = baseDataServiceFeign.searchUiPosition(uiPositionParam);
         if (Objects.isNull(uiPositionEntity) || uiPositionEntity.getStatusCode().isError()){
@@ -51,7 +52,7 @@ public class ArticleSectionApi {
             positionIds.add(uiPosition.getId().toString());
         });
         ArticleSectionParam articleSectionParam = new ArticleSectionParam();
-        articleSectionParam.setApplicationType("HEALTH_GOOD");
+        articleSectionParam.setApplicationType(ApplicationType.HEALTH_GOOD);
         articleSectionParam.setPositionIds(StringUtils.collectionToDelimitedString(positionIds,","));
         articleSectionParam.setIncludeArticles(true);
         ResponseEntity<Pages<ArticleSection>> pagesResponseEntity = baseDataServiceFeign.searchArticleSection(articleSectionParam);

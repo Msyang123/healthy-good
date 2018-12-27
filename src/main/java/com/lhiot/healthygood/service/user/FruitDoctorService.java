@@ -205,7 +205,7 @@ public class FruitDoctorService {
      *
      * @param fruitDoctor
      * @return
-     * @author yijun
+     * @author yangjiawen
      * @date 2018/07/26 12:08:13
      */
     public Pages<FruitDoctor> subordinate(FruitDoctor fruitDoctor) {
@@ -254,10 +254,8 @@ public class FruitDoctorService {
      * @param phone 待发送验证码手机号
      */
     public void bandPhoneSendTemplateMessage(String phone) {
-
         //发送模板消息
         publisher.publishEvent(new SendCaptchaSmsEvent(phone));
-
         log.info("鲜果师注册时绑定手机号码，发送模板消息");
     }
 

@@ -153,10 +153,7 @@ public class ActivityProductService {
         }
         // 删除活动商品
         boolean batchDelete = activityProductMapper.deleteByIds(Arrays.asList(ids.split(","))) > 0;
-        if (!batchDelete) {
-            return Tips.warn("批量删除活动商品失败");
-        }
-        return Tips.info("删除成功");
+        return (!batchDelete) ? Tips.warn("批量删除活动商品失败") : Tips.info("删除成功");
     }
 
     /**

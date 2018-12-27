@@ -39,6 +39,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.CollectionUtils;
 
 import java.time.*;
 import java.time.format.DateTimeFormatter;
@@ -454,7 +455,7 @@ public class CustomOrderService {
         List<CustomOrder> customOrderList = customOrderMapper.pageCustomOrder(customOrder);
         if (needChild) {
             customOrderList.forEach(item -> {
-                item.setCustomOrderDeliveryList(customOrderDeliveryMapper.selectByCustomOrderId(item.getPlanId(), item.getId()));//设置定制配送记录
+                item.setCustomOrderDeliveryList(customOrderDeliveryMapper.selectByCustomOrderId(item.getPlanId(), item.getTotalQty(), item.getId()));//设置定制配送记录
                 item.setCustomPlan(customPlanService.findById(item.getPlanId()));//设置定制计划
             });
         }
@@ -467,39 +468,44 @@ public class CustomOrderService {
      * 依据定制订单code查询订单详情
      *
      * @param orderCode
-     * @param needChlid
+     * @param needChild
      * @return
      */
     @Nullable
-    public Tips<CustomOrder> selectByCode(String orderCode, boolean needChlid) {
+    public Tips<CustomOrder> selectByCode(String orderCode, boolean needChild) {
         CustomOrder customOrder = customOrderMapper.selectByCode(orderCode);
         if (Objects.isNull(customOrder)) {
             return Tips.warn("未找到定制订单");
         }
-        if (needChlid && Objects.nonNull(customOrder)) {
-            List<CustomOrderDelivery> customOrderDeliveryList = customOrderDeliveryMapper.selectByCustomOrderId(customOrder.getPlanId(), customOrder.getId());
-            // 设置定制配送记录
-            customOrder.setCustomOrderDeliveryList(customOrderDeliveryList);
-            // 设置定制计划
-            customOrder.setCustomPlan(customPlanService.findById(customOrder.getPlanId()));
-            // 查找定制计划套餐详情
-            List<Long> shelfIdList = customOrderDeliveryList.stream().map(CustomOrderDelivery::getProductShelfId).collect(Collectors.toList());
-            String shelfIds = StringUtils.collectionToDelimitedString(shelfIdList, ",");
-            ProductShelfParam productShelfParam = new ProductShelfParam();
-            productShelfParam.setIds(shelfIds);
-            ResponseEntity<Pages<ProductShelf>> productEntity = baseDataServiceFeign.searchProductShelves(productShelfParam);
-            if (productEntity.getStatusCode().isError()) {
-                return Tips.warn(productEntity.getBody().toString());
+        if (needChild && Objects.nonNull(customOrder)) {
+            List<CustomOrderDelivery> customOrderDeliveryList = customOrderDeliveryMapper.selectByCustomOrderId(customOrder.getPlanId(), customOrder.getTotalQty(), customOrder.getId());
+            if (!CollectionUtils.isEmpty(customOrderDeliveryList)) {
+                // 设置定制配送记录
+                customOrder.setCustomOrderDeliveryList(customOrderDeliveryList);
+                // 设置定制计划
+                customOrder.setCustomPlan(customPlanService.findById(customOrder.getPlanId()));
+                // 查找定制计划套餐详情
+                List<Long> shelfIdList = customOrderDeliveryList.stream().map(CustomOrderDelivery::getProductShelfId).collect(Collectors.toList());
+                String shelfIds = StringUtils.collectionToDelimitedString(shelfIdList, ",");
+                ProductShelfParam productShelfParam = new ProductShelfParam();
+                productShelfParam.setIds(shelfIds);
+                ResponseEntity productEntity = baseDataServiceFeign.searchProductShelves(productShelfParam);
+                if (productEntity.getStatusCode().isError()) {
+                    return Tips.warn((String) productEntity.getBody());
+                }
+                Pages<ProductShelf> productShelfPages = (Pages<ProductShelf>) productEntity.getBody();
+                List<ProductShelf> productShelfList = productShelfPages.getArray();
+                if (!CollectionUtils.isEmpty(productShelfList)){
+                    productShelfList.forEach(productShelf ->
+                            customOrderDeliveryList.forEach(customOrderDelivery -> {
+                                if (Objects.equals(productShelf.getId(), customOrderDelivery.getProductShelfId())) {
+                                    customOrderDelivery.setProductName(productShelf.getName());
+                                    customOrderDelivery.setImage(productShelf.getImage());
+                                }
+                            })
+                    );
+                }
             }
-            List<ProductShelf> productShelfList = productEntity.getBody().getArray();
-            productShelfList.forEach(productShelf ->
-                    customOrderDeliveryList.forEach(customOrderDelivery -> {
-                        if (Objects.equals(productShelf.getId(), customOrderDelivery.getProductShelfId())) {
-                            customOrderDelivery.setProductName(productShelf.getName());
-                            customOrderDelivery.setImage(productShelf.getImage());
-                        }
-                    })
-            );
         }
         Tips<CustomOrder> tips = new Tips<>();
         tips.setData(customOrder);

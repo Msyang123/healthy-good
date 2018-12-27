@@ -77,7 +77,7 @@ public class FruitDoctorApi {
     @ApiOperation(value = "发送鲜果师申请验证码")
     @ApiImplicitParam(paramType = "query", name = "phone", value = "发送鲜果师申请验证码对应手机号", required = true, dataType = "String")
     public ResponseEntity captcha(@RequestParam String phone) {
-        //TODO 需要申请发送短信模板
+
         fruitDoctorService.bandPhoneSendTemplateMessage(phone);
         return ResponseEntity.ok().build();
     }
@@ -89,7 +89,7 @@ public class FruitDoctorApi {
         log.debug("添加鲜果师申请记录\t param:{}", registerApplication);
         String userId = user.getUser().get("userId").toString();
         registerApplication.setUserId(Long.valueOf(userId));
-        //TODO 需要申请发送短信模板
+
         ValidateParam smsValidateParam = new ValidateParam();
         smsValidateParam.setCode(registerApplication.getVerificationCode());
         smsValidateParam.setPhoneNumber(registerApplication.getPhone());
@@ -241,27 +241,6 @@ public class FruitDoctorApi {
         }
     }
 
-
-   /*@PostMapping("/relation")
-    @ApiOperation(value = "添加鲜果师客户 关注鲜果师(绑定)")
-    @ApiImplicitParam(paramType = "body", name = "DoctorCustomer", value = "要添加的鲜果师客户", required = true, dataType = "DoctorCustomer")
-    public ResponseEntity bindingDoctor(Sessions.User user, @RequestBody DoctorCustomer doctorCustomer) {
-        Long userId = Long.valueOf(user.getUser().get("userId").toString());
-
-        FruitDoctor fruitDoctor = fruitDoctorService.selectByUserId(doctorCustomer.getDoctorId());
-        if (Objects.isNull(fruitDoctor)) {
-            return ResponseEntity.badRequest().body(Tips.warn("鲜果师不存在"));
-        }
-       DoctorCustomer dUser = doctorCustomerService.selectByUserId(userId);
-        if (Objects.nonNull(dUser)) {
-            return ResponseEntity.badRequest().body(Tips.warn("您已经绑定该鲜果师了"));
-        }
-       doctorCustomer.setDoctorId(fruitDoctor.getId());
-       doctorCustomer.setUserId(userId);
-        doctorCustomerService.create(doctorCustomer);
-        return ResponseEntity.ok(Tips.info("绑定成功！"));
-    }*/
-
     @PutMapping("/remark")
     @ApiOperation(value = "鲜果师修改用户备注*")
     @ApiImplicitParam(paramType = "body", name = "DoctorCustomer", value = "鲜果师修改用户备注实体信息", required = true, dataType = "DoctorCustomer")
@@ -274,11 +253,7 @@ public class FruitDoctorApi {
         log.debug("鲜果师修改用户备注\t param:{}", DoctorCustomer);
         DoctorCustomer.setDoctorId(fruitDoctor.getId());
         int result = doctorCustomerService.updateRemarkName(DoctorCustomer);
-        if (result > 0) {
-            return ResponseEntity.ok("更新成功");
-        } else {
-            return ResponseEntity.badRequest().body("更新失败");
-        }
+        return result > 0 ? ResponseEntity.ok("更新成功") : ResponseEntity.badRequest().body("更新失败");
     }
 
 
@@ -464,7 +439,7 @@ public class FruitDoctorApi {
         cardParam.setDoctorId(fruitDoctor.getId());
         cardUpdateLog.setDoctorId(fruitDoctor.getId());
         cardUpdateLog.setUpdateAt(Date.from(Instant.now()));
-        return ResponseEntity.ok(cardUpdateLogService.create(cardUpdateLog) > 0 ? "添加成功" : "添加失败");
+        return cardUpdateLogService.create(cardUpdateLog) > 0 ? ResponseEntity.ok("添加成功") : ResponseEntity.badRequest().body("添加失败");
     }
 
     @ApiOperation(value = "查询鲜果师银行卡信息*", notes = "根据session里的doctorId查询", response = CardUpdateLog.class)
@@ -547,43 +522,6 @@ public class FruitDoctorApi {
                 return o1Val.compareTo(o2Val);
             }
         });
-        /*for (DoctorCustomer item : DoctorCustomerList) {
-            String pinyin = tool.toPinYin(item.getNickname());
-            Matcher matcher = pattern.matcher(pinyin);
-
-            item.setNicknameFristChar(matcher.find()?("" + pinyin.charAt(0)).toUpperCase():"#");
-            boolean exist = false;
-            for (int i = 0; i < customers.size(); i++) {
-                JSONObject jsonObject = (JSONObject) customers.get(i);
-                if (Objects.equals(item.getNicknameFristChar(), jsonObject.get("index"))) {
-                    JSONArray array = (JSONArray) jsonObject.get("array");
-                    array.add(item);
-                    exist = true;
-                    break;
-                }
-            }
-            if (!exist) {
-                JSONObject customerGroup = new JSONObject();
-                customerGroup.put("index", item.getNicknameFristChar());
-                JSONArray array = new JSONArray();
-                array.add(item);
-                customerGroup.put("array", array);
-                customers.add(customerGroup);
-            }
-        }
-        customers.sort(new Comparator<JSONObject>() {
-            @Override
-            public int compare(JSONObject o1, JSONObject o2) {
-                String o1Val = o1.get("index").toString();
-                String o2Val = o2.get("index").toString();
-                return o1Val.compareTo(o2Val);
-            }
-
-            @Override
-            public boolean equals(Object obj) {
-                return super.equals(obj);
-            }
-        });*/
         return ResponseEntity.ok(customers);
     }
 

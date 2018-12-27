@@ -12,6 +12,7 @@ import com.lhiot.healthygood.domain.good.ProductDetailResult;
 import com.lhiot.healthygood.domain.good.ProductSearchParam;
 import com.lhiot.healthygood.feign.BaseDataServiceFeign;
 import com.lhiot.healthygood.feign.model.*;
+import com.lhiot.healthygood.feign.type.ApplicationType;
 import com.lhiot.healthygood.service.activity.ActivityProductRecordService;
 import com.lhiot.healthygood.service.activity.ActivityProductService;
 import com.lhiot.healthygood.service.activity.SpecialProductActivityService;
@@ -73,7 +74,7 @@ public class ProductSectionApi {
     @ApiOperation(value = "根据位置编码查询所有商品板块列表（商品信息可选）",response = ProductSection.class,responseContainer = "List")
     public ResponseEntity positionProductSection(@RequestParam(value = "code") String code, @RequestParam(value = "flag",required = false) YesOrNo flag) {
         UiPositionParam uiPositionParam = new UiPositionParam();
-        uiPositionParam.setApplicationType("HEALTH_GOOD");
+        uiPositionParam.setApplicationType(ApplicationType.HEALTH_GOOD);
         uiPositionParam.setCodes(code);
         ResponseEntity<Pages<UiPosition>> uiPositionEntity = baseDataServiceFeign.searchUiPosition(uiPositionParam);
         if (Objects.isNull(uiPositionEntity) || uiPositionEntity.getStatusCode().isError()){
@@ -175,7 +176,7 @@ public class ProductSectionApi {
     public ResponseEntity cart(Sessions.User user, @RequestParam(value = "ids") String ids) {
         ProductShelfParam productShelfParam = new ProductShelfParam();
         productShelfParam.setIds(ids);
-        productShelfParam.setApplicationType("HEALTH_GOOD");
+        productShelfParam.setApplicationType(ApplicationType.HEALTH_GOOD);
         ResponseEntity<Pages<ProductShelf>> pagesResponseEntity = baseDataServiceFeign.searchProductShelves(productShelfParam);
         if (Objects.isNull(pagesResponseEntity) || pagesResponseEntity.getStatusCode().isError()) {
             return pagesResponseEntity;
@@ -213,7 +214,7 @@ public class ProductSectionApi {
     @ApiOperation(value = "查询/搜索商品" )
     public ResponseEntity<Pages<ProductShelf>> searchProduct(@RequestBody ProductSearchParam productSearchParam) {
         ProductShelfParam productShelfParam = new ProductShelfParam();
-        productShelfParam.setApplicationType("HEALTH_GOOD");
+        productShelfParam.setApplicationType(ApplicationType.HEALTH_GOOD);
         productShelfParam.setKeyword(productSearchParam.getKeywords());
         productShelfParam.setShelfStatus(OnOff.ON);
         productShelfParam.setShelfType(ShelfType.NORMAL);
@@ -232,7 +233,7 @@ public class ProductSectionApi {
     @ApiOperation(value = "发现推荐商品列表" ,response = ProductSection.class)
     public ResponseEntity recommendProducts(){
         UiPositionParam uiPositionParam = new UiPositionParam();
-        uiPositionParam.setApplicationType("HEALTH_GOOD");
+        uiPositionParam.setApplicationType(ApplicationType.HEALTH_GOOD);
         uiPositionParam.setCodes("SEARCH_PRODUCTS");
         ResponseEntity<Pages<UiPosition>> uiPositionEntity = baseDataServiceFeign.searchUiPosition(uiPositionParam);
         if (Objects.isNull(uiPositionEntity) || uiPositionEntity.getStatusCode().isError()){
