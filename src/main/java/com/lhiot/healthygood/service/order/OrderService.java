@@ -18,7 +18,7 @@ import com.lhiot.healthygood.mapper.customplan.CustomOrderDeliveryMapper;
 import com.lhiot.healthygood.mapper.customplan.CustomOrderMapper;
 import com.lhiot.healthygood.mq.HealthyGoodQueue;
 import com.lhiot.healthygood.service.common.CommonService;
-import com.lhiot.healthygood.service.customplan.CustomOrderService;
+import com.lhiot.healthygood.type.CustomOrderDeliveryStatus;
 import com.lhiot.healthygood.type.ReceivingWay;
 import com.lhiot.healthygood.util.FeginResponseTools;
 import lombok.extern.slf4j.Slf4j;
@@ -72,7 +72,7 @@ public class OrderService {
 
     //处理海鼎回调
     public Tips hdCallbackDeal(@RequestBody Map<String, Object> map) {
-        Map<String, String> contentMap = (Map<String,String>)map.get("content");
+        Map<String, String> contentMap = (Map<String, String>) map.get("content");
 
         log.info("content = " + contentMap.toString());
         String orderCode = contentMap.get("front_order_id");
@@ -142,9 +142,14 @@ public class OrderService {
                         customOrder.setId(customOrderDelivery.getCustomOrderId());
                         customOrder.setRemainingQtyAdd(1);//退还一次剩余
                         customOrderMapper.updateById(customOrder);
+                        CustomOrderDelivery updateCustomOrderDelivery = new CustomOrderDelivery();
+                        updateCustomOrderDelivery.setOrderCode(orderCode);
+                        updateCustomOrderDelivery.setDeliveryStatus(CustomOrderDeliveryStatus.ALREADY_RETURN);//退货完成
+                        //修改当前配送记录为已退货
+                        customOrderDeliveryMapper.updateByOrderCode(updateCustomOrderDelivery);
                         //通知基础服务已经海鼎回调退货到门店
-                        ResponseEntity  notPayedRefundResponse= orderServiceFeign.notPayedRefund(orderCode, NotPayRefundWay.STOCKING);
-                        log.info("定制订单发送基础服务订单实际未支付退货（无需退款）{}",notPayedRefundResponse);
+                        ResponseEntity notPayedRefundResponse = orderServiceFeign.notPayedRefund(orderCode, NotPayRefundWay.STOCKING);
+                        log.info("定制订单发送基础服务订单实际未支付退货（无需退款）{}", notPayedRefundResponse);
                     } else {
                         //普通订单
                         Tips refundOrderTips = FeginResponseTools.convertResponse(orderServiceFeign.refundOrder(orderDetailResult.getCode(), null));//此处为用户依据申请了退货了，海鼎回调中不需要再告知基础服务退货列表
@@ -198,6 +203,17 @@ public class OrderService {
                 case 4:
                     deliverServiceFeign.update(orderCode, new DeliverUpdate(orderCode, DeliverStatus.DONE, null, null, null));
                     orderServiceFeign.updateOrderStatus(orderCode, OrderStatus.RECEIVED);
+                    ResponseEntity<OrderDetailResult> orderDetailResultResponseEntity = orderServiceFeign.orderDetail(orderCode, false, false);
+                    Tips<OrderDetailResult> orderDetailResultTips = FeginResponseTools.convertResponse(orderDetailResultResponseEntity);
+                    if (orderDetailResultTips.succ()) {
+                        //定制订单类型的订单
+                        if (Objects.equals(OrderType.CUSTOM, orderDetailResultTips.getData().getOrderType())) {
+                            CustomOrderDelivery updateCustomOrderDelivery = new CustomOrderDelivery();
+                            updateCustomOrderDelivery.setOrderCode(orderCode);
+                            updateCustomOrderDelivery.setDeliveryStatus(CustomOrderDeliveryStatus.RECEIVED);//定制订单已收货
+                            customOrderDeliveryMapper.updateByOrderCode(updateCustomOrderDelivery);
+                        }
+                    }
                     return Tips.info("配送配送完成");
                 case 5:
                     deliverServiceFeign.update(orderCode, new DeliverUpdate(orderCode, DeliverStatus.FAILURE, null, null, "已取消"));
