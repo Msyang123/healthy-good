@@ -296,6 +296,7 @@ public class CustomOrderService {
         orderParam.setReceivingWay(ReceivingWay.TO_THE_HOME);//所有的都是送货上门
         orderParam.setAllowRefund(AllowRefund.YES);//允许退货
         orderParam.setOrderType(OrderType.CUSTOM);//定制订单
+        orderParam.setPayId(customOrder.getPayId());//支付id
         orderParam.setRemark(remark);
 
         orderParam.setDeliverAt(deliveryTime);

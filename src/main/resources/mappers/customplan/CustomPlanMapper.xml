@@ -207,6 +207,7 @@
         left join custom_plan_section_relation t2
         on t1.id = t2.plan_id
         where t2.section_id = #{id}
+        and t1.status = 'VALID'
         <if test="rows != null and rows > 0 ">
             order by t2.sort asc
             limit #{startRow} , #{rows}
