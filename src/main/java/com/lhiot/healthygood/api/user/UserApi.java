@@ -318,15 +318,19 @@ public class UserApi {
     public ResponseEntity captcha(Sessions.User user, @RequestParam String phone) {
         Long userId = Long.valueOf(user.getUser().get("userId").toString());
 
-        ResponseEntity<UserDetailResult> userDetailResultResponseEntity = baseUserServerFeign.findById(userId);
+        ResponseEntity userDetailResultResponseEntity = baseUserServerFeign.findById(userId);
         if (Objects.isNull(userDetailResultResponseEntity) || userDetailResultResponseEntity.getStatusCode().isError()) {
             return userDetailResultResponseEntity;
         }
-        CaptchaParam captchaParam = new CaptchaParam();
-        captchaParam.setApplicationName("和色果膳商城");
-        captchaParam.setPhoneNumber(phone);
-        captchaParam.setFreeSignName(FreeSignName.FRUIT_DOCTOR);
-        return thirdpartyServerFeign.captcha(CaptchaTemplate.REGISTER, captchaParam);
+        UserDetailResult userDetailResult = (UserDetailResult) userDetailResultResponseEntity.getBody();
+        if (Objects.equals(phone,userDetailResult.getPhone())){
+            CaptchaParam captchaParam = new CaptchaParam();
+            captchaParam.setApplicationName("和色果膳商城");
+            captchaParam.setPhoneNumber(phone);
+            captchaParam.setFreeSignName(FreeSignName.FRUIT_DOCTOR);
+            return thirdpartyServerFeign.captcha(CaptchaTemplate.REGISTER, captchaParam);
+        }
+        return ResponseEntity.badRequest().body("手机号码已存在");
     }
 
     @PutMapping("/binding")
@@ -361,10 +365,10 @@ public class UserApi {
 
         //获取用户信息
         ResponseEntity userDetailResult = baseUserServerFeign.findById(userId);
-        UserDetailResult users = (UserDetailResult) userDetailResult.getBody();
         if (Objects.isNull(userDetailResult) || userDetailResult.getStatusCode().isError()) {
             return userDetailResult;
         }
+        UserDetailResult users = (UserDetailResult) userDetailResult.getBody();
         FruitDoctor doctor = fruitDoctorService.selectByUserId(Long.valueOf(users.getId()));
         if (Objects.nonNull(doctor)) {
             users.setFruitDoctor(true);
