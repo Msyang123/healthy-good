@@ -468,10 +468,10 @@ public class OrderApi {
     }
 
     @Sessions.Uncheck
-    @PostMapping("/deliver/{deliverType}/callback")
+    @PostMapping("/orders/deliver/{deliverType}/callback")
     @ApiOperation(value = "达达配送回调处理订单")
     public ResponseEntity deliverCallback(@PathVariable("deliverType") DeliverType deliverType, HttpServletRequest request) {
-
+        log.info("配送回调处理订单{}",deliverType);
         //依据deliverType配送类型处理
         Map<String, Object> parameters = ConvertRequestToMap.convertRequestParameters(request);
 
