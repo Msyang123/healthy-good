@@ -23,6 +23,7 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.Date;
 import java.util.Objects;
 
@@ -36,6 +37,8 @@ public class AutoExtractionConsumer {
     private final CustomOrderService customOrderService;
     private final CustomOrderPauseMapper customOrderPauseMapper;
     private final ProbeEventPublisher publisher;
+    private static final DateTimeFormatter MONTH_AND_DAY = DateTimeFormatter.ofPattern("MM-dd");
+
     public AutoExtractionConsumer(RabbitInitializer initializer, CustomOrderService customOrderService, CustomOrderPauseMapper customOrderPauseMapper, ProbeEventPublisher publisher) {
         this.customOrderService = customOrderService;
         this.customOrderPauseMapper = customOrderPauseMapper;
@@ -61,10 +64,11 @@ public class AutoExtractionConsumer {
             return;
         }
         Date current = Date.from(Instant.now());
+        LocalDate now = LocalDate.now();
         //获取设置的配送时间段 customOrder.getDeliveryTime() eg:{"display":"08:30-09:30","startTime":"08:30:00","endTime":"09:30:00"}
         CustomOrderTime customOrderTime = Jackson.object(customOrder.getDeliveryTime(), CustomOrderTime.class);
         //设置具体配送时间
-        LocalDateTime nextDeliverTime = LocalDate.now().plusDays(1).atTime(customOrderTime.getStartTime());
+        LocalDateTime nextDeliverTime = now.plusDays(1).atTime(customOrderTime.getStartTime());
         try {
             //检查是否用户设置了暂停配送并且当前时间在暂停配送时间内
             CustomOrderPause customOrderPause = new CustomOrderPause();
@@ -85,9 +89,12 @@ public class AutoExtractionConsumer {
             if (Objects.equals(customOrder.getDeliveryType(), CustomOrderBuyType.AUTO)) {
                 //将定制设定时间转换成今天的配送时间
                 DeliverTime deliverTime = new DeliverTime();
-                deliverTime.setDisplay(customOrderTime.getDisplay());
-                deliverTime.setStartTime(Date.from(LocalDate.now().atTime(customOrderTime.getStartTime()).atZone(ZoneId.systemDefault()).toInstant()));
-                deliverTime.setEndTime(Date.from(LocalDate.now().atTime(customOrderTime.getEndTime()).atZone(ZoneId.systemDefault()).toInstant()));
+                String timeDisplay = customOrderTime.getDisplay();
+                String[] timeParts = timeDisplay.split("-");
+                timeDisplay = now.format(MONTH_AND_DAY) + " " + timeParts[0] + ":00-" + now.format(MONTH_AND_DAY) + " " + timeParts[1] + ":00";
+                deliverTime.setDisplay(timeDisplay);//定制订单显示格式 eg:08:30-09:30 应该显示为eg 12-27 20:30:11-12-27 21:30:11
+                deliverTime.setStartTime(Date.from(now.atTime(customOrderTime.getStartTime()).atZone(ZoneId.systemDefault()).toInstant()));
+                deliverTime.setEndTime(Date.from(now.atTime(customOrderTime.getEndTime()).atZone(ZoneId.systemDefault()).toInstant()));
 
                 Tips result = customOrderService.extraction(customOrder, Jackson.json(deliverTime), "自动提取");//会提取并且发送海鼎与配送
                 if (result.err()) {
