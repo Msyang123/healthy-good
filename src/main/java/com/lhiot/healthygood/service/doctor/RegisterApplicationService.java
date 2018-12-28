@@ -90,7 +90,7 @@ public class RegisterApplicationService {
         }
         int result = fruitDoctorMapper.updateById(fruitDoctor);
         //升级为明星鲜果师且不是明星鲜果师的时候才发送模板消息
-        if (result >= 0 && Objects.equals("YES", fruitDoctor.getHot()) && Objects.equals("NO",doctors.getHot())) {
+        if (result >= 0 && Objects.equals(Hot.YES, fruitDoctor.getHot()) && Objects.equals(Hot.NO,doctors.getHot())) {
             String currentTime = new SimpleDateFormat("yyyy-MM-dd").format(new Date());
             DataItem dataItem = new DataItem();
             DataObject first = new DataObject();
@@ -127,6 +127,13 @@ public class RegisterApplicationService {
         if (!updated) {
             return Tips.warn("修改鲜果师申请记录失败");
         }
+        // 查询用户openId
+        ResponseEntity findBaseUser = baseUserServerFeign.findById(registerApplication.getUserId());
+        if (findBaseUser.getStatusCode().isError() || Objects.isNull(findBaseUser.getBody())) {
+            return Tips.warn("基础用户服务查询失败");
+        }
+        UserDetailResult findUserDetailResult = (UserDetailResult) findBaseUser.getBody();
+
         // 审核通过 新增鲜果师成员记录
         if (Objects.equals(AuditStatus.AGREE, registerApplication.getAuditStatus())) {
             // 幂等添加
@@ -157,15 +164,15 @@ public class RegisterApplicationService {
             fruitDoctor.setApplicationId(registerApplication.getId());
             fruitDoctor.setUserId(registerApplication.getUserId());
             fruitDoctor.setHot(Hot.NO);
-            return fruitDoctorMapper.create(fruitDoctor) > 0 ? Tips.info("添加鲜果师成员成功") : Tips.warn("添加鲜果师成员失败");
+            if (fruitDoctorMapper.create(fruitDoctor) > 0) {
+                // 发送模板消息
+                this.doctorApplicationSendTemplate(registerApplication.getAuditStatus(), findUserDetailResult.getOpenId());
+                return  Tips.info("添加鲜果师成员成功");
+            }
+            return Tips.warn("添加鲜果师成员失败");
         }
         // 发送模板消息
-        ResponseEntity findBaseUser = baseUserServerFeign.findById(registerApplication.getUserId());
-        if (findBaseUser.getStatusCode().isError() || Objects.isNull(findBaseUser.getBody())) {
-            return Tips.warn("基础服务查询失败");
-        }
-        UserDetailResult userDetailResult = (UserDetailResult) findBaseUser.getBody();
-        this.doctorApplicationSendTemplate(registerApplication.getAuditStatus(), userDetailResult.getOpenId());
+        this.doctorApplicationSendTemplate(registerApplication.getAuditStatus(), findUserDetailResult.getOpenId());
         return Tips.info("修改成功");
     }
 
@@ -185,33 +192,30 @@ public class RegisterApplicationService {
         DataObject keyword2 = new DataObject();
         DataObject keyword3 = new DataObject();
         DataObject keyword4 = new DataObject();
-        DataObject remark = new DataObject();
 
         if (AuditStatus.UNAUDITED.equals(auditStatus)) {
             first.setValue(FirstAndRemarkData.APPLY.getFirstData());
             keyword1.setValue(BacklogEnum.APPLICATION.getBacklog());
-            keyword2.setValue(BacklogEnum.APPLICATION.getStatus());
-            keyword4.setValue(BacklogEnum.APPLICATION.getRemark());
+            keyword4.setValue(BacklogEnum.APPLICATION.getStatus());
+            keyword2.setValue(BacklogEnum.APPLICATION.getRemark());
         } else if (AuditStatus.AGREE.equals(auditStatus)) {
-            first.setValue(FirstAndRemarkData.APPLY_FAILURE.getFirstData());
-            keyword1.setValue(BacklogEnum.APPLICATION_SUCCESS.getBacklog());
-            keyword2.setValue(BacklogEnum.APPLICATION_SUCCESS.getRemark());
-            keyword4.setValue(BacklogEnum.APPLICATION_SUCCESS.getStatus());
-        } else if (AuditStatus.REJECT.equals(auditStatus)) {
             first.setValue(FirstAndRemarkData.APPLY_SUCCESS.getFirstData());
+            keyword1.setValue(BacklogEnum.APPLICATION_SUCCESS.getBacklog());
+            keyword4.setValue(BacklogEnum.APPLICATION_SUCCESS.getRemark());
+            keyword2.setValue(BacklogEnum.APPLICATION_SUCCESS.getStatus());
+        } else if (AuditStatus.REJECT.equals(auditStatus)) {
+            first.setValue(FirstAndRemarkData.APPLY_FAILURE.getFirstData());
             keyword1.setValue(BacklogEnum.APPLICATION_FAILURE.getBacklog());
-            keyword2.setValue(BacklogEnum.APPLICATION_FAILURE.getRemark());
-            keyword4.setValue(BacklogEnum.APPLICATION_FAILURE.getStatus());
+            keyword4.setValue(BacklogEnum.APPLICATION_FAILURE.getRemark());
+            keyword2.setValue(BacklogEnum.APPLICATION_FAILURE.getStatus());
         }
         keyword3.setValue(currentTime);
-        remark.setValue("如有疑问请致电0731-85240088");
 
         dataItem.setFirst(first);
         dataItem.setKeyword1(keyword1);
         dataItem.setKeyword2(keyword2);
         dataItem.setKeyword3(keyword3);
         dataItem.setKeyword4(keyword4);
-        dataItem.setRemark(remark);
         weChatUtil.sendMessageToWechat(TemplateMessageEnum.APPLY_FRUIT_DOCTOR, openId, dataItem);
         return Tips.info("修改成功");
     }
