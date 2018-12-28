@@ -248,7 +248,7 @@ public class OrderService {
         //如果计算结果为负数，那么就只延迟1秒钟
         //延迟发送到海鼎
         HealthyGoodQueue.DelayQueue.SEND_TO_HD.send(rabbitTemplate, orderCode, (interval <= 0 ? 1000L : interval));
-        log.info("创建定制订单提取延迟发送到海鼎:{},{}", orderCode, interval);
+        log.info("创建订单提取延迟发送到海鼎:{},{}", orderCode, interval);
     }
 
 

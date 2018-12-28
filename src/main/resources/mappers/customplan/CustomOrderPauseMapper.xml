@@ -13,6 +13,7 @@
         <result column="pause_day" property="pauseDay" />
         <result column="plan_pause_day" property="planPauseDay" />
         <result column="plan_pause_end_at" property="planPauseEndAt" />
+        <result column="oper_status" property="operStatus" />
     </resultMap>
 
     <!-- base查询字段  -->
@@ -26,6 +27,7 @@
             pause_day,
             plan_pause_day,
             plan_pause_end_at,
+            oper_status,
         </trim>
     </sql>
 
