@@ -5,10 +5,12 @@ import com.leon.microx.util.auditing.Random;
 import com.leon.microx.web.result.Pages;
 import com.leon.microx.web.result.Tips;
 import com.lhiot.healthygood.domain.doctor.RegisterApplication;
+import com.lhiot.healthygood.domain.user.DoctorCustomer;
 import com.lhiot.healthygood.domain.user.FruitDoctor;
 import com.lhiot.healthygood.feign.BaseUserServerFeign;
 import com.lhiot.healthygood.feign.model.UserDetailResult;
 import com.lhiot.healthygood.mapper.doctor.RegisterApplicationMapper;
+import com.lhiot.healthygood.mapper.user.DoctorCustomerMapper;
 import com.lhiot.healthygood.mapper.user.FruitDoctorMapper;
 import com.lhiot.healthygood.type.*;
 import com.lhiot.healthygood.util.DataItem;
@@ -39,13 +41,15 @@ public class RegisterApplicationService {
 
     private final RegisterApplicationMapper registerApplicationMapper;
     private final FruitDoctorMapper fruitDoctorMapper;
+    private final DoctorCustomerMapper doctorCustomerMapper;
     private final BaseUserServerFeign baseUserServerFeign;
     private WeChatUtil weChatUtil;
 
     @Autowired
-    public RegisterApplicationService(RegisterApplicationMapper registerApplicationMapper, FruitDoctorMapper fruitDoctorMapper,BaseUserServerFeign baseUserServerFeign, WeChatUtil weChatUtil) {
+    public RegisterApplicationService(RegisterApplicationMapper registerApplicationMapper, FruitDoctorMapper fruitDoctorMapper, DoctorCustomerMapper doctorCustomerMapper, BaseUserServerFeign baseUserServerFeign, WeChatUtil weChatUtil) {
         this.registerApplicationMapper = registerApplicationMapper;
         this.fruitDoctorMapper = fruitDoctorMapper;
+        this.doctorCustomerMapper = doctorCustomerMapper;
         this.baseUserServerFeign = baseUserServerFeign;
         this.weChatUtil = weChatUtil;
     }
@@ -149,7 +153,11 @@ public class RegisterApplicationService {
             fruitDoctor.setDoctorLevel(DoctorLevel.TRAINING.toString());
             fruitDoctor.setDoctorStatus(DoctorStatus.VALID);
             fruitDoctor.setCreateAt(Date.from(Instant.now()));
-            fruitDoctor.setRefereeId(registerApplication.getRefereeId());
+            //查找推荐人
+            DoctorCustomer doctorCustomer = doctorCustomerMapper.selectByUserId(registerApplication.getUserId());
+            if (Objects.nonNull(doctorCustomer)) {
+                fruitDoctor.setRefereeId(doctorCustomer.getDoctorId());
+            }
             //查找基础服务对应的微信用户信息
             ResponseEntity<UserDetailResult> userEntity = baseUserServerFeign.findById(registerApplication.getUserId());
             if (userEntity.getStatusCode().isError()) {
