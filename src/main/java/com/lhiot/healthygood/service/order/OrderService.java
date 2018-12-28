@@ -29,8 +29,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.RequestBody;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.util.Date;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -211,6 +213,7 @@ public class OrderService {
                             CustomOrderDelivery updateCustomOrderDelivery = new CustomOrderDelivery();
                             updateCustomOrderDelivery.setOrderCode(orderCode);
                             updateCustomOrderDelivery.setDeliveryStatus(CustomOrderDeliveryStatus.RECEIVED);//定制订单已收货
+                            updateCustomOrderDelivery.setRecevingTime(Date.from(Instant.now()));//配送时间
                             customOrderDeliveryMapper.updateByOrderCode(updateCustomOrderDelivery);
                         }
                     }
