@@ -134,6 +134,7 @@ public class UserApi {
         }
         //如果用户不存在且邀请码有效则创建用户并绑定鲜果师，否则不做操作或者绑定鲜果师
         ResponseEntity searchUserEntity = baseUserServerFeign.findByOpenId(accessToken.getOpenId());
+        ResponseEntity imsOperationRes = imsServiceFeign.selectAuthority();
         //注册
         if (searchUserEntity.getStatusCode().isError()) {
             String weixinUserInfo = weChatUtil.getOauth2UserInfo(accessToken.getOpenId(), accessToken.getAccessToken());
@@ -147,6 +148,11 @@ public class UserApi {
             Sessions.User sessionUser = session.create(request).user(Maps.of("userId", userDetailResult.getId(), "baseUserId",userDetailResult.getBaseUserId()
                     , "openId", userDetailResult.getOpenId()))
                     .timeToLive(30, TimeUnit.MINUTES);
+            List<ImsOperation> imsOperations = (List<ImsOperation>) imsOperationRes.getBody();
+            List<Authority> authorityList = imsOperations.stream()
+                    .map(op -> Authority.of(op.getAntUrl(), StringUtils.tokenizeToStringArray(op.getType(), ",")))
+                    .collect(Collectors.toList());
+            sessionUser.authorities(authorityList);
             String sessionId = session.cache(sessionUser);
             clientUri = accessToken.getOpenId() + "?sessionId=" + sessionId + "&clientUri=" + clientUri;
         } else {
@@ -166,7 +172,6 @@ public class UserApi {
                     .timeToLive(30, TimeUnit.MINUTES);
             //sessionUser.authorities(Authority.of("/**", RequestMethod.values()));
 
-            ResponseEntity imsOperationRes = imsServiceFeign.selectAuthority();
             if (imsOperationRes.getStatusCode().isError()){
                 return ;
             }

@@ -65,7 +65,8 @@ public class WeixinClientApi {
             return null;
         }
     }
-    
+
+    @Sessions.Uncheck
     @PostMapping("/sign")
     @ApiOperation(value = "微信发送的信息响应")
     public void postSign(@RequestParam("signature") String signature,
