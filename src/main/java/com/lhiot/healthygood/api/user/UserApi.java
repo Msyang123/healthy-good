@@ -142,6 +142,7 @@ public class UserApi {
             if (Objects.nonNull(fruitDoctor)) {
                 weChatRegisterParam.setDoctorId(fruitDoctor.getId());
             }
+            weChatRegisterParam.setApplicationType(ApplicationType.HEALTH_GOOD);
             //新增用户
             Tips tips = fruitDoctorUserService.create(weChatRegisterParam);
             UserDetailResult userDetailResult = (UserDetailResult) tips.getData();
@@ -322,15 +323,15 @@ public class UserApi {
         if (Objects.isNull(userDetailResultResponseEntity) || userDetailResultResponseEntity.getStatusCode().isError()) {
             return userDetailResultResponseEntity;
         }
-        UserDetailResult userDetailResult = (UserDetailResult) userDetailResultResponseEntity.getBody();
-        if (Objects.equals(phone,userDetailResult.getPhone())){
-            CaptchaParam captchaParam = new CaptchaParam();
-            captchaParam.setApplicationName("和色果膳商城");
-            captchaParam.setPhoneNumber(phone);
-            captchaParam.setFreeSignName(FreeSignName.FRUIT_DOCTOR);
-            return thirdpartyServerFeign.captcha(CaptchaTemplate.REGISTER, captchaParam);
+        ResponseEntity presentUserRes = baseUserServerFeign.findByPhone(phone,ApplicationType.HEALTH_GOOD);
+        if (presentUserRes.getStatusCode().is2xxSuccessful() && Objects.nonNull(presentUserRes)){
+            return ResponseEntity.badRequest().body("手机号码已存在");
         }
-        return ResponseEntity.badRequest().body("手机号码已存在");
+        CaptchaParam captchaParam = new CaptchaParam();
+        captchaParam.setApplicationName("和色果膳商城");
+        captchaParam.setPhoneNumber(phone);
+        captchaParam.setFreeSignName(FreeSignName.FRUIT_DOCTOR);
+        return thirdpartyServerFeign.captcha(CaptchaTemplate.REGISTER, captchaParam);
     }
 
     @PutMapping("/binding")
@@ -383,10 +384,18 @@ public class UserApi {
     @ApiOperation(value = "用户余额明细*",response = BalanceLog.class)
     @PostMapping("/balance-log/page")
     public ResponseEntity findUserBalanceLog(Sessions.User user,@RequestBody PagesParam pagesParam){
-        Long baseUserId = Long.valueOf(user.getUser().get("baseUserId").toString());
+        Long userId = Long.valueOf(user.getUser().get("userId").toString());
+        ResponseEntity userDetailResult = baseUserServerFeign.findById(userId);
+        if (Objects.isNull(userDetailResult.getBody()) || userDetailResult.getStatusCode().isError()) {
+            return userDetailResult;
+        }
+        UserDetailResult users = (UserDetailResult) userDetailResult.getBody();
+        if (Objects.isNull(users.getBaseUserId())){
+            return ResponseEntity.ok().build();
+        }
         BalanceLogParam balanceLogParam = new BalanceLogParam();
         BeanUtils.copyProperties(pagesParam,balanceLogParam);
-        balanceLogParam.setBaseUserId(baseUserId);
+        balanceLogParam.setBaseUserId(users.getBaseUserId());
         balanceLogParam.setApplicationType("HEALTH_GOOD");
         ResponseEntity responseEntity =  baseUserServerFeign.searchBalanceLog(balanceLogParam);
         return responseEntity.getStatusCode().is2xxSuccessful() ? ResponseEntity.ok(responseEntity.getBody()) : ResponseEntity.badRequest().body(responseEntity.getBody());
