@@ -101,7 +101,7 @@ public class CustomOrderService {
         this.dictionaryClient = dictionaryClient;
         this.fruitDoctorService = fruitDoctorService;
         this.rabbitTemplate = rabbitTemplate;
-        //初始化调用修改暂停恢复定制计划每五分钟调用一次
+        //初始化调用修改暂停恢复定制计划1分钟后调用
         HealthyGoodQueue.DelayQueue.UPDATE_CUSTOM_ORDER_STATUS.send(rabbitTemplate, "nothing", 1 * 60 * 1000);
     }
 

@@ -80,7 +80,7 @@ public class UpdateCustomOrderStatusConsumer {
             // 异常、队列消息
             publisher.mqConsumerException(e, Maps.of("message", "依据配送暂停设置修改定制订单状态为暂停状态和恢复状态"));
         }
-        //每十分钟循环调用一次
-        HealthyGoodQueue.DelayQueue.UPDATE_CUSTOM_ORDER_STATUS.send(rabbitTemplate,"nothing",10*60*1000);
+        //每五分钟循环调用一次
+        HealthyGoodQueue.DelayQueue.UPDATE_CUSTOM_ORDER_STATUS.send(rabbitTemplate,"nothing",5*60*1000);
     }
 }
