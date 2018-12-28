@@ -39,7 +39,7 @@ public class LastExtractionConsumer {
         this.publisher = publisher;
         this.paymentServiceFeign = paymentServiceFeign;
         this.wechatPayConfig = healthyGoodConfig.getWechatPay();
-        HealthyGoodQueue.DelayQueue.LAST_EXTRACTION.init(initializer);
+        //HealthyGoodQueue.DelayQueue.LAST_EXTRACTION.init(initializer);
     }
 
     /**

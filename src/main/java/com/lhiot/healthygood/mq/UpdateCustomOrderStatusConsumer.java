@@ -35,7 +35,7 @@ public class UpdateCustomOrderStatusConsumer {
         this.customOrderService = customOrderService;
         this.publisher = publisher;
         this.rabbitTemplate = rabbitTemplate;
-        HealthyGoodQueue.DelayQueue.UPDATE_CUSTOM_ORDER_STATUS.init(initializer);
+        //HealthyGoodQueue.DelayQueue.UPDATE_CUSTOM_ORDER_STATUS.init(initializer);
     }
 
     /**
