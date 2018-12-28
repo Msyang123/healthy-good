@@ -25,7 +25,7 @@ public class CancelCustomOrderConsumer {
     public CancelCustomOrderConsumer(RabbitInitializer initializer, CustomOrderMapper customOrderMapper, ProbeEventPublisher publisher) {
         this.customOrderMapper = customOrderMapper;
         this.publisher = publisher;
-        HealthyGoodQueue.DelayQueue.CANCEL_CUSTOM_ORDER.init(initializer);
+        //HealthyGoodQueue.DelayQueue.CANCEL_CUSTOM_ORDER.init(initializer);
     }
 
     /**
