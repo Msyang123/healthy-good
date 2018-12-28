@@ -189,7 +189,7 @@
 	        from activity_product
 	        <include refid="Base_Where_Condition" />
              <if test="rows != null and rows > 0 ">
-                 order by  id desc
+                 order by sort desc, id desc
                  limit #{startRow} , #{rows}
              </if>
      </select>
