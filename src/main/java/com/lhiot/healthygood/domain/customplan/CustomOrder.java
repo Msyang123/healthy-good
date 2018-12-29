@@ -119,6 +119,9 @@ public class CustomOrder {
     @ApiModelProperty(notes = "已暂停天数", dataType = "Long")
     private Long alreadyPauseDay;
 
+    @ApiModelProperty(notes = "暂停配送设置对象", dataType = "CustomOrderPause")
+    private CustomOrderPause customOrderPause;
+
     @ApiModelProperty(notes = "每页查询条数(为空或0不分页查所有)", dataType = "Integer")
     private Integer rows;
     @ApiModelProperty(notes = "当前页", dataType = "Integer")
