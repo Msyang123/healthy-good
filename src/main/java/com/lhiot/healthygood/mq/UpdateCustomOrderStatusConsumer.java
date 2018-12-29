@@ -2,6 +2,7 @@ package com.lhiot.healthygood.mq;
 
 import com.leon.microx.amqp.RabbitInitializer;
 import com.leon.microx.probe.collector.ProbeEventPublisher;
+import com.leon.microx.util.DateTime;
 import com.leon.microx.util.Maps;
 import com.lhiot.healthygood.domain.customplan.CustomOrder;
 import com.lhiot.healthygood.domain.customplan.CustomOrderPause;
@@ -15,6 +16,9 @@ import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.stereotype.Component;
 
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.Date;
 import java.util.List;
 import java.util.Objects;
@@ -30,12 +34,13 @@ public class UpdateCustomOrderStatusConsumer {
     private final CustomOrderService customOrderService;
     private final ProbeEventPublisher publisher;
     private final RabbitTemplate rabbitTemplate;
+    private static final LocalTime END_PAUSE_OF_DAY = LocalTime.parse("23:59:59");
     public UpdateCustomOrderStatusConsumer(RabbitInitializer initializer, CustomOrderPauseMapper customOrderPauseMapper, CustomOrderService customOrderService, ProbeEventPublisher publisher, RabbitTemplate rabbitTemplate) {
         this.customOrderPauseMapper = customOrderPauseMapper;
         this.customOrderService = customOrderService;
         this.publisher = publisher;
         this.rabbitTemplate = rabbitTemplate;
-        HealthyGoodQueue.DelayQueue.UPDATE_CUSTOM_ORDER_STATUS.init(initializer);
+        //HealthyGoodQueue.DelayQueue.UPDATE_CUSTOM_ORDER_STATUS.init(initializer);
     }
 
     /**
@@ -51,21 +56,26 @@ public class UpdateCustomOrderStatusConsumer {
                 log.info("依据配送暂停设置修改定制订单状态为暂停状态和恢复状态,没有符合条件的暂停设置");
                 return;
             }
-            Date current =new Date();
+            Date current =Date.from(Instant.now());
+            LocalDate currentDate =LocalDate.now();
             customOrderPauseList.forEach(item->{
                 //当前时间是在暂停时间内
                 if(current.after(item.getPauseBeginAt())&& current.before(item.getPauseEndAt())){
                     CustomOrder customOrder =new CustomOrder();
                     customOrder.setCustomOrderCode(item.getCustomOrderCode());
-
+                    LocalDate pauseEndAt = LocalDate.parse(DateTime.format(item.getPauseEndAt(),"yyyy-MM-dd"));
                     if(Objects.equals(item.getOperStatus(), OperStatus.PAUSE)){
                         //设置定制订单为暂停
                         customOrder.setStatus(CustomOrderStatus.PAUSE_DELIVERY);
-                    }else if(Objects.equals(item.getOperStatus(), OperStatus.RECOVERY)){
-                        //设置定制订单为恢复
+                        customOrderService.updateByCode(customOrder);
+                    }else if(Objects.equals(item.getOperStatus(), OperStatus.RECOVERY)&&
+                            pauseEndAt.compareTo(currentDate)>0
+                    ){
+                        //设置的恢复时间小于今天23:59:59才允许恢复 设置定制订单为恢复 也就是当天设置恢复，
+                        // 第二天才能配送，就算恢复操作时间在当天配送时间之前也是第二天配送
                         customOrder.setStatus(CustomOrderStatus.CUSTOMING);
+                        customOrderService.updateByCode(customOrder);
                     }
-                    customOrderService.updateByCode(customOrder);
                 }else if(current.after(item.getPauseEndAt())){
                     //当前时间大于实际暂停结束时间，那么就自动恢复
                     CustomOrder customOrder =new CustomOrder();

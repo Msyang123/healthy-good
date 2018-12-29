@@ -1,5 +1,6 @@
 package com.lhiot.healthygood.domain.good;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.leon.microx.predefine.OnOff;
 import com.lhiot.healthygood.type.ShelfType;
 import io.swagger.annotations.ApiModel;
@@ -36,6 +37,7 @@ public class Products {
     @ApiModelProperty(notes = "上架类型：NORMAL-普通商品,GIFT-赠品", dataType = "ShelfType")
     private ShelfType shelfType;
     @ApiModelProperty(notes = "创建时间", dataType = "Date", readOnly = true)
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss",timezone = "GMT+8")
     private Date createAt;
     @ApiModelProperty(notes = "描述", dataType = "String")
     private String description;

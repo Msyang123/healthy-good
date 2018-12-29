@@ -58,7 +58,7 @@ public class BalanceApi {
     }
 
     @PostMapping("/recharge/payment-sign")
-    @ApiOperation("充值签名")
+    @ApiOperation(value ="充值签名", response = String.class)
     public ResponseEntity paymentSign(@RequestBody WxPayModel paySign, HttpServletRequest request, Sessions.User user) {
         String openId = user.getUser().get("openId").toString();
         Long userId = Long.valueOf(user.getUser().get("userId").toString());
