@@ -1,5 +1,6 @@
 package com.lhiot.healthygood.feign.model;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
@@ -29,6 +30,7 @@ public class ProductSection {
     @ApiModelProperty(notes = "排序字段", dataType = "Integer")
     private Integer sorting;
     @ApiModelProperty(notes = "创建时间", dataType = "Date", readOnly = true)
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss",timezone = "GMT+8")
     private Date createAt;
     @ApiModelProperty(notes = "父ID", dataType = "Long")
     private Long parentId;

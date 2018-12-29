@@ -1,5 +1,6 @@
 package com.lhiot.healthygood.feign.model;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.leon.microx.predefine.OnOff;
 import com.lhiot.healthygood.feign.type.AdvertiseType;
 import com.lhiot.healthygood.feign.type.RelationType;
@@ -39,9 +40,12 @@ public class Advertisement {
     @ApiModelProperty(notes = "广告序号", dataType = "Integer")
     private Integer sorting;
     @ApiModelProperty(notes = "开启时间", dataType = "Date")
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss",timezone = "GMT+8")
     private Date beginAt;
     @ApiModelProperty(notes = "关闭时间", dataType = "Date")
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss",timezone = "GMT+8")
     private Date endAt;
     @ApiModelProperty(notes = "创建时间", dataType = "Date", readOnly = true)
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss",timezone = "GMT+8")
     private Date createAt;
 }

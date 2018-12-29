@@ -1,5 +1,6 @@
 package com.lhiot.healthygood.feign.model;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.lhiot.healthygood.feign.type.ArticleStatus;
 import com.lhiot.healthygood.feign.type.ArticleType;
 import io.swagger.annotations.ApiModel;
@@ -22,6 +23,7 @@ public class Article {
     @ApiModelProperty(notes = "编辑人", dataType = "String")
     private String editor;
     @ApiModelProperty(notes = "创建时间", dataType = "Date", readOnly = true)
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss",timezone = "GMT+8")
     private Date createAt;
     @ApiModelProperty(notes = "文章类型（ORIGINAL-原创  REPRINTED-转载）", dataType = "ArticleType")
     private ArticleType articleType;
@@ -44,8 +46,10 @@ public class Article {
     @ApiModelProperty(notes = "审核人", dataType = "String")
     private String auditor;
     @ApiModelProperty(notes = "编辑时间", dataType = "Date")
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss",timezone = "GMT+8")
     private Date editAt;
     @ApiModelProperty(notes = "发布时间", dataType = "Date")
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss",timezone = "GMT+8")
     private Date publishAt;
     @ApiModelProperty(notes = "关键字", dataType = "String")
     private String keywords;

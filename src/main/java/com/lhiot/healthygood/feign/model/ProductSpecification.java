@@ -1,5 +1,6 @@
 package com.lhiot.healthygood.feign.model;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.leon.microx.predefine.Use;
 import com.lhiot.healthygood.feign.type.InventorySpecification;
 import io.swagger.annotations.ApiModel;
@@ -38,5 +39,6 @@ public class ProductSpecification {
     @ApiModelProperty(notes = "是否可用：ENABLE-可用，DISABLE-不可用", dataType = "Use")
     private Use availableStatus;
     @ApiModelProperty(notes = "创建时间", dataType = "Date", readOnly = true)
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss",timezone = "GMT+8")
     private Date createAt;
 }

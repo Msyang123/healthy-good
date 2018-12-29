@@ -1,5 +1,6 @@
 package com.lhiot.healthygood.feign.model;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.lhiot.healthygood.feign.type.OperationStatus;
 import lombok.Data;
 
@@ -18,5 +19,6 @@ public class BalanceLog {
     private String applicationType;
     private String memo;
     private String sourceId;
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss",timezone = "GMT+8")
     private Date createAt = Date.from(Instant.now());
 }
