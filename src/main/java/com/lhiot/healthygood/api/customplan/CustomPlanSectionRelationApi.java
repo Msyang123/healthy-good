@@ -103,4 +103,18 @@ public class CustomPlanSectionRelationApi {
 
         return customPlanSectionRelationService.deleteRelationList(sectionId, planIds) ? ResponseEntity.noContent().build() : ResponseEntity.badRequest().body("删除信息失败！");
     }
+
+    @Sessions.Uncheck
+    @ApiOperation("修改定制板块关联(后台)")
+    @ApiImplicitParams({
+            @ApiImplicitParam(paramType = ApiParamType.PATH, name = "id", value = "定制板块关联id", dataType = "Long", required = true),
+            @ApiImplicitParam(paramType = ApiParamType.BODY, name = "customPlanSectionRelation", value = "定制板块关联", dataType = "CustomPlanSectionRelation", required = true)
+    })
+    @PutMapping("/custom-plan-section-relations/{id}")
+    public ResponseEntity update(@PathVariable("id") Long id, @RequestBody CustomPlanSectionRelation customPlanSectionRelation) {
+        log.debug("修改定制板块\t id:{}, param:{}",id, customPlanSectionRelation);
+
+        customPlanSectionRelation.setId(id);
+        return customPlanSectionRelationService.updateById(customPlanSectionRelation) > 0 ? ResponseEntity.ok().build() : ResponseEntity.badRequest().body("修改定制板块关联失败!");
+    }
 }
