@@ -2,6 +2,7 @@ package com.lhiot.healthygood.mq;
 
 import com.leon.microx.amqp.RabbitInitializer;
 import com.leon.microx.probe.collector.ProbeEventPublisher;
+import com.leon.microx.util.DateTime;
 import com.leon.microx.util.Maps;
 import com.lhiot.healthygood.domain.customplan.CustomOrder;
 import com.lhiot.healthygood.domain.customplan.CustomOrderPause;
@@ -15,10 +16,9 @@ import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.stereotype.Component;
 
+import java.time.Instant;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.time.ZoneId;
 import java.util.Date;
 import java.util.List;
 import java.util.Objects;
@@ -56,23 +56,20 @@ public class UpdateCustomOrderStatusConsumer {
                 log.info("依据配送暂停设置修改定制订单状态为暂停状态和恢复状态,没有符合条件的暂停设置");
                 return;
             }
-            Date current =new Date();
+            Date current =Date.from(Instant.now());
             LocalDate currentDate =LocalDate.now();
-            LocalDateTime  currentDateTime =currentDate.atTime(END_PAUSE_OF_DAY);//今天晚上23:59:59
-            Date toNight = Date.from(currentDateTime.atZone(ZoneId.systemDefault()).toInstant());
             customOrderPauseList.forEach(item->{
                 //当前时间是在暂停时间内
                 if(current.after(item.getPauseBeginAt())&& current.before(item.getPauseEndAt())){
                     CustomOrder customOrder =new CustomOrder();
                     customOrder.setCustomOrderCode(item.getCustomOrderCode());
-
-
+                    LocalDate pauseEndAt = LocalDate.parse(DateTime.format(item.getPauseEndAt(),"yyyy-MM-dd"));
                     if(Objects.equals(item.getOperStatus(), OperStatus.PAUSE)){
                         //设置定制订单为暂停
                         customOrder.setStatus(CustomOrderStatus.PAUSE_DELIVERY);
                         customOrderService.updateByCode(customOrder);
                     }else if(Objects.equals(item.getOperStatus(), OperStatus.RECOVERY)&&
-                            item.getPauseEndAt().before(toNight)
+                            pauseEndAt.compareTo(currentDate)>0
                     ){
                         //设置的恢复时间小于今天23:59:59才允许恢复 设置定制订单为恢复 也就是当天设置恢复，
                         // 第二天才能配送，就算恢复操作时间在当天配送时间之前也是第二天配送
