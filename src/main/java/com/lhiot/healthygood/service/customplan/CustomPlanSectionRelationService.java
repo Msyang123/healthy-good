@@ -178,5 +178,16 @@ public class CustomPlanSectionRelationService {
         return resultList;
     }
 
+    /**
+     * Description:根据id修改定制计划关联
+     *
+     * @param customPlanSectionRelation
+     * @return
+     * @author hufan
+     * @date 2018/12/29 14:56:50
+     */
+    public int updateById(CustomPlanSectionRelation customPlanSectionRelation){
+        return this.customPlanSectionRelationMapper.updateById(customPlanSectionRelation);
+    }
 }
 
