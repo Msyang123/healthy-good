@@ -1,5 +1,6 @@
 package com.lhiot.healthygood.feign.model;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.lhiot.dc.dictionary.HasEntries;
 import com.lhiot.healthygood.util.DictionaryCodes;
 import io.swagger.annotations.ApiModel;
@@ -30,6 +31,7 @@ public class ArticleSection {
     @ApiModelProperty(notes = "父级编号", dataType = "Long")
     private Long parentId;
     @ApiModelProperty(notes = "创建时间", dataType = "Date", readOnly = true)
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss",timezone = "GMT+8")
     private Date createAt;
     @ApiModelProperty(notes = "序号", dataType = "Integer")
     private Integer sorting;
