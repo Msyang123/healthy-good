@@ -72,7 +72,6 @@ public class CustomOrderService {
     private final RabbitTemplate rabbitTemplate;
     //暂停开始结束时间
     private static final LocalTime PAUSE_TIME = LocalTime.parse("00:00:00");
-    //private static final LocalTime END_PAUSE_OF_DAY = LocalTime.parse("23:59:59");
     private static final DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
     @Autowired
@@ -507,7 +506,19 @@ public class CustomOrderService {
                     );
                 }
             }
+
+            //暂停中的暂停设置记录
+            Date current = Date.from(LocalDateTime.now().atZone(ZoneId.systemDefault()).toInstant());
+            CustomOrderPause customOrderPauseParam = new CustomOrderPause();
+            customOrderPauseParam.setPauseBeginAt(current);//暂停开始时间条件
+            customOrderPauseParam.setPlanPauseEndAt(current);//计划暂停结束时间条件
+            customOrderPauseParam.setOperStatus(OperStatus.PAUSE);//暂停状态
+            customOrderPauseParam.setCustomOrderCode(orderCode);
+            //查找到当前是否设置了暂停 如果有就恢复并修改实际结束时间
+            CustomOrderPause customOrderPause = customOrderPauseMapper.selectCustomOrderPause(customOrderPauseParam);
+            customOrder.setCustomOrderPause(customOrderPause);
         }
+
         Tips<CustomOrder> tips = new Tips<>();
         tips.setData(customOrder);
         return tips;

@@ -147,8 +147,8 @@ public class CustomOrderApi {
             return validateOrderOwner;
         }
         //不需要检测当前是否是暂停中的定制
-        int result = customOrderService.resumeCustomOrder(orderCode);
-        return result > 0 ? ResponseEntity.ok("修改成功") : ResponseEntity.badRequest().body("修改失败");
+        customOrderService.resumeCustomOrder(orderCode);
+        return  ResponseEntity.ok("修改成功");
     }
 
     @PutMapping("/custom-orders/{orderCode}/delivery-time")
