@@ -36,6 +36,8 @@ public interface CustomOrderPauseMapper {
 
     CustomOrderPause selectCustomOrderPause(CustomOrderPause customOrderPause);
 
+    int checkIfCustomOrderPauseExist(String customOrderCode);
+
     Integer selectHadPauseDays(String customOrderCode);
 
     List<CustomOrderPause> selectAll();
