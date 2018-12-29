@@ -192,12 +192,12 @@ public class CustomOrderService {
         Date lastDate = Date.from(last.atZone(ZoneId.systemDefault()).toInstant());
 
         //查询当前设置暂停时间是否已经存在了 如果存在不允许设置
-        CustomOrderPause customOrderPauseParam = new CustomOrderPause();
-        customOrderPauseParam.setPauseBeginAt(Date.from(begin.atZone(ZoneId.systemDefault()).toInstant()));//暂停开始时间
-        customOrderPauseParam.setPlanPauseEndAt(lastDate);//计划暂停结束时间
-        customOrderPauseParam.setOperStatus(OperStatus.PAUSE);//暂停状态
-        customOrderPauseParam.setCustomOrderCode(customOrderCode);
-        if (Objects.nonNull(customOrderPauseMapper.selectCustomOrderPause(customOrderPauseParam))) {
+        //CustomOrderPause customOrderPauseParam = new CustomOrderPause();
+        //customOrderPauseParam.setPauseBeginAt(Date.from(begin.atZone(ZoneId.systemDefault()).toInstant()));//暂停开始时间
+        //customOrderPauseParam.setPlanPauseEndAt(lastDate);//计划暂停结束时间
+        //customOrderPauseParam.setOperStatus(OperStatus.PAUSE);//暂停状态
+        //customOrderPauseParam.setCustomOrderCode(customOrderCode);
+        if (Objects.nonNull(customOrderPauseMapper.checkIfCustomOrderPauseExist(customOrderCode))) {
             return Tips.warn("当前设置与已暂停时间段冲突");
         }
         //查询已经使用暂停天数
@@ -514,7 +514,6 @@ public class CustomOrderService {
             customOrderPauseParam.setPlanPauseEndAt(current);//计划暂停结束时间条件
             customOrderPauseParam.setOperStatus(OperStatus.PAUSE);//暂停状态
             customOrderPauseParam.setCustomOrderCode(orderCode);
-            //查找到当前是否设置了暂停 如果有就恢复并修改实际结束时间
             CustomOrderPause customOrderPause = customOrderPauseMapper.selectCustomOrderPause(customOrderPauseParam);
             customOrder.setCustomOrderPause(customOrderPause);
         }

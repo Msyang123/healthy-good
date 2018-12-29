@@ -23,6 +23,7 @@ import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
@@ -57,9 +58,11 @@ public class BalanceApi {
         this.orderService = orderService;
     }
 
-    @PostMapping("/recharge/payment-sign")
+    @PostMapping("/recharge/{fee}/payment-sign")
     @ApiOperation(value ="充值签名", response = String.class)
-    public ResponseEntity paymentSign(@RequestBody WxPayModel paySign, HttpServletRequest request, Sessions.User user) {
+    public ResponseEntity paymentSign(@PathVariable("fee") Integer fee, HttpServletRequest request, Sessions.User user) {
+        WxPayModel paySign = new WxPayModel();
+        paySign.setFee(fee);
         String openId = user.getUser().get("openId").toString();
         Long userId = Long.valueOf(user.getUser().get("userId").toString());
 
@@ -67,7 +70,6 @@ public class BalanceApi {
         paySign.setBackUrl(wechatPayConfig.getRechargeCallbackUrl());
         paySign.setClientIp(RealClientIp.getRealIp(request));//获取客户端真实ip
         paySign.setConfigName(wechatPayConfig.getConfigName());//微信支付简称
-        //paySign.setFee(fee);
         paySign.setMemo("充值支付");
         paySign.setOpenid(openId);
         paySign.setSourceType(SourceType.RECHARGE);

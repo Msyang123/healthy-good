@@ -59,31 +59,27 @@ public class UpdateCustomOrderStatusConsumer {
             Date current =Date.from(Instant.now());
             LocalDate currentDate =LocalDate.now();
             customOrderPauseList.forEach(item->{
+                LocalDate pauseEndAt = LocalDate.parse(DateTime.format(item.getPauseEndAt(),"yyyy-MM-dd"));
                 //当前时间是在暂停时间内
                 if(current.after(item.getPauseBeginAt())&& current.before(item.getPauseEndAt())){
                     CustomOrder customOrder =new CustomOrder();
                     customOrder.setCustomOrderCode(item.getCustomOrderCode());
-                    LocalDate pauseEndAt = LocalDate.parse(DateTime.format(item.getPauseEndAt(),"yyyy-MM-dd"));
                     if(Objects.equals(item.getOperStatus(), OperStatus.PAUSE)){
                         //设置定制订单为暂停
                         customOrder.setStatus(CustomOrderStatus.PAUSE_DELIVERY);
                         customOrderService.updateByCode(customOrder);
-                    }else if(Objects.equals(item.getOperStatus(), OperStatus.RECOVERY)&&
-                            pauseEndAt.compareTo(currentDate)>0
-                    ){
-                        //设置的恢复时间小于今天23:59:59才允许恢复 设置定制订单为恢复 也就是当天设置恢复，
-                        // 第二天才能配送，就算恢复操作时间在当天配送时间之前也是第二天配送
-                        customOrder.setStatus(CustomOrderStatus.CUSTOMING);
-                        customOrderService.updateByCode(customOrder);
                     }
-                }else if(current.after(item.getPauseEndAt())){
-                    //当前时间大于实际暂停结束时间，那么就自动恢复
+                }else if(pauseEndAt.compareTo(currentDate)<0){
+                    //设置的恢复时间小于今天23:59:59才允许恢复 设置定制订单为恢复 也就是当天设置恢复，
+                    // 第二天才能配送，就算恢复操作时间在当天配送时间之前也是第二天配送
                     CustomOrder customOrder =new CustomOrder();
                     customOrder.setCustomOrderCode(item.getCustomOrderCode());
                     //设置定制订单为恢复
                     customOrder.setStatus(CustomOrderStatus.CUSTOMING);
                     customOrderService.updateByCode(customOrder);
-                    //定制设置已经过了设置的时间了，不在做恢复状态修改
+                    //恢复定制设置
+                    item.setOperStatus(OperStatus.RECOVERY);
+                    customOrderPauseMapper.update(item);
                 }
             });
         } catch (Exception e) {
