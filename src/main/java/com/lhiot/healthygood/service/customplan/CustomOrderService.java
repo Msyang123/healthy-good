@@ -197,7 +197,7 @@ public class CustomOrderService {
         //customOrderPauseParam.setPlanPauseEndAt(lastDate);//计划暂停结束时间
         //customOrderPauseParam.setOperStatus(OperStatus.PAUSE);//暂停状态
         //customOrderPauseParam.setCustomOrderCode(customOrderCode);
-        if (Objects.nonNull(customOrderPauseMapper.checkIfCustomOrderPauseExist(customOrderCode))) {
+        if (customOrderPauseMapper.checkIfCustomOrderPauseExist(customOrderCode)>0) {
             return Tips.warn("当前设置与已暂停时间段冲突");
         }
         //查询已经使用暂停天数

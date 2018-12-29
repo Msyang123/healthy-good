@@ -69,7 +69,7 @@ public class UpdateCustomOrderStatusConsumer {
                         customOrder.setStatus(CustomOrderStatus.PAUSE_DELIVERY);
                         customOrderService.updateByCode(customOrder);
                     }
-                }else if(pauseEndAt.compareTo(currentDate)<0){
+                }else if(pauseEndAt.compareTo(currentDate)>0){
                     //设置的恢复时间小于今天23:59:59才允许恢复 设置定制订单为恢复 也就是当天设置恢复，
                     // 第二天才能配送，就算恢复操作时间在当天配送时间之前也是第二天配送
                     CustomOrder customOrder =new CustomOrder();
