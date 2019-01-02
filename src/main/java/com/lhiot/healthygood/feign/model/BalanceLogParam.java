@@ -1,5 +1,6 @@
 package com.lhiot.healthygood.feign.model;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.lhiot.dc.dictionary.HasEntries;
 import com.lhiot.healthygood.feign.type.OperationStatus;
@@ -27,8 +28,10 @@ public class BalanceLogParam {
     @ApiModelProperty(notes = "应用类型", dataType = "String")
     private String applicationType;
     @ApiModelProperty(notes = "起始创建时间", dataType = "Date")
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss",timezone = "GMT+8")
     private Date beginCreateAt;
     @ApiModelProperty(notes = "截止创建时间", dataType = "Date")
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss",timezone = "GMT+8")
     private Date endCreateAt;
     @ApiModelProperty(notes = "每页查询条数(为空或0不分页查所有)", dataType = "Integer")
     private Integer rows;

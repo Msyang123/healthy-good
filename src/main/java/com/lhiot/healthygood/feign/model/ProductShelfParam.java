@@ -1,5 +1,6 @@
 package com.lhiot.healthygood.feign.model;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.leon.microx.predefine.OnOff;
 import com.lhiot.healthygood.feign.type.ApplicationType;
@@ -35,8 +36,10 @@ public class ProductShelfParam {
     @ApiModelProperty(notes = "最大原价", dataType = "Integer")
     private Integer maxOriginalPrice;
     @ApiModelProperty(notes = "起始创建时间", dataType = "Date")
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss",timezone = "GMT+8")
     private Date beginCreateAt;
     @ApiModelProperty(notes = "截止创建时间", dataType = "Date")
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss",timezone = "GMT+8")
     private Date endCreateAt;
     @ApiModelProperty(notes = "上架id多个以英文逗号分隔", dataType = "String")
     private String ids;

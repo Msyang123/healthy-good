@@ -72,7 +72,6 @@ public class CustomOrderService {
     private final RabbitTemplate rabbitTemplate;
     //暂停开始结束时间
     private static final LocalTime PAUSE_TIME = LocalTime.parse("00:00:00");
-    //private static final LocalTime END_PAUSE_OF_DAY = LocalTime.parse("23:59:59");
     private static final DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
     @Autowired
@@ -193,12 +192,12 @@ public class CustomOrderService {
         Date lastDate = Date.from(last.atZone(ZoneId.systemDefault()).toInstant());
 
         //查询当前设置暂停时间是否已经存在了 如果存在不允许设置
-        CustomOrderPause customOrderPauseParam = new CustomOrderPause();
-        customOrderPauseParam.setPauseBeginAt(Date.from(begin.atZone(ZoneId.systemDefault()).toInstant()));//暂停开始时间
-        customOrderPauseParam.setPlanPauseEndAt(lastDate);//计划暂停结束时间
-        customOrderPauseParam.setOperStatus(OperStatus.PAUSE);//暂停状态
-        customOrderPauseParam.setCustomOrderCode(customOrderCode);
-        if (Objects.nonNull(customOrderPauseMapper.selectCustomOrderPause(customOrderPauseParam))) {
+        //CustomOrderPause customOrderPauseParam = new CustomOrderPause();
+        //customOrderPauseParam.setPauseBeginAt(Date.from(begin.atZone(ZoneId.systemDefault()).toInstant()));//暂停开始时间
+        //customOrderPauseParam.setPlanPauseEndAt(lastDate);//计划暂停结束时间
+        //customOrderPauseParam.setOperStatus(OperStatus.PAUSE);//暂停状态
+        //customOrderPauseParam.setCustomOrderCode(customOrderCode);
+        if (customOrderPauseMapper.checkIfCustomOrderPauseExist(customOrderCode)>0) {
             return Tips.warn("当前设置与已暂停时间段冲突");
         }
         //查询已经使用暂停天数
@@ -507,7 +506,18 @@ public class CustomOrderService {
                     );
                 }
             }
+
+            //暂停中的暂停设置记录
+            Date current = Date.from(LocalDateTime.now().atZone(ZoneId.systemDefault()).toInstant());
+            CustomOrderPause customOrderPauseParam = new CustomOrderPause();
+            customOrderPauseParam.setPauseBeginAt(current);//暂停开始时间条件
+            customOrderPauseParam.setPlanPauseEndAt(current);//计划暂停结束时间条件
+            customOrderPauseParam.setOperStatus(OperStatus.PAUSE);//暂停状态
+            customOrderPauseParam.setCustomOrderCode(orderCode);
+            CustomOrderPause customOrderPause = customOrderPauseMapper.selectCustomOrderPause(customOrderPauseParam);
+            customOrder.setCustomOrderPause(customOrderPause);
         }
+
         Tips<CustomOrder> tips = new Tips<>();
         tips.setData(customOrder);
         return tips;

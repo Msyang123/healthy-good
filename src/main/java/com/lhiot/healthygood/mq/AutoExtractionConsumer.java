@@ -43,7 +43,7 @@ public class AutoExtractionConsumer {
         this.customOrderService = customOrderService;
         this.customOrderPauseMapper = customOrderPauseMapper;
         this.publisher = publisher;
-        HealthyGoodQueue.DelayQueue.AUTO_EXTRACTION.init(initializer);
+        //HealthyGoodQueue.DelayQueue.AUTO_EXTRACTION.init(initializer);
     }
 
     /**

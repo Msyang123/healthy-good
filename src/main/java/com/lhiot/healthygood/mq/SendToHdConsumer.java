@@ -25,7 +25,7 @@ public class SendToHdConsumer {
     public SendToHdConsumer(RabbitInitializer initializer, OrderServiceFeign orderServiceFeign, ProbeEventPublisher publisher) {
         this.orderServiceFeign = orderServiceFeign;
         this.publisher = publisher;
-        HealthyGoodQueue.DelayQueue.SEND_TO_HD.init(initializer);
+        //HealthyGoodQueue.DelayQueue.SEND_TO_HD.init(initializer);
     }
 
     /**

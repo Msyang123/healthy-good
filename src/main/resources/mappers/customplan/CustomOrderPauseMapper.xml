@@ -117,6 +117,13 @@
         </where>
 	</select>
 
+    <select id="checkIfCustomOrderPauseExist" resultType="int" parameterType="String">
+        select count(*)
+        from custom_order_pause
+        where custom_order_code = #{0}
+        and oper_status ='PAUSE'
+    </select>
+
     <!--计算已经暂停总天数，计划暂停的还进行中的也计算在内-->
     <select id="selectHadPauseDays" resultType="int" parameterType="com.lhiot.healthygood.domain.customplan.CustomOrderPause">
         select IFNULL(sum(pause_day),0) as pauseDays

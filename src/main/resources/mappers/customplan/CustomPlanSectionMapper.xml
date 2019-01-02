@@ -47,6 +47,7 @@
             <result column="status" property="status"/>
             <result column="create_user" property="createUser"/>
             <result column="r_sort" property="relationSort"/>
+            <result column="r_id" property="relationId"/>
         </collection>
     </resultMap>
 
@@ -71,6 +72,7 @@
             p.create_user,
 
             r.sort r_sort,
+            r.id r_id,
         </trim>
     </sql>
 
@@ -176,7 +178,7 @@
     <select id="customPlanSectionTuple" resultMap="BaseResultMap">
         select
         <include refid="Base_Column_List"/>
-        from custom_plan_section
+        from custom_plan_section order by sort asc
     </select>
 
     <!--依据code查询定制计划板块-->

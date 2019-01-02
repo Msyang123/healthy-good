@@ -29,7 +29,7 @@ public class CancelOrderConsumer {
     public CancelOrderConsumer(RabbitInitializer initializer, OrderServiceFeign orderServiceFeign, ProbeEventPublisher publisher) {
         this.orderServiceFeign = orderServiceFeign;
         this.publisher = publisher;
-        HealthyGoodQueue.DelayQueue.CANCEL_ORDER.init(initializer);
+        //HealthyGoodQueue.DelayQueue.CANCEL_ORDER.init(initializer);
     }
 
     /**

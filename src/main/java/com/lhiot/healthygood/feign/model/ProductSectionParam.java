@@ -1,5 +1,6 @@
 package com.lhiot.healthygood.feign.model;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
@@ -21,8 +22,10 @@ public class ProductSectionParam {
     @ApiModelProperty(notes = "板块名称", dataType = "String")
     private String sectionName;
     @ApiModelProperty(notes = "起始创建时间", dataType = "Date")
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss",timezone = "GMT+8")
     private Date beginCreateAt;
     @ApiModelProperty(notes = "截止创建时间", dataType = "Date")
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss",timezone = "GMT+8")
     private Date endCreateAt;
     @ApiModelProperty(notes = "是否加载版块下商品上架信息(为空则默认为false)", dataType = "Boolean")
     private Boolean includeShelves;
