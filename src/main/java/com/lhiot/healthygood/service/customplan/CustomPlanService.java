@@ -1,7 +1,8 @@
 package com.lhiot.healthygood.service.customplan;
 
 import com.leon.microx.predefine.OnOff;
-import com.leon.microx.util.BeanUtils;
+import com.leon.microx.util.Beans;
+import com.leon.microx.util.Maps;
 import com.leon.microx.util.StringUtils;
 import com.leon.microx.web.result.Pages;
 import com.leon.microx.web.result.Tips;
@@ -364,6 +365,88 @@ public class CustomPlanService {
             }
         }
         return Tips.info("批量修改定制计划规格成功");
+    }
+
+
+    /**
+     * 修改定制计划周期类型信息
+     *
+     * @param customPlanDetailResult
+     * @return
+     */
+    public Tips updatePeriod(Long id, CustomPlanDetailResult customPlanDetailResult) {
+        // 查询出原有商品规格 根据planPeriod进行升序
+        List<CustomPlanSpecification> oldSpecificationList = customPlanSpecificationMapper.findByPlanIdAndPerid(Maps.of("planId", id, "planPeriod", null));
+        oldSpecificationList = !CollectionUtils.isEmpty(oldSpecificationList) ? oldSpecificationList.stream()
+                .sorted(Comparator.comparing(CustomPlanSpecification::getPlanPeriod))
+                .collect(Collectors.toList()) : new ArrayList<>();
+        // 得到最新的商品规格 根据planPeriod进行升序 和设置定制计划id
+        // 查询定制定制计划规格基础数据表
+        List<CustomPlanSpecificationStandard> planSpecificationStandardList = customPlanSpecificationStandardMapper.findList();
+        List<CustomPlanSpecification> newSpecificationList = new ArrayList<>();
+        List<CustomPlanProductResult> newProductResultList = new ArrayList<>();
+        customPlanDetailResult.getPeriodList().forEach(customPlanPeriodResult -> {
+            newSpecificationList.addAll(customPlanPeriodResult.getSpecificationList());
+            newProductResultList.addAll(customPlanPeriodResult.getProducts());
+        });
+        newSpecificationList.stream()
+                .peek(specification -> {
+                    if (specification.getId() == null && specification.getId() == 0) {
+                        planSpecificationStandardList.forEach(planSpecificationStandard -> {
+                            if (Objects.equals(specification.getQuantity(), planSpecificationStandard.getQuantity())) {
+                                specification.setDescription(planSpecificationStandard.getDescription());
+                                specification.setImage(planSpecificationStandard.getImage());
+                                specification.setStandardId(planSpecificationStandard.getId());
+                            }
+                        });
+                    }
+                })
+                .sorted(Comparator.comparing(CustomPlanSpecification::getPlanPeriod))
+                .collect(Collectors.toList());
+        // 和原来的商品规格进行对比，如果有改动则先清除原来的商品规格，在重新进行保存
+        if (!Objects.equals(oldSpecificationList, newSpecificationList)) {
+            int deleteSpecification = customPlanSpecificationMapper.deleteByPlanIds(Arrays.asList(id.toString()));
+            if (deleteSpecification < 0){
+                return Tips.warn("规格删除失败");
+            }
+            if (!CollectionUtils.isEmpty(newSpecificationList)) {
+                int addSpecification = customPlanSpecificationMapper.insertList(newSpecificationList);
+                if (addSpecification <= 0){
+                    return Tips.warn("定制规格添加失败");
+                }
+            }
+        }
+
+        // 查询出原有定制商品 根据dayOfPeriod进行升序
+        List<CustomPlanProduct> oldProductList = customPlanProductMapper.findByPlanIdAndPerid(Maps.of("planId", id, "planPeriod", null));
+        oldProductList = !CollectionUtils.isEmpty(oldProductList) ? oldProductList.stream()
+                .sorted(Comparator.comparing(CustomPlanProduct::getDayOfPeriod))
+                .collect(Collectors.toList()) : new ArrayList<>();
+        // 得到最新的定制商品 根据dayOfPeriod进行升序 和设置定制计划id
+        List<CustomPlanProduct> newProductList = new ArrayList<>();
+        newProductResultList.forEach(productResult -> {
+            CustomPlanProduct product = new CustomPlanProduct();
+            Beans.wrap(product).any().copyOf(productResult);
+            newProductList.add(product);
+        });
+        newProductList.stream()
+                .sorted(Comparator.comparing(CustomPlanProduct::getDayOfPeriod))
+                .collect(Collectors.toList());
+        // 和原来的定制商品进行对比，如果有改动则先清除原来的定制商品，在重新进行保存
+        if (!Objects.equals(oldProductList, newProductList)) {
+            int deleteProduct = customPlanProductMapper.deleteByPlanIds(Arrays.asList(id.toString()));
+            if (deleteProduct < 0) {
+                return Tips.warn("商品删除失败");
+            }
+            if (!CollectionUtils.isEmpty(newProductList)) {
+                int addProduct = customPlanProductMapper.insertList(newProductList);
+                if (addProduct <= 0) {
+                    return Tips.warn("商品新增失败");
+                }
+            }
+        }
+
+        return Tips.info("修改定制计划周期类型信息成功");
     }
 
 
