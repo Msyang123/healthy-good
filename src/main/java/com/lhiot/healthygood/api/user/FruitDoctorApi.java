@@ -426,7 +426,7 @@ public class FruitDoctorApi {
     }
 
     @PostMapping("/bank-card")
-    @ApiOperation(value = "银行卡添加*")
+    @ApiOperation(value = "银行卡添加/修改*")
     @ApiImplicitParam(paramType = "body", name = "cardUpdateLog", value = "要添加的", required = true, dataType = "CardUpdateLog")
     public ResponseEntity create(Sessions.User user, @RequestBody CardUpdateLog cardUpdateLog) {
         log.debug("添加\t param:{}", cardUpdateLog);
@@ -439,7 +439,8 @@ public class FruitDoctorApi {
         cardParam.setDoctorId(fruitDoctor.getId());
         cardUpdateLog.setDoctorId(fruitDoctor.getId());
         cardUpdateLog.setUpdateAt(Date.from(Instant.now()));
-        return cardUpdateLogService.create(cardUpdateLog) > 0 ? ResponseEntity.ok("添加成功") : ResponseEntity.badRequest().body("添加失败");
+        cardUpdateLog.setCardUsername(fruitDoctor.getRealName());
+        return cardUpdateLogService.create(cardUpdateLog) ? ResponseEntity.ok("操作成功") : ResponseEntity.badRequest().body("操作失败");
     }
 
     @ApiOperation(value = "查询鲜果师银行卡信息*", notes = "根据session里的doctorId查询", response = CardUpdateLog.class)
@@ -452,7 +453,8 @@ public class FruitDoctorApi {
         }
         CardUpdateLog cardUpdateLog = new CardUpdateLog();
         cardUpdateLog.setDoctorId(fruitDoctor.getId());
-        return ResponseEntity.ok(cardUpdateLogService.selectByCard(cardUpdateLog));
+        CardUpdateLog log = cardUpdateLogService.selectByCard(cardUpdateLog);
+        return Objects.isNull(log) ? ResponseEntity.ok().body(new CardUpdateLog()) : ResponseEntity.ok().body(log);
     }
 
     @ApiOperation(value = "查询鲜果师最新申请记录*", notes = "查询鲜果师最新申请记录", response = RegisterApplication.class)

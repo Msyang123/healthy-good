@@ -50,6 +50,9 @@ public class DoctorCustomer{
     @ApiModelProperty(value = "用户编号", dataType = "Long")
     private Long userId;
 
+    @ApiModelProperty(value = "openId", dataType = "String")
+    private String openId;
+
     /**
      *微信昵称
      */
