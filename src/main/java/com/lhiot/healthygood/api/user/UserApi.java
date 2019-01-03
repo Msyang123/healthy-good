@@ -1,6 +1,7 @@
 package com.lhiot.healthygood.api.user;
 
 import com.leon.microx.util.BeanUtils;
+import com.leon.microx.util.Beans;
 import com.leon.microx.util.Maps;
 import com.leon.microx.util.StringUtils;
 import com.leon.microx.web.result.Tips;
@@ -373,7 +374,8 @@ public class UserApi {
             return ResponseEntity.ok().build();
         }
         BalanceLogParam balanceLogParam = new BalanceLogParam();
-        BeanUtils.copyProperties(pagesParam,balanceLogParam);
+        //BeanUtils.copyProperties(pagesParam,balanceLogParam);
+        Beans.wrap(balanceLogParam).copyOf(pagesParam);
         balanceLogParam.setBaseUserId(users.getBaseUserId());
         balanceLogParam.setApplicationType(ApplicationType.HEALTH_GOOD);
         ResponseEntity responseEntity =  baseUserServerFeign.searchBalanceLog(balanceLogParam);

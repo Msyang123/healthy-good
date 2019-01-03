@@ -59,7 +59,8 @@ public class CustomPlanService {
         if (Objects.isNull(customPlan)) {
             return result;
         }
-        BeanUtils.copyProperties(customPlan, result);
+        //BeanUtils.copyProperties(customPlan, result);
+        Beans.wrap(result).copyOf(customPlan);
         List<CustomPlanPeriodResult> customPlanPeriodResultList = getCustomPlanPeriodResultList(id);
         result.setPeriodList(customPlanPeriodResultList);
         // 最低定制规格价格
@@ -109,7 +110,8 @@ public class CustomPlanService {
         if (productShelfTips.err()) {
             customPlanProducts.forEach(customPlanProduct -> {
                 CustomPlanProductResult customPlanProductResult = new CustomPlanProductResult();
-                BeanUtils.copyProperties(customPlanProduct, customPlanPeriodResult);
+                //BeanUtils.copyProperties(customPlanProduct, customPlanPeriodResult);
+                Beans.wrap(customPlanPeriodResult).copyOf(customPlanProduct);
                 customPlanProductResults.add(customPlanProductResult);
             });
             customPlanPeriodResult.setProducts(customPlanProductResults);
@@ -124,7 +126,8 @@ public class CustomPlanService {
                 .filter(productShelf -> Objects.equals(customPlanProduct.getProductShelfId(), productShelf.getId()))
                 .forEach(item -> {
                     CustomPlanProductResult customPlanProductResult = new CustomPlanProductResult();
-                    BeanUtils.copyProperties(customPlanProduct, customPlanProductResult);
+                    //BeanUtils.copyProperties(customPlanProduct, customPlanProductResult);
+                    Beans.wrap(customPlanProductResult).copyOf(customPlanProduct);
                     customPlanProductResult.setImage(item.getImage());//设置上架图
                     customPlanProductResult.setProductName(item.getName());//设置上架名称
                     customPlanProductResult.setProductShelfId(item.getShelfId());
@@ -221,7 +224,8 @@ public class CustomPlanService {
             return Tips.warn("定制计划名称重复，添加失败");
         }
         CustomPlan customPlan = new CustomPlan();
-        BeanUtils.copyProperties(customPlanDetailResult, customPlan);
+        //BeanUtils.copyProperties(customPlanDetailResult, customPlan);
+        Beans.wrap(customPlan).copyOf(customPlanDetailResult);
         customPlan.setCreateAt(Date.from(Instant.now()));
         boolean addCustomPlan = customPlanMapper.create(customPlan) > 0;
 
@@ -286,7 +290,8 @@ public class CustomPlanService {
                 List<CustomPlanProduct> customPlanProductList = new ArrayList<>();
                 planProductResultList.forEach(productResult -> {
                     CustomPlanProduct planProduct = new CustomPlanProduct();
-                    BeanUtils.copyProperties(productResult, planProduct);
+                    //BeanUtils.copyProperties(productResult, planProduct);
+                    Beans.wrap(planProduct).copyOf(productResult);
                     planProduct.setPlanPeriod(planPeriod);
                     planProduct.setPlanId(customPlanId);
                     // 第几天排序为几
@@ -311,7 +316,8 @@ public class CustomPlanService {
      */
     public Tips update(Long id, CustomPlanDetailResult customPlanDetailResult) {
         CustomPlan customPlan = new CustomPlan();
-        BeanUtils.copyProperties(customPlanDetailResult, customPlan);
+        //BeanUtils.copyProperties(customPlanDetailResult, customPlan);
+        Beans.wrap(customPlan).copyOf(customPlanDetailResult);
         customPlan.setId(id);
         customPlan.setCreateAt(Date.from(Instant.now()));
         boolean updateCustomPlan = customPlanMapper.updateById(customPlan) > 0;
