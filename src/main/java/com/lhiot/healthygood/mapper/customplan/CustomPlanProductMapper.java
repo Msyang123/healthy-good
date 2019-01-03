@@ -1,7 +1,6 @@
 package com.lhiot.healthygood.mapper.customplan;
 
 import com.lhiot.healthygood.domain.customplan.CustomPlanProduct;
-import com.lhiot.healthygood.domain.customplan.model.CustomPlanProductResult;
 import org.apache.ibatis.annotations.Mapper;
 import org.springframework.stereotype.Repository;
 
@@ -46,7 +45,7 @@ public interface CustomPlanProductMapper {
      * @author hufan
      * @date 2018/12/22 15:53:47
      */
-    int updateBatch(List<CustomPlanProductResult> productList);
+    int updateBatch(List<CustomPlanProduct> productList);
 
     /**
     * Description:根据ids删除定制计划关联商品

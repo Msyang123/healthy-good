@@ -1,6 +1,6 @@
 package com.lhiot.healthygood.api.activity;
 
-import com.leon.microx.util.BeanUtils;
+import com.leon.microx.util.Beans;
 import com.leon.microx.util.Maps;
 import com.leon.microx.web.result.Tips;
 import com.leon.microx.web.session.Sessions;
@@ -62,7 +62,8 @@ public class NewSpecialActivityApi {
         }
         ActivityProduct activityProduct = new ActivityProduct();
         activityProduct.setActivityId(specialProductActivity.getId());
-        BeanUtils.copyProperties(pagesParam,activityProduct);
+        Beans.wrap(activityProduct).any().copyOf(pagesParam);
+//        BeanUtils.copyProperties(pagesParam,activityProduct);
         List<ActivityProduct> activityProductsList = activityProductService.activityProductList(activityProduct);
         List<ActivityProducts> activityProducts = new ArrayList<ActivityProducts>();
 
@@ -79,7 +80,8 @@ public class NewSpecialActivityApi {
                 return;
             }
             ActivityProducts product = new ActivityProducts();
-            BeanUtils.copyProperties(productShelf,product);
+            Beans.wrap(product).any().copyOf(productShelf);
+//            BeanUtils.copyProperties(productShelf,product);
             product.setPrice(Objects.isNull(productShelf.getPrice()) ? productShelf.getOriginalPrice() : productShelf.getPrice());
             product.setProductName(productShelf.getName());
 
@@ -93,7 +95,8 @@ public class NewSpecialActivityApi {
             activityProducts.add(product);
         });
         NewSpecialResult newSpecialResult = new NewSpecialResult();
-        BeanUtils.copyProperties(specialProductActivity,newSpecialResult);
+        Beans.wrap(newSpecialResult).any().copyOf(specialProductActivity);
+//        BeanUtils.copyProperties(specialProductActivity,newSpecialResult);
         newSpecialResult.setActivityProductList(activityProducts);
         return ResponseEntity.ok(newSpecialResult);
     }

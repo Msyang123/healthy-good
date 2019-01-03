@@ -3,7 +3,7 @@ package com.lhiot.healthygood.domain.doctor;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.leon.microx.util.BeanUtils;
+import com.leon.microx.util.Beans;
 import com.lhiot.healthygood.type.IncomeType;
 import com.lhiot.healthygood.type.SourceType;
 import io.swagger.annotations.ApiModel;
@@ -112,7 +112,8 @@ public class DoctorAchievementLog{
 
     public DoctorAchievementLog toDoctorBonusLog(){
     	DoctorAchievementLog doctorAchievementLog = new DoctorAchievementLog();
-        BeanUtils.of(doctorAchievementLog).populate(BeanUtils.of(this).toMap());
+        Beans.wrap(doctorAchievementLog).any().copyOf(Beans.wrap(doctorAchievementLog).fields());
+//        BeanUtils.of(doctorAchievementLog).populate(BeanUtils.of(this).toMap());
         return doctorAchievementLog;
     }
 

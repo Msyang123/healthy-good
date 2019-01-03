@@ -1,6 +1,7 @@
 package com.lhiot.healthygood.api.good;
 
 import com.leon.microx.predefine.OnOff;
+import com.leon.microx.util.Beans;
 import com.leon.microx.util.StringUtils;
 import com.leon.microx.web.result.Pages;
 import com.leon.microx.web.session.Sessions;
@@ -23,7 +24,6 @@ import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -60,7 +60,8 @@ public class ProductSectionApi {
     public ResponseEntity<Pages<ProductShelf>> productSections(@PathVariable("id") Long id, @RequestBody com.lhiot.healthygood.domain.good.ProductSectionParam productSectionParam) {
         ProductShelfParam productShelfParam = new ProductShelfParam();
         productShelfParam.setSectionId(id);
-        BeanUtils.copyProperties(productSectionParam,productShelfParam);
+        Beans.wrap(productShelfParam).any().copyOf(productSectionParam);
+//        BeanUtils.copyProperties(productSectionParam,productShelfParam);
         ResponseEntity<Pages<ProductShelf>> pagesResponseEntity = baseDataServiceFeign.searchProductShelves(productShelfParam);
         return pagesResponseEntity;
     }
@@ -127,7 +128,8 @@ public class ProductSectionApi {
             return ResponseEntity.badRequest().body("没有数据");
         }
         ProductDetailResult detailResult = new ProductDetailResult();
-        BeanUtils.copyProperties(productShelf,detailResult);
+        Beans.wrap(detailResult).any().copyOf(productShelf);
+//        BeanUtils.copyProperties(productShelf,detailResult);
         //商品图片对象
         Product product = productShelf.getProductSpecification().getProduct();
         List<String> subImgs = new ArrayList<>();

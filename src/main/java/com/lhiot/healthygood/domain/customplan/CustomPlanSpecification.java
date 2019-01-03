@@ -2,6 +2,7 @@ package com.lhiot.healthygood.domain.customplan;
 
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.lhiot.healthygood.type.OptionType;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
@@ -65,6 +66,6 @@ public class CustomPlanSpecification{
     @ApiModelProperty(value = "定制规格基础id", dataType = "Long")
     private Long standardId;
 
-
-
+    @ApiModelProperty(value = "操作类型（后台）", dataType = "OptionType")
+    private OptionType optionType;
 }

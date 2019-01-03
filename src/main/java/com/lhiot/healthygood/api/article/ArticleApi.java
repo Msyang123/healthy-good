@@ -1,6 +1,6 @@
 package com.lhiot.healthygood.api.article;
 
-import com.leon.microx.util.BeanUtils;
+import com.leon.microx.util.Beans;
 import com.leon.microx.web.result.Pages;
 import com.leon.microx.web.session.Sessions;
 import com.leon.microx.web.swagger.ApiParamType;
@@ -32,7 +32,8 @@ public class ArticleApi {
     @ApiOperation(value = "查询/搜索文章")
     public ResponseEntity<Pages<Article>> searchArticle(@RequestBody ArticleSearchParam articleSearchParam){
         ArticleParam articleParam = new ArticleParam();
-        BeanUtils.of(articleSearchParam).populate(articleParam);
+       // BeanUtils.of(articleParam).populate(articleSearchParam);
+        Beans.wrap(articleParam).copyOf(articleSearchParam);
         articleParam.setArticleStatus(ArticleStatus.PUBLISH);
         return baseDataServiceFeign.searchArticle(articleParam);
     }

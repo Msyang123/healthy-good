@@ -1,6 +1,6 @@
 package com.lhiot.healthygood.service.activity;
 
-import com.leon.microx.util.BeanUtils;
+import com.leon.microx.util.Beans;
 import com.leon.microx.util.Maps;
 import com.leon.microx.util.StringUtils;
 import com.leon.microx.web.result.Pages;
@@ -166,7 +166,8 @@ public class ActivityProductService {
         List<ActivityProductResult> results = new ArrayList<>();
         // 查询活动商品信息
         ActivityProduct activityProduct = new ActivityProduct();
-        BeanUtils.of(activityProduct).populate(param);
+        Beans.wrap(activityProduct).any().copyOf(param);
+//        BeanUtils.of(activityProduct).populate(param);
         // 根据查询条件获取上架ids
         if (Objects.nonNull(param.getBarcode()) || Objects.nonNull(param.getName())) {
             ProductShelfParam productShelfParam = new ProductShelfParam();
@@ -210,10 +211,12 @@ public class ActivityProductService {
                 // List<ActivityProduct> 转换为  List<ActivityProductResult>
                 activityProductList.forEach(item -> {
                     ActivityProductResult activityProductResult = new ActivityProductResult();
-                    BeanUtils.copyProperties(item, activityProductResult);
+                    Beans.wrap(activityProductResult).any().copyOf(item);
+//                    BeanUtils.copyProperties(item, activityProductResult);
                     productShelfList.forEach(productShelf -> {
                         if (Objects.equals(activityProductResult.getProductShelfId(), productShelf.getId())){
-                            BeanUtils.copyProperties(productShelf,activityProductResult);
+                            Beans.wrap(activityProductResult).any().copyOf(productShelf);
+//                            BeanUtils.copyProperties(productShelf,activityProductResult);
                             ProductSpecification productSpecification  = productShelf.getProductSpecification();
                             if (Objects.nonNull(productSpecification)) {
                                 String specification = productSpecification.getWeight() + productSpecification.getPackagingUnit() + "*" + productSpecification.getSpecificationQty() + "份";

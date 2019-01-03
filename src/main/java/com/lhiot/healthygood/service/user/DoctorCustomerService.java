@@ -1,15 +1,26 @@
 package com.lhiot.healthygood.service.user;
 
+import com.leon.microx.util.Maps;
+import com.leon.microx.util.StringUtils;
 import com.leon.microx.web.result.Pages;
+import com.leon.microx.web.session.Authority;
+import com.leon.microx.web.session.Sessions;
 import com.lhiot.healthygood.domain.user.DoctorCustomer;
-import com.lhiot.healthygood.domain.user.DoctorCustomer;
+import com.lhiot.healthygood.feign.ImsServiceFeign;
+import com.lhiot.healthygood.feign.model.ImsOperation;
 import com.lhiot.healthygood.mapper.user.DoctorCustomerMapper;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import javax.servlet.http.HttpServletRequest;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
+import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 /**
 * Description:鲜果师客户服务类
@@ -21,22 +32,58 @@ import java.util.List;
 public class DoctorCustomerService {
 
     private final DoctorCustomerMapper DoctorCustomerMapper;
+    private Sessions session;
+    private final ImsServiceFeign imsServiceFeign;
+
 
     @Autowired
-    public DoctorCustomerService(DoctorCustomerMapper DoctorCustomerMapper) {
+    public DoctorCustomerService(ObjectProvider<Sessions> sessionsObjectProvider, DoctorCustomerMapper DoctorCustomerMapper, ImsServiceFeign imsServiceFeign) {
         this.DoctorCustomerMapper = DoctorCustomerMapper;
+        this.session = sessionsObjectProvider.getIfAvailable();
+        this.imsServiceFeign = imsServiceFeign;
     }
 
-    /** 
+    /**
     * Description:新增鲜果师客户
-    *  
+    *
     * @param DoctorCustomer
     * @return
     * @author yijun
     * @date 2018/07/26 12:08:13
-    */  
-    public int create(DoctorCustomer DoctorCustomer){
+    */
+    /*public int create(DoctorCustomer DoctorCustomer){
         return this.DoctorCustomerMapper.create(DoctorCustomer);
+    }*/
+
+    /**
+     * 绑定鲜果师
+     * @param request
+     * @param doctorCustomer
+     * @param uri
+     * @return
+     */
+    public String createRelations(HttpServletRequest request, DoctorCustomer doctorCustomer, String uri){
+        String clientUri = null;
+        Sessions.User sessionUser = session.create(request).user(Maps.of("userId", doctorCustomer.getUserId(),
+                "openId", doctorCustomer.getOpenId()))
+                .timeToLive(30, TimeUnit.MINUTES);
+        ResponseEntity imsOperationRes = imsServiceFeign.selectAuthority();
+        if (imsOperationRes.getStatusCode().isError()){
+            return null;
+        }
+        List<ImsOperation> imsOperations = (List<ImsOperation>) imsOperationRes.getBody();
+        List<Authority> authorityList = imsOperations.stream()
+                .map(op -> Authority.of(op.getAntUrl(), StringUtils.tokenizeToStringArray(op.getType(), ",")))
+                .collect(Collectors.toList());
+        sessionUser.authorities(authorityList);
+        String sessionId = session.cache(sessionUser);
+        DoctorCustomer doctorCustomerResult =this.DoctorCustomerMapper.selectByUserId(doctorCustomer.getUserId());
+        if (Objects.isNull(doctorCustomerResult) && Objects.nonNull(doctorCustomer.getDoctorId())){//没有记录且鲜果师id不能为空
+            this.DoctorCustomerMapper.create(doctorCustomer);
+        }
+        //clientUri = accessToken.getOpenId() + "?sessionId=" + sessionId + "&clientUri=" + clientUri;
+        clientUri = doctorCustomer.getOpenId() + "?sessionId=" + sessionId + "&clientUri=" + uri;
+        return clientUri;
     }
 
     /** 

@@ -74,15 +74,6 @@ public class FruitDoctorUserService {
         int i = createdUri.lastIndexOf("/");
         createdUri = createdUri.substring(i + 1);
         ResponseEntity<UserDetailResult> baseUser = baseUserServerFeign.findById(Long.valueOf(createdUri));
-        DoctorCustomer doctorCustomer = new DoctorCustomer();
-        if (baseUser.getStatusCode().is2xxSuccessful()) {
-            doctorCustomer.setUserId(baseUser.getBody().getId());
-        }
-        doctorCustomer.setRemark(baseUser.getBody().getNickname());
-        doctorCustomer.setDoctorId(weChatRegisterParam.getDoctorId());
-        if (doctorCustomerMapper.create(doctorCustomer) <= 0) {
-            return Tips.warn("鲜果师与客户关联失败！");
-        }
         return Tips.info("用户创建成功").data(baseUser.getBody());
     }
 

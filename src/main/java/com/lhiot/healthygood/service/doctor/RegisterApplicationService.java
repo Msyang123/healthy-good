@@ -1,6 +1,6 @@
 package com.lhiot.healthygood.service.doctor;
 
-import com.leon.microx.util.BeanUtils;
+import com.leon.microx.util.Beans;
 import com.leon.microx.util.auditing.Random;
 import com.leon.microx.web.result.Pages;
 import com.leon.microx.web.result.Tips;
@@ -147,7 +147,8 @@ public class RegisterApplicationService {
             }
             // 设置要添加的鲜果师信息
             FruitDoctor fruitDoctor = new FruitDoctor();
-            BeanUtils.copyProperties(registerApplication, fruitDoctor);
+            Beans.wrap(fruitDoctor).any().copyOf(fruitDoctor);
+//            BeanUtils.copyProperties(registerApplication, fruitDoctor);
             fruitDoctor.setRealName(registerApplication.getRealName());
             fruitDoctor.setInviteCode(Random.of(4, Random.Digits._62));
             fruitDoctor.setDoctorLevel(DoctorLevel.TRAINING.toString());

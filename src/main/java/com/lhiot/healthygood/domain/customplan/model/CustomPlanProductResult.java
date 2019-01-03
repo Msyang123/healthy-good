@@ -1,6 +1,7 @@
 package com.lhiot.healthygood.domain.customplan.model;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.lhiot.healthygood.type.OptionType;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
@@ -71,4 +72,7 @@ public class CustomPlanProductResult {
     @JsonProperty("benefit")
     @ApiModelProperty(value = "益处", dataType = "String")
     private String benefit;
+
+    @ApiModelProperty(value = "操作类型（后台）", dataType = "OptionType")
+    private OptionType optionType;
 }

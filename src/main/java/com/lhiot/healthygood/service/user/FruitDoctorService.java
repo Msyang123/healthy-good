@@ -1,6 +1,6 @@
 package com.lhiot.healthygood.service.user;
 
-import com.leon.microx.util.BeanUtils;
+import com.leon.microx.util.Beans;
 import com.leon.microx.util.Maps;
 import com.leon.microx.util.auditing.Random;
 import com.leon.microx.web.result.Pages;
@@ -79,7 +79,8 @@ public class FruitDoctorService {
             return Tips.warn("该鲜果师已存在，添加失败");
         }
         FruitDoctor fruitDoctor = new FruitDoctor();
-        BeanUtils.copyProperties(registerApplication, fruitDoctor);
+        Beans.wrap(fruitDoctor).any().copyOf(registerApplication);
+//        BeanUtils.copyProperties(registerApplication, fruitDoctor);
         this.fruitDoctorMapper.create(fruitDoctor);
         fruitDoctor.setRealName(registerApplication.getRealName());
         fruitDoctor.setInviteCode(Random.of(4, Random.Digits._62));
