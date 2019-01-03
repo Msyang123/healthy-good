@@ -2,6 +2,7 @@ package com.lhiot.healthygood.api.order;
 
 import com.leon.microx.predefine.OnOff;
 import com.leon.microx.util.BeanUtils;
+import com.leon.microx.util.Beans;
 import com.leon.microx.util.Calculator;
 import com.leon.microx.util.StringUtils;
 import com.leon.microx.web.result.Pages;
@@ -184,7 +185,8 @@ public class OrderApi {
                 //上架id相同的订单商品信息，通过基础服务获取的赋值给订单商品信息
                 .filter(productShelf -> Objects.equals(orderProduct.getShelfId(), productShelf.getId()))
                 .forEach(item -> {
-                    BeanUtils.of(orderProduct).ignoreField("id").populate(item);//忽略掉id 对象赋值
+                    //BeanUtils.of(orderProduct).ignoreField("id").populate(item);//忽略掉id 对象赋值
+                    Beans.wrap(orderProduct).copyOf(item);
                     //设置规格信息
                     ProductSpecification productSpecification = item.getProductSpecification();
                     orderProduct.setBarcode(productSpecification.getBarcode());
