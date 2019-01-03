@@ -154,7 +154,7 @@ public class WxCallbackApi {
         balanceOperationParam.setMoney(Long.valueOf(parameters.get("total_fee")));
         balanceOperationParam.setOperation(OperationStatus.ADD);
         balanceOperationParam.setSourceId(parameters.get("out_trade_no"));
-        balanceOperationParam.setSourceType("recharge");
+        balanceOperationParam.setMemo("微信充值");
         Tips tips = FeginResponseTools.convertResponse(baseUserServerFeign.userBalanceOperation(userId, balanceOperationParam));
         if (tips.err()) {
             log.error("充值微信回调给用户加鲜果币失败{},{}", userId, balanceOperationParam);
