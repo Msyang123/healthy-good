@@ -134,56 +134,35 @@ public class UserApi {
         }
         //如果用户不存在且邀请码有效则创建用户并绑定鲜果师，否则不做操作或者绑定鲜果师
         ResponseEntity searchUserEntity = baseUserServerFeign.findByOpenId(accessToken.getOpenId());
-        ResponseEntity imsOperationRes = imsServiceFeign.selectAuthority();
-        //注册
         if (searchUserEntity.getStatusCode().isError()) {
             String weixinUserInfo = weChatUtil.getOauth2UserInfo(accessToken.getOpenId(), accessToken.getAccessToken());
             WeChatRegisterParam weChatRegisterParam = fruitDoctorUserService.convert(weixinUserInfo);//传给基础服务的用户数据
-            if (Objects.nonNull(fruitDoctor)) {
-                weChatRegisterParam.setDoctorId(fruitDoctor.getId());
-            }
             weChatRegisterParam.setApplicationType(ApplicationType.HEALTH_GOOD);
             //新增用户
             Tips tips = fruitDoctorUserService.create(weChatRegisterParam);
+            if (tips.err()){
+                return;
+            }
             UserDetailResult userDetailResult = (UserDetailResult) tips.getData();
-            Sessions.User sessionUser = session.create(request).user(Maps.of("userId", userDetailResult.getId(), "baseUserId",userDetailResult.getBaseUserId()
-                    , "openId", userDetailResult.getOpenId()))
-                    .timeToLive(30, TimeUnit.MINUTES);
-            List<ImsOperation> imsOperations = (List<ImsOperation>) imsOperationRes.getBody();
-            List<Authority> authorityList = imsOperations.stream()
-                    .map(op -> Authority.of(op.getAntUrl(), StringUtils.tokenizeToStringArray(op.getType(), ",")))
-                    .collect(Collectors.toList());
-            sessionUser.authorities(authorityList);
-            String sessionId = session.cache(sessionUser);
-            clientUri = accessToken.getOpenId() + "?sessionId=" + sessionId + "&clientUri=" + clientUri;
+            DoctorCustomer doctorCustomerParam = new DoctorCustomer();
+            doctorCustomerParam.setDoctorId(fruitDoctor.getId());
+            doctorCustomerParam.setUserId(userDetailResult.getId());
+            doctorCustomerParam.setRemark(userDetailResult.getNickname());
+            doctorCustomerParam.setOpenId(userDetailResult.getOpenId());
+            clientUri = doctorCustomerService.createRelations(request,doctorCustomerParam,clientUri);//绑定鲜果师
         } else {
             UserDetailResult searchUser = (UserDetailResult) searchUserEntity.getBody();
             //判断用户是否绑定鲜果师，没有绑定则绑定,并且鲜果师不是自己
-            if ((Objects.isNull(searchUser.getDoctorId()) || Objects.equals(0L, searchUser.getId())) && Objects.nonNull(fruitDoctor)) {
-                if (!Objects.equals(fruitDoctor.getUserId(), searchUser.getId())) {
-                    DoctorCustomer doctorCustomer = new DoctorCustomer();
-                    doctorCustomer.setDoctorId(fruitDoctor.getId());
-                    doctorCustomer.setUserId(searchUser.getId());
-                    doctorCustomer.setRemark(searchUser.getNickname());
-                    doctorCustomerService.create(doctorCustomer);
-                }
+            DoctorCustomer doctorCustomerParam = new DoctorCustomer();
+            if ( Objects.nonNull(fruitDoctor)) {
+                /*if (!Objects.equals(fruitDoctor.getUserId(), searchUser.getId())) {
+                }*/
+                doctorCustomerParam.setDoctorId(fruitDoctor.getId());
             }
-            Sessions.User sessionUser = session.create(request).user(Maps.of("userId", searchUser.getId(), "baseUserId",searchUser.getBaseUserId(),
-                    "openId", searchUser.getOpenId()))
-                    .timeToLive(30, TimeUnit.MINUTES);
-            //sessionUser.authorities(Authority.of("/**", RequestMethod.values()));
-
-            if (imsOperationRes.getStatusCode().isError()){
-                return ;
-            }
-            List<ImsOperation> imsOperations = (List<ImsOperation>) imsOperationRes.getBody();
-            List<Authority> authorityList = imsOperations.stream()
-                    .map(op -> Authority.of(op.getAntUrl(), StringUtils.tokenizeToStringArray(op.getType(), ",")))
-                    .collect(Collectors.toList());
-            sessionUser.authorities(authorityList);
-
-            String sessionId = session.cache(sessionUser);
-            clientUri = accessToken.getOpenId() + "?sessionId=" + sessionId + "&clientUri=" + clientUri;
+            doctorCustomerParam.setUserId(searchUser.getId());
+            doctorCustomerParam.setRemark(searchUser.getNickname());
+            doctorCustomerParam.setOpenId(searchUser.getOpenId());
+            clientUri = doctorCustomerService.createRelations(request,doctorCustomerParam,clientUri);//绑定鲜果师
         }
         log.info("用户sendRedirect:" + wechatOauth.getAppFrontUri() + clientUri);
         response.sendRedirect(wechatOauth.getAppFrontUri() + clientUri);
@@ -191,7 +170,7 @@ public class UserApi {
     }
 
     @GetMapping("/session")
-    @ApiOperation(value = "根据sessionId重新获取session*", response = UserDetailResult.class)
+    @ApiOperation(value = "根据sessionId重新用户信息*", response = UserDetailResult.class)
     public ResponseEntity userInfo(Sessions.User user) {
         String openId = user.getUser().get("openId").toString();
         ResponseEntity searchUserEntity = baseUserServerFeign.findByOpenId(openId);
@@ -396,7 +375,7 @@ public class UserApi {
         BalanceLogParam balanceLogParam = new BalanceLogParam();
         BeanUtils.copyProperties(pagesParam,balanceLogParam);
         balanceLogParam.setBaseUserId(users.getBaseUserId());
-        balanceLogParam.setApplicationType("HEALTH_GOOD");
+        balanceLogParam.setApplicationType(ApplicationType.HEALTH_GOOD);
         ResponseEntity responseEntity =  baseUserServerFeign.searchBalanceLog(balanceLogParam);
         return responseEntity.getStatusCode().is2xxSuccessful() ? ResponseEntity.ok(responseEntity.getBody()) : ResponseEntity.badRequest().body(responseEntity.getBody());
     }

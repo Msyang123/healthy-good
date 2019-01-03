@@ -1,5 +1,6 @@
 package com.lhiot.healthygood.api.user;
 
+import com.leon.microx.util.Beans;
 import com.leon.microx.web.session.Sessions;
 import com.lhiot.healthygood.config.HealthyGoodConfig;
 import com.lhiot.healthygood.wechat.WeChatUtil;
@@ -87,7 +88,7 @@ public class WeixinClientApi {
             Collections.sort(list);// 排序
             String tmpStr = new MySecurity().encode(list.toString(),
                     MySecurity.SHA_1);// SHA-1加密
-
+            //Beans.wrap()
             if (signature.equals(tmpStr)) {
                 response.setContentType("text/html; charset=utf-8");
                 InputStream is = request.getInputStream();
