@@ -60,8 +60,8 @@ public class ProductSectionApi {
     public ResponseEntity<Pages<ProductShelf>> productSections(@PathVariable("id") Long id, @RequestBody com.lhiot.healthygood.domain.good.ProductSectionParam productSectionParam) {
         ProductShelfParam productShelfParam = new ProductShelfParam();
         productShelfParam.setSectionId(id);
-        Beans.wrap(productShelfParam).any().copyOf(productSectionParam);
-//        BeanUtils.copyProperties(productSectionParam,productShelfParam);
+        //BeanUtils.copyProperties(productSectionParam,productShelfParam);
+        Beans.wrap(productShelfParam).copyOf(productSectionParam);
         ResponseEntity<Pages<ProductShelf>> pagesResponseEntity = baseDataServiceFeign.searchProductShelves(productShelfParam);
         return pagesResponseEntity;
     }
@@ -128,8 +128,8 @@ public class ProductSectionApi {
             return ResponseEntity.badRequest().body("没有数据");
         }
         ProductDetailResult detailResult = new ProductDetailResult();
-        Beans.wrap(detailResult).any().copyOf(productShelf);
-//        BeanUtils.copyProperties(productShelf,detailResult);
+        //BeanUtils.copyProperties(productShelf,detailResult);
+        Beans.wrap(detailResult).copyOf(productShelf);
         //商品图片对象
         Product product = productShelf.getProductSpecification().getProduct();
         List<String> subImgs = new ArrayList<>();

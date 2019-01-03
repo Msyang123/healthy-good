@@ -182,8 +182,8 @@ public class OrderApi {
                 //上架id相同的订单商品信息，通过基础服务获取的赋值给订单商品信息
                 .filter(productShelf -> Objects.equals(orderProduct.getShelfId(), productShelf.getId()))
                 .forEach(item -> {
-                    Beans.wrap(orderProduct).excludes("id").copyOf(item);
-//                    BeanUtils.of(orderProduct).ignoreField("id").populate(item);//忽略掉id 对象赋值
+                    //BeanUtils.of(orderProduct).ignoreField("id").populate(item);//忽略掉id 对象赋值
+                    Beans.wrap(orderProduct).copyOf(item);
                     //设置规格信息
                     ProductSpecification productSpecification = item.getProductSpecification();
                     orderProduct.setBarcode(productSpecification.getBarcode());

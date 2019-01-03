@@ -166,8 +166,8 @@ public class ActivityProductService {
         List<ActivityProductResult> results = new ArrayList<>();
         // 查询活动商品信息
         ActivityProduct activityProduct = new ActivityProduct();
-        Beans.wrap(activityProduct).any().copyOf(param);
-//        BeanUtils.of(activityProduct).populate(param);
+        //BeanUtils.of(activityProduct).populate(param);
+        Beans.wrap(activityProduct).copyOf(param);
         // 根据查询条件获取上架ids
         if (Objects.nonNull(param.getBarcode()) || Objects.nonNull(param.getName())) {
             ProductShelfParam productShelfParam = new ProductShelfParam();
@@ -211,12 +211,12 @@ public class ActivityProductService {
                 // List<ActivityProduct> 转换为  List<ActivityProductResult>
                 activityProductList.forEach(item -> {
                     ActivityProductResult activityProductResult = new ActivityProductResult();
-                    Beans.wrap(activityProductResult).any().copyOf(item);
-//                    BeanUtils.copyProperties(item, activityProductResult);
+                   // BeanUtils.copyProperties(item, activityProductResult);
+                    Beans.wrap(activityProductResult).copyOf(item);
                     productShelfList.forEach(productShelf -> {
                         if (Objects.equals(activityProductResult.getProductShelfId(), productShelf.getId())){
-                            Beans.wrap(activityProductResult).any().copyOf(productShelf);
-//                            BeanUtils.copyProperties(productShelf,activityProductResult);
+                           // BeanUtils.copyProperties(productShelf,activityProductResult);
+                            Beans.wrap(activityProductResult).copyOf(productShelf);
                             ProductSpecification productSpecification  = productShelf.getProductSpecification();
                             if (Objects.nonNull(productSpecification)) {
                                 String specification = productSpecification.getWeight() + productSpecification.getPackagingUnit() + "*" + productSpecification.getSpecificationQty() + "份";

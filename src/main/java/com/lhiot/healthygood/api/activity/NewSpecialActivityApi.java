@@ -62,8 +62,8 @@ public class NewSpecialActivityApi {
         }
         ActivityProduct activityProduct = new ActivityProduct();
         activityProduct.setActivityId(specialProductActivity.getId());
-        Beans.wrap(activityProduct).any().copyOf(pagesParam);
-//        BeanUtils.copyProperties(pagesParam,activityProduct);
+        //BeanUtils.copyProperties(pagesParam,activityProduct);
+        Beans.wrap(activityProduct).copyOf(pagesParam);
         List<ActivityProduct> activityProductsList = activityProductService.activityProductList(activityProduct);
         List<ActivityProducts> activityProducts = new ArrayList<ActivityProducts>();
 
@@ -80,8 +80,8 @@ public class NewSpecialActivityApi {
                 return;
             }
             ActivityProducts product = new ActivityProducts();
-            Beans.wrap(product).any().copyOf(productShelf);
-//            BeanUtils.copyProperties(productShelf,product);
+            //BeanUtils.copyProperties(productShelf,product);
+            Beans.wrap(product).copyOf(productShelf);
             product.setPrice(Objects.isNull(productShelf.getPrice()) ? productShelf.getOriginalPrice() : productShelf.getPrice());
             product.setProductName(productShelf.getName());
 
@@ -95,8 +95,8 @@ public class NewSpecialActivityApi {
             activityProducts.add(product);
         });
         NewSpecialResult newSpecialResult = new NewSpecialResult();
-        Beans.wrap(newSpecialResult).any().copyOf(specialProductActivity);
-//        BeanUtils.copyProperties(specialProductActivity,newSpecialResult);
+        //BeanUtils.copyProperties(specialProductActivity,newSpecialResult);
+        Beans.wrap(newSpecialResult).copyOf(specialProductActivity);
         newSpecialResult.setActivityProductList(activityProducts);
         return ResponseEntity.ok(newSpecialResult);
     }

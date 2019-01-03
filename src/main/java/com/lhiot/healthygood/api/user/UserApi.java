@@ -155,9 +155,9 @@ public class UserApi {
             //判断用户是否绑定鲜果师，没有绑定则绑定,并且鲜果师不是自己
             DoctorCustomer doctorCustomerParam = new DoctorCustomer();
             if ( Objects.nonNull(fruitDoctor)) {
-                /*if (!Objects.equals(fruitDoctor.getUserId(), searchUser.getId())) {
-                }*/
-                doctorCustomerParam.setDoctorId(fruitDoctor.getId());
+                if (!Objects.equals(fruitDoctor.getUserId(), searchUser.getId())) {
+                    doctorCustomerParam.setDoctorId(fruitDoctor.getId());
+                }
             }
             doctorCustomerParam.setUserId(searchUser.getId());
             doctorCustomerParam.setRemark(searchUser.getNickname());
@@ -373,8 +373,8 @@ public class UserApi {
             return ResponseEntity.ok().build();
         }
         BalanceLogParam balanceLogParam = new BalanceLogParam();
-        Beans.wrap(balanceLogParam).any().copyOf(pagesParam);
-//        BeanUtils.copyProperties(pagesParam,balanceLogParam);
+        //BeanUtils.copyProperties(pagesParam,balanceLogParam);
+        Beans.wrap(balanceLogParam).copyOf(pagesParam);
         balanceLogParam.setBaseUserId(users.getBaseUserId());
         balanceLogParam.setApplicationType(ApplicationType.HEALTH_GOOD);
         ResponseEntity responseEntity =  baseUserServerFeign.searchBalanceLog(balanceLogParam);

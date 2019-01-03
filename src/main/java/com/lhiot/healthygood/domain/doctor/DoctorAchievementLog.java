@@ -112,8 +112,8 @@ public class DoctorAchievementLog{
 
     public DoctorAchievementLog toDoctorBonusLog(){
     	DoctorAchievementLog doctorAchievementLog = new DoctorAchievementLog();
-        Beans.wrap(doctorAchievementLog).any().copyOf(Beans.wrap(doctorAchievementLog).fields());
-//        BeanUtils.of(doctorAchievementLog).populate(BeanUtils.of(this).toMap());
+        //BeanUtils.of(doctorAchievementLog).populate(BeanUtils.of(this).toMap());
+        Beans.wrap(doctorAchievementLog).copyOf(Beans.wrap(this).source());
         return doctorAchievementLog;
     }
 
