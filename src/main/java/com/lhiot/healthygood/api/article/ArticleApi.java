@@ -1,6 +1,5 @@
 package com.lhiot.healthygood.api.article;
 
-import com.leon.microx.util.BeanUtils;
 import com.leon.microx.util.Beans;
 import com.leon.microx.web.result.Pages;
 import com.leon.microx.web.session.Sessions;

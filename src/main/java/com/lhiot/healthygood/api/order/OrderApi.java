@@ -1,7 +1,6 @@
 package com.lhiot.healthygood.api.order;
 
 import com.leon.microx.predefine.OnOff;
-import com.leon.microx.util.BeanUtils;
 import com.leon.microx.util.Beans;
 import com.leon.microx.util.Calculator;
 import com.leon.microx.util.StringUtils;
@@ -12,8 +11,6 @@ import com.lhiot.healthygood.config.HealthyGoodConfig;
 import com.lhiot.healthygood.domain.activity.ActivityProduct;
 import com.lhiot.healthygood.domain.activity.ActivityProductRecord;
 import com.lhiot.healthygood.domain.activity.SpecialProductActivity;
-import com.lhiot.healthygood.domain.customplan.CustomOrder;
-import com.lhiot.healthygood.domain.customplan.CustomOrderDelivery;
 import com.lhiot.healthygood.domain.order.OrderGroupCount;
 import com.lhiot.healthygood.domain.user.DoctorCustomer;
 import com.lhiot.healthygood.domain.user.FruitDoctor;

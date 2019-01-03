@@ -93,31 +93,17 @@ public class CustomPlanApi {
     }
 
     @Sessions.Uncheck
-    @ApiOperation("修改定制计划商品(后台)")
-    @ApiImplicitParams({
-            @ApiImplicitParam(paramType = ApiParamType.PATH, name = "id", value = "定制计划id", dataType = "Long", required = true),
-            @ApiImplicitParam(paramType = ApiParamType.BODY, name = "customPlanProduct", value = "定制计划商品", dataType = "CustomPlanProduct", required = true)
-    })
-    @PutMapping("/custom-plan-product/{id}")
-    public ResponseEntity updateProduct(@PathVariable("id") Long id, @RequestBody CustomPlanProduct customPlanProduct) {
-        log.debug("修改定制计划商品\t id:{} param:{}", id, customPlanProduct);
-
-        Tips tips = customPlanService.updateProduct(id, customPlanProduct);
-        return tips.err() ? ResponseEntity.badRequest().body("修改定制计划商品失败!") : ResponseEntity.ok().build();
-    }
-
-    @Sessions.Uncheck
-    @ApiOperation("修改定制计划规格(后台)")
+    @ApiOperation("修改定制计划周期类型信息(后台)")
     @ApiImplicitParams({
             @ApiImplicitParam(paramType = ApiParamType.PATH, name = "id", value = "定制计划id", dataType = "Long", required = true),
             @ApiImplicitParam(paramType = ApiParamType.BODY, name = "customPlanDetailResult", value = "定制计划", dataType = "CustomPlanDetailResult", required = true)
     })
-    @PutMapping("/custom-plan-specification/{id}")
-    public ResponseEntity updateSpecification(@PathVariable("id") Long id, @RequestBody CustomPlanDetailResult customPlanDetailResult) {
-        log.debug("修改定制计划规格\t id:{} param:{}", id, customPlanDetailResult);
+    @PutMapping("/custom-plan-periods/{id}")
+    public ResponseEntity updatePeriod(@PathVariable("id") Long id, @RequestBody CustomPlanDetailResult customPlanDetailResult) {
+        log.debug("修改定制计划周期类型信息\t id:{} param:{}", id, customPlanDetailResult);
 
-        Tips tips = customPlanService.updateSpecification(id, customPlanDetailResult);
-        return tips.err() ? ResponseEntity.badRequest().body("修改定制计划规格失败!") : ResponseEntity.ok().build();
+        Tips tips = customPlanService.updatePeriod(id, customPlanDetailResult);
+        return tips.err() ? ResponseEntity.badRequest().body("修改定制计划周期类型信息失败!") : ResponseEntity.ok().build();
     }
 
     @Sessions.Uncheck

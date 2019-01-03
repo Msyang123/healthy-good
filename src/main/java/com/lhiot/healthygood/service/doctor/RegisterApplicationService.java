@@ -1,6 +1,5 @@
 package com.lhiot.healthygood.service.doctor;
 
-import com.leon.microx.util.BeanUtils;
 import com.leon.microx.util.Beans;
 import com.leon.microx.util.auditing.Random;
 import com.leon.microx.web.result.Pages;
