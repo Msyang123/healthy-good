@@ -2,6 +2,7 @@ package com.lhiot.healthygood.service.customplan;
 
 import com.leon.microx.predefine.OnOff;
 import com.leon.microx.util.BeanUtils;
+import com.leon.microx.util.Beans;
 import com.leon.microx.util.StringUtils;
 import com.leon.microx.web.result.Pages;
 import com.leon.microx.web.result.Tips;
@@ -178,7 +179,8 @@ public class CustomPlanService {
         // 定制计划信息列表设值
         customPlanList.forEach(customPlan -> {
             CustomPlanDetailResult customPlanDetailResult = new CustomPlanDetailResult();
-            BeanUtils.of(customPlanDetailResult).populate(customPlan);
+            //BeanUtils.of(customPlanDetailResult).populate(customPlan);
+            Beans.wrap(customPlanDetailResult).copyOf(customPlan);
             if (!CollectionUtils.isEmpty(customPlanSpecificationList)) {
                 List<CustomPlanSpecification> customPlanSpecifications = customPlanSpecificationList.stream().filter(customPlanSpecification -> Objects.equals(customPlanDetailResult.getId(), customPlanSpecification.getPlanId())).collect(Collectors.toList());
                 // 周期集合
