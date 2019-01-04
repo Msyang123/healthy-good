@@ -11,6 +11,7 @@ import com.lhiot.healthygood.config.HealthyGoodConfig;
 import com.lhiot.healthygood.domain.activity.ActivityProduct;
 import com.lhiot.healthygood.domain.activity.ActivityProductRecord;
 import com.lhiot.healthygood.domain.activity.SpecialProductActivity;
+import com.lhiot.healthygood.domain.doctor.DoctorAchievementLog;
 import com.lhiot.healthygood.domain.order.OrderGroupCount;
 import com.lhiot.healthygood.domain.user.DoctorCustomer;
 import com.lhiot.healthygood.domain.user.FruitDoctor;
@@ -50,10 +51,7 @@ import javax.validation.Valid;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 import java.math.BigDecimal;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
@@ -367,9 +365,15 @@ public class OrderApi {
         if (Objects.isNull(fruitDoctor)) {
             return ResponseEntity.badRequest().body("鲜果师不存在");
         }
-        List<String> orderCodes = doctorAchievementLogService.selectOrderCodeByDoctorId(fruitDoctor.getId());
+        List<DoctorAchievementLog> doctorAchievementLogs = doctorAchievementLogService.selectOrderCodeByDoctorId(fruitDoctor.getId());
+        if (doctorAchievementLogs.size()<=0){
+            return ResponseEntity.ok().body(new Pages<OrderDetailResult>());
+        }
+        List<String> orderCodes = new ArrayList<>();
+        doctorAchievementLogs.forEach(doctorAchievementLog -> {
+            orderCodes.add(doctorAchievementLog.getOrderId());
+        });
         baseOrderParam.setOrderCodeList(orderCodes);
-        baseOrderParam.setOrderType(OrderType.NORMAL);
         baseOrderParam.setApplicationType(ApplicationType.HEALTH_GOOD);
         return orderServiceFeign.ordersPages(baseOrderParam);
     }

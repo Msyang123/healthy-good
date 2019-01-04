@@ -72,7 +72,7 @@ public interface DoctorAchievementLogMapper {
     */
      List<DoctorAchievementLog> pageDoctorAchievementLogs(DoctorAchievementLog doctorAchievementLog);
 
-     List<String> selectOrderCodeByDoctorId(Long doctorId);
+     List<DoctorAchievementLog> selectOrderCodeByDoctorId(Long doctorId);
 
 
     /**

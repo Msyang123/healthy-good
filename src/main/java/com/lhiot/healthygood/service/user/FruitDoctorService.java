@@ -315,11 +315,14 @@ public class FruitDoctorService {
                 log.info(orderDetailResult.getUserId() + "," + str + "," + "已执行过");
                 return;
             }
-            if (doctorAchievementLogService.create(doctorAchievementLog) < 0) {
-                log.error(str + "存入失败");
+            if (Objects.equals(OrderStatus.WAIT_SEND_OUT, orderDetailResult.getStatus()) || Objects.equals(OrderStatus.DISPATCHING, orderDetailResult.getStatus())
+            || Objects.equals(OrderStatus.ALREADY_RETURN, orderDetailResult.getStatus())){
+                if (doctorAchievementLogService.create(doctorAchievementLog) < 0) {
+                    log.error(str + "存入失败");
+                }
+                Tips tips = doctorAchievementLogService.updateBonus(doctor.getId(),orderCommission, BalanceType.BOUNS);//鲜果师红利余额计算
+                log.info(tips.getMessage());
             }
-            Tips tips = doctorAchievementLogService.updateBonus(doctor.getId(),orderCommission, BalanceType.BOUNS);//鲜果师红利余额计算
-            log.info(tips.getMessage());
         } catch (Exception e) {
             e.printStackTrace();
         }

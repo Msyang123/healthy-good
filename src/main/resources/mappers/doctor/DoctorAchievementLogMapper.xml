@@ -215,7 +215,7 @@
         </if>
     </select>
 
-    <select id="selectOrderCodeByDoctorId" resultMap="java.util.List"
+    <select id="selectOrderCodeByDoctorId" resultMap="BaseResultMap"
             parameterType="long">
         select order_id
         from doctor_achievement_log where doctor_id= #{0}

@@ -146,7 +146,7 @@ public class DoctorAchievementLogService {
      * @param doctorId
      * @return
      */
-    public List<String> selectOrderCodeByDoctorId(Long doctorId){
+    public List<DoctorAchievementLog> selectOrderCodeByDoctorId(Long doctorId){
         return doctorAchievementLogMapper.selectOrderCodeByDoctorId(doctorId);
     }
 
