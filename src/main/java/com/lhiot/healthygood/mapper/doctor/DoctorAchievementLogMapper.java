@@ -72,6 +72,8 @@ public interface DoctorAchievementLogMapper {
     */
      List<DoctorAchievementLog> pageDoctorAchievementLogs(DoctorAchievementLog doctorAchievementLog);
 
+     List<DoctorAchievementLog> selectOrderCodeByDoctorId(Long doctorId);
+
 
     /**
     * Description: 查询鲜果师业绩记录总记录数

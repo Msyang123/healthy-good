@@ -215,6 +215,12 @@
         </if>
     </select>
 
+    <select id="selectOrderCodeByDoctorId" resultMap="BaseResultMap"
+            parameterType="long">
+        select order_id
+        from doctor_achievement_log where doctor_id= #{0}
+    </select>
+
     <!--查询鲜果师业绩记录总记录-->
     <select id="pageDoctorAchievementLogCounts" resultType="int"
             parameterType="com.lhiot.healthygood.domain.doctor.DoctorAchievementLog">

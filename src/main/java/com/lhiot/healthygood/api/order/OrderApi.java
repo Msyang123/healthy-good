@@ -11,6 +11,7 @@ import com.lhiot.healthygood.config.HealthyGoodConfig;
 import com.lhiot.healthygood.domain.activity.ActivityProduct;
 import com.lhiot.healthygood.domain.activity.ActivityProductRecord;
 import com.lhiot.healthygood.domain.activity.SpecialProductActivity;
+import com.lhiot.healthygood.domain.doctor.DoctorAchievementLog;
 import com.lhiot.healthygood.domain.order.OrderGroupCount;
 import com.lhiot.healthygood.domain.user.DoctorCustomer;
 import com.lhiot.healthygood.domain.user.FruitDoctor;
@@ -25,6 +26,7 @@ import com.lhiot.healthygood.service.activity.ActivityProductRecordService;
 import com.lhiot.healthygood.service.activity.ActivityProductService;
 import com.lhiot.healthygood.service.activity.SpecialProductActivityService;
 import com.lhiot.healthygood.service.customplan.CustomOrderService;
+import com.lhiot.healthygood.service.doctor.DoctorAchievementLogService;
 import com.lhiot.healthygood.service.order.OrderService;
 import com.lhiot.healthygood.service.user.DoctorCustomerService;
 import com.lhiot.healthygood.service.user.FruitDoctorService;
@@ -49,10 +51,7 @@ import javax.validation.Valid;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 import java.math.BigDecimal;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
@@ -73,6 +72,7 @@ public class OrderApi {
     private final ActivityProductRecordService activityProductRecordService;
     private final SpecialProductActivityService specialProductActivityService;
     private final RabbitTemplate rabbitTemplate;
+    private final DoctorAchievementLogService doctorAchievementLogService;
 
     @Autowired
     public OrderApi(BaseDataServiceFeign baseDataServiceFeign,
@@ -80,7 +80,7 @@ public class OrderApi {
                     OrderServiceFeign orderServiceFeign,
                     PaymentServiceFeign paymentServiceFeign,
                     OrderService orderService,
-                    CustomOrderService customOrderService, DoctorCustomerService doctorCustomerService, FruitDoctorService fruitDoctorService, HealthyGoodConfig healthyGoodConfig, RabbitTemplate rabbitTemplate, ActivityProductService activityProductService, ActivityProductRecordService activityProductRecordService, SpecialProductActivityService specialProductActivityService) {
+                    CustomOrderService customOrderService, DoctorCustomerService doctorCustomerService, FruitDoctorService fruitDoctorService, HealthyGoodConfig healthyGoodConfig, RabbitTemplate rabbitTemplate, ActivityProductService activityProductService, ActivityProductRecordService activityProductRecordService, SpecialProductActivityService specialProductActivityService, DoctorAchievementLogService doctorAchievementLogService) {
         this.baseDataServiceFeign = baseDataServiceFeign;
         this.thirdpartyServerFeign = thirdpartyServerFeign;
         this.orderServiceFeign = orderServiceFeign;
@@ -94,6 +94,7 @@ public class OrderApi {
         this.activityProductService = activityProductService;
         this.activityProductRecordService = activityProductRecordService;
         this.specialProductActivityService = specialProductActivityService;
+        this.doctorAchievementLogService = doctorAchievementLogService;
     }
 
     @PostMapping("/orders")
@@ -364,11 +365,15 @@ public class OrderApi {
         if (Objects.isNull(fruitDoctor)) {
             return ResponseEntity.badRequest().body("鲜果师不存在");
         }
-        //鲜果师客户列表
-        List<DoctorCustomer> doctorCustomerList = doctorCustomerService.selectByDoctorId(fruitDoctor.getId());
-        String userIds = StringUtils.arrayToCommaDelimitedString(doctorCustomerList.parallelStream().map(DoctorCustomer::getUserId).toArray(Object[]::new));
-        baseOrderParam.setUserIds(userIds);
-        baseOrderParam.setOrderType(OrderType.NORMAL);
+        List<DoctorAchievementLog> doctorAchievementLogs = doctorAchievementLogService.selectOrderCodeByDoctorId(fruitDoctor.getId());
+        if (doctorAchievementLogs.size()<=0){
+            return ResponseEntity.ok().body(new Pages<OrderDetailResult>());
+        }
+        List<String> orderCodes = new ArrayList<>();
+        doctorAchievementLogs.forEach(doctorAchievementLog -> {
+            orderCodes.add(doctorAchievementLog.getOrderId());
+        });
+        baseOrderParam.setOrderCodeList(orderCodes);
         baseOrderParam.setApplicationType(ApplicationType.HEALTH_GOOD);
         return orderServiceFeign.ordersPages(baseOrderParam);
     }
