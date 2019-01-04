@@ -71,7 +71,8 @@ public class CustomOrderService {
     private final FruitDoctorService fruitDoctorService;
     private final RabbitTemplate rabbitTemplate;
     //暂停开始结束时间
-    private static final LocalTime PAUSE_TIME = LocalTime.parse("00:00:00");
+    private static final LocalTime PAUSE_BEGIN_TIME = LocalTime.parse("00:00:00");
+    private static final LocalTime PAUSE_END_TIME = LocalTime.parse("23:59:59");
     private static final DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
     @Autowired
@@ -186,9 +187,9 @@ public class CustomOrderService {
         //暂停开始日期
         LocalDate pauseBegin = LocalDate.parse(customOrderPause.getPauseBegin(), dateTimeFormatter);
         //暂停开始时间
-        LocalDateTime begin = pauseBegin.atTime(PAUSE_TIME);
-        //计划暂停结束时间
-        LocalDateTime last = pauseBegin.plusDays(customOrderPause.getPlanPauseDay()).atTime(PAUSE_TIME);
+        LocalDateTime begin = pauseBegin.atTime(PAUSE_BEGIN_TIME);
+        //计划暂停结束时间 23:59:59
+        LocalDateTime last = pauseBegin.plusDays(customOrderPause.getPlanPauseDay()-1).atTime(PAUSE_END_TIME);
         Date lastDate = Date.from(last.atZone(ZoneId.systemDefault()).toInstant());
 
         //查询当前设置暂停时间是否已经存在了 如果存在不允许设置

@@ -1,6 +1,5 @@
 package com.lhiot.healthygood.service.user;
 
-import com.leon.microx.util.BeanUtils;
 import com.leon.microx.util.Beans;
 import com.leon.microx.util.Maps;
 import com.leon.microx.util.auditing.Random;
