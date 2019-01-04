@@ -94,6 +94,7 @@ public class BalanceApi {
         balancePayModel.setMemo("普通订单支付");
         balancePayModel.setSourceType(SourceType.ORDER);
         balancePayModel.setUserId(userId);
+        balancePayModel.setAttach(orderCode);
         ResponseEntity<Id> balancePayResult = paymentServiceFeign.balancePay(balancePayModel);
         if (Objects.isNull(balancePayResult) || balancePayResult.getStatusCode().isError()) {
             log.error("鲜果币支付失败{}", balancePayResult);
@@ -132,12 +133,14 @@ public class BalanceApi {
             return validateResult;
         }
         CustomOrder customOrderDetial = (CustomOrder) validateResult.getBody();
+        String customOrderCode = balancePayModel.getOrderCode();
         //调用鲜果币支付接口
         balancePayModel.setApplicationType(ApplicationType.HEALTH_GOOD);
         balancePayModel.setFee(customOrderDetial.getPrice());
         balancePayModel.setMemo("定制订单支付");
         balancePayModel.setSourceType(SourceType.CUSTOM_PLAN);
         balancePayModel.setUserId(userId);
+        balancePayModel.setAttach(customOrderCode);
         ResponseEntity balancePayResult = paymentServiceFeign.balancePay(balancePayModel);
         if (Objects.isNull(balancePayResult) || balancePayResult.getStatusCode().isError()) {
             log.error("鲜果币支付定制订单失败{}", balancePayResult);
@@ -147,7 +150,6 @@ public class BalanceApi {
         String outTradeId = String.valueOf(id.getValue());
 
         //修改定制计划订单状态定制中
-        String customOrderCode = balancePayModel.getOrderCode();
         CustomOrder customOrder = new CustomOrder();
         customOrder.setCustomOrderCode(customOrderCode);
         customOrder.setStatus(CustomOrderStatus.CUSTOMING);//定制中
