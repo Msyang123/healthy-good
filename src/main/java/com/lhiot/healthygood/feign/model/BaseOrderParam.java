@@ -8,6 +8,8 @@ import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
+import java.util.List;
+
 /**
  * @author yj  created in  2018/12/8 11:28
  */
@@ -28,6 +30,8 @@ public class BaseOrderParam {
     private String orderCode;
     @ApiModelProperty(notes = "phone",dataType = "String")
     private String phone;
+    @ApiModelProperty(notes = "订单编号集合",dataType = "List")
+    private List<String> orderCodeList;
 
     private ApplicationType applicationType;
 

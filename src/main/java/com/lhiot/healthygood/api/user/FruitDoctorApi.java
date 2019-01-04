@@ -551,8 +551,9 @@ public class FruitDoctorApi {
     @Sessions.Uncheck
     @PostMapping("/ceshi/commission")
     @ApiOperation(value = "测试鲜果师订单分成接口")
-    public ResponseEntity ceshi() {
-        ResponseEntity orderDetailResult = orderServiceFeign.orderDetail("HG9232847708327936", false, false);
+    @ApiImplicitParam(paramType = "query", name = "code", dataType = "String", required = true, value = "订单编号")
+    public ResponseEntity ceshi(@RequestParam  String code) {
+        ResponseEntity orderDetailResult = orderServiceFeign.orderDetail(code, false, false);
         OrderDetailResult order = (OrderDetailResult) orderDetailResult.getBody();
         fruitDoctorService.calculationCommission(order);
         return ResponseEntity.ok().build();
