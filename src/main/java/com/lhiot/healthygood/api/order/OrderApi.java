@@ -1,7 +1,6 @@
 package com.lhiot.healthygood.api.order;
 
 import com.leon.microx.predefine.OnOff;
-import com.leon.microx.util.BeanUtils;
 import com.leon.microx.util.Beans;
 import com.leon.microx.util.Calculator;
 import com.leon.microx.util.StringUtils;
@@ -12,8 +11,6 @@ import com.lhiot.healthygood.config.HealthyGoodConfig;
 import com.lhiot.healthygood.domain.activity.ActivityProduct;
 import com.lhiot.healthygood.domain.activity.ActivityProductRecord;
 import com.lhiot.healthygood.domain.activity.SpecialProductActivity;
-import com.lhiot.healthygood.domain.customplan.CustomOrder;
-import com.lhiot.healthygood.domain.customplan.CustomOrderDelivery;
 import com.lhiot.healthygood.domain.order.OrderGroupCount;
 import com.lhiot.healthygood.domain.user.DoctorCustomer;
 import com.lhiot.healthygood.domain.user.FruitDoctor;
@@ -28,6 +25,7 @@ import com.lhiot.healthygood.service.activity.ActivityProductRecordService;
 import com.lhiot.healthygood.service.activity.ActivityProductService;
 import com.lhiot.healthygood.service.activity.SpecialProductActivityService;
 import com.lhiot.healthygood.service.customplan.CustomOrderService;
+import com.lhiot.healthygood.service.doctor.DoctorAchievementLogService;
 import com.lhiot.healthygood.service.order.OrderService;
 import com.lhiot.healthygood.service.user.DoctorCustomerService;
 import com.lhiot.healthygood.service.user.FruitDoctorService;
@@ -76,6 +74,7 @@ public class OrderApi {
     private final ActivityProductRecordService activityProductRecordService;
     private final SpecialProductActivityService specialProductActivityService;
     private final RabbitTemplate rabbitTemplate;
+    private final DoctorAchievementLogService doctorAchievementLogService;
 
     @Autowired
     public OrderApi(BaseDataServiceFeign baseDataServiceFeign,
@@ -83,7 +82,7 @@ public class OrderApi {
                     OrderServiceFeign orderServiceFeign,
                     PaymentServiceFeign paymentServiceFeign,
                     OrderService orderService,
-                    CustomOrderService customOrderService, DoctorCustomerService doctorCustomerService, FruitDoctorService fruitDoctorService, HealthyGoodConfig healthyGoodConfig, RabbitTemplate rabbitTemplate, ActivityProductService activityProductService, ActivityProductRecordService activityProductRecordService, SpecialProductActivityService specialProductActivityService) {
+                    CustomOrderService customOrderService, DoctorCustomerService doctorCustomerService, FruitDoctorService fruitDoctorService, HealthyGoodConfig healthyGoodConfig, RabbitTemplate rabbitTemplate, ActivityProductService activityProductService, ActivityProductRecordService activityProductRecordService, SpecialProductActivityService specialProductActivityService, DoctorAchievementLogService doctorAchievementLogService) {
         this.baseDataServiceFeign = baseDataServiceFeign;
         this.thirdpartyServerFeign = thirdpartyServerFeign;
         this.orderServiceFeign = orderServiceFeign;
@@ -97,6 +96,7 @@ public class OrderApi {
         this.activityProductService = activityProductService;
         this.activityProductRecordService = activityProductRecordService;
         this.specialProductActivityService = specialProductActivityService;
+        this.doctorAchievementLogService = doctorAchievementLogService;
     }
 
     @PostMapping("/orders")
@@ -367,10 +367,8 @@ public class OrderApi {
         if (Objects.isNull(fruitDoctor)) {
             return ResponseEntity.badRequest().body("鲜果师不存在");
         }
-        //鲜果师客户列表
-        List<DoctorCustomer> doctorCustomerList = doctorCustomerService.selectByDoctorId(fruitDoctor.getId());
-        String userIds = StringUtils.arrayToCommaDelimitedString(doctorCustomerList.parallelStream().map(DoctorCustomer::getUserId).toArray(Object[]::new));
-        baseOrderParam.setUserIds(userIds);
+        List<String> orderCodes = doctorAchievementLogService.selectOrderCodeByDoctorId(fruitDoctor.getId());
+        baseOrderParam.setOrderCodeList(orderCodes);
         baseOrderParam.setOrderType(OrderType.NORMAL);
         baseOrderParam.setApplicationType(ApplicationType.HEALTH_GOOD);
         return orderServiceFeign.ordersPages(baseOrderParam);

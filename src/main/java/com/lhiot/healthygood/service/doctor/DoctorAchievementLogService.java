@@ -142,6 +142,15 @@ public class DoctorAchievementLogService {
     }
 
     /**
+     * 根据鲜果师编号查找业绩订单
+     * @param doctorId
+     * @return
+     */
+    public List<String> selectOrderCodeByDoctorId(Long doctorId){
+        return doctorAchievementLogMapper.selectOrderCodeByDoctorId(doctorId);
+    }
+
+    /**
      * Description:根据ids删除鲜果师业绩记录
      *
      * @param ids
