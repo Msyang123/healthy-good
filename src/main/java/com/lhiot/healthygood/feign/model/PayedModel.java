@@ -24,5 +24,5 @@ public class PayedModel {
 
     @ApiModelProperty(value = "付款时间", dataType = "Date", required = true)
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
-    private Date payAt;
+    private Date paidAt;
 }

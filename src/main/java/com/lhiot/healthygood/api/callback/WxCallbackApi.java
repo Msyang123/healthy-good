@@ -163,7 +163,7 @@ public class WxCallbackApi {
         //修改支付日志
         PayedModel payed = new PayedModel();
         payed.setBankType(parameters.get("bank_type"));
-        payed.setPayAt(DateTime.date(parameters.get("time_end"), "yyyyMMddHHmmss"));
+        payed.setPaidAt(DateTime.date(parameters.get("time_end"), "yyyyMMddHHmmss"));
         //payed.setPayId(parameters.get("out_trade_no"));
         payed.setTradeId(parameters.get("transaction_id"));
         paymentServiceFeign.completed(parameters.get("out_trade_no"), payed);
@@ -189,7 +189,7 @@ public class WxCallbackApi {
 
         PayedModel payed = new PayedModel();
         payed.setBankType(parameters.get("bank_type"));
-        payed.setPayAt(DateTime.date(parameters.get("time_end"), "yyyyMMddHHmmss"));
+        payed.setPaidAt(DateTime.date(parameters.get("time_end"), "yyyyMMddHHmmss"));
         //payed.setPayId(parameters.get("out_trade_no"));
         payed.setTradeId(parameters.get("transaction_id"));
         Tips tips = FeginResponseTools.convertResponse(paymentServiceFeign.completed(parameters.get("out_trade_no"), payed));
