@@ -79,8 +79,12 @@ public class CustomPlanService {
         List<CustomPlanPeriodResult> results = new ArrayList<>();
         CustomPlanPeriodResult customPlanPeriodOfWeekResult = getCustomPlanDetailStandardResult(customPlanId, 7);
         CustomPlanPeriodResult customPlanPeriodOfMonthResult = getCustomPlanDetailStandardResult(customPlanId, 30);
-        results.add(customPlanPeriodOfWeekResult);
-        results.add(customPlanPeriodOfMonthResult);
+        if(Objects.nonNull(customPlanPeriodOfWeekResult.getProducts()) && customPlanPeriodOfWeekResult.getProducts().size()>0) {
+            results.add(customPlanPeriodOfWeekResult);
+        }
+        if(Objects.nonNull(customPlanPeriodOfMonthResult.getProducts()) && customPlanPeriodOfMonthResult.getProducts().size()>0) {
+            results.add(customPlanPeriodOfMonthResult);
+        }
         return results;
     }
 
