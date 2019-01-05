@@ -18,6 +18,7 @@ import com.lhiot.healthygood.feign.ImsServiceFeign;
 import com.lhiot.healthygood.feign.ThirdpartyServerFeign;
 import com.lhiot.healthygood.feign.model.*;
 import com.lhiot.healthygood.feign.type.ApplicationType;
+import com.lhiot.healthygood.mq.HealthyGoodQueue;
 import com.lhiot.healthygood.service.doctor.DoctorAchievementLogService;
 import com.lhiot.healthygood.service.user.DoctorCustomerService;
 import com.lhiot.healthygood.service.user.FruitDoctorService;
@@ -33,6 +34,7 @@ import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 import org.redisson.api.RMapCache;
 import org.redisson.api.RedissonClient;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -73,6 +75,7 @@ public class UserApi {
     private RedissonClient redissonClient;
     private final HealthyGoodConfig.WechatOauthConfig wechatOauth;
     private final ImsServiceFeign imsServiceFeign;
+    private final RabbitTemplate rabbitTemplate;
 
     @Autowired
     public UserApi(WeChatUtil weChatUtil, FruitDoctorUserService fruitDoctorUserService,
@@ -82,7 +85,7 @@ public class UserApi {
                    ObjectProvider<Sessions> sessionsObjectProvider,
                    RedissonClient redissonClient,
                    DoctorAchievementLogService doctorAchievementLogService,
-                   HealthyGoodConfig healthyGoodConfig, ImsServiceFeign imsServiceFeign) {
+                   HealthyGoodConfig healthyGoodConfig, ImsServiceFeign imsServiceFeign, RabbitTemplate rabbitTemplate) {
         this.weChatUtil = weChatUtil;
         this.fruitDoctorUserService = fruitDoctorUserService;
         this.fruitDoctorService = fruitDoctorService;
@@ -94,6 +97,7 @@ public class UserApi {
         this.session = sessionsObjectProvider.getIfAvailable();
         this.wechatOauth = healthyGoodConfig.getWechatOauth();
         this.imsServiceFeign = imsServiceFeign;
+        this.rabbitTemplate = rabbitTemplate;
     }
 
     /*****************************************微信授权登陆*****************************************************/
@@ -124,7 +128,7 @@ public class UserApi {
         }
         AccessToken accessToken = weChatUtil.getAccessTokenByCode(wechatOauth.getAppId(), wechatOauth.getAppSecret(), code);
         RMapCache<String, String> cache = redissonClient.getMapCache(PREFIX_REDIS + "userToken");
-        //将access_token(2小时) 缓存起来
+        //将access_token(2小时) 缓存起来 Fixme 是不是可以去掉，会不会覆盖掉rides里面的时间，因为这里已经重新缓存了
         cache.put("accessToken" + accessToken.getOpenId(), accessToken.getAccessToken(), 2, TimeUnit.HOURS);
         //redis缓存 refresh_token一个月
         cache.put("refreshToken" + accessToken.getOpenId(), accessToken.getRefreshToken(), 30, TimeUnit.DAYS);
@@ -169,6 +173,28 @@ public class UserApi {
         return;
     }
 
+   /* public ResponseEntity accessToken(){
+        RMapCache<String,String> cache=  redissonClient.getMapCache(PREFIX_REDIS+"userToken");
+        //获取access_token(2小时) 缓存
+        String accessToken=cache.get("accessToken"+openid);
+
+        //如果不存在说明redis缓存时间已经到达，需要通过调用weChatUtil.refreshAccessToken()获取
+        if(StringUtils.isEmpty(accessToken)){
+            //获取redis缓存 refresh_token
+            String refreshToken=cache.get("refreshToken"+openid);
+            if(StringUtils.isEmpty(refreshToken)){
+                //TODO 需要和前端协商处理此问题 可以考虑前端缓存超时时间
+                return ResponseEntity.badRequest().body("refreshToken失效 需要重新授权 请求/wechat/login获取调整链接");
+            }
+            //重新刷新accessToken 并放入redis 缓存中
+            AccessToken getAccessToken=weChatUtil.refreshAccessToken(refreshToken);
+            //将access_token(2小时) 缓存起来
+            cache.put("accessToken"+getAccessToken.getOpenId(),getAccessToken.getAccessToken(),2, TimeUnit.HOURS);
+            accessToken=getAccessToken.getAccessToken();
+        }
+        String result=weChatUtil.getOauth2UserInfo(openid,accessToken);
+    }*/
+
     @GetMapping("/session")
     @ApiOperation(value = "根据sessionId重新用户信息*", response = UserDetailResult.class)
     public ResponseEntity userInfo(Sessions.User user) {
@@ -212,6 +238,8 @@ public class UserApi {
                 .collect(Collectors.toList());
         sessionUser.authorities(authorityList);
         String sessionId = session.cache(sessionUser);
+     /*   //刷新access_token 判断access_token 是否过期
+        HealthyGoodQueue.DelayQueue.CANCEL_CUSTOM_ORDER.send(rabbitTemplate, searchUser.getOpenId(), 7100 * 1000);*/
         return ResponseEntity.ok()
                 .header(Sessions.HTTP_HEADER_NAME, sessionId).body(sessionId);
     }
@@ -374,7 +402,7 @@ public class UserApi {
         }
         BalanceLogParam balanceLogParam = new BalanceLogParam();
         //BeanUtils.copyProperties(pagesParam,balanceLogParam);
-        Beans.wrap(balanceLogParam).copyOf(pagesParam);
+        Beans.from(pagesParam).populate(balanceLogParam);
         balanceLogParam.setBaseUserId(users.getBaseUserId());
         balanceLogParam.setApplicationType(ApplicationType.HEALTH_GOOD);
         ResponseEntity responseEntity =  baseUserServerFeign.searchBalanceLog(balanceLogParam);

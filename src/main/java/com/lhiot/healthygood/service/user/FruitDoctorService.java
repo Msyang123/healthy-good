@@ -17,6 +17,7 @@ import com.lhiot.healthygood.feign.model.UserDetailResult;
 import com.lhiot.healthygood.feign.type.OrderStatus;
 import com.lhiot.healthygood.mapper.user.DoctorCustomerMapper;
 import com.lhiot.healthygood.mapper.user.FruitDoctorMapper;
+import com.lhiot.healthygood.mq.HealthyGoodQueue;
 import com.lhiot.healthygood.service.customplan.CustomPlanService;
 import com.lhiot.healthygood.service.doctor.DoctorAchievementLogService;
 import com.lhiot.healthygood.type.BalanceType;
@@ -24,6 +25,8 @@ import com.lhiot.healthygood.type.DoctorLevel;
 import com.lhiot.healthygood.type.DoctorStatus;
 import com.lhiot.healthygood.type.SourceType;
 import lombok.extern.slf4j.Slf4j;
+import org.redisson.api.RedissonClient;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.ResponseEntity;
@@ -52,16 +55,20 @@ public class FruitDoctorService {
     private final BaseUserServerFeign baseUserServerFeign;
     private final CustomPlanService customPlanService;
     private final DoctorAchievementLogService doctorAchievementLogService;
+    private final RabbitTemplate rabbitTemplate;
 
 
     @Autowired
-    public FruitDoctorService(FruitDoctorMapper fruitDoctorMapper, DoctorCustomerMapper doctorCustomerMapper, ApplicationEventPublisher publisher, BaseUserServerFeign baseUserServerFeign, CustomPlanService customPlanService, DoctorAchievementLogService doctorAchievementLogService) {
+    public FruitDoctorService(FruitDoctorMapper fruitDoctorMapper, DoctorCustomerMapper doctorCustomerMapper, ApplicationEventPublisher publisher, BaseUserServerFeign baseUserServerFeign, CustomPlanService customPlanService, DoctorAchievementLogService doctorAchievementLogService, RedissonClient redissonClient, RabbitTemplate rabbitTemplate) {
         this.fruitDoctorMapper = fruitDoctorMapper;
         this.doctorCustomerMapper = doctorCustomerMapper;
         this.publisher = publisher;
         this.baseUserServerFeign = baseUserServerFeign;
         this.customPlanService = customPlanService;
         this.doctorAchievementLogService = doctorAchievementLogService;
+        this.rabbitTemplate = rabbitTemplate;
+        //初始化调用初始化accessToken 7100毫秒后调用
+        HealthyGoodQueue.DelayQueue.REFRESH_ACCESS_TOKEN.send(this.rabbitTemplate, "nothing", 7100*1000);
     }
 
     /**
@@ -80,7 +87,7 @@ public class FruitDoctorService {
         }
         FruitDoctor fruitDoctor = new FruitDoctor();
         //BeanUtils.copyProperties(registerApplication, fruitDoctor);
-        Beans.wrap(fruitDoctor).copyOf(registerApplication);
+        Beans.from(registerApplication).populate(fruitDoctor);
         this.fruitDoctorMapper.create(fruitDoctor);
         fruitDoctor.setRealName(registerApplication.getRealName());
         fruitDoctor.setInviteCode(Random.of(4, Random.Digits._62));

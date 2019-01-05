@@ -301,6 +301,23 @@
         </trim>
     </select>
 
+    <select id="achievementTodayOrderCount" parameterType="map" resultType="Long">
+        SELECT COUNT(
+        order_id) AS orderCount
+        FROM doctor_achievement_log where
+            source_type IN ('ORDER')
+            <if test=" beginTime!=null and endTime != null">
+                AND (DATE_FORMAT(create_at,'%Y-%m-%d') &gt;= #{beginTime} AND DATE_FORMAT(create_at,'%Y-%m-%d') &lt;=
+                #{endTime})
+            </if>
+            <if test="doctorId != null">
+                AND doctor_id = #{doctorId}
+            </if>
+            <if test="userId != null">
+                AND user_id = #{userId}
+            </if>
+    </select>
+
     <!-- lynn 根据订单id查询记录 -->
     <select id="selectByOrderId" parameterType="Long" resultMap="BaseResultMap">
         select

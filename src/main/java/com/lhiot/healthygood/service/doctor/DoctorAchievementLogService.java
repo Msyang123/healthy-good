@@ -245,7 +245,7 @@ public class DoctorAchievementLogService {
     public Achievement achievement(DateTypeEnum dateType, PeriodType periodType,
                                    Long doctorId, boolean statisticalIncome, boolean isAll, Long userId) {
         Achievement achievement = new Achievement();
-        Map<String, String> time = this.beginAndEndTime(dateType, periodType);
+        Map<String, Object> time = this.beginAndEndTime(dateType, periodType);
         if (Objects.isNull(time)) {
             return achievement;
         }
@@ -254,10 +254,19 @@ public class DoctorAchievementLogService {
         if (!isAll) {
             param.putAll(time);
         }
+        Long count = doctorAchievementLogMapper.achievementTodayOrderCount(param);
         //统计业绩
         achievement = doctorAchievementLogMapper.achievement(param);
+        achievement.setOrderCount(count);
         return achievement;
     }
+
+    /*public Long achievementTodayOrderCount(DateTypeEnum dateType, PeriodType periodType,
+                                              Long doctorId){
+        Map<String, Object> time = this.beginAndEndTime(dateType, periodType);
+        time.put("doctorId",doctorId);
+        return doctorAchievementLogMapper.achievementTodayOrderCount(time);
+    }*/
 
     /**
      * 我的团队的个人业绩
@@ -283,8 +292,8 @@ public class DoctorAchievementLogService {
      * @param periodType
      * @return
      */
-    public Map<String, String> beginAndEndTime(DateTypeEnum dateType, PeriodType periodType) {
-        Map<String, String> result = new HashMap<>();
+    public Map<String, Object> beginAndEndTime(DateTypeEnum dateType, PeriodType periodType) {
+        Map<String, Object> result = new HashMap<>();
         int dc = periodType.ordinal();
         String beginTime = null;
         String endTime = null;
