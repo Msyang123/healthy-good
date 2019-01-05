@@ -1,6 +1,7 @@
 package com.lhiot.healthygood.api.user;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.leon.microx.util.Beans;
 import com.leon.microx.web.result.Pages;
 import com.leon.microx.web.result.Tips;
 import com.leon.microx.web.session.Sessions;
@@ -408,7 +409,8 @@ public class FruitDoctorApi {
         Achievement total =
                 doctorAchievementLogService.achievement(DateTypeEnum.DAY, PeriodType.current, fruitDoctor.getId(), true, true, null);
         //构建返回值
-
+       /* Long count  = doctorAchievementLogService.achievementTodayOrderCount(DateTypeEnum.DAY, PeriodType.current, fruitDoctor.getId());
+        current.setOrderCount(count);*/
         current.setSalesToday(current.getSalesAmount());//今日销售额
         current.setSalesAmount(total.getSalesAmount());//总销售额
         ResponseEntity userInfo = baseUserServerFeign.findById(Long.valueOf(userId));

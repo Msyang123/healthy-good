@@ -33,6 +33,7 @@ public interface HealthyGoodQueue {
         SEND_TO_HD("healthy-good.order.sendToHd.exchange", "healthy-good.order.sendToHd.dlx", DelayQueue.SEND_TO_HD_CONSUMER),
         CANCEL_ORDER("healthy-good.order.cancel.exchange", "healthy-good.order.cancel.dlx", DelayQueue.CANCEL_ORDER_CONSUMER),
         CANCEL_CUSTOM_ORDER("healthy-good.custom-order.cancel.exchange", "healthy-good.custom-order.cancel.dlx", DelayQueue.CANCEL_CUSTOM_ORDER_CONSUMER),
+        REFRESH_ACCESS_TOKEN("healthy-good.refresh.accessToken.exchange","healthy-good.refresh.accessToken.dlx",DelayQueue.CACHE_NEW_ACCESS_TOKEN),
         ;
         public static final String AUTO_EXTRACTION_CONSUMER = "healthy-good.custom-order.autoExtraction.receive";//自动提货消费端队列名
         public static final String LAST_EXTRACTION_CONSUMER = "healthy-good.custom-order.lastExtraction.receive";//定制订单到达最后提取时间自动退款处理消费端队列名
@@ -40,6 +41,7 @@ public interface HealthyGoodQueue {
         public static final String SEND_TO_HD_CONSUMER = "healthy-good.order.sendToHd.receive";//延迟发送到海鼎
         public static final String CANCEL_ORDER_CONSUMER ="healthy-good.order.cancel.receive";//三十分钟未支付普通订单取消
         public static final String CANCEL_CUSTOM_ORDER_CONSUMER ="healthy-good.custom-order.cancel.receive";//三十分钟未支付定制订单取消
+        public static final String CACHE_NEW_ACCESS_TOKEN ="healthy-good.refresh.accessToken.receive";//两个小时access_token失效后重新缓存access_token
 
 
         @Getter

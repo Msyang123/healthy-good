@@ -109,6 +109,8 @@ public interface DoctorAchievementLogMapper {
 	//统计鲜果师的业绩
 	Achievement achievement(Map<String, Object> map);
 
+	Long achievementTodayOrderCount(Map<String,Object> map);
+
 	//根据订单id查询记录
 	DoctorAchievementLog selectByOrderId(Long orderId);
 

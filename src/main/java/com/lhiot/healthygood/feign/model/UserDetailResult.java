@@ -6,6 +6,8 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import com.lhiot.healthygood.domain.user.FruitDoctor;
+import com.lhiot.healthygood.feign.type.LockStatus;
+import com.lhiot.healthygood.feign.type.SwitchStatus;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
@@ -67,6 +69,15 @@ public class UserDetailResult {
 
     @ApiModelProperty(notes = "t_base_user的id", dataType = "Long")
     private Long baseUserId;
+
+    @ApiModelProperty(notes = "是否锁定UNLOCKED未锁定LOCK锁定", dataType = "LockStatus")
+    private LockStatus locked;
+
+    @ApiModelProperty(notes = "应用类型", dataType = "String")
+    private String applicationType;
+
+    @ApiModelProperty(notes = "免密支付权限", dataType = "SwitchStatus")
+    private SwitchStatus paymentPermissions;
 
     /**
      *是否为鲜果师(是-true，否-false)
