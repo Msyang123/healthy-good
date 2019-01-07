@@ -1,7 +1,9 @@
 package com.lhiot.healthygood.api.activity;
 
+import com.leon.microx.predefine.OnOff;
 import com.leon.microx.util.Beans;
 import com.leon.microx.util.Maps;
+import com.leon.microx.web.result.Pages;
 import com.leon.microx.web.result.Tips;
 import com.leon.microx.web.session.Sessions;
 import com.leon.microx.web.swagger.ApiParamType;
@@ -11,6 +13,8 @@ import com.lhiot.healthygood.domain.activity.model.ActivityProductResult;
 import com.lhiot.healthygood.domain.good.PagesParam;
 import com.lhiot.healthygood.feign.BaseDataServiceFeign;
 import com.lhiot.healthygood.feign.model.ProductShelf;
+import com.lhiot.healthygood.feign.model.ProductShelfParam;
+import com.lhiot.healthygood.feign.type.ApplicationType;
 import com.lhiot.healthygood.service.activity.ActivityProductRecordService;
 import com.lhiot.healthygood.service.activity.ActivityProductService;
 import com.lhiot.healthygood.service.activity.SpecialProductActivityService;
@@ -62,40 +66,37 @@ public class NewSpecialActivityApi {
         }
         ActivityProduct activityProduct = new ActivityProduct();
         activityProduct.setActivityId(specialProductActivity.getId());
-        //BeanUtils.copyProperties(pagesParam,activityProduct);
         Beans.from(pagesParam).populate(activityProduct);
         List<ActivityProduct> activityProductsList = activityProductService.activityProductList(activityProduct);
+
+        ProductShelfParam productShelfParam = new ProductShelfParam();
+        productShelfParam.setApplicationType(ApplicationType.HEALTH_GOOD);
+        productShelfParam.setShelfStatus(OnOff.ON);
+        ResponseEntity<Pages<ProductShelf>> pagesResponseEntity = baseDataServiceFeign.searchProductShelves(productShelfParam);
+        if (Objects.isNull(pagesResponseEntity) || pagesResponseEntity.getStatusCode().isError()) {
+            return pagesResponseEntity;
+        }
+        List<ProductShelf> productShelves = pagesResponseEntity.getBody().getArray();
         List<ActivityProducts> activityProducts = new ArrayList<ActivityProducts>();
-
         Long userId = Long.valueOf(user.getUser().get("userId").toString());
-        activityProductsList.forEach(item -> {
-            //从基础服务里查上架商品
-            ResponseEntity<ProductShelf> shelfProductResponse = baseDataServiceFeign.singleShelf(item.getProductShelfId(),false);
-            Tips<ProductShelf> tips = FeginResponseTools.convertResponse(shelfProductResponse);
-            if (tips.err()){
-                return ;
-            }
-            ProductShelf productShelf = shelfProductResponse.getBody();
-            if (Objects.isNull(productShelf)){
-                return;
-            }
-            ActivityProducts product = new ActivityProducts();
-            //BeanUtils.copyProperties(productShelf,product);
-            Beans.from(productShelf).populate(product);
-            product.setPrice(Objects.isNull(productShelf.getPrice()) ? productShelf.getOriginalPrice() : productShelf.getPrice());
-            product.setProductName(productShelf.getName());
-
-            ActivityProductRecord activityProductRecord = new ActivityProductRecord();
-            activityProductRecord.setUserId(userId);
-            activityProductRecord.setProductShelfId(productShelf.getId());
-            Integer alreadyCount = activityProductRecordService.selectRecordCount(activityProductRecord);
-            product.setAlreadyBuyCount(alreadyCount);
-            product.setShelfId(item.getProductShelfId());
-            product.setActivityPrice(item.getActivityPrice());
-            activityProducts.add(product);
-        });
+        productShelves.forEach(productShelf -> activityProductsList.stream()
+                .filter(s -> Objects.equals(productShelf.getId(), s.getProductShelfId()))
+                .forEach(item -> {
+                    ActivityProductRecord activityProductRecord = new ActivityProductRecord();
+                    activityProductRecord.setUserId(userId);
+                    activityProductRecord.setProductShelfId(item.getProductShelfId());
+                    Integer alreadyCount = activityProductRecordService.selectRecordCount(activityProductRecord);
+                    ActivityProducts product = new ActivityProducts();
+                    //BeanUtils.copyProperties(productShelf,product);
+                    Beans.from(productShelf).populate(product);
+                    product.setPrice(Objects.isNull(productShelf.getPrice()) ? productShelf.getOriginalPrice() : productShelf.getPrice());
+                    product.setProductName(productShelf.getName());
+                    product.setAlreadyBuyCount(alreadyCount);
+                    product.setShelfId(item.getProductShelfId());
+                    product.setActivityPrice(item.getActivityPrice());
+                    activityProducts.add(product);
+                }));
         NewSpecialResult newSpecialResult = new NewSpecialResult();
-        //BeanUtils.copyProperties(specialProductActivity,newSpecialResult);
         Beans.from(specialProductActivity).populate(newSpecialResult);
         newSpecialResult.setActivityProductList(activityProducts);
         return ResponseEntity.ok(newSpecialResult);
