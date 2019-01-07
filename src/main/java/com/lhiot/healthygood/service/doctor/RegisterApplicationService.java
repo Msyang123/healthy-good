@@ -148,7 +148,7 @@ public class RegisterApplicationService {
             // 设置要添加的鲜果师信息
             FruitDoctor fruitDoctor = new FruitDoctor();
            // BeanUtils.copyProperties(registerApplication, fruitDoctor);
-            Beans.wrap(fruitDoctor).copyOf(registerApplication);
+            Beans.from(registerApplication).populate(fruitDoctor);
             fruitDoctor.setRealName(registerApplication.getRealName());
             fruitDoctor.setInviteCode(Random.of(4, Random.Digits._62));
             fruitDoctor.setDoctorLevel(DoctorLevel.TRAINING.toString());

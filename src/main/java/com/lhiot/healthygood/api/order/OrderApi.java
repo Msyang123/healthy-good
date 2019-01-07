@@ -184,7 +184,7 @@ public class OrderApi {
                 .filter(productShelf -> Objects.equals(orderProduct.getShelfId(), productShelf.getId()))
                 .forEach(item -> {
                     //BeanUtils.of(orderProduct).ignoreField("id").populate(item);//忽略掉id 对象赋值
-                    Beans.wrap(orderProduct).copyOf(item);
+                    Beans.from(item).populate(orderProduct);
                     //设置规格信息
                     ProductSpecification productSpecification = item.getProductSpecification();
                     orderProduct.setBarcode(productSpecification.getBarcode());

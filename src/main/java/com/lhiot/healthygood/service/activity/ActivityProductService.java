@@ -167,7 +167,7 @@ public class ActivityProductService {
         // 查询活动商品信息
         ActivityProduct activityProduct = new ActivityProduct();
         //BeanUtils.of(activityProduct).populate(param);
-        Beans.wrap(activityProduct).copyOf(param);
+        Beans.from(param).populate(activityProduct);
         // 根据查询条件获取上架ids
         if (Objects.nonNull(param.getBarcode()) || Objects.nonNull(param.getName())) {
             ProductShelfParam productShelfParam = new ProductShelfParam();
@@ -212,11 +212,11 @@ public class ActivityProductService {
                 activityProductList.forEach(item -> {
                     ActivityProductResult activityProductResult = new ActivityProductResult();
                    // BeanUtils.copyProperties(item, activityProductResult);
-                    Beans.wrap(activityProductResult).copyOf(item);
+                    Beans.from(item).populate(activityProductResult);
                     productShelfList.forEach(productShelf -> {
                         if (Objects.equals(activityProductResult.getProductShelfId(), productShelf.getId())){
                            // BeanUtils.copyProperties(productShelf,activityProductResult);
-                            Beans.wrap(activityProductResult).copyOf(productShelf);
+                            Beans.from(productShelf).populate(activityProductResult);
                             ProductSpecification productSpecification  = productShelf.getProductSpecification();
                             if (Objects.nonNull(productSpecification)) {
                                 String specification = productSpecification.getWeight() + productSpecification.getPackagingUnit() + "*" + productSpecification.getSpecificationQty() + "份";

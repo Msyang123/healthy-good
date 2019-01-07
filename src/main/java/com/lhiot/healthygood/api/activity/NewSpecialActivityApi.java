@@ -63,7 +63,7 @@ public class NewSpecialActivityApi {
         ActivityProduct activityProduct = new ActivityProduct();
         activityProduct.setActivityId(specialProductActivity.getId());
         //BeanUtils.copyProperties(pagesParam,activityProduct);
-        Beans.wrap(activityProduct).copyOf(pagesParam);
+        Beans.from(pagesParam).populate(activityProduct);
         List<ActivityProduct> activityProductsList = activityProductService.activityProductList(activityProduct);
         List<ActivityProducts> activityProducts = new ArrayList<ActivityProducts>();
 
@@ -81,7 +81,7 @@ public class NewSpecialActivityApi {
             }
             ActivityProducts product = new ActivityProducts();
             //BeanUtils.copyProperties(productShelf,product);
-            Beans.wrap(product).copyOf(productShelf);
+            Beans.from(productShelf).populate(product);
             product.setPrice(Objects.isNull(productShelf.getPrice()) ? productShelf.getOriginalPrice() : productShelf.getPrice());
             product.setProductName(productShelf.getName());
 
@@ -96,7 +96,7 @@ public class NewSpecialActivityApi {
         });
         NewSpecialResult newSpecialResult = new NewSpecialResult();
         //BeanUtils.copyProperties(specialProductActivity,newSpecialResult);
-        Beans.wrap(newSpecialResult).copyOf(specialProductActivity);
+        Beans.from(specialProductActivity).populate(newSpecialResult);
         newSpecialResult.setActivityProductList(activityProducts);
         return ResponseEntity.ok(newSpecialResult);
     }
