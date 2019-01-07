@@ -28,7 +28,7 @@ public interface HealthyGoodQueue {
     enum DelayQueue implements HealthyGoodQueue {
 
         AUTO_EXTRACTION("healthy-good.custom-order.autoExtraction.exchange", "healthy-good.custom-order.autoExtraction.dlx", DelayQueue.AUTO_EXTRACTION_CONSUMER),
-        LAST_EXTRACTION("healthy-good.custom-order.lastExtraction.exchange", "healthy-good.custom-order.lastExtraction.-dlx", DelayQueue.LAST_EXTRACTION_CONSUMER),
+        LAST_EXTRACTION("healthy-good.custom-order.lastExtraction.exchange", "healthy-good.custom-order.lastExtraction.dlx", DelayQueue.LAST_EXTRACTION_CONSUMER),
         UPDATE_CUSTOM_ORDER_STATUS("healthy-good.custom-order.status.exchange", "healthy-good.custom-order.status.dlx", DelayQueue.UPDATE_CUSTOM_ORDER_STATUS_CONSUMER),
         SEND_TO_HD("healthy-good.order.sendToHd.exchange", "healthy-good.order.sendToHd.dlx", DelayQueue.SEND_TO_HD_CONSUMER),
         CANCEL_ORDER("healthy-good.order.cancel.exchange", "healthy-good.order.cancel.dlx", DelayQueue.CANCEL_ORDER_CONSUMER),
