@@ -28,9 +28,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Api(description = "商品板块类接口")
 @Slf4j
@@ -60,6 +59,7 @@ public class ProductSectionApi {
     public ResponseEntity<Pages<ProductShelf>> productSections(@PathVariable("id") Long id, @RequestBody com.lhiot.healthygood.domain.good.ProductSectionParam productSectionParam) {
         ProductShelfParam productShelfParam = new ProductShelfParam();
         productShelfParam.setSectionId(id);
+        productShelfParam.setShelfStatus(OnOff.ON);
         //BeanUtils.copyProperties(productSectionParam,productShelfParam);
         Beans.from(productSectionParam).populate(productShelfParam);
         ResponseEntity<Pages<ProductShelf>> pagesResponseEntity = baseDataServiceFeign.searchProductShelves(productShelfParam);
@@ -99,7 +99,7 @@ public class ProductSectionApi {
         List<ProductSection> productSections = pagesResponseEntity.getBody().getArray();
         productSections.stream().filter(Objects::nonNull).forEach(productSection ->{
                 if (Objects.nonNull(productSection.getProductShelfList())){
-                    productSection.getProductShelfList().stream().filter(Objects::nonNull).forEach(productShelf ->{
+                    productSection.getProductShelfList().stream().filter(s -> Objects.equals(OnOff.ON,s.getShelfStatus())).forEach(productShelf ->{
                         productShelf.setPrice(Objects.isNull(productShelf.getPrice()) ? productShelf.getOriginalPrice() : productShelf.getPrice());
                     });
                 }
@@ -179,6 +179,7 @@ public class ProductSectionApi {
         ProductShelfParam productShelfParam = new ProductShelfParam();
         productShelfParam.setIds(ids);
         productShelfParam.setApplicationType(ApplicationType.HEALTH_GOOD);
+        productShelfParam.setShelfStatus(OnOff.ON);
         ResponseEntity<Pages<ProductShelf>> pagesResponseEntity = baseDataServiceFeign.searchProductShelves(productShelfParam);
         if (Objects.isNull(pagesResponseEntity) || pagesResponseEntity.getStatusCode().isError()) {
             return pagesResponseEntity;
@@ -249,7 +250,15 @@ public class ProductSectionApi {
         productSectionParam.setPositionIds(StringUtils.collectionToDelimitedString(positionIds,","));
         productSectionParam.setIncludeShelves(true);
         ResponseEntity<Pages<ProductSection>> pagesResponseEntity = baseDataServiceFeign.searchProductSection(productSectionParam);
-        return ResponseEntity.ok(pagesResponseEntity.getBody().getArray().get(0));
+        if (Objects.isNull(pagesResponseEntity) || pagesResponseEntity.getStatusCode().isError()){
+            return pagesResponseEntity;
+        }
+        List<ProductSection> productSections = pagesResponseEntity.getBody().getArray();
+        return ResponseEntity.ok(productSections.stream().map(productSection -> {
+            List<ProductShelf> productShelves = productSection.getProductShelfList().stream().filter(s -> Objects.equals(OnOff.ON,s.getShelfStatus())).sorted(Comparator.comparing(ProductShelf::getSorting)).collect(Collectors.toList());
+            productSection.setProductShelfList(productShelves);
+            return productSection;
+        }).collect(Collectors.toList()).get(0));
     }
 
 }

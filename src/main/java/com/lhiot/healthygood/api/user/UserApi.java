@@ -128,7 +128,7 @@ public class UserApi {
         }
         AccessToken accessToken = weChatUtil.getAccessTokenByCode(wechatOauth.getAppId(), wechatOauth.getAppSecret(), code);
         RMapCache<String, String> cache = redissonClient.getMapCache(PREFIX_REDIS + "userToken");
-        //将access_token(2小时) 缓存起来 Fixme 是不是可以去掉，会不会覆盖掉rides里面的时间，因为这里已经重新缓存了
+        //将access_token(2小时) 缓存起来
         cache.put("accessToken" + accessToken.getOpenId(), accessToken.getAccessToken(), 2, TimeUnit.HOURS);
         //redis缓存 refresh_token一个月
         cache.put("refreshToken" + accessToken.getOpenId(), accessToken.getRefreshToken(), 30, TimeUnit.DAYS);
@@ -149,7 +149,10 @@ public class UserApi {
             }
             UserDetailResult userDetailResult = (UserDetailResult) tips.getData();
             DoctorCustomer doctorCustomerParam = new DoctorCustomer();
-            doctorCustomerParam.setDoctorId(fruitDoctor.getId());
+            if ( Objects.nonNull(fruitDoctor)) {
+
+                doctorCustomerParam.setDoctorId(fruitDoctor.getId());
+            }
             doctorCustomerParam.setUserId(userDetailResult.getId());
             doctorCustomerParam.setRemark(userDetailResult.getNickname());
             doctorCustomerParam.setOpenId(userDetailResult.getOpenId());
