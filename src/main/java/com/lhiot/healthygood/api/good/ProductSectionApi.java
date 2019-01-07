@@ -61,7 +61,7 @@ public class ProductSectionApi {
         ProductShelfParam productShelfParam = new ProductShelfParam();
         productShelfParam.setSectionId(id);
         //BeanUtils.copyProperties(productSectionParam,productShelfParam);
-        Beans.wrap(productShelfParam).copyOf(productSectionParam);
+        Beans.from(productSectionParam).populate(productShelfParam);
         ResponseEntity<Pages<ProductShelf>> pagesResponseEntity = baseDataServiceFeign.searchProductShelves(productShelfParam);
         return pagesResponseEntity;
     }
@@ -129,7 +129,7 @@ public class ProductSectionApi {
         }
         ProductDetailResult detailResult = new ProductDetailResult();
         //BeanUtils.copyProperties(productShelf,detailResult);
-        Beans.wrap(detailResult).copyOf(productShelf);
+        Beans.from(productShelf).populate(detailResult);
         //商品图片对象
         Product product = productShelf.getProductSpecification().getProduct();
         List<String> subImgs = new ArrayList<>();
