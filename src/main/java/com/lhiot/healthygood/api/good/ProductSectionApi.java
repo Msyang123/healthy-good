@@ -98,14 +98,19 @@ public class ProductSectionApi {
         ResponseEntity<Pages<ProductSection>> pagesResponseEntity = baseDataServiceFeign.searchProductSection(productSectionParam);
         List<ProductSection> productSections = pagesResponseEntity.getBody().getArray();
         productSections.stream().filter(Objects::nonNull).forEach(productSection ->{
-                if (Objects.nonNull(productSection.getProductShelfList())){
+            List<ProductShelf> products = new ArrayList<>();
+            if (Objects.nonNull(productSection.getProductShelfList())){
                     productSection.getProductShelfList().stream().filter(s -> Objects.equals(OnOff.ON,s.getShelfStatus())).forEach(productShelf ->{
                         productShelf.setPrice(Objects.isNull(productShelf.getPrice()) ? productShelf.getOriginalPrice() : productShelf.getPrice());
+                        products.add(productShelf);
                     });
                 }
+                productSection.setProductShelfList(products);
             }
         );
-        return pagesResponseEntity;
+        Pages<ProductSection> pages = new Pages<>();
+        pages.setArray(productSections);
+        return ResponseEntity.ok().body(pages);
     }
 
     public void setPrice(List<ProductShelf> productShelves){

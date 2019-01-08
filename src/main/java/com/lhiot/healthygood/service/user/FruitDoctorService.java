@@ -323,7 +323,7 @@ public class FruitDoctorService {
                 return;
             }
             if (Objects.equals(OrderStatus.WAIT_SEND_OUT, orderDetailResult.getStatus()) || Objects.equals(OrderStatus.DISPATCHING, orderDetailResult.getStatus())
-            || Objects.equals(OrderStatus.ALREADY_RETURN, orderDetailResult.getStatus())){
+            || Objects.equals(OrderStatus.ALREADY_RETURN, orderDetailResult.getStatus()) || Objects.equals(OrderStatus.RETURNING, orderDetailResult.getStatus())){
                 if (doctorAchievementLogService.create(doctorAchievementLog) < 0) {
                     log.error(str + "存入失败");
                 }

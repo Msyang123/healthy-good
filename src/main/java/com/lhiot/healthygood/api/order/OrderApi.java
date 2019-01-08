@@ -104,6 +104,9 @@ public class OrderApi {
 
         Map<String, Object> sessionUserMap = user.getUser();
         Long userId = Long.valueOf(sessionUserMap.get("userId").toString());
+        if (Objects.isNull(userId)){
+            return ResponseEntity.badRequest().body("用户不存在");
+        }
         orderParam.setUserId(userId);//设置业务用户id
         orderParam.setApplicationType(ApplicationType.HEALTH_GOOD);
         orderParam.setOrderType(OrderType.NORMAL);//普通订单
@@ -342,7 +345,9 @@ public class OrderApi {
                 break;
 
         }
-        fruitDoctorService.calculationCommission(orderDetailResult);
+        ResponseEntity orderDetail = validateOrderOwner(userId, orderCode);
+        OrderDetailResult orderResult = (OrderDetailResult) orderDetail.getBody();
+        fruitDoctorService.calculationCommission(orderResult);
         return refundOrder;
     }
 
