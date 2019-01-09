@@ -69,7 +69,7 @@ public interface PaymentServiceFeign {
 
     /***********支付退款***********************************/
     //支付 - 退款（支持部分、多次退款）
-    @RequestMapping(value = "/payed/{outTradeNo}/refunds", method = RequestMethod.POST)
+    @RequestMapping(value = "/paid/{outTradeNo}/refunds", method = RequestMethod.POST)
     ResponseEntity refund(@PathVariable("outTradeNo") String outTradeNo, @Valid @RequestBody RefundModel refund);
 
     @RequestMapping(value = "/refunds/{outRefundNo}/completed", method = RequestMethod.PUT)
