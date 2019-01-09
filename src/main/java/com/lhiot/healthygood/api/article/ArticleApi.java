@@ -33,7 +33,7 @@ public class ArticleApi {
     public ResponseEntity<Pages<Article>> searchArticle(@RequestBody ArticleSearchParam articleSearchParam){
         ArticleParam articleParam = new ArticleParam();
        // BeanUtils.of(articleParam).populate(articleSearchParam);
-        Beans.from(articleSearchParam).populate(articleParam);
+        Beans.from(articleSearchParam).to(articleParam);
         articleParam.setArticleStatus(ArticleStatus.PUBLISH);
         return baseDataServiceFeign.searchArticle(articleParam);
     }

@@ -87,7 +87,7 @@ public class FruitDoctorService {
         }
         FruitDoctor fruitDoctor = new FruitDoctor();
         //BeanUtils.copyProperties(registerApplication, fruitDoctor);
-        Beans.from(registerApplication).populate(fruitDoctor);
+        Beans.from(registerApplication).to(fruitDoctor);
         this.fruitDoctorMapper.create(fruitDoctor);
         fruitDoctor.setRealName(registerApplication.getRealName());
         fruitDoctor.setInviteCode(Random.of(4, Random.Digits._62));

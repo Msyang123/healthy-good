@@ -405,7 +405,7 @@ public class UserApi {
         }
         BalanceLogParam balanceLogParam = new BalanceLogParam();
         //BeanUtils.copyProperties(pagesParam,balanceLogParam);
-        Beans.from(pagesParam).populate(balanceLogParam);
+        Beans.from(pagesParam).to(balanceLogParam);
         balanceLogParam.setBaseUserId(users.getBaseUserId());
         balanceLogParam.setApplicationType(ApplicationType.HEALTH_GOOD);
         ResponseEntity responseEntity =  baseUserServerFeign.searchBalanceLog(balanceLogParam);
