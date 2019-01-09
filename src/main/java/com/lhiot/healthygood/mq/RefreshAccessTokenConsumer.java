@@ -37,7 +37,9 @@ public class RefreshAccessTokenConsumer {
     @RabbitListener(queues = HealthyGoodQueue.DelayQueue.CACHE_NEW_ACCESS_TOKEN)
     public void refreshAccessToken() {
         try {
-            RMapCache<String,String> cache=  redissonClient.getMapCache(PREFIX_REDIS+"accessToken");
+            RMapCache<String,String> cache=  redissonClient.getMapCache(PREFIX_REDIS+"acce" +
+                    "" +
+                    "ssToken");
             //获取access_token(2小时) 缓存
             String accessToken=cache.get("accessToken");
             if(Objects.isNull(accessToken)){
