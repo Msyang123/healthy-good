@@ -9,10 +9,7 @@ import com.lhiot.healthygood.domain.customplan.CustomOrder;
 import com.lhiot.healthygood.domain.customplan.CustomOrderDelivery;
 import com.lhiot.healthygood.feign.DeliverServiceFeign;
 import com.lhiot.healthygood.feign.OrderServiceFeign;
-import com.lhiot.healthygood.feign.model.DeliverTime;
-import com.lhiot.healthygood.feign.model.DeliverUpdate;
-import com.lhiot.healthygood.feign.model.DeliveryParam;
-import com.lhiot.healthygood.feign.model.OrderDetailResult;
+import com.lhiot.healthygood.feign.model.*;
 import com.lhiot.healthygood.feign.type.*;
 import com.lhiot.healthygood.mapper.customplan.CustomOrderDeliveryMapper;
 import com.lhiot.healthygood.mapper.customplan.CustomOrderMapper;
@@ -51,6 +48,7 @@ public class OrderService {
     private final OrderServiceFeign orderServiceFeign;
     private final DeliverServiceFeign deliverServiceFeign;
     private final HealthyGoodConfig.DeliverConfig deliverConfig;
+    private final HealthyGoodConfig.WechatPayConfig wechatPayConfig;
     private final CommonService commonService;
     private final CustomOrderMapper customOrderMapper;
     private final CustomOrderDeliveryMapper customOrderDeliveryMapper;
@@ -66,6 +64,7 @@ public class OrderService {
         this.orderServiceFeign = orderServiceFeign;
         this.deliverServiceFeign = deliverServiceFeign;
         this.deliverConfig = healthyGoodConfig.getDeliver();
+        this.wechatPayConfig= healthyGoodConfig.getWechatPay();
         this.commonService = commonService;
         this.customOrderMapper = customOrderMapper;
         this.customOrderDeliveryMapper = customOrderDeliveryMapper;
@@ -154,7 +153,9 @@ public class OrderService {
                         log.info("定制订单发送基础服务订单实际未支付退货（无需退款）{}", notPayedRefundResponse);
                     } else {
                         //普通订单
-                        Tips refundOrderTips = FeginResponseTools.convertResponse(orderServiceFeign.refundOrder(orderDetailResult.getCode(), null));//此处为用户依据申请了退货了，海鼎回调中不需要再告知基础服务退货列表
+                        ReturnOrderParam returnOrderParam =new ReturnOrderParam();
+                        returnOrderParam.setNotifyUrl(wechatPayConfig.getOrderRefundCallbackUrl());
+                        Tips refundOrderTips = FeginResponseTools.convertResponse(orderServiceFeign.refundOrder(orderDetailResult.getCode(), returnOrderParam));//此处为用户依据申请了退货了，海鼎回调中不需要再告知基础服务退货列表
                         if (refundOrderTips.err()) {
                             log.error("调用基础服务 refundOrder失败{}", orderDetailResult);
                             return Tips.warn(String.valueOf(orderDetailResultResponseEntity.getBody()));
