@@ -87,7 +87,7 @@ public class FruitDoctorService {
         }
         FruitDoctor fruitDoctor = new FruitDoctor();
         //BeanUtils.copyProperties(registerApplication, fruitDoctor);
-        Beans.from(registerApplication).populate(fruitDoctor);
+        Beans.from(registerApplication).to(fruitDoctor);
         this.fruitDoctorMapper.create(fruitDoctor);
         fruitDoctor.setRealName(registerApplication.getRealName());
         fruitDoctor.setInviteCode(Random.of(4, Random.Digits._62));
@@ -323,7 +323,7 @@ public class FruitDoctorService {
                 return;
             }
             if (Objects.equals(OrderStatus.WAIT_SEND_OUT, orderDetailResult.getStatus()) || Objects.equals(OrderStatus.DISPATCHING, orderDetailResult.getStatus())
-            || Objects.equals(OrderStatus.ALREADY_RETURN, orderDetailResult.getStatus())){
+            || Objects.equals(OrderStatus.ALREADY_RETURN, orderDetailResult.getStatus()) || Objects.equals(OrderStatus.RETURNING, orderDetailResult.getStatus())){
                 if (doctorAchievementLogService.create(doctorAchievementLog) < 0) {
                     log.error(str + "存入失败");
                 }

@@ -104,6 +104,9 @@ public class OrderApi {
 
         Map<String, Object> sessionUserMap = user.getUser();
         Long userId = Long.valueOf(sessionUserMap.get("userId").toString());
+        if (Objects.isNull(userId)){
+            return ResponseEntity.badRequest().body("用户不存在");
+        }
         orderParam.setUserId(userId);//设置业务用户id
         orderParam.setApplicationType(ApplicationType.HEALTH_GOOD);
         orderParam.setOrderType(OrderType.NORMAL);//普通订单
@@ -184,7 +187,7 @@ public class OrderApi {
                 .filter(productShelf -> Objects.equals(orderProduct.getShelfId(), productShelf.getId()))
                 .forEach(item -> {
                     //BeanUtils.of(orderProduct).ignoreField("id").populate(item);//忽略掉id 对象赋值
-                    Beans.from(item).populate(orderProduct);
+                    Beans.from(item).to(orderProduct);
                     //设置规格信息
                     ProductSpecification productSpecification = item.getProductSpecification();
                     orderProduct.setBarcode(productSpecification.getBarcode());
@@ -253,7 +256,7 @@ public class OrderApi {
     @DeleteMapping("/orders/{orderCode}")
     @ApiOperation("和色果膳--取消订单*")
     @ApiImplicitParam(paramType = "path", name = "orderCode", dataType = "String", required = true, value = "订单id")
-    public ResponseEntity createOrder(@Valid @NotBlank @PathVariable("orderCode") String orderCode, Sessions.User user) {
+    public ResponseEntity cancelOrder(@Valid @NotBlank @PathVariable("orderCode") String orderCode, Sessions.User user) {
         Long userId = Long.valueOf(user.getUser().get("userId").toString());
         ResponseEntity validateResult = validateOrderOwner(userId, orderCode);
         if (Objects.isNull(validateResult) || validateResult.getStatusCode().isError()) {
@@ -342,7 +345,9 @@ public class OrderApi {
                 break;
 
         }
-        fruitDoctorService.calculationCommission(orderDetailResult);
+        ResponseEntity orderDetail = validateOrderOwner(userId, orderCode);
+        OrderDetailResult orderResult = (OrderDetailResult) orderDetail.getBody();
+        fruitDoctorService.calculationCommission(orderResult);
         return refundOrder;
     }
 
@@ -367,7 +372,10 @@ public class OrderApi {
         }
         List<DoctorAchievementLog> doctorAchievementLogs = doctorAchievementLogService.selectOrderCodeByDoctorId(fruitDoctor.getId());
         if (doctorAchievementLogs.size()<=0){
-            return ResponseEntity.ok().body(new Pages<OrderDetailResult>());
+            Pages p = new Pages();
+            p.setArray(new ArrayList<>());
+            p.setTotal(0);
+            return ResponseEntity.ok(p);
         }
         List<String> orderCodes = new ArrayList<>();
         doctorAchievementLogs.forEach(doctorAchievementLog -> {
@@ -375,7 +383,16 @@ public class OrderApi {
         });
         baseOrderParam.setOrderCodeList(orderCodes);
         baseOrderParam.setApplicationType(ApplicationType.HEALTH_GOOD);
-        return orderServiceFeign.ordersPages(baseOrderParam);
+        ResponseEntity responseEntity = orderServiceFeign.ordersPages(baseOrderParam);
+        if (Objects.isNull(responseEntity) || responseEntity.getStatusCode().isError()){
+            return responseEntity;
+        }
+        Pages<OrderDetailResult> pages = (Pages<OrderDetailResult>) responseEntity.getBody();
+        if (Objects.isNull(pages.getArray())){
+            pages.setArray(new ArrayList<>());
+            pages.setTotal(0);
+        }
+        return ResponseEntity.ok(pages);
     }
 
     @Sessions.Uncheck

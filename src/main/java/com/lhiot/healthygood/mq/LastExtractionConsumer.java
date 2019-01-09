@@ -74,6 +74,13 @@ public class LastExtractionConsumer {
             refundModel.setReason("定制订单超过最后提取日期");
             ResponseEntity responseEntity = paymentServiceFeign.refund(customOrder.getPayId(),refundModel);
             log.info("定制最后提取日期消费端 发送退款申请{}",responseEntity);
+            if(Objects.nonNull(responseEntity)&&responseEntity.getStatusCode().is2xxSuccessful()){
+                //更新定制为完成
+                CustomOrder updateCustomOrder =new CustomOrder();
+                updateCustomOrder.setCustomOrderCode(customOrderCode);
+                updateCustomOrder.setStatus(CustomOrderStatus.FINISHED);
+                customOrderService.updateByCode(updateCustomOrder);
+            }
         } catch (Exception e) {
             // 异常、队列消息
             publisher.mqConsumerException(e, Maps.of("message", "最后提取日期操作退款消费失败"));

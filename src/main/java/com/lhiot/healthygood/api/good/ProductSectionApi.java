@@ -61,7 +61,7 @@ public class ProductSectionApi {
         productShelfParam.setSectionId(id);
         productShelfParam.setShelfStatus(OnOff.ON);
         //BeanUtils.copyProperties(productSectionParam,productShelfParam);
-        Beans.from(productSectionParam).populate(productShelfParam);
+        Beans.from(productSectionParam).to(productShelfParam);
         ResponseEntity<Pages<ProductShelf>> pagesResponseEntity = baseDataServiceFeign.searchProductShelves(productShelfParam);
         return pagesResponseEntity;
     }
@@ -98,14 +98,19 @@ public class ProductSectionApi {
         ResponseEntity<Pages<ProductSection>> pagesResponseEntity = baseDataServiceFeign.searchProductSection(productSectionParam);
         List<ProductSection> productSections = pagesResponseEntity.getBody().getArray();
         productSections.stream().filter(Objects::nonNull).forEach(productSection ->{
-                if (Objects.nonNull(productSection.getProductShelfList())){
+            List<ProductShelf> products = new ArrayList<>();
+            if (Objects.nonNull(productSection.getProductShelfList())){
                     productSection.getProductShelfList().stream().filter(s -> Objects.equals(OnOff.ON,s.getShelfStatus())).forEach(productShelf ->{
                         productShelf.setPrice(Objects.isNull(productShelf.getPrice()) ? productShelf.getOriginalPrice() : productShelf.getPrice());
+                        products.add(productShelf);
                     });
                 }
+                productSection.setProductShelfList(products);
             }
         );
-        return pagesResponseEntity;
+        Pages<ProductSection> pages = new Pages<>();
+        pages.setArray(productSections);
+        return ResponseEntity.ok().body(pages);
     }
 
     public void setPrice(List<ProductShelf> productShelves){
@@ -129,7 +134,7 @@ public class ProductSectionApi {
         }
         ProductDetailResult detailResult = new ProductDetailResult();
         //BeanUtils.copyProperties(productShelf,detailResult);
-        Beans.from(productShelf).populate(detailResult);
+        Beans.from(productShelf).to(detailResult);
         //商品图片对象
         Product product = productShelf.getProductSpecification().getProduct();
         List<String> subImgs = new ArrayList<>();

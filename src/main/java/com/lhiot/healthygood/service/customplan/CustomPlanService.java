@@ -60,7 +60,7 @@ public class CustomPlanService {
             return result;
         }
         //BeanUtils.copyProperties(customPlan, result);
-        Beans.from(customPlan).populate(result);
+        Beans.from(customPlan).to(result);
         List<CustomPlanPeriodResult> customPlanPeriodResultList = getCustomPlanPeriodResultList(id);
         result.setPeriodList(customPlanPeriodResultList);
         // 最低定制规格价格
@@ -115,7 +115,7 @@ public class CustomPlanService {
             customPlanProducts.forEach(customPlanProduct -> {
                 CustomPlanProductResult customPlanProductResult = new CustomPlanProductResult();
                 //BeanUtils.copyProperties(customPlanProduct, customPlanPeriodResult);
-                Beans.from(customPlanProduct).populate(customPlanPeriodResult);
+                Beans.from(customPlanProduct).to(customPlanPeriodResult);
                 customPlanProductResults.add(customPlanProductResult);
             });
             customPlanPeriodResult.setProducts(customPlanProductResults);
@@ -131,7 +131,7 @@ public class CustomPlanService {
                 .forEach(item -> {
                     CustomPlanProductResult customPlanProductResult = new CustomPlanProductResult();
                     //BeanUtils.copyProperties(customPlanProduct, customPlanProductResult);
-                    Beans.from(customPlanProduct).populate(customPlanProductResult);
+                    Beans.from(customPlanProduct).to(customPlanProductResult);
                     customPlanProductResult.setImage(item.getImage());//设置上架图
                     customPlanProductResult.setProductName(item.getName());//设置上架名称
                     customPlanProductResult.setProductShelfId(item.getShelfId());
@@ -187,7 +187,7 @@ public class CustomPlanService {
         customPlanList.forEach(customPlan -> {
             CustomPlanDetailResult customPlanDetailResult = new CustomPlanDetailResult();
             // BeanUtils.of(customPlanDetailResult).populate(customPlan);
-            Beans.from(customPlan).populate(customPlanDetailResult);
+            Beans.from(customPlan).to(customPlanDetailResult);
             if (!CollectionUtils.isEmpty(customPlanSpecificationList)) {
                 List<CustomPlanSpecification> customPlanSpecifications = customPlanSpecificationList.stream().filter(customPlanSpecification -> Objects.equals(customPlanDetailResult.getId(), customPlanSpecification.getPlanId())).collect(Collectors.toList());
                 // 周期集合
@@ -228,7 +228,7 @@ public class CustomPlanService {
             return Tips.warn("定制计划名称重复，添加失败");
         }
         CustomPlan customPlan = new CustomPlan();
-        Beans.from(customPlanDetailResult).populate(customPlan);
+        Beans.from(customPlanDetailResult).to(customPlan);
         customPlan.setCreateAt(Date.from(Instant.now()));
         boolean addCustomPlan = customPlanMapper.create(customPlan) > 0;
         if (!addCustomPlan) {
@@ -282,7 +282,7 @@ public class CustomPlanService {
                 // 要添加的定制计划商品
                 customPlanPeriodResult.getProducts().forEach(productResult -> {
                     CustomPlanProduct planProduct = new CustomPlanProduct();
-                    Beans.from(productResult).populate(planProduct);
+                    Beans.from(productResult).to(planProduct);
                     planProduct.setPlanPeriod(customPlanPeriodResult.getPlanPeriod());
                     planProduct.setPlanId(customPlanId);
                     planProduct.setSort(planProduct.getDayOfPeriod());
@@ -315,7 +315,7 @@ public class CustomPlanService {
     public Tips update(Long id, CustomPlanDetailResult customPlanDetailResult) {
         CustomPlan customPlan = new CustomPlan();
         //BeanUtils.copyProperties(customPlanDetailResult, customPlan);
-        Beans.from(customPlanDetailResult).populate(customPlan);
+        Beans.from(customPlanDetailResult).to(customPlan);
         customPlan.setId(id);
         customPlan.setCreateAt(Date.from(Instant.now()));
         boolean updateCustomPlan = customPlanMapper.updateById(customPlan) > 0;
@@ -366,7 +366,7 @@ public class CustomPlanService {
                 productList.forEach(productResult -> {
                     // 类型转换
                     CustomPlanProduct product = new CustomPlanProduct();
-                    Beans.from(productResult).populate(product);
+                    Beans.from(productResult).to(product);
                     if (Objects.equals(OptionType.UPDATE, productResult.getOptionType())) {
                         updateProductList.add(product);
                     } else if (Objects.equals(OptionType.INSERT, productResult.getOptionType())) {

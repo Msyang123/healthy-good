@@ -127,11 +127,6 @@ public class UserApi {
             inviteCode = states[1];
         }
         AccessToken accessToken = weChatUtil.getAccessTokenByCode(wechatOauth.getAppId(), wechatOauth.getAppSecret(), code);
-        RMapCache<String, String> cache = redissonClient.getMapCache(PREFIX_REDIS + "userToken");
-        //将access_token(2小时) 缓存起来
-        cache.put("accessToken" + accessToken.getOpenId(), accessToken.getAccessToken(), 2, TimeUnit.HOURS);
-        //redis缓存 refresh_token一个月
-        cache.put("refreshToken" + accessToken.getOpenId(), accessToken.getRefreshToken(), 30, TimeUnit.DAYS);
         FruitDoctor fruitDoctor = null;
         if (StringUtils.isNotBlank(inviteCode)) {
             fruitDoctor = fruitDoctorService.findDoctorByInviteCode(inviteCode);
@@ -176,27 +171,6 @@ public class UserApi {
         return;
     }
 
-   /* public ResponseEntity accessToken(){
-        RMapCache<String,String> cache=  redissonClient.getMapCache(PREFIX_REDIS+"userToken");
-        //获取access_token(2小时) 缓存
-        String accessToken=cache.get("accessToken"+openid);
-
-        //如果不存在说明redis缓存时间已经到达，需要通过调用weChatUtil.refreshAccessToken()获取
-        if(StringUtils.isEmpty(accessToken)){
-            //获取redis缓存 refresh_token
-            String refreshToken=cache.get("refreshToken"+openid);
-            if(StringUtils.isEmpty(refreshToken)){
-                //TODO 需要和前端协商处理此问题 可以考虑前端缓存超时时间
-                return ResponseEntity.badRequest().body("refreshToken失效 需要重新授权 请求/wechat/login获取调整链接");
-            }
-            //重新刷新accessToken 并放入redis 缓存中
-            AccessToken getAccessToken=weChatUtil.refreshAccessToken(refreshToken);
-            //将access_token(2小时) 缓存起来
-            cache.put("accessToken"+getAccessToken.getOpenId(),getAccessToken.getAccessToken(),2, TimeUnit.HOURS);
-            accessToken=getAccessToken.getAccessToken();
-        }
-        String result=weChatUtil.getOauth2UserInfo(openid,accessToken);
-    }*/
 
     @GetMapping("/session")
     @ApiOperation(value = "根据sessionId重新用户信息*", response = UserDetailResult.class)
@@ -229,7 +203,7 @@ public class UserApi {
         }
         UserDetailResult searchUser = (UserDetailResult) searchUserEntity.getBody();
         Sessions.User sessionUser = session.create(request).user(Maps.of("userId", searchUser.getId(), "baseUserId",searchUser.getBaseUserId(),
-                "openId", searchUser.getOpenId())).timeToLive(3, TimeUnit.HOURS);
+                "openId", searchUser.getOpenId())).timeToLive(30, TimeUnit.MINUTES);
         //sessionUser.authorities(Authority.of("/**", RequestMethod.values()));
         ResponseEntity imsOperationRes = imsServiceFeign.selectAuthority();
         if (imsOperationRes.getStatusCode().isError()){
@@ -405,7 +379,7 @@ public class UserApi {
         }
         BalanceLogParam balanceLogParam = new BalanceLogParam();
         //BeanUtils.copyProperties(pagesParam,balanceLogParam);
-        Beans.from(pagesParam).populate(balanceLogParam);
+        Beans.from(pagesParam).to(balanceLogParam);
         balanceLogParam.setBaseUserId(users.getBaseUserId());
         balanceLogParam.setApplicationType(ApplicationType.HEALTH_GOOD);
         ResponseEntity responseEntity =  baseUserServerFeign.searchBalanceLog(balanceLogParam);
