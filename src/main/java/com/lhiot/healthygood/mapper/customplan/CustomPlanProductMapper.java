@@ -78,6 +78,16 @@ public interface CustomPlanProductMapper {
     CustomPlanProduct selectById(Long id);
 
     /**
+     * Description:根据商品上镜啊iid查找定制计划关联商品
+     *
+     * @param shelfId
+     * @return
+     * @author hufan
+     * @date 2019/01/09 10:48:47
+     */
+    List<CustomPlanProduct> selectByShelfId(Long shelfId);
+
+    /**
      * 依据定制计划和周期查询定制商品列表
      * @param param
      * @return

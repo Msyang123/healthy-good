@@ -6,8 +6,8 @@ import com.leon.microx.web.result.Tips;
 import com.leon.microx.web.session.Sessions;
 import com.leon.microx.web.swagger.ApiParamType;
 import com.lhiot.dc.dictionary.module.Dictionary;
+import com.lhiot.healthygood.domain.customplan.CustomPlan;
 import com.lhiot.healthygood.domain.customplan.CustomPlanAndSpecification;
-import com.lhiot.healthygood.domain.customplan.CustomPlanProduct;
 import com.lhiot.healthygood.domain.customplan.model.CustomPlanDetailResult;
 import com.lhiot.healthygood.domain.customplan.model.CustomPlanParam;
 import com.lhiot.healthygood.service.customplan.CustomPlanService;
@@ -140,6 +140,17 @@ public class CustomPlanApi {
     @ApiOperation(value = "定制计划最大暂停天数")
     public ResponseEntity<Dictionary> customPlanMaxPauseDay() {
         return ResponseEntity.ok(customPlanService.customPlanMaxPauseDay());
+    }
+
+    @Sessions.Uncheck
+    @ApiOperation(value = "根据上架商品id查询关联的定制计划列表(后台)", response = CustomPlan.class, responseContainer = "List")
+    @ApiImplicitParam(paramType = ApiParamType.PATH, name = "id", value = "上架id", dataType = "Long")
+    @GetMapping("/product-shelves/{id}/custom-plans")
+    public ResponseEntity findByShelfId(@PathVariable("id") Long id) {
+        log.debug("根据上架商品id查询关联的定制计划列表\t param:{}", id);
+
+        List<CustomPlan> customPlanList = customPlanService.findListByShelfId(id);
+        return ResponseEntity.ok(customPlanList);
     }
 
 }
