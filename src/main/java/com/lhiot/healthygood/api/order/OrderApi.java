@@ -187,7 +187,7 @@ public class OrderApi {
                 .filter(productShelf -> Objects.equals(orderProduct.getShelfId(), productShelf.getId()))
                 .forEach(item -> {
                     //BeanUtils.of(orderProduct).ignoreField("id").populate(item);//忽略掉id 对象赋值
-                    Beans.from(item).populate(orderProduct);
+                    Beans.from(item).to(orderProduct);
                     //设置规格信息
                     ProductSpecification productSpecification = item.getProductSpecification();
                     orderProduct.setBarcode(productSpecification.getBarcode());
@@ -256,7 +256,7 @@ public class OrderApi {
     @DeleteMapping("/orders/{orderCode}")
     @ApiOperation("和色果膳--取消订单*")
     @ApiImplicitParam(paramType = "path", name = "orderCode", dataType = "String", required = true, value = "订单id")
-    public ResponseEntity createOrder(@Valid @NotBlank @PathVariable("orderCode") String orderCode, Sessions.User user) {
+    public ResponseEntity cancelOrder(@Valid @NotBlank @PathVariable("orderCode") String orderCode, Sessions.User user) {
         Long userId = Long.valueOf(user.getUser().get("userId").toString());
         ResponseEntity validateResult = validateOrderOwner(userId, orderCode);
         if (Objects.isNull(validateResult) || validateResult.getStatusCode().isError()) {

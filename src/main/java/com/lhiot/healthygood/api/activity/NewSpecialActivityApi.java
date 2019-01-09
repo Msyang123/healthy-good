@@ -66,7 +66,7 @@ public class NewSpecialActivityApi {
         }
         ActivityProduct activityProduct = new ActivityProduct();
         activityProduct.setActivityId(specialProductActivity.getId());
-        Beans.from(pagesParam).populate(activityProduct);
+        Beans.from(pagesParam).to(activityProduct);
         List<ActivityProduct> activityProductsList = activityProductService.activityProductList(activityProduct);
 
         ProductShelfParam productShelfParam = new ProductShelfParam();
@@ -88,7 +88,7 @@ public class NewSpecialActivityApi {
                     Integer alreadyCount = activityProductRecordService.selectRecordCount(activityProductRecord);
                     ActivityProducts product = new ActivityProducts();
                     //BeanUtils.copyProperties(productShelf,product);
-                    Beans.from(productShelf).populate(product);
+                    Beans.from(productShelf).to(product);
                     product.setPrice(Objects.isNull(productShelf.getPrice()) ? productShelf.getOriginalPrice() : productShelf.getPrice());
                     product.setProductName(productShelf.getName());
                     product.setAlreadyBuyCount(alreadyCount);
@@ -97,7 +97,7 @@ public class NewSpecialActivityApi {
                     activityProducts.add(product);
                 }));
         NewSpecialResult newSpecialResult = new NewSpecialResult();
-        Beans.from(specialProductActivity).populate(newSpecialResult);
+        Beans.from(specialProductActivity).to(newSpecialResult);
         newSpecialResult.setActivityProductList(activityProducts);
         return ResponseEntity.ok(newSpecialResult);
     }
