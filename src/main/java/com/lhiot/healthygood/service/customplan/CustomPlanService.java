@@ -451,4 +451,21 @@ public class CustomPlanService {
     public Dictionary customPlanMaxPauseDay() {
         return dictionaryClient.dictionary("customPlanMaxPauseDay").get();
     }
+
+
+    /**
+     * 根据上架id查询关联的定制计划列表
+     * @param shelfId   上架id
+     * @return  定制计划列表
+     */
+    public List<CustomPlan> findListByShelfId(Long shelfId) {
+        // 根据上架板块id查询定制商品中的定制计划ids
+        List<CustomPlanProduct> customPlanProduct = customPlanProductMapper.selectByShelfId(shelfId);
+        if (CollectionUtils.isEmpty(customPlanProduct)) {
+            return null;
+        }
+        // 根据定制计划ids查询定制计划列表
+        List<Long> planIdList = customPlanProduct.stream().map(CustomPlanProduct::getPlanId).distinct().collect(Collectors.toList());
+        return customPlanMapper.selectByIds(planIdList);
+    }
 }

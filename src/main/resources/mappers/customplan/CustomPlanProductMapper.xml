@@ -212,4 +212,10 @@
         </foreach>
     </insert>
 
+    <!--根据商品上架id查询定制计划商品列表-->
+    <select id="selectByShelfId" resultMap="BaseResultMap">
+        select <include refid="Base_Column_List" />
+        from custom_plan_product
+        where product_shelf_id = #{shelfId}
+    </select>
 </mapper>
