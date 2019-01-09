@@ -372,7 +372,10 @@ public class OrderApi {
         }
         List<DoctorAchievementLog> doctorAchievementLogs = doctorAchievementLogService.selectOrderCodeByDoctorId(fruitDoctor.getId());
         if (doctorAchievementLogs.size()<=0){
-            return ResponseEntity.ok().body(new Pages<OrderDetailResult>());
+            Pages p = new Pages();
+            p.setArray(new ArrayList<>());
+            p.setTotal(0);
+            return ResponseEntity.ok(p);
         }
         List<String> orderCodes = new ArrayList<>();
         doctorAchievementLogs.forEach(doctorAchievementLog -> {
@@ -380,7 +383,16 @@ public class OrderApi {
         });
         baseOrderParam.setOrderCodeList(orderCodes);
         baseOrderParam.setApplicationType(ApplicationType.HEALTH_GOOD);
-        return orderServiceFeign.ordersPages(baseOrderParam);
+        ResponseEntity responseEntity = orderServiceFeign.ordersPages(baseOrderParam);
+        if (Objects.isNull(responseEntity) || responseEntity.getStatusCode().isError()){
+            return responseEntity;
+        }
+        Pages<OrderDetailResult> pages = (Pages<OrderDetailResult>) responseEntity.getBody();
+        if (Objects.isNull(pages.getArray())){
+            pages.setArray(new ArrayList<>());
+            pages.setTotal(0);
+        }
+        return ResponseEntity.ok(pages);
     }
 
     @Sessions.Uncheck
