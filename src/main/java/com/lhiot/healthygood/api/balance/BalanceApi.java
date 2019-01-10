@@ -95,12 +95,12 @@ public class BalanceApi {
         balancePayModel.setSourceType(SourceType.ORDER);
         balancePayModel.setUserId(userId);
         balancePayModel.setAttach(orderCode);
-        ResponseEntity<Id> balancePayResult = paymentServiceFeign.balancePay(balancePayModel);
+        ResponseEntity balancePayResult = paymentServiceFeign.balancePay(balancePayModel);
         if (Objects.isNull(balancePayResult) || balancePayResult.getStatusCode().isError()) {
             log.error("鲜果币支付失败{}", balancePayResult);
             return ResponseEntity.badRequest().body("鲜果币支付失败");
         }
-        String outTradeId = String.valueOf(balancePayResult.getBody().getValue());
+        String outTradeId = String.valueOf(((Id)balancePayResult.getBody()).getValue());
         Payed payed = new Payed();
         //payed.setBankType("");
         payed.setPayAt(Date.from(Instant.now()));
@@ -169,11 +169,11 @@ public class BalanceApi {
 
     //验证是否属于当前用户的订单
     private ResponseEntity validateOrderOwner(Long userId, String orderCode) {
-        ResponseEntity<OrderDetailResult> responseEntity = orderServiceFeign.orderDetail(orderCode, false, false);
+        ResponseEntity responseEntity = orderServiceFeign.orderDetail(orderCode, false, false);
         if (Objects.isNull(responseEntity) || responseEntity.getStatusCode().isError()) {
             return responseEntity;
         }
-        OrderDetailResult orderDetailResult = responseEntity.getBody();
+        OrderDetailResult orderDetailResult = (OrderDetailResult)responseEntity.getBody();
         if (!Objects.equals(orderDetailResult.getUserId(), userId)) {
             return ResponseEntity.badRequest().body("当前操作订单不属于登录用户");
         }

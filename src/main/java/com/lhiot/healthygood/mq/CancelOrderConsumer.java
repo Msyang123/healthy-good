@@ -42,7 +42,7 @@ public class CancelOrderConsumer {
     public void cancelUnPayOrder(String orderCode) {
         try {
 
-            ResponseEntity<OrderDetailResult> orderDetailResultResponseEntity = orderServiceFeign.orderDetail(orderCode,false,false);
+            ResponseEntity orderDetailResultResponseEntity = orderServiceFeign.orderDetail(orderCode,false,false);
             Tips<OrderDetailResult> orderDetailResultTips = FeginResponseTools.convertResponse(orderDetailResultResponseEntity);
             if(orderDetailResultTips.err()){
                 log.warn("订单状态修改为已失效未找到订单或失败",orderDetailResultTips);

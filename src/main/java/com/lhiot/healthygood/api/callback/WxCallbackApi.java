@@ -96,12 +96,12 @@ public class WxCallbackApi {
             return ResponseEntity.badRequest().body("调用订单修改支付失败");
         }
         //本地mq延迟到配送时间前一小时发送海鼎
-        ResponseEntity<OrderDetailResult> orderDetailResultResponseEntity = orderServiceFeign.orderDetail(orderCode,false,false);
+        ResponseEntity orderDetailResultResponseEntity = orderServiceFeign.orderDetail(orderCode,false,false);
         if(Objects.isNull(orderDetailResultResponseEntity) || orderDetailResultResponseEntity.getStatusCode().isError()){
             log.error("订单支付微信回调调用基础订单查询服务失败:{},{}", orderCode, orderDetailResultResponseEntity);
             return ResponseEntity.badRequest().body("调用基础订单查询服务失败");
         }
-        OrderDetailResult orderDetailResult = orderDetailResultResponseEntity.getBody();
+        OrderDetailResult orderDetailResult = (OrderDetailResult)orderDetailResultResponseEntity.getBody();
         //延迟发货到海鼎
         orderService.delaySendToHd(orderCode,Jackson.object(orderDetailResult.getDeliverAt(), DeliverTime.class));
 

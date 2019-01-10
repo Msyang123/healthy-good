@@ -62,7 +62,7 @@ public class ProductSectionApi {
         productShelfParam.setShelfStatus(OnOff.ON);
         //BeanUtils.copyProperties(productSectionParam,productShelfParam);
         Beans.from(productSectionParam).to(productShelfParam);
-        ResponseEntity<Pages<ProductShelf>> pagesResponseEntity = baseDataServiceFeign.searchProductShelves(productShelfParam);
+        ResponseEntity pagesResponseEntity = baseDataServiceFeign.searchProductShelves(productShelfParam);
         return pagesResponseEntity;
     }
 
@@ -77,12 +77,12 @@ public class ProductSectionApi {
         UiPositionParam uiPositionParam = new UiPositionParam();
         uiPositionParam.setApplicationType(ApplicationType.HEALTH_GOOD);
         uiPositionParam.setCodes(code);
-        ResponseEntity<Pages<UiPosition>> uiPositionEntity = baseDataServiceFeign.searchUiPosition(uiPositionParam);
+        ResponseEntity uiPositionEntity = baseDataServiceFeign.searchUiPosition(uiPositionParam);
         if (Objects.isNull(uiPositionEntity) || uiPositionEntity.getStatusCode().isError()){
             return uiPositionEntity;
         }
         List<String> positionIds = new ArrayList<>();
-        uiPositionEntity.getBody().getArray().forEach(uiPosition -> {
+        ((Pages<UiPosition>)uiPositionEntity.getBody()).getArray().forEach(uiPosition -> {
             positionIds.add(uiPosition.getId().toString());
         });
 
@@ -95,8 +95,8 @@ public class ProductSectionApi {
         ProductSectionParam productSectionParam = new ProductSectionParam();
         productSectionParam.setPositionIds(StringUtils.collectionToDelimitedString(positionIds,","));
         productSectionParam.setIncludeShelves(flags);
-        ResponseEntity<Pages<ProductSection>> pagesResponseEntity = baseDataServiceFeign.searchProductSection(productSectionParam);
-        List<ProductSection> productSections = pagesResponseEntity.getBody().getArray();
+        ResponseEntity pagesResponseEntity = baseDataServiceFeign.searchProductSection(productSectionParam);
+        List<ProductSection> productSections = ((Pages<ProductSection>)pagesResponseEntity.getBody()).getArray();
         productSections.stream().filter(Objects::nonNull).forEach(productSection ->{
             List<ProductShelf> products = new ArrayList<>();
             if (Objects.nonNull(productSection.getProductShelfList())){
@@ -124,11 +124,11 @@ public class ProductSectionApi {
     @ApiImplicitParam(paramType = ApiParamType.PATH, name = "id", value = "商品上架Id", dataType = "Long", required = true)
     @ApiOperation(value = "查询商品详情*",response = ProductDetailResult.class)
     public ResponseEntity singeProduct(Sessions.User user, @PathVariable(value = "id") Long id) {
-        ResponseEntity<ProductShelf> productShelfResponseEntity = baseDataServiceFeign.singleShelf(id,true);
+        ResponseEntity productShelfResponseEntity = baseDataServiceFeign.singleShelf(id,true);
         if (Objects.isNull(productShelfResponseEntity) || productShelfResponseEntity.getStatusCode().isError()) {
             return productShelfResponseEntity;
         }
-        ProductShelf productShelf = productShelfResponseEntity.getBody();
+        ProductShelf productShelf = (ProductShelf)productShelfResponseEntity.getBody();
         if (Objects.isNull(productShelf)){
             return ResponseEntity.badRequest().body("没有数据");
         }
@@ -185,11 +185,11 @@ public class ProductSectionApi {
         productShelfParam.setIds(ids);
         productShelfParam.setApplicationType(ApplicationType.HEALTH_GOOD);
         productShelfParam.setShelfStatus(OnOff.ON);
-        ResponseEntity<Pages<ProductShelf>> pagesResponseEntity = baseDataServiceFeign.searchProductShelves(productShelfParam);
+        ResponseEntity pagesResponseEntity = baseDataServiceFeign.searchProductShelves(productShelfParam);
         if (Objects.isNull(pagesResponseEntity) || pagesResponseEntity.getStatusCode().isError()) {
             return pagesResponseEntity;
         }
-        List<ProductShelf> productShelves = pagesResponseEntity.getBody().getArray();
+        List<ProductShelf> productShelves = ((Pages<ProductShelf>)pagesResponseEntity.getBody()).getArray();
         //新品尝鲜商品
         SpecialProductActivity specialProductActivity = specialProductActivityService.selectActivity();
         if (Objects.nonNull(specialProductActivity)) {
@@ -228,11 +228,11 @@ public class ProductSectionApi {
         productShelfParam.setShelfType(ShelfType.NORMAL);
         productShelfParam.setPage(productSearchParam.getPage());
         productShelfParam.setRows(productSearchParam.getRows());
-        ResponseEntity<Pages<ProductShelf>> pagesResponseEntity = baseDataServiceFeign.searchProductShelves(productShelfParam);
+        ResponseEntity pagesResponseEntity = baseDataServiceFeign.searchProductShelves(productShelfParam);
         if (Objects.isNull(pagesResponseEntity) || pagesResponseEntity.getStatusCode().isError()) {
             return pagesResponseEntity;
         }
-        this.setPrice(pagesResponseEntity.getBody().getArray());
+        this.setPrice(((Pages<ProductShelf>)pagesResponseEntity.getBody()).getArray());
         return pagesResponseEntity;
     }
 
@@ -243,22 +243,22 @@ public class ProductSectionApi {
         UiPositionParam uiPositionParam = new UiPositionParam();
         uiPositionParam.setApplicationType(ApplicationType.HEALTH_GOOD);
         uiPositionParam.setCodes("SEARCH_PRODUCTS");
-        ResponseEntity<Pages<UiPosition>> uiPositionEntity = baseDataServiceFeign.searchUiPosition(uiPositionParam);
+        ResponseEntity uiPositionEntity = baseDataServiceFeign.searchUiPosition(uiPositionParam);
         if (Objects.isNull(uiPositionEntity) || uiPositionEntity.getStatusCode().isError()){
             return uiPositionEntity;
         }
         List<String> positionIds = new ArrayList<>();
-        uiPositionEntity.getBody().getArray().forEach(uiPosition -> {
+        ((Pages<UiPosition>)uiPositionEntity.getBody()).getArray().forEach(uiPosition -> {
             positionIds.add(uiPosition.getId().toString());
         });
         ProductSectionParam productSectionParam = new ProductSectionParam();
         productSectionParam.setPositionIds(StringUtils.collectionToDelimitedString(positionIds,","));
         productSectionParam.setIncludeShelves(true);
-        ResponseEntity<Pages<ProductSection>> pagesResponseEntity = baseDataServiceFeign.searchProductSection(productSectionParam);
+        ResponseEntity pagesResponseEntity = baseDataServiceFeign.searchProductSection(productSectionParam);
         if (Objects.isNull(pagesResponseEntity) || pagesResponseEntity.getStatusCode().isError()){
             return pagesResponseEntity;
         }
-        List<ProductSection> productSections = pagesResponseEntity.getBody().getArray();
+        List<ProductSection> productSections = ((Pages<ProductSection>)pagesResponseEntity.getBody()).getArray();
         return ResponseEntity.ok(productSections.stream().map(productSection -> {
             List<ProductShelf> productShelves = productSection.getProductShelfList().stream().filter(s -> Objects.equals(OnOff.ON,s.getShelfStatus())).sorted(Comparator.comparing(ProductShelf::getSorting)).collect(Collectors.toList());
             productSection.setProductShelfList(productShelves);

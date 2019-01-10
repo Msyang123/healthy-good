@@ -105,11 +105,11 @@ public class CommonsApi {
     public ResponseEntity search(@RequestBody DeliverFeeQuery feeQuery){
         String storeCode = feeQuery.getStoreCode();
         //判断门店是否存在
-        ResponseEntity<Store> storeResponseEntity = baseDataServiceFeign.findStoreByCode(storeCode, ApplicationType.HEALTH_GOOD);
+        ResponseEntity storeResponseEntity = baseDataServiceFeign.findStoreByCode(storeCode, ApplicationType.HEALTH_GOOD);
         if (Objects.isNull(storeResponseEntity) || storeResponseEntity.getStatusCode().isError()) {
             return storeResponseEntity;
         }
-        Store store = storeResponseEntity.getBody();
+        Store store = (Store)storeResponseEntity.getBody();
         feeQuery.setStoreId(store.getId());//设置门店id
         feeQuery.setDeliverAtType(DeliverAtType.ALL_DAY);
         //如果有地址依据地址设置经纬度
@@ -155,7 +155,7 @@ public class CommonsApi {
         feeQuery.setWeight(weight.get().doubleValue());
         feeQuery.setOrderFee(productAmount.get());
         //查询配送中心配送费
-        ResponseEntity<Fee> responseEntity = deliverServiceFeign.search(feeQuery);
+        ResponseEntity responseEntity = deliverServiceFeign.search(feeQuery);
         if(Objects.nonNull(responseEntity) && responseEntity.getStatusCode().is2xxSuccessful()){
             return ResponseEntity.ok(responseEntity.getBody());
         }

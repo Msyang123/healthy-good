@@ -72,11 +72,11 @@ public class NewSpecialActivityApi {
         ProductShelfParam productShelfParam = new ProductShelfParam();
         productShelfParam.setApplicationType(ApplicationType.HEALTH_GOOD);
         productShelfParam.setShelfStatus(OnOff.ON);
-        ResponseEntity<Pages<ProductShelf>> pagesResponseEntity = baseDataServiceFeign.searchProductShelves(productShelfParam);
+        ResponseEntity pagesResponseEntity = baseDataServiceFeign.searchProductShelves(productShelfParam);
         if (Objects.isNull(pagesResponseEntity) || pagesResponseEntity.getStatusCode().isError()) {
             return pagesResponseEntity;
         }
-        List<ProductShelf> productShelves = pagesResponseEntity.getBody().getArray();
+        List<ProductShelf> productShelves = ((Pages<ProductShelf>)pagesResponseEntity.getBody()).getArray();
         List<ActivityProducts> activityProducts = new ArrayList<ActivityProducts>();
         Long userId = Long.valueOf(user.getUser().get("userId").toString());
         productShelves.forEach(productShelf -> activityProductsList.stream()
