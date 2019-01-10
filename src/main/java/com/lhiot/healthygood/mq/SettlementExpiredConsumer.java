@@ -47,7 +47,7 @@ public class SettlementExpiredConsumer {
             // 每月结算时间为15日-17日，当前时间为每个月18日-20日进行定时任务处理
             LocalDate localDate = LocalDate.now();
             //每月18号
-            LocalDate eighteenth = LocalDate.of(localDate.getYear(), localDate.getMonth(), 10);
+            LocalDate eighteenth = LocalDate.of(localDate.getYear(), localDate.getMonth(), 18);
             //每月20号
             LocalDate twentieth = LocalDate.of(localDate.getYear(), localDate.getMonth(), 20);
             if (localDate.isBefore(eighteenth) || localDate.isAfter(twentieth)) {

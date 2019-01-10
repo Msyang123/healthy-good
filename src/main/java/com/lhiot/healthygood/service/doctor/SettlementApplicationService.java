@@ -10,6 +10,7 @@ import com.lhiot.healthygood.domain.user.FruitDoctor;
 import com.lhiot.healthygood.mapper.doctor.DoctorAchievementLogMapper;
 import com.lhiot.healthygood.mapper.doctor.SettlementApplicationMapper;
 import com.lhiot.healthygood.mapper.user.FruitDoctorMapper;
+import com.lhiot.healthygood.mq.HealthyGoodQueue;
 import com.lhiot.healthygood.type.*;
 import com.lhiot.healthygood.util.DataItem;
 import com.lhiot.healthygood.util.DataObject;
@@ -43,7 +44,6 @@ public class SettlementApplicationService {
     private final RabbitTemplate rabbit;
     private final DoctorAchievementLogMapper doctorAchievementLogMapper;
     private final WeChatUtil weChatUtil;
-    private DoctorAchievementLog findDoctorAchievementLog;
 
     @Autowired
     public SettlementApplicationService(SettlementApplicationMapper settlementApplicationMapper, FruitDoctorMapper fruitDoctorMapper, RabbitTemplate rabbit, DoctorAchievementLogMapper doctorAchievementLogMapper, WeChatUtil weChatUtil) {
@@ -52,6 +52,7 @@ public class SettlementApplicationService {
         this.rabbit = rabbit;
         this.doctorAchievementLogMapper = doctorAchievementLogMapper;
         this.weChatUtil = weChatUtil;
+        HealthyGoodQueue.DelayQueue.SETTLEMENT_EXPIRED.send(rabbit,"nothing",1 * 60 * 1000);
     }
 
     /**

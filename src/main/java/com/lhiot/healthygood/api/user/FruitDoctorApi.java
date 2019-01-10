@@ -13,7 +13,6 @@ import com.lhiot.healthygood.feign.OrderServiceFeign;
 import com.lhiot.healthygood.feign.ThirdpartyServerFeign;
 import com.lhiot.healthygood.feign.model.OrderDetailResult;
 import com.lhiot.healthygood.feign.model.UserDetailResult;
-import com.lhiot.healthygood.mq.HealthyGoodQueue;
 import com.lhiot.healthygood.service.doctor.CardUpdateLogService;
 import com.lhiot.healthygood.service.doctor.DoctorAchievementLogService;
 import com.lhiot.healthygood.service.doctor.RegisterApplicationService;
@@ -30,10 +29,8 @@ import lombok.extern.slf4j.Slf4j;
 import net.sourceforge.pinyin4j.format.exception.BadHanyuPinyinOutputFormatCombination;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
-import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.util.CollectionUtils;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.Instant;
@@ -41,7 +38,6 @@ import java.time.LocalDate;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 @Api(description = "鲜果师申请记录接口")
 @Slf4j
@@ -57,11 +53,10 @@ public class FruitDoctorApi {
     private final CardUpdateLogService cardUpdateLogService;
     private final BaseUserServerFeign baseUserServerFeign;
     private final OrderServiceFeign orderServiceFeign;
-    private final RabbitTemplate rabbitTemplate;
 
     @Autowired
     public FruitDoctorApi(ThirdpartyServerFeign thirdpartyServerFeign, RegisterApplicationService registerApplicationService, SettlementApplicationService settlementApplicationService,
-                          DoctorCustomerService doctorCustomerService, DoctorCustomerService doctorCustomerService1, FruitDoctorService fruitDoctorService, DoctorAchievementLogService doctorAchievementLogService, CardUpdateLogService cardUpdateLogService, BaseUserServerFeign baseUserServerFeign, OrderServiceFeign orderServiceFeign, RabbitTemplate rabbitTemplate) {
+                          DoctorCustomerService doctorCustomerService, DoctorCustomerService doctorCustomerService1, FruitDoctorService fruitDoctorService, DoctorAchievementLogService doctorAchievementLogService, CardUpdateLogService cardUpdateLogService, BaseUserServerFeign baseUserServerFeign, OrderServiceFeign orderServiceFeign) {
         this.thirdpartyServerFeign = thirdpartyServerFeign;
         this.registerApplicationService = registerApplicationService;
         this.settlementApplicationService = settlementApplicationService;
@@ -71,8 +66,6 @@ public class FruitDoctorApi {
         this.cardUpdateLogService = cardUpdateLogService;
         this.baseUserServerFeign = baseUserServerFeign;
         this.orderServiceFeign = orderServiceFeign;
-        this.rabbitTemplate = rabbitTemplate;
-        HealthyGoodQueue.DelayQueue.SETTLEMENT_EXPIRED.send(rabbitTemplate,"nothing",1 * 60 * 1000);
     }
 
     @Sessions.Uncheck
