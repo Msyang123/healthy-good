@@ -336,7 +336,6 @@ public class CustomPlanService {
         List<CustomPlanSpecification> insertSpecificationList = new ArrayList<>();
         List<CustomPlanProduct> updateProductList = new ArrayList<>();
         List<CustomPlanProduct> insertProductList = new ArrayList<>();
-
         // 查询定制定制计划规格基础数据表
         List<CustomPlanSpecificationStandard> planSpecificationStandardList = customPlanSpecificationStandardMapper.findList();
 
@@ -401,6 +400,15 @@ public class CustomPlanService {
                 return Tips.warn("批量修改的商品失败");
             }
         }
+        // 要新增的商品是否存在（即商品已下架），存在则先根据查询的id批量删除
+        List<CustomPlanProduct> shelfOffProductList = customPlanProductMapper.findByPlanProduct(insertProductList);
+        if (!CollectionUtils.isEmpty(shelfOffProductList)) {
+            List<String> shelfOffProductIds = shelfOffProductList.stream().map(product -> product.getId().toString()).collect(Collectors.toList());
+            int deleteProduct = customPlanProductMapper.deleteByIds(shelfOffProductIds);
+            if (deleteProduct <= 0 ){
+                return Tips.warn("批量删除下架商品失败");
+            }
+        }
         // 批量新增的商品
         if (!CollectionUtils.isEmpty(insertProductList)) {
             int insertProduct = customPlanProductMapper.insertList(insertProductList);
@@ -450,22 +458,5 @@ public class CustomPlanService {
      */
     public Dictionary customPlanMaxPauseDay() {
         return dictionaryClient.dictionary("customPlanMaxPauseDay").get();
-    }
-
-
-    /**
-     * 根据上架id查询关联的定制计划列表
-     * @param shelfId   上架id
-     * @return  定制计划列表
-     */
-    public List<CustomPlan> findListByShelfId(Long shelfId) {
-        // 根据上架板块id查询定制商品中的定制计划ids
-        List<CustomPlanProduct> customPlanProduct = customPlanProductMapper.selectByShelfId(shelfId);
-        if (CollectionUtils.isEmpty(customPlanProduct)) {
-            return null;
-        }
-        // 根据定制计划ids查询定制计划列表
-        List<Long> planIdList = customPlanProduct.stream().map(CustomPlanProduct::getPlanId).distinct().collect(Collectors.toList());
-        return customPlanMapper.selectByIds(planIdList);
     }
 }

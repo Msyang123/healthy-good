@@ -212,10 +212,13 @@
         </foreach>
     </insert>
 
-    <!--根据商品上架id查询定制计划商品列表-->
-    <select id="selectByShelfId" resultMap="BaseResultMap">
-        select <include refid="Base_Column_List" />
+    <!--根据定制计划信息批量查询-->
+    <select id="findByPlanProduct" resultMap="BaseResultMap" parameterType="List">
+        select <include refid="Base_Column_List"/>
         from custom_plan_product
-        where product_shelf_id = #{shelfId}
+        where
+        <foreach collection="list" separator="or" item="item">
+            (plan_id = #{item.planId} and plan_period = #{item.planPeriod} and day_of_period = #{item.dayOfPeriod})
+        </foreach>
     </select>
 </mapper>
