@@ -34,6 +34,7 @@ public interface HealthyGoodQueue {
         CANCEL_ORDER("healthy-good.order.cancel.exchange", "healthy-good.order.cancel.dlx", DelayQueue.CANCEL_ORDER_CONSUMER),
         CANCEL_CUSTOM_ORDER("healthy-good.custom-order.cancel.exchange", "healthy-good.custom-order.cancel.dlx", DelayQueue.CANCEL_CUSTOM_ORDER_CONSUMER),
         REFRESH_ACCESS_TOKEN("healthy-good.refresh.accessToken.exchange","healthy-good.refresh.accessToken.dlx",DelayQueue.CACHE_NEW_ACCESS_TOKEN),
+        SETTLEMENT_EXPIRED("healthy-good.settlement.expired.exchange","healthy-good.settlement.expired.dlx",DelayQueue.SETTLEMENT_EXPIRED_CONSUMER),
         ;
         public static final String AUTO_EXTRACTION_CONSUMER = "healthy-good.custom-order.autoExtraction.receive";//自动提货消费端队列名
         public static final String LAST_EXTRACTION_CONSUMER = "healthy-good.custom-order.lastExtraction.receive";//定制订单到达最后提取时间自动退款处理消费端队列名
@@ -42,6 +43,7 @@ public interface HealthyGoodQueue {
         public static final String CANCEL_ORDER_CONSUMER ="healthy-good.order.cancel.receive";//三十分钟未支付普通订单取消
         public static final String CANCEL_CUSTOM_ORDER_CONSUMER ="healthy-good.custom-order.cancel.receive";//三十分钟未支付定制订单取消
         public static final String CACHE_NEW_ACCESS_TOKEN ="healthy-good.refresh.accessToken.receive";//两个小时access_token失效后重新缓存access_token
+        public static final String SETTLEMENT_EXPIRED_CONSUMER = "healthy-good.settlement.expired.receive"; //薪资结算申请3天未处理将结算状态自动改为已过期
 
 
         @Getter

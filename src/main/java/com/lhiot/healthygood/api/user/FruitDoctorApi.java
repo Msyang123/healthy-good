@@ -1,7 +1,5 @@
 package com.lhiot.healthygood.api.user;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.leon.microx.util.Beans;
 import com.leon.microx.web.result.Pages;
 import com.leon.microx.web.result.Tips;
 import com.leon.microx.web.session.Sessions;
@@ -15,6 +13,7 @@ import com.lhiot.healthygood.feign.OrderServiceFeign;
 import com.lhiot.healthygood.feign.ThirdpartyServerFeign;
 import com.lhiot.healthygood.feign.model.OrderDetailResult;
 import com.lhiot.healthygood.feign.model.UserDetailResult;
+import com.lhiot.healthygood.mq.HealthyGoodQueue;
 import com.lhiot.healthygood.service.doctor.CardUpdateLogService;
 import com.lhiot.healthygood.service.doctor.DoctorAchievementLogService;
 import com.lhiot.healthygood.service.doctor.RegisterApplicationService;
@@ -31,7 +30,7 @@ import lombok.extern.slf4j.Slf4j;
 import net.sourceforge.pinyin4j.format.exception.BadHanyuPinyinOutputFormatCombination;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
-import org.springframework.amqp.AmqpException;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.CollectionUtils;
@@ -58,10 +57,11 @@ public class FruitDoctorApi {
     private final CardUpdateLogService cardUpdateLogService;
     private final BaseUserServerFeign baseUserServerFeign;
     private final OrderServiceFeign orderServiceFeign;
+    private final RabbitTemplate rabbitTemplate;
 
     @Autowired
     public FruitDoctorApi(ThirdpartyServerFeign thirdpartyServerFeign, RegisterApplicationService registerApplicationService, SettlementApplicationService settlementApplicationService,
-                          DoctorCustomerService doctorCustomerService, DoctorCustomerService doctorCustomerService1, FruitDoctorService fruitDoctorService, DoctorAchievementLogService doctorAchievementLogService, CardUpdateLogService cardUpdateLogService, BaseUserServerFeign baseUserServerFeign, OrderServiceFeign orderServiceFeign) {
+                          DoctorCustomerService doctorCustomerService, DoctorCustomerService doctorCustomerService1, FruitDoctorService fruitDoctorService, DoctorAchievementLogService doctorAchievementLogService, CardUpdateLogService cardUpdateLogService, BaseUserServerFeign baseUserServerFeign, OrderServiceFeign orderServiceFeign, RabbitTemplate rabbitTemplate) {
         this.thirdpartyServerFeign = thirdpartyServerFeign;
         this.registerApplicationService = registerApplicationService;
         this.settlementApplicationService = settlementApplicationService;
@@ -71,6 +71,8 @@ public class FruitDoctorApi {
         this.cardUpdateLogService = cardUpdateLogService;
         this.baseUserServerFeign = baseUserServerFeign;
         this.orderServiceFeign = orderServiceFeign;
+        this.rabbitTemplate = rabbitTemplate;
+        HealthyGoodQueue.DelayQueue.SETTLEMENT_EXPIRED.send(rabbitTemplate,"nothing",1 * 60 * 1000);
     }
 
     @Sessions.Uncheck
@@ -234,7 +236,8 @@ public class FruitDoctorApi {
         //筛选过期数据集合
         ids = pages.getArray().stream().filter(settlementApplication ->
                 //当前时间减去创建时间大于3天未处理 ,修改状态为已过期
-                today.getTime() - settlementApplication.getCreateAt().getTime() > (1 * 24 * 60 * 60 * 1000) * 3)
+//                today.getTime() - settlementApplication.getCreateAt().getTime() > (1 * 24 * 60 * 60 * 1000) * 3)
+        today.getTime() - settlementApplication.getCreateAt().getTime() > (3 * 60 * 1000)) //测试2分钟
                 .map(settlementApplication -> settlementApplication.getId()).collect(Collectors.toList());
         //修改状态
         if (!CollectionUtils.isEmpty(ids)) {
