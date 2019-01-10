@@ -67,8 +67,8 @@ public class SettlementExpiredConsumer {
             //筛选过期数据集合
             ids = pages.getArray().stream().filter(settlementApplication ->
                     //当前时间减去创建时间大于3天未处理 ,修改状态为已过期
-//                today.getTime() - settlementApplication.getCreateAt().getTime() > (1 * 24 * 60 * 60 * 1000) * 3)
-                    today.getTime() - settlementApplication.getCreateAt().getTime() > (3 * 60 * 1000)) //测试3分钟
+                today.getTime() - settlementApplication.getCreateAt().getTime() > (1 * 24 * 60 * 60 * 1000) * 3)
+//                    today.getTime() - settlementApplication.getCreateAt().getTime() > (3 * 60 * 1000)) //测试3分钟
                     .map(settlementApplication -> settlementApplication.getId()).collect(Collectors.toList());
             //修改状态
             if (!CollectionUtils.isEmpty(ids)) {
@@ -79,8 +79,8 @@ public class SettlementExpiredConsumer {
             publisher.mqConsumerException(e, Maps.of("message", "薪资结算申请3天未处理将结算状态自动改为已过期"));
         }
         //每天循环调用一次
-        HealthyGoodQueue.DelayQueue.UPDATE_CUSTOM_ORDER_STATUS.send(rabbitTemplate,"nothing",5 * 60 * 1000);
-//        HealthyGoodQueue.DelayQueue.UPDATE_CUSTOM_ORDER_STATUS.send(rabbitTemplate,"nothing",1 * 24 * 60 * 60 * 1000 * 1);
+//        HealthyGoodQueue.DelayQueue.UPDATE_CUSTOM_ORDER_STATUS.send(rabbitTemplate,"nothing",5 * 60 * 1000); // 测试5分钟调一次
+        HealthyGoodQueue.DelayQueue.UPDATE_CUSTOM_ORDER_STATUS.send(rabbitTemplate,"nothing",1 * 24 * 60 * 60 * 1000 * 1);
 
 
     }

@@ -210,4 +210,14 @@
         <include refid="Base_Where_Condition"/>
     </select>
 
+    <!--批量修改结算失效状态-->
+    <update id="updateExpiredStatus"  parameterType="java.util.List">
+        update fruit_doctor_settlement
+        set settlement_status = 'EXPIRED'
+        where id in
+        <foreach collection="list" item="item" open="("
+                 separator="," close=")">
+            #{item}
+        </foreach>
+    </update>
 </mapper>

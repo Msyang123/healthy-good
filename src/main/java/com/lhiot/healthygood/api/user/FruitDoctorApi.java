@@ -215,36 +215,6 @@ public class FruitDoctorApi {
         return ResponseEntity.ok(settlementApplicationPages);
     }
 
-    @Sessions.Uncheck
-    @PutMapping("/settlement/expired")
-    @ApiOperation(value = "薪资结算定时任务处理(后台)", notes = "申请三天内没有处理,状态修改成已失效")
-    public void expiredStatusJob() {
-        log.debug("薪资结算定时任务处理\t");
-
-        //查询所有 未处理数据
-        SettlementApplication param = new SettlementApplication();
-        param.setSettlementStatus(SettlementStatus.UNSETTLED);
-
-        Pages<SettlementApplication> pages = settlementApplicationService.pageList(param);
-        if (CollectionUtils.isEmpty(pages.getArray())) {
-            return;
-        }
-        //批量修改ids
-        List<Long> ids = null;
-        //获取创建时间
-        Date today = new Date();
-        //筛选过期数据集合
-        ids = pages.getArray().stream().filter(settlementApplication ->
-                //当前时间减去创建时间大于3天未处理 ,修改状态为已过期
-//                today.getTime() - settlementApplication.getCreateAt().getTime() > (1 * 24 * 60 * 60 * 1000) * 3)
-        today.getTime() - settlementApplication.getCreateAt().getTime() > (3 * 60 * 1000)) //测试2分钟
-                .map(settlementApplication -> settlementApplication.getId()).collect(Collectors.toList());
-        //修改状态
-        if (!CollectionUtils.isEmpty(ids)) {
-            settlementApplicationService.updateExpiredStatus(ids);
-        }
-    }
-
     @PutMapping("/remark")
     @ApiOperation(value = "鲜果师修改用户备注*")
     @ApiImplicitParam(paramType = "body", name = "DoctorCustomer", value = "鲜果师修改用户备注实体信息", required = true, dataType = "DoctorCustomer")

@@ -127,6 +127,15 @@ public class SettlementApplicationService {
      */
     public Tips refund(Long id) {
         SettlementApplication settlementApplication = settlementApplicationMapper.selectById(id);
+        // 修改结算申请记录
+        SettlementApplication updateSettlement = new SettlementApplication();
+        updateSettlement.setId(id);
+        updateSettlement.setDealAt(Date.from(Instant.now()));
+        updateSettlement.setSettlementStatus(SettlementStatus.REFUND);
+        boolean settlementUpdate = settlementApplicationMapper.updateById(updateSettlement) > 0;
+        if (!settlementUpdate) {
+            return Tips.warn("修改结算申请记录失败");
+        }
         // 增加鲜果师可结算金额
         FruitDoctor findFruitDoctor = fruitDoctorMapper.selectById(settlementApplication.getDoctorId());
         boolean settlementUpdated = fruitDoctorMapper.updateBouns(Maps.of("id", findFruitDoctor.getId(), "money", settlementApplication.getAmount(), "balanceType","SETTLEMENT")) > 0;
