@@ -213,13 +213,4 @@
             limit #{startRow} , #{rows}
         </if>
     </select>
-
-    <!--根据定制计划ids查询定制计划列表-->
-    <select id="selectByIds" resultMap="BaseResultMap" parameterType="List">
-        select <include refid="Base_Column_List"/>
-        from custom_plan where id in
-        <foreach collection="list" item="item" open="(" separator="," close=")">
-            #{item}
-        </foreach>
-    </select>
 </mapper>

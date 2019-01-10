@@ -95,10 +95,4 @@ public interface CustomPlanMapper {
      */
     List<CustomPlan> findByCustomPlanSectionId(PlanSectionsParam planSectionsParam);
 
-    /**
-     * 查询定制计划列表
-     * @param planIds  定制计划id
-     * @return 定制计划列表
-     */
-    List<CustomPlan> selectByIds(List<Long> planIds);
 }
