@@ -43,19 +43,19 @@ public class ArticleSectionApi {
         UiPositionParam uiPositionParam = new UiPositionParam();
         uiPositionParam.setApplicationType(ApplicationType.HEALTH_GOOD);
         uiPositionParam.setCodes("SEARCH_ARTICLES");
-        ResponseEntity<Pages<UiPosition>> uiPositionEntity = baseDataServiceFeign.searchUiPosition(uiPositionParam);
+        ResponseEntity uiPositionEntity = baseDataServiceFeign.searchUiPosition(uiPositionParam);
         if (Objects.isNull(uiPositionEntity) || uiPositionEntity.getStatusCode().isError()){
             return uiPositionEntity;
         }
         List<String> positionIds = new ArrayList<>();
-        uiPositionEntity.getBody().getArray().forEach(uiPosition -> {
+        ((Pages<UiPosition>)uiPositionEntity.getBody()).getArray().forEach(uiPosition -> {
             positionIds.add(uiPosition.getId().toString());
         });
         ArticleSectionParam articleSectionParam = new ArticleSectionParam();
         articleSectionParam.setApplicationType(ApplicationType.HEALTH_GOOD);
         articleSectionParam.setPositionIds(StringUtils.collectionToDelimitedString(positionIds,","));
         articleSectionParam.setIncludeArticles(true);
-        ResponseEntity<Pages<ArticleSection>> pagesResponseEntity = baseDataServiceFeign.searchArticleSection(articleSectionParam);
-        return ResponseEntity.ok(pagesResponseEntity.getBody().getArray().get(0));
+        ResponseEntity pagesResponseEntity = baseDataServiceFeign.searchArticleSection(articleSectionParam);
+        return ResponseEntity.ok(((Pages<ArticleSection>)pagesResponseEntity.getBody()).getArray().get(0));
     }
 }
