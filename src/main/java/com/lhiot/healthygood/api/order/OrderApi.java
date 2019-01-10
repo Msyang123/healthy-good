@@ -114,11 +114,11 @@ public class OrderApi {
 
         String storeCode = orderParam.getOrderStore().getStoreCode();
         //判断门店是否存在
-        ResponseEntity<Store> storeResponseEntity = baseDataServiceFeign.findStoreByCode(storeCode, ApplicationType.HEALTH_GOOD);
+        ResponseEntity storeResponseEntity = baseDataServiceFeign.findStoreByCode(storeCode, ApplicationType.HEALTH_GOOD);
         if (Objects.isNull(storeResponseEntity) || storeResponseEntity.getStatusCode().isError()) {
             return storeResponseEntity;
         }
-        Store store = storeResponseEntity.getBody();
+        Store store = (Store)storeResponseEntity.getBody();
 
         //给订单门店赋值
         OrderStore orderStore = new OrderStore();
@@ -147,12 +147,12 @@ public class OrderApi {
                 .map(ProductSpecification::getBarcode).toArray(String[]::new);
 
         //查询门店h4库存信息
-        ResponseEntity<Map<String, Object>> quserSkuTips = thirdpartyServerFeign.querySku(orderParam.getOrderStore().getStoreCode(), barcodes);
+        ResponseEntity quserSkuTips = thirdpartyServerFeign.querySku(orderParam.getOrderStore().getStoreCode(), barcodes);
 
         if (Objects.isNull(quserSkuTips) || quserSkuTips.getStatusCode().isError()) {
             return quserSkuTips;
         }
-        List<Map> businvs = (List<Map>) quserSkuTips.getBody().get("businvs");
+        List<Map> businvs = (List<Map>) ((Map<String, Object>)quserSkuTips.getBody()).get("businvs");
         //校验库存是否足够
         for (ProductShelf productShelf : productShelfPages.getArray()) {
             for (Map businv : businvs) {
@@ -217,7 +217,7 @@ public class OrderApi {
         orderParam.setAmountPayable(disCountPrice.get());//应付金额
         orderParam.setCouponAmount(productAmount.get() - disCountPrice.get());//订单优惠金额
 
-        ResponseEntity<OrderDetailResult> orderDetailResultResponse = orderServiceFeign.createOrder(orderParam);
+        ResponseEntity orderDetailResultResponse = orderServiceFeign.createOrder(orderParam);
         if (Objects.isNull(orderDetailResultResponse)) {
             return ResponseEntity.badRequest().body("创建订单错误");
         } else if (orderDetailResultResponse.getStatusCode().isError()) {
@@ -238,7 +238,7 @@ public class OrderApi {
                             record.setProductShelfId(activityProduct.getProductShelfId());
                             record.setUserId(userId);
                             record.setActivityId(activityProduct.getActivityId());
-                            record.setOrderCode(orderDetailResultResponse.getBody().getCode());
+                            record.setOrderCode(((OrderDetailResult)orderDetailResultResponse.getBody()).getCode());
                             record.setActivityType(ActivityType.NEW_SPECIAL);
                             activityProductRecordService.create(record);
                         }
@@ -249,7 +249,7 @@ public class OrderApi {
             });
         }
         //mq设置三十分钟未支付失效
-        HealthyGoodQueue.DelayQueue.CANCEL_ORDER.send(rabbitTemplate, orderDetailResultResponse.getBody().getCode(), 30 * 60 * 1000);
+        HealthyGoodQueue.DelayQueue.CANCEL_ORDER.send(rabbitTemplate, ((OrderDetailResult)orderDetailResultResponse.getBody()).getCode(), 30 * 60 * 1000);
         return orderDetailResultResponse;
     }
 
@@ -284,7 +284,7 @@ public class OrderApi {
         ResponseEntity refundOrder = null;
         returnOrderParam.setNotifyUrl(wechatPayConfig.getOrderRefundCallbackUrl());//设置退款回调
         //查询退款金额
-        ResponseEntity<Fee> refundFeeResponseEntity = orderServiceFeign.refundFee(orderCode, returnOrderParam.getOrderProductIds(), returnOrderParam.getRefundType());
+        ResponseEntity refundFeeResponseEntity = orderServiceFeign.refundFee(orderCode, returnOrderParam.getOrderProductIds(), returnOrderParam.getRefundType());
         Tips<Fee> refundFeeTips = FeginResponseTools.convertResponse(refundFeeResponseEntity);
         AtomicReference<Integer> refundFeeSum = new AtomicReference<>(0);
         //计算订单金额
@@ -399,19 +399,19 @@ public class OrderApi {
     @GetMapping("/orders/{orderCode}/detail")
     @ApiOperation(value = "根据订单code查询订单详情", response = OrderDetailResult.class)
     public ResponseEntity orderDetial(@Valid @NotBlank @PathVariable("orderCode") String orderCode) {
-        ResponseEntity<OrderDetailResult> orderDetailResultResponseEntity = orderServiceFeign.orderDetail(orderCode, true, true);
+        ResponseEntity orderDetailResultResponseEntity = orderServiceFeign.orderDetail(orderCode, true, true);
         Tips<OrderDetailResult> orderDetailResultTips = FeginResponseTools.convertResponse(orderDetailResultResponseEntity);
         if (orderDetailResultTips.err()) {
             return orderDetailResultResponseEntity;
         }
         if (StringUtils.isNotBlank(orderDetailResultTips.getData().getPayId())) {
-            ResponseEntity<Record> payLog = paymentServiceFeign.one(orderDetailResultTips.getData().getPayId());
+            ResponseEntity payLog = paymentServiceFeign.one(orderDetailResultTips.getData().getPayId());
             Tips<Record> recordTips = FeginResponseTools.convertResponse(payLog);
             if (recordTips.err()) {
                 return orderDetailResultResponseEntity;
             }
             //设置支付类型
-            orderDetailResultResponseEntity.getBody().setTradeType(recordTips.getData().getTradeType());
+            ((OrderDetailResult)orderDetailResultResponseEntity.getBody()).setTradeType(recordTips.getData().getTradeType());
         }
         return orderDetailResultResponseEntity;
     }
@@ -426,7 +426,7 @@ public class OrderApi {
         baseOrderParam.setOrderType(OrderType.NORMAL);
         baseOrderParam.setApplicationType(ApplicationType.HEALTH_GOOD);
         baseOrderParam.setOrderStatuses(new OrderStatus[]{OrderStatus.WAIT_PAYMENT});
-        ResponseEntity<Pages<OrderDetailResult>> ordersPages = orderServiceFeign.ordersPages(baseOrderParam);
+        ResponseEntity ordersPages = orderServiceFeign.ordersPages(baseOrderParam);
         Tips<Pages<OrderDetailResult>> waitPaymentListTips = FeginResponseTools.convertResponse(ordersPages);
 
         //ResponseEntity<Tuple<OrderDetailResult>> waitPayment = orderServiceFeign.ordersByUserId(userId, OrderType.NORMAL, OrderStatus.WAIT_PAYMENT);
@@ -507,11 +507,11 @@ public class OrderApi {
     //验证是否属于当前用户的订单
     private ResponseEntity validateOrderOwner(Long userId, String orderCode) {
 
-        ResponseEntity<OrderDetailResult> orderDetailResultEntity = orderServiceFeign.orderDetail(orderCode, true, false);
+        ResponseEntity orderDetailResultEntity = orderServiceFeign.orderDetail(orderCode, true, false);
         if (Objects.isNull(orderDetailResultEntity) || orderDetailResultEntity.getStatusCode().isError()) {
             return orderDetailResultEntity;
         }
-        if (!Objects.equals(orderDetailResultEntity.getBody().getUserId(), userId)) {
+        if (!Objects.equals(((OrderDetailResult)orderDetailResultEntity.getBody()).getUserId(), userId)) {
             return ResponseEntity.badRequest().body("当前操作订单不属于登录用户");
         }
         return orderDetailResultEntity;

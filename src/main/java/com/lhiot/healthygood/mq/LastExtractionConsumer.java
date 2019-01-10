@@ -60,7 +60,7 @@ public class LastExtractionConsumer {
         }
         try {
             log.info("查询支付中心支付信息{}",customOrder.getPayId());
-            ResponseEntity<Record> payLogResponse = paymentServiceFeign.one(customOrder.getPayId());
+            ResponseEntity payLogResponse = paymentServiceFeign.one(customOrder.getPayId());
             Tips<Record> payLogTips = FeginResponseTools.convertResponse(payLogResponse);
             if (payLogTips.err()){
                 log.warn("定制最后提取日期消费端 未找到定制订单支付记录{}", customOrder.getPayId());

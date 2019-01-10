@@ -40,11 +40,11 @@ public class AdvertisementApi {
         UiPositionParam uiPositionParam = new UiPositionParam();
         uiPositionParam.setApplicationType(ApplicationType.HEALTH_GOOD);
         uiPositionParam.setCodes(code);
-        ResponseEntity<Pages<UiPosition>> uiPositionEntity = baseDataServiceFeign.searchUiPosition(uiPositionParam);
+        ResponseEntity uiPositionEntity = baseDataServiceFeign.searchUiPosition(uiPositionParam);
         if (Objects.isNull(uiPositionEntity) || uiPositionEntity.getStatusCode().isError()){
             return uiPositionEntity;
         }
-         Long positionId = uiPositionEntity.getBody().getArray().get(0).getId();
+         Long positionId = ((Pages<UiPosition>)uiPositionEntity.getBody()).getArray().get(0).getId();
         AdvertisementParam advertisementParam = new AdvertisementParam();
         advertisementParam.setPositionId(positionId);
         advertisementParam.setAdvertiseStatus(OnOff.ON);

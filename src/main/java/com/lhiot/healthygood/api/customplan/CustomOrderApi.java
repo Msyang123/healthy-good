@@ -64,7 +64,7 @@ public class CustomOrderApi {
     public ResponseEntity create(@Valid @RequestBody CustomOrder customOrder, Sessions.User user) {
         Long userId = Long.valueOf(user.getUser().get("userId").toString());
         customOrder.setUserId(userId);
-        ResponseEntity<UserDetailResult> userDetailResultResponseEntity = baseUserServerFeign.findById(userId);
+        ResponseEntity userDetailResultResponseEntity = baseUserServerFeign.findById(userId);
         Tips<UserDetailResult> userDetailResultTips = FeginResponseTools.convertResponse(userDetailResultResponseEntity);
         if (!userDetailResultTips.err()) {
             customOrder.setNickname(userDetailResultTips.getData().getNickname());
@@ -120,7 +120,7 @@ public class CustomOrderApi {
         wxPayModel.setUserId(userId);
         wxPayModel.setAttach(orderCode);//定制订单code
         log.info("定制计划支付时微信签名{}",orderCode);
-        ResponseEntity<Map> responseEntity  = paymentServiceFeign.wxJsSign(wxPayModel);
+        ResponseEntity responseEntity  = paymentServiceFeign.wxJsSign(wxPayModel);
         return responseEntity;
     }
 
