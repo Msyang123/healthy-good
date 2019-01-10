@@ -160,11 +160,11 @@ public class RegisterApplicationService {
                 fruitDoctor.setRefereeId(doctorCustomer.getDoctorId());
             }
             //查找基础服务对应的微信用户信息
-            ResponseEntity<UserDetailResult> userEntity = baseUserServerFeign.findById(registerApplication.getUserId());
-            if (userEntity.getStatusCode().isError()) {
-                return Tips.warn(userEntity.getBody().toString());
+            ResponseEntity userEntity = baseUserServerFeign.findById(registerApplication.getUserId());
+            if (userEntity.getStatusCode().isError() || Objects.isNull(userEntity.getBody())) {
+                return Tips.warn("基础用户服务查询失败");
             }
-            UserDetailResult userDetailResult = userEntity.getBody();
+            UserDetailResult userDetailResult = (UserDetailResult) userEntity.getBody();
             //设置头像默认为微信头像
             fruitDoctor.setAvatar(userDetailResult.getAvatar());
             fruitDoctor.setPhoto(userDetailResult.getAvatar());

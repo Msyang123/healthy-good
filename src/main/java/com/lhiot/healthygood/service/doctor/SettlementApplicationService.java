@@ -10,6 +10,7 @@ import com.lhiot.healthygood.domain.user.FruitDoctor;
 import com.lhiot.healthygood.mapper.doctor.DoctorAchievementLogMapper;
 import com.lhiot.healthygood.mapper.doctor.SettlementApplicationMapper;
 import com.lhiot.healthygood.mapper.user.FruitDoctorMapper;
+import com.lhiot.healthygood.mq.HealthyGoodQueue;
 import com.lhiot.healthygood.type.*;
 import com.lhiot.healthygood.util.DataItem;
 import com.lhiot.healthygood.util.DataObject;
@@ -43,7 +44,6 @@ public class SettlementApplicationService {
     private final RabbitTemplate rabbit;
     private final DoctorAchievementLogMapper doctorAchievementLogMapper;
     private final WeChatUtil weChatUtil;
-    private DoctorAchievementLog findDoctorAchievementLog;
 
     @Autowired
     public SettlementApplicationService(SettlementApplicationMapper settlementApplicationMapper, FruitDoctorMapper fruitDoctorMapper, RabbitTemplate rabbit, DoctorAchievementLogMapper doctorAchievementLogMapper, WeChatUtil weChatUtil) {
@@ -52,6 +52,7 @@ public class SettlementApplicationService {
         this.rabbit = rabbit;
         this.doctorAchievementLogMapper = doctorAchievementLogMapper;
         this.weChatUtil = weChatUtil;
+        HealthyGoodQueue.DelayQueue.SETTLEMENT_EXPIRED.send(rabbit,"nothing",1 * 60 * 1000);
     }
 
     /**
@@ -127,6 +128,15 @@ public class SettlementApplicationService {
      */
     public Tips refund(Long id) {
         SettlementApplication settlementApplication = settlementApplicationMapper.selectById(id);
+        // 修改结算申请记录
+        SettlementApplication updateSettlement = new SettlementApplication();
+        updateSettlement.setId(id);
+        updateSettlement.setDealAt(Date.from(Instant.now()));
+        updateSettlement.setSettlementStatus(SettlementStatus.REFUND);
+        boolean settlementUpdate = settlementApplicationMapper.updateById(updateSettlement) > 0;
+        if (!settlementUpdate) {
+            return Tips.warn("修改结算申请记录失败");
+        }
         // 增加鲜果师可结算金额
         FruitDoctor findFruitDoctor = fruitDoctorMapper.selectById(settlementApplication.getDoctorId());
         boolean settlementUpdated = fruitDoctorMapper.updateBouns(Maps.of("id", findFruitDoctor.getId(), "money", settlementApplication.getAmount(), "balanceType","SETTLEMENT")) > 0;

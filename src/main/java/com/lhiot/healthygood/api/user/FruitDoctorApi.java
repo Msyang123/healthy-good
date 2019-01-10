@@ -1,7 +1,5 @@
 package com.lhiot.healthygood.api.user;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.leon.microx.util.Beans;
 import com.leon.microx.web.result.Pages;
 import com.leon.microx.web.result.Tips;
 import com.leon.microx.web.session.Sessions;
@@ -31,10 +29,8 @@ import lombok.extern.slf4j.Slf4j;
 import net.sourceforge.pinyin4j.format.exception.BadHanyuPinyinOutputFormatCombination;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
-import org.springframework.amqp.AmqpException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.util.CollectionUtils;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.Instant;
@@ -42,7 +38,6 @@ import java.time.LocalDate;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 @Api(description = "鲜果师申请记录接口")
 @Slf4j
@@ -211,35 +206,6 @@ public class FruitDoctorApi {
 
         Pages<SettlementApplication> settlementApplicationPages = settlementApplicationService.pageList(settlementApplication);
         return ResponseEntity.ok(settlementApplicationPages);
-    }
-
-    @Sessions.Uncheck
-    @PutMapping("/settlement/expired")
-    @ApiOperation(value = "薪资结算定时任务处理(后台)", notes = "申请三天内没有处理,状态修改成已失效")
-    public void expiredStatusJob() {
-        log.debug("薪资结算定时任务处理\t");
-
-        //查询所有 未处理数据
-        SettlementApplication param = new SettlementApplication();
-        param.setSettlementStatus(SettlementStatus.UNSETTLED);
-
-        Pages<SettlementApplication> pages = settlementApplicationService.pageList(param);
-        if (CollectionUtils.isEmpty(pages.getArray())) {
-            return;
-        }
-        //批量修改ids
-        List<Long> ids = null;
-        //获取创建时间
-        Date today = new Date();
-        //筛选过期数据集合
-        ids = pages.getArray().stream().filter(settlementApplication ->
-                //当前时间减去创建时间大于3天未处理 ,修改状态为已过期
-                today.getTime() - settlementApplication.getCreateAt().getTime() > (1 * 24 * 60 * 60 * 1000) * 3)
-                .map(settlementApplication -> settlementApplication.getId()).collect(Collectors.toList());
-        //修改状态
-        if (!CollectionUtils.isEmpty(ids)) {
-            settlementApplicationService.updateExpiredStatus(ids);
-        }
     }
 
     @PutMapping("/remark")
