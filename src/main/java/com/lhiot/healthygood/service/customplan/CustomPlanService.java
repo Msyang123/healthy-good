@@ -400,17 +400,17 @@ public class CustomPlanService {
                 return Tips.warn("批量修改的商品失败");
             }
         }
-        // 要新增的商品是否存在（即商品已下架），存在则先根据查询的id批量删除
-        List<CustomPlanProduct> shelfOffProductList = customPlanProductMapper.findByPlanProduct(insertProductList);
-        if (!CollectionUtils.isEmpty(shelfOffProductList)) {
-            List<String> shelfOffProductIds = shelfOffProductList.stream().map(product -> product.getId().toString()).collect(Collectors.toList());
-            int deleteProduct = customPlanProductMapper.deleteByIds(shelfOffProductIds);
-            if (deleteProduct <= 0 ){
-                return Tips.warn("批量删除下架商品失败");
-            }
-        }
         // 批量新增的商品
         if (!CollectionUtils.isEmpty(insertProductList)) {
+            // 要新增的商品是否存在（即商品已下架），存在则先根据查询的id批量删除
+            List<CustomPlanProduct> shelfOffProductList = customPlanProductMapper.findByPlanProduct(insertProductList);
+            if (!CollectionUtils.isEmpty(shelfOffProductList)) {
+                List<String> shelfOffProductIds = shelfOffProductList.stream().map(product -> product.getId().toString()).collect(Collectors.toList());
+                int deleteProduct = customPlanProductMapper.deleteByIds(shelfOffProductIds);
+                if (deleteProduct <= 0 ){
+                    return Tips.warn("批量删除下架商品失败");
+                }
+            }
             int insertProduct = customPlanProductMapper.insertList(insertProductList);
             if (insertProduct <= 0) {
                 return Tips.warn("批量新增的商品失败");
