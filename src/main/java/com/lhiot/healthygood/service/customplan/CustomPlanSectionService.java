@@ -18,10 +18,14 @@ import com.lhiot.healthygood.type.YesOrNo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.CollectionUtils;
 
 import java.sql.Date;
 import java.time.Instant;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 /**
@@ -46,8 +50,8 @@ public class CustomPlanSectionService {
     /**
      * 新增定制板块
      *
-     * @param customPlanSection
-     * @return
+     * @param customPlanSection 要添加的定制板块信息
+     * @return 成功则返回新增的板块id，反正返回对应的提示信息
      */
     public Tips addCustomPlanSection(CustomPlanSection customPlanSection) {
         // 幂等添加
@@ -62,25 +66,27 @@ public class CustomPlanSectionService {
         }
         // 新增板块id
         Long sectionId = customPlanSection.getId();
-        if (customPlanSection.getCustomPlanList().isEmpty() || customPlanSection.getCustomPlanList().size() == 0) {
+        if (CollectionUtils.isEmpty(customPlanSection.getCustomPlanList())) {
             return Tips.info(customPlanSection.getId() + "");
         }
         // 添加定制板块和定制计划的关联
-        List<Long> sorts = customPlanSection.getCustomPlanList().stream().map(CustomPlan::getRelationSort).collect(Collectors.toList());
-        List<Long> planIds = customPlanSection.getCustomPlanList().stream().map(CustomPlan::getId).collect(Collectors.toList());
-        if (Objects.nonNull(sectionId) && !planIds.isEmpty() && !sorts.isEmpty()) {
+        List<Long> sorts = new ArrayList<>();
+        List<Long> planIds = new ArrayList<>();
+        customPlanSection.getCustomPlanList().forEach(plan -> {
+                sorts.add(plan.getRelationSort());
+                planIds.add(plan.getId());
+        });
+        // 如果计划id集合和排序id集合不为空，且两个集合相等，存入List<CustomPlanSectionRelation>中
+        if (CollectionUtils.isEmpty(planIds) || CollectionUtils.isEmpty(sorts) || planIds.size() != sorts.size()) {
+            return Tips.warn("定制计划id集合和排序集合要长度相等且不能为空");
+        } else if (Objects.nonNull(sectionId) && !CollectionUtils.isEmpty(planIds) && !CollectionUtils.isEmpty(sorts)) {
             //先做幂等验证
             List<CustomPlanSectionRelation> relationList = customPlanSectionRelationMapper.selectRelationListBySectionId(sectionId, Joiner.on(",").join(planIds));
-            if (!relationList.isEmpty()) {
+            if (!CollectionUtils.isEmpty(relationList)) {
                 return Tips.warn("定制计划与版块关联重复，添加失败");
             }
             List<CustomPlanSectionRelation> customPlanSectionRelationList = new ArrayList<>();
             CustomPlanSectionRelation customPlanSectionRelation;
-
-            // 如果计划id集合和排序id集合不为空，且两个集合相等，存入List<CustomPlanSectionRelation>中
-            if (planIds.isEmpty() || sorts.isEmpty() || planIds.size() != sorts.size()) {
-                return Tips.warn("定制计划id集合和排序集合要长度相等且不能为空");
-            }
             for (Long planId : planIds) {
                 customPlanSectionRelation = new CustomPlanSectionRelation();
                 customPlanSectionRelation.setSectionId(sectionId);
@@ -130,10 +136,15 @@ public class CustomPlanSectionService {
         // 如果查询关联的定制计划信息
         if (flag && Objects.nonNull(customPlanSection)) {
             List<CustomPlanSectionRelationResult> customPlanSectionRelationResults = customPlanSectionRelationMapper.findPlanBySectionId(id);
-            if (!customPlanSectionRelationResults.isEmpty()) {
-                List<CustomPlan> customPlans = customPlanSectionRelationResults.stream().map(CustomPlanSectionRelationResult::getCustomPlan).collect(Collectors.toList());
-                List<Long> relationSorts = customPlanSectionRelationResults.stream().map(CustomPlanSectionRelationResult::getSort).collect(Collectors.toList());
-                List<Long> relationIds = customPlanSectionRelationResults.stream().map(CustomPlanSectionRelationResult::getId).collect(Collectors.toList());
+            if (!CollectionUtils.isEmpty(customPlanSectionRelationResults)) {
+                List<CustomPlan> customPlans = new ArrayList<>();
+                List<Long> relationSorts = new ArrayList<>();
+                List<Long> relationIds = new ArrayList<>();
+                customPlanSectionRelationResults.forEach(relation -> {
+                    customPlans.add(relation.getCustomPlan());
+                    relationSorts.add(relation.getSort());
+                    relationIds.add(relation.getId());
+                });
                 customPlanSection.setCustomPlanList(customPlans);
                 customPlanSection.getCustomPlanList().stream().peek(customPlan -> {
                     customPlan.setRelationSort(relationSorts.get(customPlans.indexOf(customPlan)));
