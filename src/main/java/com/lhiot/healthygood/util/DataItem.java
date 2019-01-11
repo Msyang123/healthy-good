@@ -1,10 +1,7 @@
 package com.lhiot.healthygood.util;
 
-import com.lhiot.healthygood.type.TemplateMessageEnum;
 import io.swagger.annotations.ApiModel;
 import lombok.Data;
-
-import java.util.Map;
 
 @Data
 @ApiModel

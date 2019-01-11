@@ -7,52 +7,53 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 
 /**
-* Description:鲜果师申请记录Mapper类
-* @author yijun
-* @date 2018/07/26
-*/
+ * Description:鲜果师申请记录Mapper类
+ *
+ * @author yijun
+ * @date 2018/07/26
+ */
 @Mapper
 @Repository
 public interface RegisterApplicationMapper {
 
     /**
-    * Description:新增鲜果师申请记录
-    *
-    * @param registerApplication
-    * @return
-    * @author yijun
-    * @date 2018/07/26 12:08:13
-    */
+     * Description:新增鲜果师申请记录
+     *
+     * @param registerApplication
+     * @return
+     * @author yijun
+     * @date 2018/07/26 12:08:13
+     */
     int create(RegisterApplication registerApplication);
 
     /**
-    * Description:根据id修改鲜果师申请记录
-    *
-    * @param registerApplication
-    * @return
-    * @author yijun
-    * @date 2018/07/26 12:08:13
-    */
+     * Description:根据id修改鲜果师申请记录
+     *
+     * @param registerApplication
+     * @return
+     * @author yijun
+     * @date 2018/07/26 12:08:13
+     */
     int updateById(RegisterApplication registerApplication);
 
     /**
-    * Description:根据ids删除鲜果师申请记录
-    *
-    * @param ids
-    * @return
-    * @author yijun
-    * @date 2018/07/26 12:08:13
-    */
+     * Description:根据ids删除鲜果师申请记录
+     *
+     * @param ids
+     * @return
+     * @author yijun
+     * @date 2018/07/26 12:08:13
+     */
     int deleteByIds(List<String> ids);
 
     /**
-    * Description:根据id查找鲜果师申请记录
-    *
-    * @param id
-    * @return
-    * @author yijun
-    * @date 2018/07/26 12:08:13
-    */
+     * Description:根据id查找鲜果师申请记录
+     *
+     * @param id
+     * @return
+     * @author yijun
+     * @date 2018/07/26 12:08:13
+     */
     RegisterApplication selectById(Long id);
 
 

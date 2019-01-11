@@ -103,7 +103,7 @@ public class FruitDoctorApi {
             @ApiImplicitParam(paramType = ApiParamType.BODY, name = "registerApplication", value = "要更新的鲜果师申请记录", required = true, dataType = "RegisterApplication")
     })
     @PutMapping("/qualifications/{id}")
-    public ResponseEntity update(@PathVariable("id") Long id, @RequestBody RegisterApplication registerApplication){
+    public ResponseEntity update(@PathVariable("id") Long id, @RequestBody RegisterApplication registerApplication) {
         log.debug("根据id更新鲜果师申请记录\t id:{} param:{}", id, registerApplication);
 
         RegisterApplication findLastApplication = registerApplicationService.findLastApplicationById(registerApplication.getUserId());
@@ -211,15 +211,15 @@ public class FruitDoctorApi {
     @PutMapping("/remark")
     @ApiOperation(value = "鲜果师修改用户备注*")
     @ApiImplicitParam(paramType = "body", name = "DoctorCustomer", value = "鲜果师修改用户备注实体信息", required = true, dataType = "DoctorCustomer")
-    public ResponseEntity updateRemarkName(Sessions.User user, @RequestBody DoctorCustomer DoctorCustomer) {
+    public ResponseEntity updateRemarkName(Sessions.User user, @RequestBody DoctorCustomer doctorCustomer) {
         String userId = user.getUser().get("userId").toString();
         FruitDoctor fruitDoctor = fruitDoctorService.selectByUserId(Long.valueOf(userId));
         if (Objects.isNull(fruitDoctor)) {
             return ResponseEntity.badRequest().body("鲜果师不存在");
         }
-        log.debug("鲜果师修改用户备注\t param:{}", DoctorCustomer);
-        DoctorCustomer.setDoctorId(fruitDoctor.getId());
-        int result = doctorCustomerService.updateRemarkName(DoctorCustomer);
+        log.debug("鲜果师修改用户备注\t param:{}", doctorCustomer);
+        doctorCustomer.setDoctorId(fruitDoctor.getId());
+        int result = doctorCustomerService.updateRemarkName(doctorCustomer);
         return result > 0 ? ResponseEntity.ok("更新成功") : ResponseEntity.badRequest().body("更新失败");
     }
 
@@ -384,7 +384,7 @@ public class FruitDoctorApi {
             return ResponseEntity.badRequest().body(userInfo.getBody());
         }
         UserDetailResult users = (UserDetailResult) userInfo.getBody();
-        FruitDoctor doctor = fruitDoctorService.selectByUserId(Long.valueOf(users.getId()));
+        FruitDoctor doctor = fruitDoctorService.selectByUserId(users.getId());
         if (Objects.nonNull(doctor)) {
             users.setFruitDoctor(true);
             users.setFruitDoctorInfo(doctor);
@@ -441,15 +441,15 @@ public class FruitDoctorApi {
             return ResponseEntity.badRequest().body("鲜果师不存在");
         }
         List<DoctorCustomer> doctorCustomerList = doctorCustomerService.doctorCustomers(fruitDoctor.getId());
-        doctorCustomerList.stream().forEach(DoctorCustomer -> {
-            ResponseEntity userInfoEntity = baseUserServerFeign.findById(Long.valueOf(DoctorCustomer.getUserId()));
+        doctorCustomerList.stream().forEach(doctorCustomer -> {
+            ResponseEntity userInfoEntity = baseUserServerFeign.findById(doctorCustomer.getUserId());
             if (userInfoEntity.getStatusCode().isError()) {
                 return;
             }
             UserDetailResult userDetailResult = (UserDetailResult) userInfoEntity.getBody();
-            DoctorCustomer.setNickname(userDetailResult.getNickname());
-            DoctorCustomer.setAvatar(userDetailResult.getAvatar());
-            DoctorCustomer.setPhone(userDetailResult.getPhone());
+            doctorCustomer.setNickname(userDetailResult.getNickname());
+            doctorCustomer.setAvatar(userDetailResult.getAvatar());
+            doctorCustomer.setPhone(userDetailResult.getPhone());
         });
         PinyinTool tool = new PinyinTool();
         Pattern pattern = Pattern.compile("^[a-zA-Z]");
@@ -520,7 +520,7 @@ public class FruitDoctorApi {
     @PostMapping("/ceshi/commission")
     @ApiOperation(value = "测试鲜果师订单分成接口")
     @ApiImplicitParam(paramType = "query", name = "code", dataType = "String", required = true, value = "订单编号")
-    public ResponseEntity ceshi(@RequestParam  String code) {
+    public ResponseEntity ceshi(@RequestParam String code) {
         ResponseEntity orderDetailResult = orderServiceFeign.orderDetail(code, false, false);
         OrderDetailResult order = (OrderDetailResult) orderDetailResult.getBody();
         fruitDoctorService.calculationCommission(order);

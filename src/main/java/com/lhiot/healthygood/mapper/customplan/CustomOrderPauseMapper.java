@@ -1,6 +1,5 @@
 package com.lhiot.healthygood.mapper.customplan;
 
-import com.lhiot.healthygood.domain.customplan.CustomOrder;
 import com.lhiot.healthygood.domain.customplan.CustomOrderPause;
 import org.apache.ibatis.annotations.Mapper;
 import org.springframework.stereotype.Repository;
