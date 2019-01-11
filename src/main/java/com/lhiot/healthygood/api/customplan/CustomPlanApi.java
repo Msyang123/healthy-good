@@ -6,7 +6,6 @@ import com.leon.microx.web.result.Tips;
 import com.leon.microx.web.session.Sessions;
 import com.leon.microx.web.swagger.ApiParamType;
 import com.lhiot.dc.dictionary.module.Dictionary;
-import com.lhiot.healthygood.domain.customplan.CustomPlan;
 import com.lhiot.healthygood.domain.customplan.CustomPlanAndSpecification;
 import com.lhiot.healthygood.domain.customplan.model.CustomPlanDetailResult;
 import com.lhiot.healthygood.domain.customplan.model.CustomPlanParam;

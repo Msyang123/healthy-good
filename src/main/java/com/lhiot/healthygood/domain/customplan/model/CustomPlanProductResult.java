@@ -75,4 +75,11 @@ public class CustomPlanProductResult {
 
     @ApiModelProperty(value = "操作类型（后台）", dataType = "OptionType")
     private OptionType optionType;
+
+    /**
+     *定制周期（周、月）
+     */
+    @JsonProperty("planPeriod")
+    @ApiModelProperty(value = "定制周期（周、月）（后台）", dataType = "Integer")
+    private Integer planPeriod;
 }

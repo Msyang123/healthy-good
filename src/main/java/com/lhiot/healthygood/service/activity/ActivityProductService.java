@@ -32,10 +32,11 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 
 /**
-* Description:活动商品服务类
-* @author yangjiawen
-* @date 2018/11/24
-*/
+ * Description:活动商品服务类
+ *
+ * @author yangjiawen
+ * @date 2018/11/24
+ */
 @Service
 @Transactional(rollbackFor = Exception.class)
 public class ActivityProductService {
@@ -74,7 +75,7 @@ public class ActivityProductService {
             return Tips.warn("添加活动商品失败！");
         }
         // 添加上架商品与新品尝鲜板块的关联
-        if (Objects.equals(YesOrNo.YES, activityProduct.getRelationSection())){
+        if (Objects.equals(YesOrNo.YES, activityProduct.getRelationSection())) {
             // 根据活动id查询关联的板块id
             @NotNull(message = "活动id不为空") Long activityId = activityProduct.getActivityId();
             // 一个定制板块活动只会关联一个商品板块,如果有多个活动则要修改
@@ -88,7 +89,7 @@ public class ActivityProductService {
         return Tips.info(activityProduct.getId() + "");
     }
 
-    public List<ActivityProduct> list (ActivityProduct product){
+    public List<ActivityProduct> list(ActivityProduct product) {
         return activityProductMapper.selectActivityProducts(product);
     }
 
@@ -103,27 +104,8 @@ public class ActivityProductService {
     public Tips updateById(Long id, ActivityProduct activityProduct) {
         // 修改活动商品
         activityProduct.setId(id);
-        ActivityProduct findActivityProduct = activityProductMapper.selectById(id);
-        Long beforeShelfId = findActivityProduct.getProductShelfId();
-
         boolean updateActivityProduct = activityProductMapper.updateById(activityProduct) > 0;
-        if (!updateActivityProduct) {
-            return Tips.warn("修改活动商品失败");
-        }
-        // 修改上架商品与新品尝鲜板块的关联
-//        // 先删除 再新增
-//        @NotNull(message = "活动id不为空") Long activityId = activityProduct.getActivityId();
-//        // 一个定制板块活动只会关联一个商品板块,如果有多个活动则要修改
-//        ActivitySectionRelation relation = activitydeleteBatchSectionRelationMapper.selectRelation(Maps.of("activityId", activityId));
-//        ResponseEntity deleteEntity = baseDataServiceFeign.deleteBatch(relation.getSectionId(), beforeShelfId.toString());
-//        if (deleteEntity.getStatusCode().isError()) {
-//            return Tips.warn((String) deleteEntity.getBody());
-//        }
-//        ResponseEntity addEntity = baseDataServiceFeign.create(new ProductSectionRelation(null, relation.getSectionId(), activityProduct.getProductShelfId()));
-//        if (addEntity.getStatusCode().isError()) {
-//            return Tips.warn((String) addEntity.getBody());
-//        }
-        return Tips.info("修改活动商品成功");
+        return updateActivityProduct ? Tips.info("修改活动商品成功") : Tips.warn("修改活动商品失败");
     }
 
     /**
@@ -153,7 +135,7 @@ public class ActivityProductService {
         }
         // 删除活动商品
         boolean batchDelete = activityProductMapper.deleteByIds(Arrays.asList(ids.split(","))) > 0;
-        return (!batchDelete) ? Tips.warn("批量删除活动商品失败") : Tips.info("删除成功");
+        return batchDelete ? Tips.info("删除成功") : Tips.warn("批量删除活动商品失败");
     }
 
     /**
@@ -166,7 +148,6 @@ public class ActivityProductService {
         List<ActivityProductResult> results = new ArrayList<>();
         // 查询活动商品信息
         ActivityProduct activityProduct = new ActivityProduct();
-        //BeanUtils.of(activityProduct).populate(param);
         Beans.from(param).to(activityProduct);
         // 根据查询条件获取上架ids
         if (Objects.nonNull(param.getBarcode()) || Objects.nonNull(param.getName())) {
@@ -204,20 +185,18 @@ public class ActivityProductService {
             if (productShelfEntity.getStatusCode().isError()) {
                 return Tips.warn((String) productShelfEntity.getBody());
             }
-            if (Objects.nonNull(productShelfEntity.getBody())){
+            if (Objects.nonNull(productShelfEntity.getBody())) {
                 Pages<ProductShelf> productShelfPages = (Pages<ProductShelf>) productShelfEntity.getBody();
                 List<ProductShelf> productShelfList = productShelfPages.getArray();
                 // 结果转换
                 // List<ActivityProduct> 转换为  List<ActivityProductResult>
                 activityProductList.forEach(item -> {
                     ActivityProductResult activityProductResult = new ActivityProductResult();
-                   // BeanUtils.copyProperties(item, activityProductResult);
                     Beans.from(item).to(activityProductResult);
                     productShelfList.forEach(productShelf -> {
-                        if (Objects.equals(activityProductResult.getProductShelfId(), productShelf.getId())){
-                           // BeanUtils.copyProperties(productShelf,activityProductResult);
+                        if (Objects.equals(activityProductResult.getProductShelfId(), productShelf.getId())) {
                             Beans.from(productShelf).to(activityProductResult);
-                            ProductSpecification productSpecification  = productShelf.getProductSpecification();
+                            ProductSpecification productSpecification = productShelf.getProductSpecification();
                             if (Objects.nonNull(productSpecification)) {
                                 String specification = productSpecification.getWeight() + productSpecification.getPackagingUnit() + "*" + productSpecification.getSpecificationQty() + "份";
                                 activityProductResult.setSpecification(specification);
@@ -234,24 +213,22 @@ public class ActivityProductService {
                 });
             }
         }
-
-
         return Tips.<Pages<ActivityProductResult>>empty().data(Pages.of(total, results));
     }
 
-    public ActivityProduct selectActivityProduct(ActivityProduct activityProduct){
+    public ActivityProduct selectActivityProduct(ActivityProduct activityProduct) {
         return activityProductMapper.selectActivityProduct(activityProduct);
     }
 
     /**
-    * Description: 查询活动商品总记录数
-    *  
-    * @param activityProduct
-    * @return
-    * @author yangjiawen
-    * @date 2018/11/24 16:09:12
-    */  
-    public int count(ActivityProduct activityProduct){
+     * Description: 查询活动商品总记录数
+     *
+     * @param activityProduct
+     * @return
+     * @author yangjiawen
+     * @date 2018/11/24 16:09:12
+     */
+    public int count(ActivityProduct activityProduct) {
         return this.activityProductMapper.pageActivityProductCounts(activityProduct);
     }
 

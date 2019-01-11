@@ -23,52 +23,54 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 /**
-* Description:鲜果师客户服务类
-* @author yijun
-* @date 2018/07/26
-*/
+ * Description:鲜果师客户服务类
+ *
+ * @author yijun
+ * @date 2018/07/26
+ */
 @Service
 @Transactional
 public class DoctorCustomerService {
 
-    private final DoctorCustomerMapper DoctorCustomerMapper;
+    private final DoctorCustomerMapper doctorCustomerMapper;
     private Sessions session;
     private final ImsServiceFeign imsServiceFeign;
 
 
     @Autowired
-    public DoctorCustomerService(ObjectProvider<Sessions> sessionsObjectProvider, DoctorCustomerMapper DoctorCustomerMapper, ImsServiceFeign imsServiceFeign) {
-        this.DoctorCustomerMapper = DoctorCustomerMapper;
+    public DoctorCustomerService(ObjectProvider<Sessions> sessionsObjectProvider, DoctorCustomerMapper doctorCustomerMapper, ImsServiceFeign imsServiceFeign) {
+        this.doctorCustomerMapper = doctorCustomerMapper;
         this.session = sessionsObjectProvider.getIfAvailable();
         this.imsServiceFeign = imsServiceFeign;
     }
 
     /**
-    * Description:新增鲜果师客户
-    *
-    * @param DoctorCustomer
-    * @return
-    * @author yijun
-    * @date 2018/07/26 12:08:13
-    */
+     * Description:新增鲜果师客户
+     *
+     * @param DoctorCustomer
+     * @return
+     * @author yijun
+     * @date 2018/07/26 12:08:13
+     */
     /*public int create(DoctorCustomer DoctorCustomer){
         return this.DoctorCustomerMapper.create(DoctorCustomer);
     }*/
 
     /**
      * 绑定鲜果师
+     *
      * @param request
      * @param doctorCustomer
      * @param uri
      * @return
      */
-    public String createRelations(HttpServletRequest request, DoctorCustomer doctorCustomer, String uri){
+    public String createRelations(HttpServletRequest request, DoctorCustomer doctorCustomer, String uri) {
         String clientUri = null;
         Sessions.User sessionUser = session.create(request).user(Maps.of("userId", doctorCustomer.getUserId(),
                 "openId", doctorCustomer.getOpenId()))
                 .timeToLive(30, TimeUnit.MINUTES);
         ResponseEntity imsOperationRes = imsServiceFeign.selectAuthority();
-        if (imsOperationRes.getStatusCode().isError()){
+        if (imsOperationRes.getStatusCode().isError()) {
             return null;
         }
         List<ImsOperation> imsOperations = (List<ImsOperation>) imsOperationRes.getBody();
@@ -77,62 +79,62 @@ public class DoctorCustomerService {
                 .collect(Collectors.toList());
         sessionUser.authorities(authorityList);
         String sessionId = session.cache(sessionUser);
-        DoctorCustomer doctorCustomerResult =this.DoctorCustomerMapper.selectByUserId(doctorCustomer.getUserId());
-        if (Objects.isNull(doctorCustomerResult) && Objects.nonNull(doctorCustomer.getDoctorId())){//没有记录且鲜果师id不能为空
-            this.DoctorCustomerMapper.create(doctorCustomer);
+        DoctorCustomer doctorCustomerResult = this.doctorCustomerMapper.selectByUserId(doctorCustomer.getUserId());
+        if (Objects.isNull(doctorCustomerResult) && Objects.nonNull(doctorCustomer.getDoctorId())) {//没有记录且鲜果师id不能为空
+            this.doctorCustomerMapper.create(doctorCustomer);
         }
         //clientUri = accessToken.getOpenId() + "?sessionId=" + sessionId + "&clientUri=" + clientUri;
         clientUri = doctorCustomer.getOpenId() + "?sessionId=" + sessionId + "&clientUri=" + uri;
         return clientUri;
     }
 
-    /** 
-    * Description:根据id修改鲜果师客户
-    *  
-    * @param DoctorCustomer
-    * @return
-    * @author yijun
-    * @date 2018/07/26 12:08:13
-    */ 
-    public int updateById(DoctorCustomer DoctorCustomer){
-        return this.DoctorCustomerMapper.updateById(DoctorCustomer);
+    /**
+     * Description:根据id修改鲜果师客户
+     *
+     * @param doctorCustomer
+     * @return
+     * @author yijun
+     * @date 2018/07/26 12:08:13
+     */
+    public int updateById(DoctorCustomer doctorCustomer) {
+        return this.doctorCustomerMapper.updateById(doctorCustomer);
     }
 
     /**
      * Description:鲜果师修改用户备注
      *
-     * @param DoctorCustomer
+     * @param doctorCustomer
      * @return
      * @author yijun
      * @date 2018/07/26 12:08:13
      */
-    public int updateRemarkName(DoctorCustomer DoctorCustomer){
-        return this.DoctorCustomerMapper.updateRemarkName(DoctorCustomer);
+    public int updateRemarkName(DoctorCustomer doctorCustomer) {
+        return this.doctorCustomerMapper.updateRemarkName(doctorCustomer);
     }
 
 
-    /** 
-    * Description:根据ids删除鲜果师客户
-    *  
-    * @param ids
-    * @return
-    * @author yijun
-    * @date 2018/07/26 12:08:13
-    */ 
-    public int deleteByIds(String ids){
-        return this.DoctorCustomerMapper.deleteByIds(Arrays.asList(ids.split(",")));
+    /**
+     * Description:根据ids删除鲜果师客户
+     *
+     * @param ids
+     * @return
+     * @author yijun
+     * @date 2018/07/26 12:08:13
+     */
+    public int deleteByIds(String ids) {
+        return this.doctorCustomerMapper.deleteByIds(Arrays.asList(ids.split(",")));
     }
-    
-    /** 
-    * Description:根据id查找鲜果师客户
-    *  
-    * @param id
-    * @return
-    * @author yijun
-    * @date 2018/07/26 12:08:13
-    */ 
-    public DoctorCustomer selectById(Long id){
-        return this.DoctorCustomerMapper.selectById(id);
+
+    /**
+     * Description:根据id查找鲜果师客户
+     *
+     * @param id
+     * @return
+     * @author yijun
+     * @date 2018/07/26 12:08:13
+     */
+    public DoctorCustomer selectById(Long id) {
+        return this.doctorCustomerMapper.selectById(id);
     }
 
     /**
@@ -143,41 +145,41 @@ public class DoctorCustomerService {
      * @author yijun
      * @date 2018/07/26 12:08:13
      */
-    public DoctorCustomer selectByUserId(Long userId){
-        return this.DoctorCustomerMapper.selectByUserId(userId);
+    public DoctorCustomer selectByUserId(Long userId) {
+        return this.doctorCustomerMapper.selectByUserId(userId);
     }
 
-    public List<DoctorCustomer> selectByDoctorId(Long doctorId){
-        return this.DoctorCustomerMapper.selectByDoctorId(doctorId);
+    public List<DoctorCustomer> selectByDoctorId(Long doctorId) {
+        return this.doctorCustomerMapper.selectByDoctorId(doctorId);
     }
 
-    /** 
-    * Description: 查询鲜果师客户总记录数
-    *  
-    * @param DoctorCustomer
-    * @return
-    * @author yijun
-    * @date 2018/07/26 12:08:13
-    */  
-    public int count(DoctorCustomer DoctorCustomer){
-        return this.DoctorCustomerMapper.pageDoctorCustomerCounts(DoctorCustomer);
+    /**
+     * Description: 查询鲜果师客户总记录数
+     *
+     * @param doctorCustomer
+     * @return
+     * @author yijun
+     * @date 2018/07/26 12:08:13
+     */
+    public int count(DoctorCustomer doctorCustomer) {
+        return this.doctorCustomerMapper.pageDoctorCustomerCounts(doctorCustomer);
     }
-    
-    /** 
-    * Description: 查询鲜果师客户分页列表
-    *  
-    * @param DoctorCustomer
-    * @return
-    * @author yijun
-    * @date 2018/07/26 12:08:13
-    */  
-    public Pages<DoctorCustomer> pageList(DoctorCustomer DoctorCustomer) {
-       int total = 0;
-       if (DoctorCustomer.getRows() != null && DoctorCustomer.getRows() > 0) {
-           total = this.count(DoctorCustomer);
-       }
-       return Pages.of(total,
-              this.DoctorCustomerMapper.pageDoctorCustomers(DoctorCustomer));
+
+    /**
+     * Description: 查询鲜果师客户分页列表
+     *
+     * @param doctorCustomerMapper
+     * @return
+     * @author yijun
+     * @date 2018/07/26 12:08:13
+     */
+    public Pages<DoctorCustomer> pageList(DoctorCustomer doctorCustomerMapper) {
+        int total = 0;
+        if (doctorCustomerMapper.getRows() != null && doctorCustomerMapper.getRows() > 0) {
+            total = this.count(doctorCustomerMapper);
+        }
+        return Pages.of(total,
+                this.doctorCustomerMapper.pageDoctorCustomers(doctorCustomerMapper));
     }
 
     /**
@@ -190,7 +192,7 @@ public class DoctorCustomerService {
      */
     public List<DoctorCustomer> doctorCustomers(Long id) {
 
-        return this.DoctorCustomerMapper.doctorCustomers(id);
+        return this.doctorCustomerMapper.doctorCustomers(id);
     }
 }
 

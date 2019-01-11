@@ -48,7 +48,7 @@ public class CardUpdateLogService {
         }
         if (flag) {
             FruitDoctor fruitDoctorParam = new FruitDoctor();
-            fruitDoctorParam.setRealName(cardUpdateLog.getCardUsername());
+            fruitDoctorParam.setCardUsername(cardUpdateLog.getCardUsername());
             fruitDoctorParam.setBankDeposit(cardUpdateLog.getBankDeposit());
             fruitDoctorParam.setCardNo(cardUpdateLog.getCardNo());
             fruitDoctorParam.setId(cardUpdateLog.getDoctorId());

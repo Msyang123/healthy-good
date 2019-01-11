@@ -18,7 +18,7 @@ public interface ActivitySectionRelationMapper {
      * @param map
      * @return 关系对象
      */
-    ActivitySectionRelation selectRelation(Map<String,Object> map);
+    ActivitySectionRelation selectRelation(Map<String, Object> map);
 
 
 }

@@ -2,8 +2,6 @@ package com.lhiot.healthygood.api.callback;
 
 import com.leon.microx.util.DateTime;
 import com.leon.microx.util.Jackson;
-import com.leon.microx.util.xml.XNode;
-import com.leon.microx.util.xml.XReader;
 import com.leon.microx.web.result.Tips;
 import com.leon.microx.web.session.Sessions;
 import com.lhiot.healthygood.domain.customplan.CustomOrder;
@@ -36,10 +34,8 @@ import org.springframework.web.bind.annotation.RestController;
 import javax.servlet.http.HttpServletRequest;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.TreeMap;
 import java.util.concurrent.TimeUnit;
 
 @Api(description = "微信支付回调接口")

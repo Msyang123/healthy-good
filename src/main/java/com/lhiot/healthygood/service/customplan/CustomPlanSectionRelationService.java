@@ -121,7 +121,7 @@ public class CustomPlanSectionRelationService {
             // 先批量删除 定制计划id为空，则删除该板块id的所有关联关系
             boolean deleted = customPlanSectionRelationMapper.deleteRelationList(sectionId, null) > 0;
             if (!deleted) {
-                Tips.warn("删除失败！");
+                return Tips.warn("删除失败！");
             }
             // 再批量新增
             customPlanSectionRelationMapper.insertList(customPlanSectionRelationList);

@@ -14,75 +14,76 @@ import java.util.List;
 import java.util.Map;
 
 /**
-* Description:鲜果师业绩记录Mapper类
-* @author yijun
-* @date 2018/07/26
-*/
+ * Description:鲜果师业绩记录Mapper类
+ *
+ * @author yijun
+ * @date 2018/07/26
+ */
 @Mapper
 @Repository
 public interface DoctorAchievementLogMapper {
 
     /**
-    * Description:新增鲜果师业绩记录
-    *
-    * @param doctorAchievementLog
-    * @return
-    * @author yijun
-    * @date 2018/07/26 12:08:13
-    */
+     * Description:新增鲜果师业绩记录
+     *
+     * @param doctorAchievementLog
+     * @return
+     * @author yijun
+     * @date 2018/07/26 12:08:13
+     */
     int create(DoctorAchievementLog doctorAchievementLog);
 
     /**
-    * Description:根据id修改鲜果师业绩记录
-    *
-    * @param doctorAchievementLog
-    * @return
-    * @author yijun
-    * @date 2018/07/26 12:08:13
-    */
+     * Description:根据id修改鲜果师业绩记录
+     *
+     * @param doctorAchievementLog
+     * @return
+     * @author yijun
+     * @date 2018/07/26 12:08:13
+     */
     int updateById(DoctorAchievementLog doctorAchievementLog);
 
     /**
-    * Description:根据ids删除鲜果师业绩记录
-    *
-    * @param ids
-    * @return
-    * @author yijun
-    * @date 2018/07/26 12:08:13
-    */
+     * Description:根据ids删除鲜果师业绩记录
+     *
+     * @param ids
+     * @return
+     * @author yijun
+     * @date 2018/07/26 12:08:13
+     */
     int deleteByIds(List<String> ids);
 
     /**
-    * Description:根据id查找鲜果师业绩记录
-    *
-    * @param id
-    * @return
-    * @author yijun
-    * @date 2018/07/26 12:08:13
-    */
+     * Description:根据id查找鲜果师业绩记录
+     *
+     * @param id
+     * @return
+     * @author yijun
+     * @date 2018/07/26 12:08:13
+     */
     DoctorAchievementLog selectById(Long id);
 
     /**
-    * Description:查询鲜果师业绩记录列表
-    *
-    * @param doctorAchievementLog
-    * @return
-    * @author yijun
-    * @date 2018/07/26 12:08:13
-    */
-     List<DoctorAchievementLog> pageDoctorAchievementLogs(DoctorAchievementLog doctorAchievementLog);
+     * Description:查询鲜果师业绩记录列表
+     *
+     * @param doctorAchievementLog
+     * @return
+     * @author yijun
+     * @date 2018/07/26 12:08:13
+     */
+    List<DoctorAchievementLog> pageDoctorAchievementLogs(DoctorAchievementLog doctorAchievementLog);
 
-     List<DoctorAchievementLog> selectOrderCodeByDoctorId(Long doctorId);
+    List<DoctorAchievementLog> selectOrderCodeByDoctorId(Long doctorId);
 
 
     /**
-    * Description: 查询鲜果师业绩记录总记录数
-    *
-    * @param doctorAchievementLog
-    * @return
-    * @author yijun
-    * @date 2018/07/26 12:08:13
-    */
+     * Description: 查询鲜果师业绩记录总记录数
+     *
+     * @param doctorAchievementLog
+     * @return
+     * @author yijun
+     * @date 2018/07/26 12:08:13
+     */
     int pageDoctorAchievementLogCounts(DoctorAchievementLog doctorAchievementLog);
 
 
@@ -106,17 +107,17 @@ public interface DoctorAchievementLogMapper {
      */
     TeamAchievement teamAchievement(Long id);
 
-	//统计鲜果师的业绩
-	Achievement achievement(Map<String, Object> map);
+    //统计鲜果师的业绩
+    Achievement achievement(Map<String, Object> map);
 
-	Long achievementTodayOrderCount(Map<String,Object> map);
+    Long achievementTodayOrderCount(Map<String, Object> map);
 
-	//根据订单id查询记录
-	DoctorAchievementLog selectByOrderId(Long orderId);
+    //根据订单id查询记录
+    DoctorAchievementLog selectByOrderId(Long orderId);
 
     DoctorAchievementLog selectByOrderIdAndType(@Param("orderId") Long orderId, @Param("sourceType") SourceType sourceType);
 
     Integer selectFruitDoctorCommission(Long id);
 
-	Integer superiorBonusOfMonth(Map<String,Object> map);
+    Integer superiorBonusOfMonth(Map<String, Object> map);
 }
