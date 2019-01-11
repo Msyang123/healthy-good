@@ -49,6 +49,7 @@ public class WeixinClientApi {
         // 重写totring方法，得到三个参数的拼接字符串
         List<String> list = new ArrayList<String>(3) {
             private static final long serialVersionUID = 2621444383666420433L;
+            @Override
             public String toString() {
                 return this.get(0) + this.get(1) + this.get(2);
             }
@@ -78,6 +79,7 @@ public class WeixinClientApi {
             // 重写totring方法，得到三个参数的拼接字符串
             List<String> list = new ArrayList<String>(3) {
                 private static final long serialVersionUID = 2621444383666420433L;
+                @Override
                 public String toString() {
                     return this.get(0) + this.get(1) + this.get(2);
                 }
@@ -105,7 +107,7 @@ public class WeixinClientApi {
 
                 // 语音识别消息
                 session.addOnHandleMessageListener(new HandleMessageAdapter() {
-
+                    @Override
                     public void onVoiceMsg(Msg4Voice msg) {
                         Msg4Text reMsg = new Msg4Text();
                         reMsg.setFromUserName(msg.getToUserName());
@@ -118,6 +120,7 @@ public class WeixinClientApi {
 
                 // 处理事件
                 session.addOnHandleMessageListener(new HandleMessageAdapter() {
+                    @Override
                     public void onEventMsg(Msg4Event msg) {
 
                         //根据当期接收人自定义消息给予回复
@@ -146,6 +149,7 @@ public class WeixinClientApi {
 
                 // 处理地理位置
                 session.addOnHandleMessageListener(new HandleMessageAdapter() {
+                    @Override
                     public void onLocationMsg(Msg4Location msg) {
                         System.out.println("收到地理位置消息：");
                         System.out.println("X:" + msg.getLocation_X());
