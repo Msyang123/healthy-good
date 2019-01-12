@@ -1,12 +1,16 @@
 package com.lhiot.healthygood.service.customplan;
 
 import com.leon.microx.web.result.Pages;
+import com.leon.microx.web.result.Tips;
+import com.lhiot.healthygood.domain.customplan.CustomPlanSpecification;
 import com.lhiot.healthygood.domain.customplan.CustomPlanSpecificationStandard;
 import com.lhiot.healthygood.domain.customplan.model.CustomPlanSpecificationStandardParam;
+import com.lhiot.healthygood.mapper.customplan.CustomPlanSpecificationMapper;
 import com.lhiot.healthygood.mapper.customplan.CustomPlanSpecificationStandardMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.CollectionUtils;
 
 import java.util.Arrays;
 import java.util.List;
@@ -22,10 +26,12 @@ import java.util.List;
 public class CustomPlanSpecificationStandardService {
 
     private final CustomPlanSpecificationStandardMapper customPlanSpecificationStandardMapper;
+    private final CustomPlanSpecificationMapper customPlanSpecificationMapper;
 
     @Autowired
-    public CustomPlanSpecificationStandardService(CustomPlanSpecificationStandardMapper customPlanSpecificationStandardMapper) {
+    public CustomPlanSpecificationStandardService(CustomPlanSpecificationStandardMapper customPlanSpecificationStandardMapper, CustomPlanSpecificationMapper customPlanSpecificationMapper) {
         this.customPlanSpecificationStandardMapper = customPlanSpecificationStandardMapper;
+        this.customPlanSpecificationMapper = customPlanSpecificationMapper;
     }
 
     /**
@@ -49,8 +55,26 @@ public class CustomPlanSpecificationStandardService {
      * @author hufan
      * @date 2018/12/08 09:07:00
      */
-    public boolean updateById(CustomPlanSpecificationStandard customPlanSpecificationStandard) {
-        return this.customPlanSpecificationStandardMapper.updateById(customPlanSpecificationStandard) > 0;
+    public Tips updateById(Long id, CustomPlanSpecificationStandard customPlanSpecificationStandard) {
+        customPlanSpecificationStandard.setId(id);
+        boolean updateStandard = this.customPlanSpecificationStandardMapper.updateById(customPlanSpecificationStandard) > 0;
+        if (!updateStandard) {
+            return Tips.warn("修改定制计划规格基础数据失败！");
+        }
+        List<CustomPlanSpecification> customPlanSpecificationList = customPlanSpecificationMapper.selectByStandardsIds(Arrays.asList(id.toString()));
+        if (!CollectionUtils.isEmpty(customPlanSpecificationList)) {
+            // 批量修改定制规格的配图
+            CustomPlanSpecification customPlanSpecification = new CustomPlanSpecification();
+            customPlanSpecification.setImage(customPlanSpecificationStandard.getImage());
+            customPlanSpecification.setDescription(customPlanSpecificationStandard.getDescription());
+            customPlanSpecification.setQuantity(customPlanSpecificationStandard.getQuantity());
+            customPlanSpecification.setStandardId(id);
+            boolean updateSpecification = this.customPlanSpecificationMapper.updateByStandardId(customPlanSpecification) > 0;
+            if (!updateSpecification) {
+                return Tips.warn("修改定制计划规格失败!");
+            }
+        }
+        return Tips.empty();
     }
 
     /**

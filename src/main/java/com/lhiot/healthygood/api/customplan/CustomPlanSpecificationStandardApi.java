@@ -2,10 +2,13 @@ package com.lhiot.healthygood.api.customplan;
 
 import com.leon.microx.util.Maps;
 import com.leon.microx.web.result.Pages;
+import com.leon.microx.web.result.Tips;
 import com.leon.microx.web.session.Sessions;
 import com.leon.microx.web.swagger.ApiHideBodyProperty;
+import com.lhiot.healthygood.domain.customplan.CustomPlanSpecification;
 import com.lhiot.healthygood.domain.customplan.CustomPlanSpecificationStandard;
 import com.lhiot.healthygood.domain.customplan.model.CustomPlanSpecificationStandardParam;
+import com.lhiot.healthygood.mapper.customplan.CustomPlanSpecificationMapper;
 import com.lhiot.healthygood.service.customplan.CustomPlanSpecificationStandardService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
@@ -13,10 +16,13 @@ import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.util.CollectionUtils;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
+import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Description:定制计划规格基础数据接口类
@@ -30,10 +36,12 @@ import java.util.List;
 public class CustomPlanSpecificationStandardApi {
 
     private final CustomPlanSpecificationStandardService customPlanSpecificationStandardService;
+    private final CustomPlanSpecificationMapper customPlanSpecificationMapper;
 
     @Autowired
-    public CustomPlanSpecificationStandardApi(CustomPlanSpecificationStandardService customPlanSpecificationStandardService) {
+    public CustomPlanSpecificationStandardApi(CustomPlanSpecificationStandardService customPlanSpecificationStandardService, CustomPlanSpecificationMapper customPlanSpecificationMapper) {
         this.customPlanSpecificationStandardService = customPlanSpecificationStandardService;
+        this.customPlanSpecificationMapper = customPlanSpecificationMapper;
     }
 
     @Sessions.Uncheck
@@ -56,9 +64,11 @@ public class CustomPlanSpecificationStandardApi {
     public ResponseEntity update(@PathVariable("id") Long id, @RequestBody CustomPlanSpecificationStandard customPlanSpecificationStandard) {
         log.debug("根据id更新定制计划规格基础数据\t id:{} param:{}", id, customPlanSpecificationStandard);
 
-        customPlanSpecificationStandard.setId(id);
-        boolean updated = customPlanSpecificationStandardService.updateById(customPlanSpecificationStandard);
-        return updated ? ResponseEntity.ok().build() : ResponseEntity.badRequest().body("修改定制计划规格基础数据失败！");
+        Tips tips = customPlanSpecificationStandardService.updateById(id, customPlanSpecificationStandard);
+        if (tips.err()) {
+            return ResponseEntity.badRequest().body(tips.getMessage());
+        }
+        return ResponseEntity.ok().build();
     }
 
     @Sessions.Uncheck
@@ -68,6 +78,12 @@ public class CustomPlanSpecificationStandardApi {
     public ResponseEntity deleteByIds(@PathVariable("ids") String ids) {
         log.debug("根据ids删除定制计划规格基础数据\t param:{}", ids);
 
+        // 如果已经关联了定制板块规格，则不能删除
+        List<CustomPlanSpecification> customPlanSpecificationList = this.customPlanSpecificationMapper.selectByStandardsIds(Arrays.asList(ids.split(",")));
+        if (!CollectionUtils.isEmpty(customPlanSpecificationList)) {
+            List<Long> idList = customPlanSpecificationList.stream().map(CustomPlanSpecification::getStandardId).distinct().collect(Collectors.toList());
+            return ResponseEntity.badRequest().body("以下id:" + idList + "已经关联了定制板块规格，删除失败！");
+        }
         return customPlanSpecificationStandardService.deleteByIds(ids) ? ResponseEntity.noContent().build() : ResponseEntity.badRequest().body("删除定制计划规格基础数据失败！");
     }
 
