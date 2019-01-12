@@ -119,7 +119,7 @@
         where id=#{id}
     </update>
 
-    <!--批量修改定制计划关联商品-->
+    <!--批量修改定制计划规格-->
     <update id="updateBatch" parameterType="list">
         update custom_plan_specification
         <trim prefix="set">
@@ -135,6 +135,23 @@
         </foreach>
     </update>
 
+
+    <!--根据基础规格id批量修改定制计划规格-->
+    <update id="updateByStandardId" parameterType="com.lhiot.healthygood.domain.customplan.CustomPlanSpecification">
+        update custom_plan_specification
+        <set>
+            <if test="quantity != null ">
+                quantity = #{quantity},
+            </if>
+            <if test="description != null ">
+                description = #{description},
+            </if>
+            <if test="image != null ">
+                image = #{image},
+            </if>
+        </set>
+        where standard_id = #{standardId}
+    </update>
 
     <!--根据ids删除定制计划规格-->
     <delete id="deleteByIds" parameterType="java.util.List">
@@ -255,5 +272,16 @@
             )
         </foreach>
     </insert>
+
+
+    <!--根据ids删除定制计划规格基础数据-->
+    <select id="selectByStandardsIds" parameterType="java.util.List" resultMap="BaseResultMap">
+        select <include refid="Base_Column_List"/>
+        from custom_plan_specification where standard_id in
+        <foreach collection="list" item="item" open="("
+                 separator="," close=")">
+            #{item}
+        </foreach>
+    </select>
 
 </mapper>

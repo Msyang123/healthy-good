@@ -40,7 +40,7 @@ public class SettlementExpiredConsumer {
      */
     @RabbitHandler
     @RabbitListener(queues = HealthyGoodQueue.DelayQueue.SETTLEMENT_EXPIRED_CONSUMER)
-    public void expiredStatusJob() {
+    public void expiredStatusJob(String message) {
         log.debug("薪资结算3天未处理改为已过期定时任务处理\t");
 
         try {
