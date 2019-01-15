@@ -19,6 +19,7 @@ import org.springframework.stereotype.Component;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Objects;
@@ -34,7 +35,7 @@ public class UpdateCustomOrderStatusConsumer {
     private final CustomOrderService customOrderService;
     private final ProbeEventPublisher publisher;
     private final RabbitTemplate rabbitTemplate;
-    private static final LocalTime END_PAUSE_OF_DAY = LocalTime.parse("23:59:59");
+    //private static final LocalTime END_PAUSE_OF_DAY = LocalTime.parse("23:59:59");
     public UpdateCustomOrderStatusConsumer(RabbitInitializer initializer, CustomOrderPauseMapper customOrderPauseMapper, CustomOrderService customOrderService, ProbeEventPublisher publisher, RabbitTemplate rabbitTemplate) {
         this.customOrderPauseMapper = customOrderPauseMapper;
         this.customOrderService = customOrderService;
@@ -58,16 +59,19 @@ public class UpdateCustomOrderStatusConsumer {
             }
             Date current =Date.from(Instant.now());
             LocalDate currentDate =LocalDate.now();
+            List<CustomOrder> updateCustomOrderList = new ArrayList<>();
+            List<CustomOrderPause> updateCcustomOrderPauseList = new ArrayList<>();
             customOrderPauseList.forEach(item->{
                 LocalDate pauseEndAt = LocalDate.parse(DateTime.format(item.getPauseEndAt(),"yyyy-MM-dd"));
                 //当前时间是在暂停时间内
                 if(current.after(item.getPauseBeginAt())&& current.before(item.getPauseEndAt())){
-                    CustomOrder customOrder =new CustomOrder();
-                    customOrder.setCustomOrderCode(item.getCustomOrderCode());
                     if(Objects.equals(item.getOperStatus(), OperStatus.PAUSE)){
                         //设置定制订单为暂停
+                        CustomOrder customOrder =new CustomOrder();
+                        customOrder.setCustomOrderCode(item.getCustomOrderCode());
                         customOrder.setStatus(CustomOrderStatus.PAUSE_DELIVERY);
-                        customOrderService.updateByCode(customOrder);
+                        updateCustomOrderList.add(customOrder);
+                        //customOrderService.updateByCode(customOrder);
                     }
                 }else if(currentDate.compareTo(pauseEndAt)>0){
                     //设置的恢复时间小于今天23:59:59才允许恢复 设置定制订单为恢复 也就是当天设置恢复，
@@ -76,17 +80,24 @@ public class UpdateCustomOrderStatusConsumer {
                     customOrder.setCustomOrderCode(item.getCustomOrderCode());
                     //设置定制订单为恢复
                     customOrder.setStatus(CustomOrderStatus.CUSTOMING);
-                    customOrderService.updateByCode(customOrder);
+                    //customOrderService.updateByCode(customOrder);
+                    updateCustomOrderList.add(customOrder);
                     //恢复定制设置
                     item.setOperStatus(OperStatus.RECOVERY);
-                    customOrderPauseMapper.update(item);
+                    updateCcustomOrderPauseList.add(item);
+                    //customOrderPauseMapper.update(item);
                 }
             });
+            //批量修改定制订单状态
+            customOrderService.updateByCodeBatch(updateCustomOrderList);
+            //批量修改定制设置暂停恢复状态
+            customOrderPauseMapper.updateByCodeBatch(updateCcustomOrderPauseList);
+
         } catch (Exception e) {
             // 异常、队列消息
             publisher.mqConsumerException(e, Maps.of("message", "依据配送暂停设置修改定制订单状态为暂停状态和恢复状态"));
         }
-        //每五分钟循环调用一次
-        HealthyGoodQueue.DelayQueue.UPDATE_CUSTOM_ORDER_STATUS.send(rabbitTemplate,"nothing",5*60*1000);
+        //每二十分钟循环调用一次
+        HealthyGoodQueue.DelayQueue.UPDATE_CUSTOM_ORDER_STATUS.send(rabbitTemplate,"nothing",20*60*1000);
     }
 }

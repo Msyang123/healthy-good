@@ -97,6 +97,21 @@
         where id = #{id}
     </update>
 
+    <update id="updateByCodeBatch" parameterType="list">
+        update custom_order_pause
+        <trim prefix="set">
+            <trim prefix="oper_status = case" suffix="end">
+                <foreach collection="list" item="item">
+                    when id=#{item.id} then #{item.operStatus}
+                </foreach>
+            </trim>
+        </trim>
+        where
+        <foreach collection="list" separator="or" item="item">
+            id=#{item.id}
+        </foreach>
+    </update>
+
     <!--查询是否有实际设置的暂停时间是否在已经设置的内部-->
 	<select id="selectCustomOrderPause" resultMap="BaseResultMap" parameterType="com.lhiot.healthygood.domain.customplan.CustomOrderPause">
         select <include refid="Base_Column_List" />
