@@ -115,7 +115,7 @@ public class CustomPlanService {
             customPlanProducts.forEach(customPlanProduct -> {
                 CustomPlanProductResult customPlanProductResult = new CustomPlanProductResult();
                 //BeanUtils.copyProperties(customPlanProduct, customPlanPeriodResult);
-                Beans.from(customPlanProduct).to(customPlanPeriodResult);
+                Beans.from(customPlanProduct).to(customPlanProductResult);
                 customPlanProductResults.add(customPlanProductResult);
             });
             customPlanPeriodResult.setProducts(customPlanProductResults);
