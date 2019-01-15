@@ -67,7 +67,7 @@ public class CustomPlanService {
         result.setPrice(customPlanSpecificationMapper.findMinPriceByPlanId(id));
         // 定制计划关联的定制板块
         List<CustomPlanSectionRelation> customPlanSectionRelationList = customPlanSectionRelationMapper.findByPlanId(id);
-        if (!CollectionUtils.isEmpty(customPlanPeriodResultList)) {
+        if (!CollectionUtils.isEmpty(customPlanSectionRelationList)) {
             List<Long> sectionIdList = customPlanSectionRelationList.stream().map(CustomPlanSectionRelation::getSectionId).collect(Collectors.toList());
             result.setCustomPlanSectionIds(sectionIdList);
         }
