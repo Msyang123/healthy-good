@@ -305,6 +305,21 @@
         where id=#{id}
     </update>
 
+    <update id="updateByCodeBatch" parameterType="list">
+        update custom_order
+        <trim prefix="set">
+            <trim prefix="status = case" suffix="end">
+                <foreach collection="list" item="item">
+                    when custom_order_code=#{item.customOrderCode} then #{item.status}
+                </foreach>
+            </trim>
+        </trim>
+        where
+        <foreach collection="list" separator="or" item="item">
+            custom_order_code=#{item.customOrderCode}
+        </foreach>
+    </update>
+
     <!-- 根据code查找定制计划 -->
     <select id="selectByCode" resultMap="BaseResultMap" parameterType="String">
         select

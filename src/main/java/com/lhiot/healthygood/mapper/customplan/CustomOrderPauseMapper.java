@@ -33,6 +33,8 @@ public interface CustomOrderPauseMapper {
      */
     int update(CustomOrderPause customOrderPause);
 
+    int updateByCodeBatch(List<CustomOrderPause> customOrderPauseList);
+
     CustomOrderPause selectCustomOrderPause(CustomOrderPause customOrderPause);
 
     int checkIfCustomOrderPauseExist(String customOrderCode);

@@ -168,6 +168,16 @@ public class CustomOrderService {
     }
 
     /**
+     * 批量修改定制订单记录
+     *
+     * @param customOrderList
+     * @return
+     */
+    public int updateByCodeBatch(List<CustomOrder> customOrderList) {
+        return customOrderMapper.updateByCodeBatch(customOrderList);
+    }
+
+    /**
      * 暂停配送
      *
      * @param customOrderPause

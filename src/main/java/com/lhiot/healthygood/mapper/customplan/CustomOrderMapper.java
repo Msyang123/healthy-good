@@ -33,6 +33,8 @@ public interface CustomOrderMapper {
 
     int updateById(CustomOrder customOrder);
 
+    int updateByCodeBatch(List<CustomOrder> customOrderList);
+
     List<CustomOrder> pageCustomOrder(CustomOrder customOrder);
 
     int pageCustomOrderCounts(CustomOrder customOrder);
