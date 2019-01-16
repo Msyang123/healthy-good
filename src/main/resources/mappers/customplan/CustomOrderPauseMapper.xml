@@ -149,5 +149,6 @@
     <select id="selectAll" resultMap="BaseResultMap">
     select <include refid="Base_Column_List" />
       from custom_order_pause where pause_begin_at <![CDATA[ <= ]]>now()
+        and id in(select max(id) from custom_order_pause group by custom_order_code)
     </select>
 </mapper>
