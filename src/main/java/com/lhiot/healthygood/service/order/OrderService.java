@@ -15,6 +15,7 @@ import com.lhiot.healthygood.mapper.customplan.CustomOrderDeliveryMapper;
 import com.lhiot.healthygood.mapper.customplan.CustomOrderMapper;
 import com.lhiot.healthygood.mq.HealthyGoodQueue;
 import com.lhiot.healthygood.service.common.CommonService;
+import com.lhiot.healthygood.service.user.FruitDoctorService;
 import com.lhiot.healthygood.type.CustomOrderDeliveryStatus;
 import com.lhiot.healthygood.type.ReceivingWay;
 import com.lhiot.healthygood.util.FeginResponseTools;
@@ -53,13 +54,14 @@ public class OrderService {
     private final CustomOrderMapper customOrderMapper;
     private final CustomOrderDeliveryMapper customOrderDeliveryMapper;
     private final RabbitTemplate rabbitTemplate;
+    private final FruitDoctorService fruitDoctorService;
 
 
     @Autowired
     public OrderService(OrderServiceFeign orderServiceFeign,
                         DeliverServiceFeign deliverServiceFeign,
                         HealthyGoodConfig healthyGoodConfig, CommonService commonService,
-                        CustomOrderMapper customOrderMapper, CustomOrderDeliveryMapper customOrderDeliveryMapper, RabbitTemplate rabbitTemplate) {
+                        CustomOrderMapper customOrderMapper, CustomOrderDeliveryMapper customOrderDeliveryMapper, RabbitTemplate rabbitTemplate, FruitDoctorService fruitDoctorService) {
 
         this.orderServiceFeign = orderServiceFeign;
         this.deliverServiceFeign = deliverServiceFeign;
@@ -69,6 +71,7 @@ public class OrderService {
         this.customOrderMapper = customOrderMapper;
         this.customOrderDeliveryMapper = customOrderDeliveryMapper;
         this.rabbitTemplate = rabbitTemplate;
+        this.fruitDoctorService = fruitDoctorService;
     }
 
     //处理海鼎回调
@@ -162,6 +165,7 @@ public class OrderService {
                         }
                         //发起用户退款 等待用户退款回调然后发送orderServiceFeign.refundConfirmation
                     }
+                    fruitDoctorService.calculationCommission(orderDetailResult.getCode());
                 }
                 return Tips.info(orderCode);
             } else {

@@ -113,12 +113,7 @@ public class BalanceApi {
             log.error("修改为已支付失败{}", updateOrderToPayed);
             return ResponseEntity.badRequest().body("修改为已支付失败");
         }
-        ResponseEntity orderDetailResultResponseEntity = orderServiceFeign.orderDetail(balancePayModel.getOrderCode(), false, false);
-        if (orderDetailResultResponseEntity.getStatusCode().isError()) {
-            return ResponseEntity.badRequest().body(orderDetailResultResponseEntity.getBody());
-        }
-        OrderDetailResult order = (OrderDetailResult) orderDetailResultResponseEntity.getBody();
-        fruitDoctorService.calculationCommission(order);//鲜果师业绩提成
+        fruitDoctorService.calculationCommission(balancePayModel.getOrderCode());//鲜果师业绩提成
         //延迟发送海鼎
         orderService.delaySendToHd(orderCode, Jackson.object(orderDetailResult.getDeliverAt(), DeliverTime.class));
         return ResponseEntity.ok(orderDetailResult);

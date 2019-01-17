@@ -346,7 +346,7 @@ public class OrderApi {
         }
         ResponseEntity orderDetail = validateOrderOwner(userId, orderCode);
         OrderDetailResult orderResult = (OrderDetailResult) orderDetail.getBody();
-        fruitDoctorService.calculationCommission(orderResult);
+        fruitDoctorService.calculationCommission(orderResult.getCode());
         return refundOrder;
     }
 

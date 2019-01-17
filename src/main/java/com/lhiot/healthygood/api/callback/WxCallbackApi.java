@@ -101,7 +101,7 @@ public class WxCallbackApi {
         //延迟发货到海鼎
         orderService.delaySendToHd(orderCode,Jackson.object(orderDetailResult.getDeliverAt(), DeliverTime.class));
 
-        fruitDoctorService.calculationCommission(orderDetailResult);//鲜果师业绩提成
+        fruitDoctorService.calculationCommission(orderDetailResult.getCode());//鲜果师业绩提成
         //返回成功处理给微信
         return ResponseEntity.ok("<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
                 + "<xml><return_code><![CDATA[SUCCESS]]></return_code>"
