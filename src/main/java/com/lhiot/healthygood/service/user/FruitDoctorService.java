@@ -12,6 +12,7 @@ import com.lhiot.healthygood.domain.user.DoctorCustomer;
 import com.lhiot.healthygood.domain.user.FruitDoctor;
 import com.lhiot.healthygood.event.SendCaptchaSmsEvent;
 import com.lhiot.healthygood.feign.BaseUserServerFeign;
+import com.lhiot.healthygood.feign.OrderServiceFeign;
 import com.lhiot.healthygood.feign.model.OrderDetailResult;
 import com.lhiot.healthygood.feign.model.UserDetailResult;
 import com.lhiot.healthygood.feign.type.OrderStatus;
@@ -56,10 +57,11 @@ public class FruitDoctorService {
     private final CustomPlanService customPlanService;
     private final DoctorAchievementLogService doctorAchievementLogService;
     private final RabbitTemplate rabbitTemplate;
+    private final OrderServiceFeign orderServiceFeign;
 
 
     @Autowired
-    public FruitDoctorService(FruitDoctorMapper fruitDoctorMapper, DoctorCustomerMapper doctorCustomerMapper, ApplicationEventPublisher publisher, BaseUserServerFeign baseUserServerFeign, CustomPlanService customPlanService, DoctorAchievementLogService doctorAchievementLogService, RedissonClient redissonClient, RabbitTemplate rabbitTemplate) {
+    public FruitDoctorService(FruitDoctorMapper fruitDoctorMapper, DoctorCustomerMapper doctorCustomerMapper, ApplicationEventPublisher publisher, BaseUserServerFeign baseUserServerFeign, CustomPlanService customPlanService, DoctorAchievementLogService doctorAchievementLogService, RedissonClient redissonClient, RabbitTemplate rabbitTemplate, OrderServiceFeign orderServiceFeign) {
         this.fruitDoctorMapper = fruitDoctorMapper;
         this.doctorCustomerMapper = doctorCustomerMapper;
         this.publisher = publisher;
@@ -67,6 +69,7 @@ public class FruitDoctorService {
         this.customPlanService = customPlanService;
         this.doctorAchievementLogService = doctorAchievementLogService;
         this.rabbitTemplate = rabbitTemplate;
+        this.orderServiceFeign = orderServiceFeign;
         //初始化调用初始化accessToken 7100毫秒后调用
         HealthyGoodQueue.DelayQueue.REFRESH_ACCESS_TOKEN.send(this.rabbitTemplate, "nothing", 7100*1000);
     }
@@ -272,9 +275,15 @@ public class FruitDoctorService {
     /**
      * 计算销售提成
      *
-     * @param orderDetailResult
+     * @param orderCode
      */
-    public void calculationCommission(OrderDetailResult orderDetailResult) {
+    public void calculationCommission(String orderCode) {
+        ResponseEntity orderDetailResultResponseEntity = orderServiceFeign.orderDetail(orderCode,false,false);
+        if (orderDetailResultResponseEntity.getStatusCode().isError()){
+            log.error(orderCode +":"+ orderDetailResultResponseEntity.getBody());
+            return;
+        }
+        OrderDetailResult orderDetailResult = (OrderDetailResult) orderDetailResultResponseEntity.getBody();
         try {
             FruitDoctor doctor = this.findSuperiorFruitDoctorByUserId(orderDetailResult.getUserId());//查询用户的上级鲜果师
             if (Objects.isNull(doctor)) {
