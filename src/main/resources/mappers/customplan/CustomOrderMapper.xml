@@ -386,7 +386,7 @@
         left join custom_plan p on p.id = o.plan_id
         <include refid="Base_Where_Condition"/>
         <if test="rows != null and rows > 0 ">
-            order by o.id desc
+            order by status asc,o.id desc
             limit #{startRow} , #{rows}
         </if>
     </select>
