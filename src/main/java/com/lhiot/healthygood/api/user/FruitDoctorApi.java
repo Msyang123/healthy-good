@@ -523,7 +523,7 @@ public class FruitDoctorApi {
     public ResponseEntity ceshi(@RequestParam String code) {
         ResponseEntity orderDetailResult = orderServiceFeign.orderDetail(code, false, false);
         OrderDetailResult order = (OrderDetailResult) orderDetailResult.getBody();
-        fruitDoctorService.calculationCommission(order);
+        fruitDoctorService.calculationCommission(order.getCode());
         return ResponseEntity.ok().build();
     }
 

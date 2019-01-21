@@ -409,7 +409,7 @@ public class CustomOrderService {
         }
 
         //本地修改提取次数
-        fruitDoctorService.calculationCommission(orderDetailResultTips.getData());//鲜果师业绩
+        fruitDoctorService.calculationCommission(orderDetailResultTips.getData().getCode());//鲜果师业绩
         String orderCode = orderDetailResultTips.getData().getCode();
         CustomOrderDelivery customOrderDelivery = new CustomOrderDelivery();
         customOrderDelivery.setProductShelfId(customPlanProductResult.getProductShelfId());
