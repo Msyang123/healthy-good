@@ -211,6 +211,7 @@ public class OrderService {
                     deliverServiceFeign.update(orderCode, new DeliverUpdate(orderCode, DeliverStatus.DONE, null, null, null));
                     orderServiceFeign.updateOrderStatus(orderCode, OrderStatus.RECEIVED);
                     ResponseEntity<OrderDetailResult> orderDetailResultResponseEntity = orderServiceFeign.orderDetail(orderCode, false, false);
+
                     Tips<OrderDetailResult> orderDetailResultTips = FeginResponseTools.convertResponse(orderDetailResultResponseEntity);
                     if (orderDetailResultTips.succ()) {
                         //定制订单类型的订单
@@ -221,6 +222,8 @@ public class OrderService {
                             updateCustomOrderDelivery.setRecevingTime(Date.from(Instant.now()));//配送时间
                             customOrderDeliveryMapper.updateByOrderCode(updateCustomOrderDelivery);
                         }
+                        //配送完成修改海鼎订单状态
+                        deliverServiceFeign.hdStatus(orderDetailResultTips.getData().getHdOrderCode());
                     }
                     return Tips.info("配送配送完成");
                 case 5:

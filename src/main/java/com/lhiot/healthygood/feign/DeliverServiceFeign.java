@@ -47,4 +47,8 @@ public interface DeliverServiceFeign {
     //计算配送费
     @RequestMapping(value = "/delivery/fee/search", method = RequestMethod.POST)
     ResponseEntity<Fee> search(@RequestBody DeliverFeeQuery feeQuery);
+
+    //配送完成修改海鼎订单状态
+    @RequestMapping(value = "/delivery-notes/{code}/hd-status", method = RequestMethod.PUT)
+    ResponseEntity<String> hdStatus(@PathVariable("code") String code);
 }
