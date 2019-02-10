@@ -171,6 +171,8 @@ public class OrderService {
             } else {
                 log.info("hd other group message= " + map.get("group"));
             }
+
+
         }
         return Tips.warn(String.valueOf(orderDetailResultResponseEntity.getBody()));
     }
