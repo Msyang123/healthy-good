@@ -1,0 +1,154 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.lhiot.healthygood.mapper.customplan.CustomOrderPauseMapper">
+
+    <!-- 数据库字段对象关系映射 -->
+    <resultMap id="BaseResultMap"
+        type="com.lhiot.healthygood.domain.customplan.CustomOrderPause" >
+        <id column="id" property="id"/>
+        <result column="custom_order_code" property="customOrderCode" />
+        <result column="create_at" property="createAt" />
+        <result column="pause_begin_at" property="pauseBeginAt" />
+        <result column="pause_end_at" property="pauseEndAt" />
+        <result column="pause_day" property="pauseDay" />
+        <result column="plan_pause_day" property="planPauseDay" />
+        <result column="plan_pause_end_at" property="planPauseEndAt" />
+        <result column="oper_status" property="operStatus" />
+    </resultMap>
+
+    <!-- base查询字段  -->
+    <sql id="Base_Column_List" >
+        <trim suffixOverrides="," >
+            id,
+            custom_order_code,
+            create_at,
+            pause_begin_at,
+            pause_end_at,
+            pause_day,
+            plan_pause_day,
+            plan_pause_end_at,
+            oper_status,
+        </trim>
+    </sql>
+
+    <!--新增定制计划暂停记录-->
+    <insert id="create" parameterType="com.lhiot.healthygood.domain.customplan.CustomOrderPause" useGeneratedKeys="true" keyColumn="id" keyProperty="id">
+        insert into custom_order_pause
+        <trim prefix="(" suffix=")" suffixOverrides="," >
+            <if test="customOrderCode != null ">
+                custom_order_code,
+            </if>
+            <if test="createAt != null ">
+                create_at,
+            </if>
+            <if test="pauseBeginAt != null ">
+                pause_begin_at,
+            </if>
+            <if test="pauseEndAt != null ">
+                pause_end_at,
+            </if>
+            <if test="pauseDay != null ">
+                pause_day,
+            </if>
+            <if test="planPauseDay != null ">
+                plan_pause_day,
+            </if>
+            <if test="planPauseEndAt != null ">
+                plan_pause_end_at,
+            </if>
+            <if test="operStatus !=null">
+                oper_status,
+            </if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides="," >
+            <if test="customOrderCode != null ">
+                #{customOrderCode},
+            </if>
+            <if test="createAt != null ">
+                #{createAt},
+            </if>
+            <if test="pauseBeginAt != null ">
+                #{pauseBeginAt},
+            </if>
+            <if test="pauseEndAt != null ">
+                #{pauseEndAt},
+            </if>
+            <if test="pauseDay != null ">
+                #{pauseDay},
+            </if>
+            <if test="planPauseDay != null ">
+                #{planPauseDay},
+            </if>
+            <if test="planPauseEndAt != null ">
+                #{planPauseEndAt},
+            </if>
+            <if test="operStatus !=null">
+                #{operStatus},
+            </if>
+        </trim>
+    </insert>
+
+    <update id="update" parameterType="com.lhiot.healthygood.domain.customplan.CustomOrderPause">
+        update custom_order_pause
+        set
+        pause_end_at= #{pauseEndAt},
+        pause_day = #{pauseDay},
+        oper_status = #{operStatus}
+        where id = #{id}
+    </update>
+
+    <update id="updateByCodeBatch" parameterType="list">
+        update custom_order_pause
+        <trim prefix="set">
+            <trim prefix="oper_status = case" suffix="end">
+                <foreach collection="list" item="item">
+                    when id=#{item.id} then #{item.operStatus}
+                </foreach>
+            </trim>
+        </trim>
+        where
+        <foreach collection="list" separator="or" item="item">
+            id=#{item.id}
+        </foreach>
+    </update>
+
+    <!--查询是否有实际设置的暂停时间是否在已经设置的内部-->
+	<select id="selectCustomOrderPause" resultMap="BaseResultMap" parameterType="com.lhiot.healthygood.domain.customplan.CustomOrderPause">
+        select <include refid="Base_Column_List" />
+		from custom_order_pause
+        <where>
+            <if test="customOrderCode != null ">
+                and custom_order_code = #{customOrderCode}
+            </if>
+            <if test="pauseBeginAt != null ">
+                and pause_begin_at <![CDATA[ <= ]]> #{pauseBeginAt}
+            </if>
+            <if test="pauseBeginAt != null ">
+                and pause_end_at <![CDATA[ > ]]> #{pauseBeginAt}
+            </if>
+            <if test="operStatus !=null">
+                and oper_status =#{operStatus}
+            </if>
+        </where>
+	</select>
+
+    <select id="checkIfCustomOrderPauseExist" resultType="int" parameterType="String">
+        select count(*)
+        from custom_order_pause
+        where custom_order_code = #{0}
+        and oper_status ='PAUSE'
+    </select>
+
+    <!--计算已经暂停总天数，计划暂停的还进行中的也计算在内-->
+    <select id="selectHadPauseDays" resultType="int" parameterType="com.lhiot.healthygood.domain.customplan.CustomOrderPause">
+        select IFNULL(sum(pause_day),0) as pauseDays
+        from custom_order_pause where custom_order_code = #{customOrderCode}
+    </select>
+
+    <!--查询所有状态的定制订单设置的暂停或者恢复设置记录 (过滤条件 暂停开始时间<=当前时间)-->
+    <select id="selectAll" resultMap="BaseResultMap">
+    select <include refid="Base_Column_List" />
+      from custom_order_pause where pause_begin_at <![CDATA[ <= ]]>now()
+        and id in(select max(id) from custom_order_pause group by custom_order_code)
+    </select>
+</mapper>

@@ -1,0 +1,216 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.lhiot.healthygood.mapper.customplan.CustomPlanMapper">
+
+    <!-- 数据库字段对象关系映射 -->
+    <resultMap id="BaseResultMap"
+        type="com.lhiot.healthygood.domain.customplan.CustomPlan" >
+        <id column="id" property="id"/>
+        <result column="name" property="name" />
+        <result column="description" property="description" />
+        <result column="image" property="image" />
+        <result column="create_at" property="createAt" />
+        <result column="over_rule" property="overRule" />
+        <result column="status" property="status" />
+        <result column="create_user" property="createUser" />
+    </resultMap>
+
+    <!-- base查询字段  -->
+    <sql id="Base_Column_List" >
+        <trim suffixOverrides="," >
+            id,
+            name,
+            description,
+            image,
+            create_at,
+            over_rule,
+            status,
+            create_user,
+        </trim>
+    </sql>
+
+    <!--新增定制计划-->
+    <insert id="create" parameterType="com.lhiot.healthygood.domain.customplan.CustomPlan" useGeneratedKeys="true" keyColumn="id" keyProperty="id">
+        insert into custom_plan
+        <trim prefix="(" suffix=")" suffixOverrides="," >
+            <if test="id != null ">
+                id,
+            </if>
+            <if test="name != null ">
+                name,
+            </if>
+            <if test="description != null ">
+                description,
+            </if>
+            <if test="image != null ">
+                image,
+            </if>
+            <if test="createAt != null ">
+                create_at,
+            </if>
+            <if test="overRule != null ">
+                over_rule,
+            </if>
+            <if test="status != null ">
+                status,
+            </if>
+            <if test="createUser != null ">
+                create_user,
+            </if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides="," >
+            <if test="id != null ">
+                #{id},
+            </if>
+            <if test="name != null ">
+                #{name},
+            </if>
+            <if test="description != null ">
+                #{description},
+            </if>
+            <if test="image != null ">
+                #{image},
+            </if>
+            <if test="createAt != null ">
+                #{createAt},
+            </if>
+            <if test="overRule != null ">
+                #{overRule},
+            </if>
+            <if test="status != null ">
+                #{status},
+            </if>
+            <if test="createUser != null ">
+                #{createUser},
+            </if>
+        </trim>
+    </insert>
+
+    <!--根据id修改定制计划-->
+    <update id="updateById" parameterType="com.lhiot.healthygood.domain.customplan.CustomPlan">
+        update custom_plan
+        <set>
+            <if test="id != null ">
+                id = #{id},
+            </if>
+            <if test="name != null ">
+                name = #{name},
+            </if>
+            <if test="description != null ">
+                description = #{description},
+            </if>
+            <if test="image != null ">
+                image = #{image},
+            </if>
+            <if test="createAt != null ">
+                create_at = #{createAt},
+            </if>
+            <if test="overRule != null ">
+                over_rule = #{overRule},
+            </if>
+            <if test="status != null ">
+                status = #{status},
+            </if>
+            <if test="createUser != null ">
+                create_user = #{createUser},
+            </if>
+        </set>
+        where id=#{id}
+    </update>
+
+    <!--根据ids删除定制计划-->
+    <delete id="deleteByIds" parameterType="java.util.List">
+        delete from custom_plan where id in
+        <foreach collection="list" item="item" open="("
+            separator="," close=")">
+            #{item}
+        </foreach>
+    </delete>
+
+    <!-- 根据id查找定制计划 -->
+	<select id="selectById" resultMap="BaseResultMap"
+		parameterType="long"> select <include refid="Base_Column_List" />
+		from custom_plan where id = #{id}
+	</select>
+
+    <!-- 根据name查找定制计划 -->
+    <select id="selectByName" parameterType="String" resultMap="BaseResultMap">
+        select <include refid="Base_Column_List"/>
+        from custom_plan where name = #{name}
+    </select>
+
+
+    <!-- base where条件  -->
+    <sql id="Base_Where_Condition" >
+        <where>
+            <if test="id != null ">
+                and id = #{id}
+            </if>
+            <if test="name != null and name != '' ">
+                and name like concat('%',#{name}, '%')
+            </if>
+            <if test="description != null and description != '' ">
+                and description like concat('%',#{description}, '%')
+            </if>
+            <if test="image != null and image != ''">
+                and image = #{image}
+            </if>
+            <if test="createAt != null ">
+                and create_at = #{createAt}
+            </if>
+            <if test="overRule != null ">
+                and over_rule = #{overRule}
+            </if>
+            <if test="status != null ">
+                and status = #{status}
+            </if>
+            <if test="createUser != null and createUser != '' ">
+                and create_user  like concat('%',#{createUser}, '%')
+            </if>
+        </where>
+    </sql>
+
+
+    <!--查询定制计划列表-->
+     <select id="pageCustomPlans" resultMap="BaseResultMap"
+        parameterType="com.lhiot.healthygood.domain.customplan.model.CustomPlanParam">
+	        select <include refid="Base_Column_List" />
+	        from custom_plan
+	        <include refid="Base_Where_Condition" />
+            <if test="rows != null and rows > 0 ">
+                 order by id desc
+                 limit #{startRow} , #{rows}
+            </if>
+    </select>
+
+    <!--查询定制计划总记录-->
+    <select id="pageCustomPlanCounts" resultType="int"
+        parameterType="com.lhiot.healthygood.domain.customplan.model.CustomPlanParam">
+            select count(1)
+            from custom_plan
+            <include refid="Base_Where_Condition" />
+    </select>
+
+    <!-- 根据板块id查询定制计划 -->
+    <select id="findByCustomPlanSectionId" resultMap="BaseResultMap"
+            parameterType="map">
+        select
+        t1.id,
+        t1.name,
+        t1.description,
+        t1.image,
+        t1.create_at,
+        t1.over_rule,
+        t1.status,
+        t1.create_user
+        from custom_plan t1
+        left join custom_plan_section_relation t2
+        on t1.id = t2.plan_id
+        where t2.section_id = #{id}
+        and t1.status = 'VALID'
+        <if test="rows != null and rows > 0 ">
+            order by t2.sort asc
+            limit #{startRow} , #{rows}
+        </if>
+    </select>
+</mapper>

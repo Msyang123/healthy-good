@@ -1,0 +1,175 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.lhiot.healthygood.mapper.activity.ActivityProductRecordMapper">
+
+    <!-- 数据库字段对象关系映射 -->
+    <resultMap id="BaseResultMap"
+        type="com.lhiot.healthygood.domain.activity.ActivityProductRecord" >
+        <id column="id" property="id"/>
+        <result column="user_id" property="userId" />
+        <result column="product_shelf_id" property="productShelfId" />
+        <result column="order_code" property="orderCode" />
+        <result column="create_at" property="createAt" />
+        <result column="activity_id" property="activityId" />
+        <result column="activity_type" property="activityType" />
+    </resultMap>
+
+    <!-- base查询字段  -->
+    <sql id="Base_Column_List" >
+        <trim suffixOverrides="," >
+            id,
+            user_id,
+            product_shelf_id,
+            order_code,
+            create_at,
+            activity_id,
+            activity_type,
+        </trim>
+    </sql>
+
+    <!--新增活动商品购买记录-->
+    <insert id="create" parameterType="com.lhiot.healthygood.domain.activity.ActivityProductRecord" useGeneratedKeys="true" keyProperty="id">
+        insert into activity_product_record
+        <trim prefix="(" suffix=")" suffixOverrides="," >
+            <if test="id != null ">
+                id,
+            </if>
+            <if test="userId != null ">
+                user_id,
+            </if>
+            <if test="productShelfId != null ">
+                product_shelf_id,
+            </if>
+            <if test="orderCode != null ">
+                order_code,
+            </if>
+                create_at,
+            <if test="activityId != null ">
+                activity_id,
+            </if>
+            <if test="activityType != null ">
+                activity_type,
+            </if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides="," >
+            <if test="id != null ">
+                #{id},
+            </if>
+            <if test="userId != null ">
+                #{userId},
+            </if>
+            <if test="productShelfId != null ">
+                #{productShelfId},
+            </if>
+            <if test="orderCode != null ">
+                #{orderCode},
+            </if>
+                now(),
+            <if test="activityId != null ">
+                #{activityId},
+            </if>
+            <if test="activityType != null ">
+                #{activityType},
+            </if>
+        </trim>
+    </insert>
+
+    <!--根据id修改活动商品购买记录-->
+    <update id="updateById" parameterType="com.lhiot.healthygood.domain.activity.ActivityProductRecord">
+        update activity_product_record
+        <set>
+            <if test="id != null ">
+                id = #{id},
+            </if>
+            <if test="userId != null ">
+                user_id = #{userId},
+            </if>
+            <if test="productShelfId != null ">
+                product_shelf_id = #{productShelfId},
+            </if>
+            <if test="orderCode != null ">
+                order_code = #{orderCode},
+            </if>
+            <if test="createAt != null ">
+                create_at = #{createAt},
+            </if>
+            <if test="activityId != null ">
+                activity_id = #{activityId},
+            </if>
+            <if test="activityType != null ">
+                activity_type = #{activityType},
+            </if>
+        </set>
+        where id=#{id}
+    </update>
+
+    <!--根据ids删除活动商品购买记录-->
+    <delete id="deleteByIds" parameterType="java.util.List">
+        delete from activity_product_record where id in
+        <foreach collection="list" item="item" open="("
+            separator="," close=")">
+            #{item}
+        </foreach>
+    </delete>
+
+
+    <!-- 根据id查找活动商品购买记录 -->
+	<select id="selectById" resultMap="BaseResultMap"
+		parameterType="long"> select <include refid="Base_Column_List" />
+		from activity_product_record where id = #{id}
+	</select>
+
+    <select id="selectRecordCount" resultType="Integer" parameterType="long">
+        select count(*)
+        from activity_product_record <include refid="Base_Where_Condition" />
+    </select>
+
+    <!-- base where条件  -->
+    <sql id="Base_Where_Condition" >
+        <where>
+            <if test="id != null ">
+                and id = #{id}
+            </if>
+            <if test="userId != null ">
+                and user_id = #{userId}
+            </if>
+            <if test="productShelfId != null ">
+                and product_shelf_id = #{productShelfId}
+            </if>
+            <if test="orderCode != null ">
+                and order_code = #{orderCode}
+            </if>
+            <if test="createAt != null ">
+                and create_at = #{createAt}
+            </if>
+            <if test="activityId != null ">
+                and activity_id = #{activityId}
+            </if>
+            <if test="activityType != null ">
+                and activity_type = #{activityType}
+            </if>
+        </where>
+    </sql>
+
+
+    <!--查询活动商品购买记录列表-->
+     <select id="pageActivityProductRecords" resultMap="BaseResultMap"
+        parameterType="com.lhiot.healthygood.domain.activity.ActivityProductRecord">
+	        select <include refid="Base_Column_List" />
+	        from activity_product_record
+	        <include refid="Base_Where_Condition" />
+             <if test="rows != null and rows > 0 ">
+                 order by  id desc
+                 limit #{startRow} , #{rows}
+             </if>
+    </select>
+
+    <!--查询活动商品购买记录总记录-->
+    <select id="pageActivityProductRecordCounts" resultType="int"
+        parameterType="com.lhiot.healthygood.domain.activity.ActivityProductRecord">
+            select count(1)
+            from activity_product_record
+            <include refid="Base_Where_Condition" />
+    </select>
+
+</mapper>

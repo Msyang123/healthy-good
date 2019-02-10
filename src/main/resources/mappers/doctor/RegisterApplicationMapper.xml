@@ -1,0 +1,214 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.lhiot.healthygood.mapper.doctor.RegisterApplicationMapper">
+
+    <!-- 数据库字段对象关系映射 -->
+    <resultMap id="BaseResultMap"
+        type="com.lhiot.healthygood.domain.doctor.RegisterApplication" >
+        <id column="id" property="id"/>
+        <result column="idcard_no" property="idcardNo" />
+        <result column="phone" property="phone" />
+        <result column="idcard_front" property="idcardFront" />
+        <result column="idcard_reverse" property="idcardReverse" />
+        <result column="credentials" property="credentials" />
+        <result column="failure_reason" property="failureReason" />
+        <result column="audit_status" property="auditStatus" />
+        <result column="create_at" property="createAt" />
+        <result column="real_name" property="realName" />
+        <result column="audit_at" property="auditAt" />
+        <result column="audit_user" property="auditUser" />
+        <result column="user_id" property="userId" />
+    </resultMap>
+
+    <!-- base查询字段  -->
+    <sql id="Base_Column_List" >
+        <trim suffixOverrides="," >
+            id,
+            idcard_no,
+            phone,
+            idcard_front,
+            idcard_reverse,
+            credentials,
+            failure_reason,
+            audit_status,
+            create_at,
+            real_name,
+            audit_at,
+            audit_user,
+            user_id,
+        </trim>
+    </sql>
+
+    <!--新增鲜果师申请记录-->
+    <insert id="create" parameterType="com.lhiot.healthygood.domain.doctor.RegisterApplication" useGeneratedKeys="true" keyProperty="id">
+        insert into fruit_doctor_qualification
+        <trim prefix="(" suffix=")" suffixOverrides="," >
+            <if test="idcardNo != null ">
+                idcard_no,
+            </if>
+            <if test="phone != null ">
+                phone,
+            </if>
+            <if test="idcardFront != null ">
+                idcard_front,
+            </if>
+            <if test="idcardReverse != null ">
+                idcard_reverse,
+            </if>
+            <if test="credentials != null ">
+                credentials,
+            </if>
+            <if test="auditStatus != null ">
+                audit_status,
+            </if>
+            <if test="createAt != null ">
+                create_at,
+            </if>
+            <if test="realName != null ">
+                real_name,
+            </if>
+            <if test="userId != null ">
+                user_id,
+            </if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides="," >
+            <if test="idcardNo != null ">
+                #{idcardNo},
+            </if>
+            <if test="phone != null ">
+                #{phone},
+            </if>
+            <if test="idcardFront != null ">
+                #{idcardFront},
+            </if>
+            <if test="idcardReverse != null ">
+                #{idcardReverse},
+            </if>
+            <if test="credentials != null ">
+                #{credentials},
+            </if>
+            <if test="auditStatus != null ">
+                #{auditStatus},
+            </if>
+            <if test="createAt != null ">
+                #{createAt},
+            </if>
+            <if test="realName != null ">
+                #{realName},
+            </if>
+            <if test="userId != null ">
+                #{userId},
+            </if>
+        </trim>
+    </insert>
+
+    <!--根据id修改鲜果师申请记录-->
+    <update id="updateById" parameterType="com.lhiot.healthygood.domain.doctor.RegisterApplication">
+        update fruit_doctor_qualification
+        <set>
+            <if test="id != null ">
+                id = #{id},
+            </if>
+            <if test="idcardNo != null ">
+                idcard_no = #{idcardNo},
+            </if>
+            <if test="phone != null ">
+                phone = #{phone},
+            </if>
+            <if test="idcardFront != null ">
+                idcard_front = #{idcardFront},
+            </if>
+            <if test="idcardReverse != null ">
+                idcard_reverse = #{idcardReverse},
+            </if>
+            <if test="credentials != null ">
+                credentials = #{credentials},
+            </if>
+            <if test="failureReason != null ">
+                failure_reason = #{failureReason},
+            </if>
+            <if test="auditStatus != null ">
+                audit_status = #{auditStatus},
+            </if>
+            <if test="createAt != null ">
+                create_at = #{createAt},
+            </if>
+            <if test="realName != null ">
+                real_name = #{realName},
+            </if>
+            <if test="auditAt != null ">
+                audit_at = #{auditAt},
+            </if>
+            <if test="auditUser != null ">
+                audit_user = #{auditUser},
+            </if>
+            <if test="userId != null ">
+                user_id = #{userId},
+            </if>
+        </set>
+        where id=#{id}
+    </update>
+
+    <!--根据ids删除鲜果师申请记录-->
+    <delete id="deleteByIds" parameterType="java.util.List">
+        delete from fruit_doctor_qualification where id in
+        <foreach collection="list" item="item" open="("
+            separator="," close=")">
+            #{item}
+        </foreach>
+    </delete>
+
+
+    <!-- 根据id查找鲜果师申请记录 -->
+	<select id="selectById" resultMap="BaseResultMap"
+		parameterType="long"> select <include refid="Base_Column_List" />
+		from fruit_doctor_qualification where id = #{id}
+	</select>
+
+
+    <!-- 根据用户id查找鲜果师最新申请记录 -->
+    <select id="findLastApplicationById" resultMap="BaseResultMap"
+            parameterType="long">
+        select <include refid="Base_Column_List" />
+        from fruit_doctor_qualification
+        where user_id = #{id} order by id desc limit 1
+    </select>
+
+    <!-- base where条件  -->
+    <sql id="Base_Where_Condition" >
+        <where>
+            <if test="id != null ">and id = #{id}</if>
+            <if test="idcardNo != null and idcardNo != '' ">and idcard_no like concat('%',#{idcardNo}, '%')</if>
+            <if test="phone != null and phone != '' ">and phone like concat('%',#{phone}, '%')</if>
+            <if test="idcardFront != null and idcardFront != '' ">and idcard_front = #{idcardFront}</if>
+            <if test="idcardReverse != null and idcardReverse != '' "> and idcard_reverse = #{idcardReverse}</if>
+            <if test="credentials != null and credentials != '' ">and credentials = #{credentials}</if>
+            <if test="failureReason != null and failureReason != '' ">and failure_reason like concat('%',#{failureReason}, '%')</if>
+            <if test="auditStatus != null ">and audit_status = #{auditStatus}</if>
+            <if test="realName != null and realName != '' ">and real_name like concat('%',#{realName}, '%')</if>
+            <if test="auditAt != null ">and audit_at = #{auditAt}</if>
+            <if test="auditUser != null and auditUser != '' ">and audit_user like concat('%',#{auditUser}, '%')</if>
+            <if test="userId != null ">and user_id = #{userId}</if>
+            <if test="beginCreateAt != null">and create_at <![CDATA[ >= ]]> #{beginCreateAt}</if>
+            <if test="endCreateAt != null">and create_at <![CDATA[ <= ]]> #{endCreateAt}</if>
+        </where>
+    </sql>
+
+    <!--查询鲜果师申请记录列表-->
+    <select id="findList" resultMap="BaseResultMap"
+            parameterType="com.lhiot.healthygood.domain.doctor.RegisterApplication">
+        select <include refid="Base_Column_List" />
+        from fruit_doctor_qualification
+        <include refid="Base_Where_Condition" />
+        order by case audit_status when 'UNAUDITED' then 0  when 'AGREE' then 1 when 'REJECT' then 2 else 3 end asc, id desc
+    </select>
+
+    <!--查询鲜果师申请记录总记录-->
+    <select id="findCount" resultType="int"
+            parameterType="com.lhiot.healthygood.domain.doctor.RegisterApplication">
+        select count(1)
+        from fruit_doctor_qualification
+        <include refid="Base_Where_Condition" />
+    </select>
+
+</mapper>

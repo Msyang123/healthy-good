@@ -1,0 +1,166 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.lhiot.healthygood.mapper.doctor.CardUpdateLogMapper">
+
+    <!-- 数据库字段对象关系映射 -->
+    <resultMap id="BaseResultMap"
+        type="com.lhiot.healthygood.domain.doctor.CardUpdateLog" >
+        <id column="id" property="id"/>
+        <result column="card_no" property="cardNo" />
+        <result column="bank_deposit" property="bankDeposit" />
+        <result column="card_username" property="cardUsername" />
+        <result column="update_at" property="updateAt" />
+        <result column="doctor_id" property="doctorId" />
+    </resultMap>
+
+    <!-- base查询字段  -->
+    <sql id="Base_Column_List" >
+        <trim suffixOverrides="," >
+            id,
+            card_no,
+            bank_deposit,
+            card_username,
+            update_at,
+            doctor_id,
+        </trim>
+    </sql>
+
+    <!--新增-->
+    <insert id="create" parameterType="com.lhiot.healthygood.domain.doctor.CardUpdateLog" useGeneratedKeys="true" keyProperty="id">
+        insert into card_update_log
+        <trim prefix="(" suffix=")" suffixOverrides="," >
+            <if test="id != null ">
+                id,
+            </if>
+            <if test="cardNo != null ">
+                card_no,
+            </if>
+            <if test="bankDeposit != null ">
+                bank_deposit,
+            </if>
+            <if test="cardUsername != null ">
+                card_username,
+            </if>
+            <if test="updateAt != null ">
+                update_at,
+            </if>
+            <if test="doctorId != null ">
+                doctor_id,
+            </if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides="," >
+            <if test="id != null ">
+                #{id},
+            </if>
+            <if test="cardNo != null ">
+                #{cardNo},
+            </if>
+            <if test="bankDeposit != null ">
+                #{bankDeposit},
+            </if>
+            <if test="cardUsername != null ">
+                #{cardUsername},
+            </if>
+            <if test="updateAt != null ">
+                #{updateAt},
+            </if>
+            <if test="doctorId != null ">
+                #{doctorId},
+            </if>
+        </trim>
+    </insert>
+
+    <!--根据id修改-->
+    <update id="updateById" parameterType="com.lhiot.healthygood.domain.doctor.CardUpdateLog">
+        update card_update_log
+        <set>
+            <if test="id != null ">
+                id = #{id},
+            </if>
+            <if test="cardNo != null ">
+                card_no = #{cardNo},
+            </if>
+            <if test="bankDeposit != null ">
+                bank_deposit = #{bankDeposit},
+            </if>
+            <if test="cardUsername != null ">
+                card_username = #{cardUsername},
+            </if>
+            <if test="updateAt != null ">
+                update_at = #{updateAt},
+            </if>
+            <if test="doctorId != null ">
+                doctor_id = #{doctorId},
+            </if>
+        </set>
+        where id=#{id}
+    </update>
+
+    <!--根据ids删除-->
+    <delete id="deleteByIds" parameterType="java.util.List">
+        delete from card_update_log where id in
+        <foreach collection="list" item="item" open="("
+            separator="," close=")">
+            #{item}
+        </foreach>
+    </delete>
+
+
+    <!-- 根据id查找 -->
+	<select id="selectById" resultMap="BaseResultMap"
+		parameterType="long"> select <include refid="Base_Column_List" />
+		from card_update_log where id = #{id}
+	</select>
+
+    <select id="selectByCard" resultMap="BaseResultMap"
+            parameterType="com.lhiot.healthygood.domain.doctor.CardUpdateLog"> select <include refid="Base_Column_List" />
+        from card_update_log <include refid="Base_Where_Condition" />
+    </select>
+
+
+    <!-- base where条件  -->
+    <sql id="Base_Where_Condition" >
+        <where>
+            <if test="id != null ">
+                and id = #{id}
+            </if>
+            <if test="cardNo != null and cardNo != '' ">
+                and card_no  like concat('%',#{cardNo}, '%')
+            </if>
+            <if test="bankDeposit != null and bankDeposit != ''">
+                and bank_deposit like concat('%',#{bankDeposit}, '%')
+            </if>
+            <if test="cardUsername != null and cardUsername != '' ">
+                and card_username like concat('%',#{cardUsername}, '%')
+            </if>
+            <if test="updateAt != null ">
+                and update_at = #{updateAt}
+            </if>
+            <if test="doctorId != null ">
+                and doctor_id = #{doctorId}
+            </if>
+        </where>
+    </sql>
+
+
+    <!--查询列表-->
+     <select id="pageCardUpdateLogs" resultMap="BaseResultMap"
+        parameterType="com.lhiot.healthygood.domain.doctor.CardUpdateLog">
+	        select <include refid="Base_Column_List" />
+	        from card_update_log
+	        <include refid="Base_Where_Condition" />
+             <if test="rows != null and rows > 0 ">
+                 order by id desc
+                 limit #{startRow} , #{rows}
+             </if>
+    </select>
+
+    <!--查询总记录-->
+    <select id="pageCardUpdateLogCounts" resultType="int"
+        parameterType="com.lhiot.healthygood.domain.doctor.CardUpdateLog">
+            select count(1)
+            from card_update_log
+            <include refid="Base_Where_Condition" />
+    </select>
+
+</mapper>

@@ -1,0 +1,223 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.lhiot.healthygood.mapper.doctor.SettlementApplicationMapper">
+
+    <!-- 数据库字段对象关系映射 -->
+    <resultMap id="BaseResultMap"
+               type="com.lhiot.healthygood.domain.doctor.SettlementApplication">
+        <id column="id" property="id"/>
+        <result column="doctor_id" property="doctorId"/>
+        <result column="create_at" property="createAt"/>
+        <result column="amount" property="amount"/>
+        <result column="settlement_status" property="settlementStatus"/>
+        <result column="deal_at" property="dealAt"/>
+    </resultMap>
+
+    <!-- base查询字段  -->
+    <sql id="Base_Column_List">
+        <trim suffixOverrides=",">
+            id,
+            doctor_id,
+            create_at,
+            amount,
+            settlement_status,
+            deal_at,
+        </trim>
+    </sql>
+
+    <!-- 数据库字段对象关系映射 -->
+    <resultMap id="SettlementResultMap"
+               type="com.lhiot.healthygood.domain.doctor.SettlementApplication">
+        <id column="id" property="id"/>
+        <result column="doctor_id" property="doctorId"/>
+        <result column="create_at" property="createAt"/>
+        <result column="amount" property="amount"/>
+        <result column="settlement_status" property="settlementStatus"/>
+        <result column="deal_at" property="dealAt"/>
+
+        <result column="real_name" property="realName"/>
+        <result column="phone" property="phone"/>
+        <result column="card_no" property="cardNo"/>
+        <result column="bank_deposit" property="bankDeposit"/>
+        <result column="card_username" property="cardUsername"/>
+    </resultMap>
+
+    <!-- base查询字段  -->
+    <sql id="Settlement_Column_List">
+        <trim suffixOverrides=",">
+            s.id,
+            s.doctor_id,
+            s.create_at,
+            s.amount,
+            s.settlement_status,
+            s.deal_at,
+
+            f.real_name,
+            f.phone,
+            f.card_no,
+            f.bank_deposit,
+            f.card_username,
+        </trim>
+    </sql>
+
+    <!--新增结算申请-->
+    <insert id="create" parameterType="com.lhiot.healthygood.domain.doctor.SettlementApplication"
+            useGeneratedKeys="true" keyProperty="id">
+        insert into fruit_doctor_settlement
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="id != null ">
+                id,
+            </if>
+            <if test="doctorId != null ">
+                doctor_id,
+            </if>
+            <if test="createAt != null ">
+                create_at,
+            </if>
+            <if test="amount != null ">
+                amount,
+            </if>
+            <if test="settlementStatus != null ">
+                settlement_status,
+            </if>
+            <if test="dealAt != null ">
+                deal_at,
+            </if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="id != null ">
+                #{id},
+            </if>
+            <if test="doctorId != null ">
+                #{doctorId},
+            </if>
+            <if test="createAt != null ">
+                #{createAt},
+            </if>
+            <if test="amount != null ">
+                #{amount},
+            </if>
+            <if test="settlementStatus != null ">
+                #{settlementStatus},
+            </if>
+            <if test="dealAt != null ">
+                #{dealAt},
+            </if>
+        </trim>
+    </insert>
+
+    <!--根据id修改结算申请-->
+    <update id="updateById" parameterType="com.lhiot.healthygood.domain.doctor.SettlementApplication">
+        update fruit_doctor_settlement
+        <set>
+            <if test="id != null ">
+                id = #{id},
+            </if>
+            <if test="doctorId != null ">
+                doctor_id = #{doctorId},
+            </if>
+            <if test="createAt != null ">
+                create_at = #{createAt},
+            </if>
+            <if test="amount != null ">
+                amount = #{amount},
+            </if>
+            <if test="settlementStatus != null ">
+                settlement_status = #{settlementStatus},
+            </if>
+            <if test="dealAt != null ">
+                deal_at = #{dealAt},
+            </if>
+        </set>
+        where id=#{id}
+    </update>
+
+    <!--根据ids删除结算申请-->
+    <delete id="deleteByIds" parameterType="java.util.List">
+        delete from fruit_doctor_settlement where id in
+        <foreach collection="list" item="item" open="("
+                 separator="," close=")">
+            #{item}
+        </foreach>
+    </delete>
+
+
+    <!-- 根据id查找结算申请 -->
+    <select id="selectById" resultMap="BaseResultMap"
+            parameterType="long">select
+        <include refid="Base_Column_List"/>
+        from fruit_doctor_settlement where id = #{id}
+    </select>
+
+
+    <!-- base where条件  -->
+    <sql id="Base_Where_Condition">
+        <where>
+            <if test="id != null ">
+                and s.id = #{id}
+            </if>
+            <if test="doctorId != null ">
+                and s.doctor_id = #{doctorId}
+            </if>
+            <if test="createAt != null ">
+                and s.create_at = #{createAt}
+            </if>
+            <if test="amount != null ">
+                and s.amount = #{amount}
+            </if>
+            <if test="settlementStatus != null ">
+                and s.settlement_status = #{settlementStatus}
+            </if>
+            <if test="dealAt != null ">
+                and s.deal_at = #{dealAt}
+            </if>
+            <if test="realName != null and realName != '' ">
+                and f.real_name like concat('%',#{realName},'%')
+            </if>
+            <if test="phone != null and phone != '' ">
+                and f.phone like concat('%',#{phone},'%')
+            </if>
+            <if test="cardNo != null and cardNo != '' ">
+                and f.card_no like concat('%',#{cardNo},'%')
+            </if>
+            <if test="beginCreateAt != null">and s.create_at <![CDATA[ >= ]]> #{beginCreateAt}</if>
+            <if test="endCreateAt != null">and s.create_at <![CDATA[ <= ]]> #{endCreateAt}</if>
+        </where>
+    </sql>
+
+
+    <!--查询结算申请列表-->
+    <select id="pageSettlementApplications" resultMap="SettlementResultMap"
+            parameterType="com.lhiot.healthygood.domain.doctor.SettlementApplication">
+        SELECT <include refid="Settlement_Column_List"/>
+        FROM fruit_doctor_settlement s
+        LEFT JOIN fruit_doctor f ON s.doctor_id = f.id
+        <include refid="Base_Where_Condition"/>
+        <if test="rows != null and rows > 0 ">
+            order by case s.settlement_status when 'UNSETTLED' then 0 when 'SUCCESS' then 1 when 'REFUND' then 2  when 'EXPIRED' then 3 else
+            4 end asc,
+            s.id desc
+            limit #{startRow} , #{rows}
+        </if>
+    </select>
+
+    <!--查询结算申请总记录-->
+    <select id="pageSettlementApplicationCounts" resultType="int"
+            parameterType="com.lhiot.healthygood.domain.doctor.SettlementApplication">
+        select count(1)
+        FROM fruit_doctor_settlement s
+        LEFT JOIN fruit_doctor f ON s.doctor_id = f.id
+        <include refid="Base_Where_Condition"/>
+    </select>
+
+    <!--批量修改结算失效状态-->
+    <update id="updateExpiredStatus"  parameterType="java.util.List">
+        update fruit_doctor_settlement
+        set settlement_status = 'EXPIRED'
+        where id in
+        <foreach collection="list" item="item" open="("
+                 separator="," close=")">
+            #{item}
+        </foreach>
+    </update>
+</mapper>
